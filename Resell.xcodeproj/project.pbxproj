@@ -63,7 +63,7 @@
 		2C9B4CF92C8FBC180029DF61 /* Rubik-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Rubik-Medium.ttf"; path = "../../../../../Downloads/Rubik/static/Rubik-Medium.ttf"; sourceTree = "<group>"; };
 		2C9B4CFB2C8FBC200029DF61 /* Rubik-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Rubik-Regular.ttf"; path = "../../../../../Downloads/Rubik/static/Rubik-Regular.ttf"; sourceTree = "<group>"; };
 		2C9B4CFD2C8FBC580029DF61 /* ReemKufi-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "ReemKufi-Regular.ttf"; sourceTree = "<group>"; };
-		2C9B4CFF2C8FBC860029DF61 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		2C9B4CFF2C8FBC860029DF61 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2C9B4D062C8FCB070029DF61 /* ResellPurpleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResellPurpleButton.swift; sourceTree = "<group>"; };
 		2C9B4D082C8FD8200029DF61 /* LoginViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewModel.swift; sourceTree = "<group>"; };
 		2C9B4D0B2C90EF1D0029DF61 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
@@ -98,6 +98,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2C3024782C91190A0057D3D9 /* Supporting */ = {
+			isa = PBXGroup;
+			children = (
+				2C3024762C9105E60057D3D9 /* GoogleService-Info.plist */,
+				2C9B4CFF2C8FBC860029DF61 /* Info.plist */,
+			);
+			path = Supporting;
+			sourceTree = "<group>";
+		};
 		2C9B4CBE2C8FB7B70029DF61 = {
 			isa = PBXGroup;
 			children = (
@@ -121,15 +130,14 @@
 		2C9B4CC92C8FB7B70029DF61 /* Resell */ = {
 			isa = PBXGroup;
 			children = (
+				2C3024782C91190A0057D3D9 /* Supporting */,
 				2C9B4D0A2C90EF060029DF61 /* Core */,
-				2C9B4CFF2C8FBC860029DF61 /* Info.plist */,
 				2C9B4CCC2C8FB7B70029DF61 /* LoginView.swift */,
 				2C9B4D122C90FE170029DF61 /* ViewModels */,
 				2C9B4D012C8FC7B00029DF61 /* Views */,
 				2C9B4CF62C8FB8450029DF61 /* Utils */,
 				2C9B4CF42C8FB81A0029DF61 /* Resources */,
 				2C9B4CD02C8FB7B80029DF61 /* Preview Content */,
-				2C3024762C9105E60057D3D9 /* GoogleService-Info.plist */,
 			);
 			path = Resell;
 			sourceTree = "<group>";

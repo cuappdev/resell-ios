@@ -13,7 +13,7 @@ struct Keys {
     static let googlePlacesKey = Keys.keyDict["GOOGLE_API_KEY"] as? String ?? ""
 
     private static let keyDict: NSDictionary = {
-        guard let path = Bundle.main.path(forResource: "Keys", ofType: "plist"), let dict = NSDictionary(contentsOfFile: path) else { return [:] }
+        guard let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"), let dict = NSDictionary(contentsOfFile: path) else { return [:] }
         return dict
     }()
 }

@@ -1,0 +1,8 @@
+## Build generated
+*.DS_Store
+.build/
+xcuserdata/
+build/
+
+## Secrets
+Resell/Supporting/GoogleService-Info.plist
