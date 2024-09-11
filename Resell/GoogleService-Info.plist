@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>1534649394-98pts94l83s9309oijhplbo0duvu9abd.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.1534649394-98pts94l83s9309oijhplbo0duvu9abd</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>1534649394-7dnl9fo0un373q7j0lkof8d7m0b3lgo0.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDPhRChykNC_taNdUH_giBROhKJfIP6erg</string>
+	<key>GCM_SENDER_ID</key>
+	<string>1534649394</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.cornellappdev.resell</string>
+	<key>PROJECT_ID</key>
+	<string>resell-e99a2</string>
+	<key>STORAGE_BUCKET</key>
+	<string>resell-e99a2.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:1534649394:ios:824d63289402ecec38082b</string>
+	<key>DATABASE_URL</key>
+	<string>https://resell-e99a2-default-rtdb.firebaseio.com</string>
+</dict>
+</plist>

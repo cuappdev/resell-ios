@@ -1,0 +1,740 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2C30246F2C90FFB40057D3D9 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 2C30246E2C90FFB40057D3D9 /* GoogleSignIn */; };
+		2C3024712C90FFB40057D3D9 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 2C3024702C90FFB40057D3D9 /* GoogleSignInSwift */; };
+		2C3024732C90FFE60057D3D9 /* Keys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C3024722C90FFE60057D3D9 /* Keys.swift */; };
+		2C3024772C9105E60057D3D9 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2C3024762C9105E60057D3D9 /* GoogleService-Info.plist */; };
+		2C9B4CCB2C8FB7B70029DF61 /* ResellApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4CCA2C8FB7B70029DF61 /* ResellApp.swift */; };
+		2C9B4CCF2C8FB7B80029DF61 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2C9B4CCE2C8FB7B80029DF61 /* Assets.xcassets */; };
+		2C9B4CD22C8FB7B80029DF61 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2C9B4CD12C8FB7B80029DF61 /* Preview Assets.xcassets */; };
+		2C9B4CDC2C8FB7B80029DF61 /* ResellTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4CDB2C8FB7B80029DF61 /* ResellTests.swift */; };
+		2C9B4CE62C8FB7B80029DF61 /* ResellUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4CE52C8FB7B80029DF61 /* ResellUITests.swift */; };
+		2C9B4CE82C8FB7B80029DF61 /* ResellUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4CE72C8FB7B80029DF61 /* ResellUITestsLaunchTests.swift */; };
+		2C9B4CF82C8FB84F0029DF61 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4CF72C8FB84F0029DF61 /* Constants.swift */; };
+		2C9B4CFA2C8FBC180029DF61 /* Rubik-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2C9B4CF92C8FBC180029DF61 /* Rubik-Medium.ttf */; };
+		2C9B4CFC2C8FBC200029DF61 /* Rubik-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2C9B4CFB2C8FBC200029DF61 /* Rubik-Regular.ttf */; };
+		2C9B4CFE2C8FBC580029DF61 /* ReemKufi-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2C9B4CFD2C8FBC580029DF61 /* ReemKufi-Regular.ttf */; };
+		2C9B4D042C8FC8250029DF61 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4CCC2C8FB7B70029DF61 /* LoginView.swift */; };
+		2C9B4D072C8FCB070029DF61 /* ResellPurpleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4D062C8FCB070029DF61 /* ResellPurpleButton.swift */; };
+		2C9B4D092C8FD8200029DF61 /* LoginViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4D082C8FD8200029DF61 /* LoginViewModel.swift */; };
+		2C9B4D0C2C90EF1D0029DF61 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2C9B4D0B2C90EF1D0029DF61 /* Launch Screen.storyboard */; };
+		2C9B4D0E2C90F54D0029DF61 /* ResellLoginGradient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4D0D2C90F54D0029DF61 /* ResellLoginGradient.swift */; };
+		2C9B4D102C90F69C0029DF61 /* UIScreen + Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4D0F2C90F69C0029DF61 /* UIScreen + Extensions.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		2C9B4CD82C8FB7B80029DF61 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2C9B4CBF2C8FB7B70029DF61 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2C9B4CC62C8FB7B70029DF61;
+			remoteInfo = Resell;
+		};
+		2C9B4CE22C8FB7B80029DF61 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2C9B4CBF2C8FB7B70029DF61 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2C9B4CC62C8FB7B70029DF61;
+			remoteInfo = Resell;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		2C3024722C90FFE60057D3D9 /* Keys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keys.swift; sourceTree = "<group>"; };
+		2C3024762C9105E60057D3D9 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		2C9B4CC72C8FB7B70029DF61 /* Resell.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Resell.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2C9B4CCA2C8FB7B70029DF61 /* ResellApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResellApp.swift; sourceTree = "<group>"; };
+		2C9B4CCC2C8FB7B70029DF61 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		2C9B4CCE2C8FB7B80029DF61 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2C9B4CD12C8FB7B80029DF61 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		2C9B4CD72C8FB7B80029DF61 /* ResellTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ResellTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2C9B4CDB2C8FB7B80029DF61 /* ResellTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResellTests.swift; sourceTree = "<group>"; };
+		2C9B4CE12C8FB7B80029DF61 /* ResellUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ResellUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2C9B4CE52C8FB7B80029DF61 /* ResellUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResellUITests.swift; sourceTree = "<group>"; };
+		2C9B4CE72C8FB7B80029DF61 /* ResellUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResellUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		2C9B4CF72C8FB84F0029DF61 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		2C9B4CF92C8FBC180029DF61 /* Rubik-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Rubik-Medium.ttf"; path = "../../../../../Downloads/Rubik/static/Rubik-Medium.ttf"; sourceTree = "<group>"; };
+		2C9B4CFB2C8FBC200029DF61 /* Rubik-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Rubik-Regular.ttf"; path = "../../../../../Downloads/Rubik/static/Rubik-Regular.ttf"; sourceTree = "<group>"; };
+		2C9B4CFD2C8FBC580029DF61 /* ReemKufi-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "ReemKufi-Regular.ttf"; sourceTree = "<group>"; };
+		2C9B4CFF2C8FBC860029DF61 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		2C9B4D062C8FCB070029DF61 /* ResellPurpleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResellPurpleButton.swift; sourceTree = "<group>"; };
+		2C9B4D082C8FD8200029DF61 /* LoginViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewModel.swift; sourceTree = "<group>"; };
+		2C9B4D0B2C90EF1D0029DF61 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
+		2C9B4D0D2C90F54D0029DF61 /* ResellLoginGradient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResellLoginGradient.swift; sourceTree = "<group>"; };
+		2C9B4D0F2C90F69C0029DF61 /* UIScreen + Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIScreen + Extensions.swift"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		2C9B4CC42C8FB7B70029DF61 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2C30246F2C90FFB40057D3D9 /* GoogleSignIn in Frameworks */,
+				2C3024712C90FFB40057D3D9 /* GoogleSignInSwift in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2C9B4CD42C8FB7B80029DF61 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2C9B4CDE2C8FB7B80029DF61 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2C9B4CBE2C8FB7B70029DF61 = {
+			isa = PBXGroup;
+			children = (
+				2C9B4CC92C8FB7B70029DF61 /* Resell */,
+				2C9B4CDA2C8FB7B80029DF61 /* ResellTests */,
+				2C9B4CE42C8FB7B80029DF61 /* ResellUITests */,
+				2C9B4CC82C8FB7B70029DF61 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		2C9B4CC82C8FB7B70029DF61 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				2C9B4CC72C8FB7B70029DF61 /* Resell.app */,
+				2C9B4CD72C8FB7B80029DF61 /* ResellTests.xctest */,
+				2C9B4CE12C8FB7B80029DF61 /* ResellUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		2C9B4CC92C8FB7B70029DF61 /* Resell */ = {
+			isa = PBXGroup;
+			children = (
+				2C9B4D0A2C90EF060029DF61 /* Core */,
+				2C9B4CFF2C8FBC860029DF61 /* Info.plist */,
+				2C9B4CCC2C8FB7B70029DF61 /* LoginView.swift */,
+				2C9B4D122C90FE170029DF61 /* ViewModels */,
+				2C9B4D012C8FC7B00029DF61 /* Views */,
+				2C9B4CF62C8FB8450029DF61 /* Utils */,
+				2C9B4CF42C8FB81A0029DF61 /* Resources */,
+				2C9B4CD02C8FB7B80029DF61 /* Preview Content */,
+				2C3024762C9105E60057D3D9 /* GoogleService-Info.plist */,
+			);
+			path = Resell;
+			sourceTree = "<group>";
+		};
+		2C9B4CD02C8FB7B80029DF61 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				2C9B4CD12C8FB7B80029DF61 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		2C9B4CDA2C8FB7B80029DF61 /* ResellTests */ = {
+			isa = PBXGroup;
+			children = (
+				2C9B4CDB2C8FB7B80029DF61 /* ResellTests.swift */,
+			);
+			path = ResellTests;
+			sourceTree = "<group>";
+		};
+		2C9B4CE42C8FB7B80029DF61 /* ResellUITests */ = {
+			isa = PBXGroup;
+			children = (
+				2C9B4CE52C8FB7B80029DF61 /* ResellUITests.swift */,
+				2C9B4CE72C8FB7B80029DF61 /* ResellUITestsLaunchTests.swift */,
+			);
+			path = ResellUITests;
+			sourceTree = "<group>";
+		};
+		2C9B4CF42C8FB81A0029DF61 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				2C9B4CF52C8FB8370029DF61 /* Fonts */,
+				2C9B4CCE2C8FB7B80029DF61 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		2C9B4CF52C8FB8370029DF61 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				2C9B4CFD2C8FBC580029DF61 /* ReemKufi-Regular.ttf */,
+				2C9B4CFB2C8FBC200029DF61 /* Rubik-Regular.ttf */,
+				2C9B4CF92C8FBC180029DF61 /* Rubik-Medium.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
+		2C9B4CF62C8FB8450029DF61 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				2C9B4D002C8FC0570029DF61 /* Extensions */,
+				2C9B4CF72C8FB84F0029DF61 /* Constants.swift */,
+				2C3024722C90FFE60057D3D9 /* Keys.swift */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		2C9B4D002C8FC0570029DF61 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				2C9B4D0F2C90F69C0029DF61 /* UIScreen + Extensions.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		2C9B4D012C8FC7B00029DF61 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				2C9B4D052C8FCAF20029DF61 /* Supporting */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		2C9B4D052C8FCAF20029DF61 /* Supporting */ = {
+			isa = PBXGroup;
+			children = (
+				2C9B4D062C8FCB070029DF61 /* ResellPurpleButton.swift */,
+				2C9B4D0D2C90F54D0029DF61 /* ResellLoginGradient.swift */,
+			);
+			path = Supporting;
+			sourceTree = "<group>";
+		};
+		2C9B4D0A2C90EF060029DF61 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				2C9B4CCA2C8FB7B70029DF61 /* ResellApp.swift */,
+				2C9B4D0B2C90EF1D0029DF61 /* Launch Screen.storyboard */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		2C9B4D122C90FE170029DF61 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				2C9B4D082C8FD8200029DF61 /* LoginViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		2C9B4CC62C8FB7B70029DF61 /* Resell */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2C9B4CEB2C8FB7B80029DF61 /* Build configuration list for PBXNativeTarget "Resell" */;
+			buildPhases = (
+				2C9B4CC32C8FB7B70029DF61 /* Sources */,
+				2C9B4CC42C8FB7B70029DF61 /* Frameworks */,
+				2C9B4CC52C8FB7B70029DF61 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Resell;
+			packageProductDependencies = (
+				2C30246E2C90FFB40057D3D9 /* GoogleSignIn */,
+				2C3024702C90FFB40057D3D9 /* GoogleSignInSwift */,
+			);
+			productName = Resell;
+			productReference = 2C9B4CC72C8FB7B70029DF61 /* Resell.app */;
+			productType = "com.apple.product-type.application";
+		};
+		2C9B4CD62C8FB7B80029DF61 /* ResellTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2C9B4CEE2C8FB7B80029DF61 /* Build configuration list for PBXNativeTarget "ResellTests" */;
+			buildPhases = (
+				2C9B4CD32C8FB7B80029DF61 /* Sources */,
+				2C9B4CD42C8FB7B80029DF61 /* Frameworks */,
+				2C9B4CD52C8FB7B80029DF61 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2C9B4CD92C8FB7B80029DF61 /* PBXTargetDependency */,
+			);
+			name = ResellTests;
+			productName = ResellTests;
+			productReference = 2C9B4CD72C8FB7B80029DF61 /* ResellTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		2C9B4CE02C8FB7B80029DF61 /* ResellUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2C9B4CF12C8FB7B80029DF61 /* Build configuration list for PBXNativeTarget "ResellUITests" */;
+			buildPhases = (
+				2C9B4CDD2C8FB7B80029DF61 /* Sources */,
+				2C9B4CDE2C8FB7B80029DF61 /* Frameworks */,
+				2C9B4CDF2C8FB7B80029DF61 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2C9B4CE32C8FB7B80029DF61 /* PBXTargetDependency */,
+			);
+			name = ResellUITests;
+			productName = ResellUITests;
+			productReference = 2C9B4CE12C8FB7B80029DF61 /* ResellUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2C9B4CBF2C8FB7B70029DF61 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1540;
+				LastUpgradeCheck = 1540;
+				TargetAttributes = {
+					2C9B4CC62C8FB7B70029DF61 = {
+						CreatedOnToolsVersion = 15.4;
+					};
+					2C9B4CD62C8FB7B80029DF61 = {
+						CreatedOnToolsVersion = 15.4;
+						TestTargetID = 2C9B4CC62C8FB7B70029DF61;
+					};
+					2C9B4CE02C8FB7B80029DF61 = {
+						CreatedOnToolsVersion = 15.4;
+						TestTargetID = 2C9B4CC62C8FB7B70029DF61;
+					};
+				};
+			};
+			buildConfigurationList = 2C9B4CC22C8FB7B70029DF61 /* Build configuration list for PBXProject "Resell" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 2C9B4CBE2C8FB7B70029DF61;
+			packageReferences = (
+				2C9B4D112C90FD440029DF61 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
+			productRefGroup = 2C9B4CC82C8FB7B70029DF61 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				2C9B4CC62C8FB7B70029DF61 /* Resell */,
+				2C9B4CD62C8FB7B80029DF61 /* ResellTests */,
+				2C9B4CE02C8FB7B80029DF61 /* ResellUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		2C9B4CC52C8FB7B70029DF61 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2C9B4D0C2C90EF1D0029DF61 /* Launch Screen.storyboard in Resources */,
+				2C3024772C9105E60057D3D9 /* GoogleService-Info.plist in Resources */,
+				2C9B4CFA2C8FBC180029DF61 /* Rubik-Medium.ttf in Resources */,
+				2C9B4CFC2C8FBC200029DF61 /* Rubik-Regular.ttf in Resources */,
+				2C9B4CD22C8FB7B80029DF61 /* Preview Assets.xcassets in Resources */,
+				2C9B4CCF2C8FB7B80029DF61 /* Assets.xcassets in Resources */,
+				2C9B4CFE2C8FBC580029DF61 /* ReemKufi-Regular.ttf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2C9B4CD52C8FB7B80029DF61 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2C9B4CDF2C8FB7B80029DF61 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2C9B4CC32C8FB7B70029DF61 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2C9B4D0E2C90F54D0029DF61 /* ResellLoginGradient.swift in Sources */,
+				2C3024732C90FFE60057D3D9 /* Keys.swift in Sources */,
+				2C9B4D042C8FC8250029DF61 /* LoginView.swift in Sources */,
+				2C9B4CCB2C8FB7B70029DF61 /* ResellApp.swift in Sources */,
+				2C9B4D072C8FCB070029DF61 /* ResellPurpleButton.swift in Sources */,
+				2C9B4D102C90F69C0029DF61 /* UIScreen + Extensions.swift in Sources */,
+				2C9B4D092C8FD8200029DF61 /* LoginViewModel.swift in Sources */,
+				2C9B4CF82C8FB84F0029DF61 /* Constants.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2C9B4CD32C8FB7B80029DF61 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2C9B4CDC2C8FB7B80029DF61 /* ResellTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2C9B4CDD2C8FB7B80029DF61 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2C9B4CE62C8FB7B80029DF61 /* ResellUITests.swift in Sources */,
+				2C9B4CE82C8FB7B80029DF61 /* ResellUITestsLaunchTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		2C9B4CD92C8FB7B80029DF61 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2C9B4CC62C8FB7B70029DF61 /* Resell */;
+			targetProxy = 2C9B4CD82C8FB7B80029DF61 /* PBXContainerItemProxy */;
+		};
+		2C9B4CE32C8FB7B80029DF61 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2C9B4CC62C8FB7B70029DF61 /* Resell */;
+			targetProxy = 2C9B4CE22C8FB7B80029DF61 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		2C9B4CE92C8FB7B80029DF61 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		2C9B4CEA2C8FB7B80029DF61 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		2C9B4CEC2C8FB7B80029DF61 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Resell/Preview Content\"";
+				DEVELOPMENT_TEAM = ZGMCXU7X3U;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Resell/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cornellappdev.Resell;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		2C9B4CED2C8FB7B80029DF61 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Resell/Preview Content\"";
+				DEVELOPMENT_TEAM = ZGMCXU7X3U;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Resell/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cornellappdev.Resell;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		2C9B4CEF2C8FB7B80029DF61 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ZGMCXU7X3U;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cornellappdev.ResellTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Resell.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Resell";
+			};
+			name = Debug;
+		};
+		2C9B4CF02C8FB7B80029DF61 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ZGMCXU7X3U;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cornellappdev.ResellTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Resell.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Resell";
+			};
+			name = Release;
+		};
+		2C9B4CF22C8FB7B80029DF61 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ZGMCXU7X3U;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cornellappdev.ResellUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Resell;
+			};
+			name = Debug;
+		};
+		2C9B4CF32C8FB7B80029DF61 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ZGMCXU7X3U;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cornellappdev.ResellUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Resell;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2C9B4CC22C8FB7B70029DF61 /* Build configuration list for PBXProject "Resell" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2C9B4CE92C8FB7B80029DF61 /* Debug */,
+				2C9B4CEA2C8FB7B80029DF61 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2C9B4CEB2C8FB7B80029DF61 /* Build configuration list for PBXNativeTarget "Resell" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2C9B4CEC2C8FB7B80029DF61 /* Debug */,
+				2C9B4CED2C8FB7B80029DF61 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2C9B4CEE2C8FB7B80029DF61 /* Build configuration list for PBXNativeTarget "ResellTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2C9B4CEF2C8FB7B80029DF61 /* Debug */,
+				2C9B4CF02C8FB7B80029DF61 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2C9B4CF12C8FB7B80029DF61 /* Build configuration list for PBXNativeTarget "ResellUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2C9B4CF22C8FB7B80029DF61 /* Debug */,
+				2C9B4CF32C8FB7B80029DF61 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2C9B4D112C90FD440029DF61 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2C30246E2C90FFB40057D3D9 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2C9B4D112C90FD440029DF61 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		2C3024702C90FFB40057D3D9 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2C9B4D112C90FD440029DF61 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 2C9B4CBF2C8FB7B70029DF61 /* Project object */;
+}
