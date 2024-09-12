@@ -27,9 +27,7 @@ struct ResellPurpleButton: View {
 
     var body: some View {
         VStack {
-            Button {
-                action()
-            } label: {
+            Button(action: action, label: {
                 Text(text)
                     .font(Constants.Fonts.title1)
                     .padding(.horizontal, horizontalPadding)
@@ -37,7 +35,7 @@ struct ResellPurpleButton: View {
                     .background(Constants.Colors.resellPurple)
                     .foregroundStyle(Constants.Colors.white)
                     .clipShape(.capsule)
-            }
+            })
         }
     }
 }

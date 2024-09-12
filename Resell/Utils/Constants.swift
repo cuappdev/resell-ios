@@ -73,4 +73,22 @@ struct Constants {
         static let spacing12: CGFloat = 12.0
         static let spacing8: CGFloat = 8.0
     }
+
+    /// Product filter categories used in Resell's design system
+    static let filters = [
+        FilterCategory(id: 0, title: "Recent"),
+        FilterCategory(id: 1, title: "Clothing"),
+        FilterCategory(id: 2, title: "Books"),
+        FilterCategory(id: 3, title: "School"),
+        FilterCategory(id: 4, title: "Electronics"),
+        FilterCategory(id: 5, title: "Household"),
+        FilterCategory(id: 6, title: "Handmade"),
+        FilterCategory(id: 7, title: "Sports & Outdoors"),
+        FilterCategory(id: 8, title: "Other")
+    ]
+}
+
+struct FilterCategory: Hashable {
+    let id: Int
+    let title: String
 }
