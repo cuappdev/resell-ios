@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-// Custom button for each filter
-struct ResellFilterButton: View {
+/// Custom button for item filters
+struct FilterButton: View {
     let filter: FilterCategory
     let isSelected: Bool
     let action: () -> Void

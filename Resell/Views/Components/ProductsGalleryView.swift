@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/// Reusable gallery view used to display item listings
 struct ProductsGalleryView: View {
 
     // MARK: Properties

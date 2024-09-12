@@ -7,7 +7,8 @@
 
 import SwiftUI
 
-struct ResellLoginGradient: View {
+/// Gradient background for login and launchscreen
+struct LoginGradient: View {
 
     var body: some View {
         HStack(spacing: -30) {

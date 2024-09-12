@@ -7,7 +7,8 @@
 
 import SwiftUI
 
-struct ResellPurpleButton: View {
+/// Reusable purple button
+struct PurpleButton: View {
 
     // MARK: - Properties
 

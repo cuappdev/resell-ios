@@ -22,13 +22,13 @@ struct LoginView: View {
                     .foregroundStyle(Constants.Colors.resellGradient)
                     .multilineTextAlignment(.center)
                 Spacer()
-                ResellPurpleButton(text: "Login with NetID") {
+                PurpleButton(text: "Login with NetID") {
                     viewModel.googleSignIn {
                         userDidLogin = true
                     }
                 }
             }
-            .background(ResellLoginGradient())
+            .background(LoginGradient())
             .sheet(isPresented: $viewModel.didPresentError) {
                 VStack {
                     Text(viewModel.errorText)
@@ -37,7 +37,7 @@ struct LoginView: View {
                         .frame(width: 190)
                         .padding(.top, 48)
                     Spacer()
-                    ResellPurpleButton(text: "Try Again", horizontalPadding: 60) {
+                    PurpleButton(text: "Try Again", horizontalPadding: 60) {
                         viewModel.googleSignIn {
                             userDidLogin = true
                         }

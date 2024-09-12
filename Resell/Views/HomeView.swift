@@ -56,7 +56,7 @@ struct HomeView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack {
                 ForEach(Constants.filters, id: \.id) { filter in
-                    ResellFilterButton(filter: filter, isSelected: viewModel.selectedFilter == filter.title) {
+                    FilterButton(filter: filter, isSelected: viewModel.selectedFilter == filter.title) {
                         viewModel.selectedFilter = filter.title
                     }
                 }
