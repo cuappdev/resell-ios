@@ -12,7 +12,16 @@ struct ResellPurpleButton: View {
     // MARK: - Properties
 
     let text: String
+    let horizontalPadding: CGFloat?
     let action: () -> Void
+
+    // MARK: - Init
+
+    init(text: String, horizontalPadding: CGFloat? = 48, action: @escaping () -> Void) {
+        self.text = text
+        self.horizontalPadding = horizontalPadding
+        self.action = action
+    }
 
     // MARK: - UI
 
@@ -23,7 +32,7 @@ struct ResellPurpleButton: View {
             } label: {
                 Text(text)
                     .font(Constants.Fonts.title1)
-                    .padding(.horizontal, 28)
+                    .padding(.horizontal, horizontalPadding)
                     .padding(.vertical, 14)
                     .background(Constants.Colors.resellPurple)
                     .foregroundStyle(Constants.Colors.white)

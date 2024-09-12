@@ -20,9 +20,9 @@ struct ResellApp: App {
                         // Check if `user` exists; otherwise, do something with `error`
                     }
                 }
-//                .onOpenURL { url in
-//                    GIDSignIn.sharedInstance.handle(url)
-//                }
+                .onOpenURL { url in
+                    GIDSignIn.sharedInstance.handle(url)
+                }
         }
     }
 }

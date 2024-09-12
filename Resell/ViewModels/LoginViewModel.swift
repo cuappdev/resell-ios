@@ -11,6 +11,9 @@ import SwiftUI
 @MainActor
 class LoginViewModel: ObservableObject {
 
+    @Published var didPresentError: Bool = false
+    @Published var errorText: String = ""
+
     func googleSignIn() {
         guard let presentingViewController = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.windows.first?.rootViewController else { return }
 
@@ -22,6 +25,8 @@ class LoginViewModel: ObservableObject {
             guard email.contains("@cornell.edu") else {
                 GIDSignIn.sharedInstance.signOut()
                 print("User is not a cornell student")
+                self.didPresentError = true
+                self.errorText = "Please sign in with a Cornell email"
                 return
             }
         }
