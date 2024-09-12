@@ -8,6 +8,7 @@
 import Foundation
 
 extension Array {
+    
     /// Splits the array into two arrays based on even and odd indices, sorted.
     ///
     /// - Returns: A tuple containing two arrays:

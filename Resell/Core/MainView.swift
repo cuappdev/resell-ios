@@ -15,8 +15,6 @@ struct MainView: View {
     @State var selection = 0
     @StateObject private var viewModel = MainViewModel()
 
-    private let tabItems = ["home", "bookmark", "messages", "user"]
-
     // MARK: - UI
 
     var body: some View {
@@ -25,22 +23,22 @@ struct MainView: View {
                 TabView(selection: $selection) {
                     HomeView()
                         .tabItem {
-                            Image(selection == 0 ? "\(tabItems[0])-selected" : tabItems[0])
+                            TabViewIcon(index: 0, selectionIndex: selection)
                         }.tag(0)
 
                     SavedView()
                         .tabItem {
-                            Image(selection == 1 ? "\(tabItems[1])-selected" : tabItems[1])
+                            TabViewIcon(index: 1, selectionIndex: selection)
                         }.tag(1)
 
                     ChatsView()
                         .tabItem {
-                            Image(selection == 2 ? "\(tabItems[2])-selected" : tabItems[2])
+                            TabViewIcon(index: 2, selectionIndex: selection)
                         }.tag(2)
 
                     ProfileView()
                         .tabItem {
-                            Image(selection == 3 ? "\(tabItems[3])-selected" : tabItems[3])
+                            TabViewIcon(index: 3, selectionIndex: selection)
                         }.tag(3)
                 }
             } else {
