@@ -10,15 +10,6 @@ import SwiftUI
 @MainActor
 class HomeViewModel: ObservableObject {
 
-    @Published var selectedFilters: Set<FilterCategory> = []
-
-    // Toggle the filter in the selectedFilters set
-    func toggleFilter(_ filter: FilterCategory) {
-        if selectedFilters.contains(filter) {
-            selectedFilters.remove(filter)
-        } else {
-            selectedFilters.insert(filter)
-        }
-    }
-
+    @Published var selectedFilter: String = "Recent"
+    
 }

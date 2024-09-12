@@ -13,10 +13,16 @@ struct HomeView: View {
 
     var body: some View {
         NavigationStack {
-            VStack {
+            VStack(spacing: 0) {
                 headerView
                 filtersView
                 ProductsGalleryView(items: [
+                    Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
+                    Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
+                    Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
+                    Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
+                    Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
+                    Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
                     Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
                     Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
                     Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
@@ -44,20 +50,20 @@ struct HomeView: View {
             })
         }
         .padding(.horizontal, 25)
-        .padding(.top, 64)
     }
 
     private var filtersView: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack {
                 ForEach(Constants.filters, id: \.id) { filter in
-                    ResellFilterButton(filter: filter, isSelected: viewModel.selectedFilters.contains(filter)) {
-                        viewModel.toggleFilter(filter)
+                    ResellFilterButton(filter: filter, isSelected: viewModel.selectedFilter == filter.title) {
+                        viewModel.selectedFilter = filter.title
                     }
                 }
             }
             .padding(.leading, 25)
             .padding(.vertical, 1)
+            .padding(.bottom, 12)
         }
     }
 }

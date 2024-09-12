@@ -25,22 +25,22 @@ struct ProductsGalleryView: View {
     // MARK: UI
 
     var body: some View {
-        HStack(alignment: .top, spacing: 20) {
-            LazyVStack(spacing: 20) {
-                ForEach(column1) { item in
-                    ProductGalleryCell(galleryItem: item)
+        ScrollView(.vertical, showsIndicators: true) {
+            HStack(alignment: .top, spacing: 20) {
+                LazyVStack(spacing: 20) {
+                    ForEach(column1) { item in
+                        ProductGalleryCell(galleryItem: item)
+                    }
                 }
-            }
-            .background(.blue)
 
-            LazyVStack(spacing: 20) {
-                ForEach(column2) { item in
-                    ProductGalleryCell(galleryItem: item)
+                LazyVStack(spacing: 20) {
+                    ForEach(column2) { item in
+                        ProductGalleryCell(galleryItem: item)
+                    }
                 }
             }
-            .background(.red)
+            .padding(.horizontal, 24)
         }
-        .padding(.horizontal, 24)
     }
 }
 
@@ -53,19 +53,27 @@ struct ProductGalleryCell: View {
     // MARK: UI
 
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             Image(galleryItem.item.image)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
+                .frame(width: galleryItem.width, height: galleryItem.height)
                 .clipped()
-            Text(galleryItem.item.image)
-                .font(.caption)
-                .padding(.top, 5)
+            HStack {
+                Text(galleryItem.item.title)
+                    .font(Constants.Fonts.title3)
+                Spacer()
+                Text(galleryItem.item.price)
+                    .font(Constants.Fonts.title4)
+            }
+            .padding(8)
         }
-        .background(.green)
-        .frame(width: galleryItem.width, height: galleryItem.height)
         .clipped()
-        .cornerRadius(8)
+        .clipShape(.rect(cornerRadius: 8))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Constants.Colors.stroke, lineWidth: 1)
+        }
     }
 }
 
