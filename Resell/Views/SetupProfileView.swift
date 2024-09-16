@@ -12,6 +12,7 @@ struct SetupProfileView: View {
 
     // MARK: - Properties
 
+    @State private var didShowWebView: Bool = false
     @StateObject private var viewModel = SetupProfileViewModel()
 
     // MARK: - UI
@@ -36,6 +37,11 @@ struct SetupProfileView: View {
             Spacer()
         }
         .padding(.horizontal, 24)
+        .sheet(isPresented: $didShowWebView) {
+            WebView(url: URL(string: "https://www.cornellappdev.com/license/resell")!)
+                .edgesIgnoringSafeArea(.all)
+        }
+
     }
 
     private var profileImageView: some View {
@@ -78,10 +84,8 @@ struct SetupProfileView: View {
                 .font(Constants.Fonts.title4)
                 .padding(.leading, 16)
 
-            Button {
-                print("HMM")
-            } label: {
-                Text(" End User License Agreement")
+            Button { didShowWebView = true } label: {
+                Text(UIScreen.width < 380 ? " EULA" : " End User License Agreement")
                     .font(Constants.Fonts.title4)
                     .foregroundStyle(Constants.Colors.resellPurple)
                     .underline()
