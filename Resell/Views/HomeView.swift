@@ -15,7 +15,9 @@ struct HomeView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 headerView
+
                 filtersView
+
                 ProductsGalleryView(items: [
                     Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
                     Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
@@ -39,7 +41,9 @@ struct HomeView: View {
             Text("resell")
                 .font(Constants.Fonts.resellHeader)
                 .foregroundStyle(Constants.Colors.resellGradient)
+
             Spacer()
+
             Button(action: {
                 // Search Endpoint
             }, label: {

@@ -17,12 +17,15 @@ struct LoginView: View {
             VStack {
                 Image("resell")
                     .padding(.top, 180)
+
                 Text("resell")
                     .font(Constants.Fonts.resellLogo)
                     .foregroundStyle(Constants.Colors.resellGradient)
                     .multilineTextAlignment(.center)
+                
                 Spacer()
-                PurpleButton(text: "Login with NetID") {
+
+                PurpleButton(text: "Login with NetID", horizontalPadding: 28) {
                     viewModel.googleSignIn {
                         userDidLogin = true
                     }
@@ -36,7 +39,9 @@ struct LoginView: View {
                         .multilineTextAlignment(.center)
                         .frame(width: 190)
                         .padding(.top, 48)
+
                     Spacer()
+
                     PurpleButton(text: "Try Again", horizontalPadding: 60) {
                         viewModel.googleSignIn {
                             userDidLogin = true
@@ -45,7 +50,6 @@ struct LoginView: View {
                     }
                 }
                 .presentationDetents([.height(200)])
-                .presentationCornerRadius(40)
                 .presentationDragIndicator(.visible)
             }
         }

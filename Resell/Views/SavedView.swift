@@ -25,7 +25,9 @@ struct SavedView: View {
             Text("Saved")
                 .font(Constants.Fonts.h1)
                 .foregroundStyle(Constants.Colors.black)
+
             Spacer()
+            
             Button(action: {
                 // Search Endpoint
             }, label: {
