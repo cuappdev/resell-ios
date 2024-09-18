@@ -12,7 +12,7 @@ import SwiftUI
 struct ResellApp: App {
     var body: some Scene {
         WindowGroup {
-            SetupProfileView()
+            MainView()
         }
     }
 }

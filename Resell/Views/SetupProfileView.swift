@@ -17,27 +17,26 @@ struct SetupProfileView: View {
     // MARK: - UI
 
     var body: some View {
-        VStack {
-            Text("Setup your profile")
-                .font(Constants.Fonts.h3)
-                .padding(.bottom, 40)
+        NavigationStack {
+            VStack {
+                Text("Setup your profile")
+                    .font(Constants.Fonts.h3)
+                    .padding(.bottom, 40)
 
-            profileImageView
-                .padding(.bottom, 40)
+                profileImageView
+                    .padding(.bottom, 40)
 
-            LabeledTextField(label: "Username", text: $viewModel.username)
-                .padding(.bottom, 32)
+                LabeledTextField(label: "Username", text: $viewModel.username)
+                    .padding(.bottom, 32)
 
-            LabeledTextField(label: "Bio", maxCharacters: 255, frameHeight: 83, isMultiLine: true, text: $viewModel.bio)
-                .padding(.bottom, 24)
+                LabeledTextField(label: "Bio", maxCharacters: 255, frameHeight: 83, isMultiLine: true, text: $viewModel.bio)
+                    .padding(.bottom, 24)
 
-            eulaView
+                eulaView
 
-            Spacer()
+                Spacer()
 
-            PurpleButton(isActive: viewModel.checkInputIsValid(), text: "Next", horizontalPadding: 80) {
-                print("NUN")
-                print("COOL")
+                NavigationPurpleButton(isActive: viewModel.checkInputIsValid(), text: "Next", horizontalPadding: 80, destination: VenmoView())
             }
         }
         .padding(.horizontal, 24)
