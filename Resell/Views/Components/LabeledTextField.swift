@@ -18,7 +18,7 @@ struct LabeledTextField: View {
     var frameHeight: CGFloat = 40
     var isMultiLine: Bool = false
 
-    @State private var text: String = ""
+    @Binding var text: String
 
     // MARK: - UI
 

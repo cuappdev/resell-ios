@@ -25,18 +25,18 @@ struct SetupProfileView: View {
             profileImageView
                 .padding(.bottom, 40)
 
-            LabeledTextField(label: "Username")
+            LabeledTextField(label: "Username", text: $viewModel.username)
                 .padding(.bottom, 32)
 
-            LabeledTextField(label: "Bio", maxCharacters: 255, frameHeight: 83, isMultiLine: true)
+            LabeledTextField(label: "Bio", maxCharacters: 255, frameHeight: 83, isMultiLine: true, text: $viewModel.bio)
                 .padding(.bottom, 24)
 
             eulaView
 
             Spacer()
 
-            PurpleButton(isActive: viewModel.inputIsValid, text: "Next", horizontalPadding: 80) {
-                viewModel.inputIsValid = true
+            PurpleButton(isActive: viewModel.checkInputIsValid(), text: "Next", horizontalPadding: 80) {
+                print("NUN")
                 print("COOL")
             }
         }

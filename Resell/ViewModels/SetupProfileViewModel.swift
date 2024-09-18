@@ -13,7 +13,9 @@ class SetupProfileViewModel: ObservableObject {
 
     @Published var didAgreeWithEULA: Bool = false
     @Published var didShowWebView: Bool = false
-    @Published var inputIsValid: Bool = false
+
+    @Published var username: String = ""
+    @Published var bio: String = ""
 
     @Published var imageSelection: PhotosPickerItem? = nil {
         didSet {
@@ -24,6 +26,10 @@ class SetupProfileViewModel: ObservableObject {
     }
 
     var image: Image = Image("emptyProfile")
+
+    func checkInputIsValid() -> Bool {
+        return !(username.isEmpty || bio.isEmpty) && didAgreeWithEULA
+    }
 
     private func loadTransferable(from imageSelection: PhotosPickerItem) {
         imageSelection.loadTransferable(type: Image.self) { result in
