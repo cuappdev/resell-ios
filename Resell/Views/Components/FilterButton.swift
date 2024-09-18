@@ -9,9 +9,14 @@ import SwiftUI
 
 /// Custom button for item filters
 struct FilterButton: View {
+    
+    // MARK: - Properties
+
     let filter: FilterCategory
     let isSelected: Bool
     let action: () -> Void
+
+    // MARK: - UI
 
     var body: some View {
         Button(action: action, label: {

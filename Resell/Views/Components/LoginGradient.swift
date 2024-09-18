@@ -10,6 +10,8 @@ import SwiftUI
 /// Gradient background for login and launchscreen
 struct LoginGradient: View {
 
+    // MARK: - UI
+    
     var body: some View {
         HStack(spacing: -30) {
             Ellipse()

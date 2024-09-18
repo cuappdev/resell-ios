@@ -11,11 +11,12 @@ import SwiftUI
 struct LabeledTextField: View {
 
     // MARK: - Properties
-    
-    var frameHeight: CGFloat = 40
-    var label: String
-    var isMultiLine: Bool = false
+
+    let label: String
+
     var maxCharacters: Int?
+    var frameHeight: CGFloat = 40
+    var isMultiLine: Bool = false
 
     @State private var text: String = ""
 
@@ -40,11 +41,5 @@ struct LabeledTextField: View {
                     }
                 }
         }
-    }
-}
-
-struct LabeledTextField_Previews: PreviewProvider {
-    static var previews: some View {
-        LabeledTextField(frameHeight: 40, label: "Label", maxCharacters: 100)
     }
 }

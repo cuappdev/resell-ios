@@ -12,7 +12,6 @@ struct SetupProfileView: View {
 
     // MARK: - Properties
 
-    @State private var didShowWebView: Bool = false
     @StateObject private var viewModel = SetupProfileViewModel()
 
     // MARK: - UI
@@ -29,15 +28,20 @@ struct SetupProfileView: View {
             LabeledTextField(label: "Username")
                 .padding(.bottom, 32)
 
-            LabeledTextField(frameHeight: 83, label: "Bio",isMultiLine: true, maxCharacters: 255)
+            LabeledTextField(label: "Bio", maxCharacters: 255, frameHeight: 83, isMultiLine: true)
                 .padding(.bottom, 24)
 
             eulaView
 
             Spacer()
+
+            PurpleButton(isActive: viewModel.inputIsValid, text: "Next", horizontalPadding: 80) {
+                viewModel.inputIsValid = true
+                print("COOL")
+            }
         }
         .padding(.horizontal, 24)
-        .sheet(isPresented: $didShowWebView) {
+        .sheet(isPresented: $viewModel.didShowWebView) {
             WebView(url: URL(string: "https://www.cornellappdev.com/license/resell")!)
                 .edgesIgnoringSafeArea(.all)
         }
@@ -84,7 +88,7 @@ struct SetupProfileView: View {
                 .font(Constants.Fonts.title4)
                 .padding(.leading, 16)
 
-            Button { didShowWebView = true } label: {
+            Button { viewModel.didShowWebView = true } label: {
                 Text(UIScreen.width < 380 ? " EULA" : " End User License Agreement")
                     .font(Constants.Fonts.title4)
                     .foregroundStyle(Constants.Colors.resellPurple)

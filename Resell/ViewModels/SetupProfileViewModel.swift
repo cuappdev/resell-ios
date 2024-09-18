@@ -12,7 +12,9 @@ import SwiftUI
 class SetupProfileViewModel: ObservableObject {
 
     @Published var didAgreeWithEULA: Bool = false
-    @Published var image: Image = Image("emptyProfile")
+    @Published var didShowWebView: Bool = false
+    @Published var inputIsValid: Bool = false
+
     @Published var imageSelection: PhotosPickerItem? = nil {
         didSet {
             if let imageSelection {
@@ -20,6 +22,8 @@ class SetupProfileViewModel: ObservableObject {
             }
         }
     }
+
+    var image: Image = Image("emptyProfile")
 
     private func loadTransferable(from imageSelection: PhotosPickerItem) {
         imageSelection.loadTransferable(type: Image.self) { result in

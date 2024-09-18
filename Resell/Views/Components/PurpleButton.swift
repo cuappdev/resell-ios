@@ -12,28 +12,22 @@ struct PurpleButton: View {
 
     // MARK: - Properties
 
+    var isActive: Bool = false
+
     let text: String
-    let horizontalPadding: CGFloat?
+    var horizontalPadding: CGFloat = 48
     let action: () -> Void
-
-    // MARK: - Init
-
-    init(text: String, horizontalPadding: CGFloat? = 48, action: @escaping () -> Void) {
-        self.text = text
-        self.horizontalPadding = horizontalPadding
-        self.action = action
-    }
 
     // MARK: - UI
 
     var body: some View {
         VStack {
-            Button(action: action, label: {
+            Button(action: { if isActive { action() } }, label: {
                 Text(text)
                     .font(Constants.Fonts.title1)
                     .padding(.horizontal, horizontalPadding)
                     .padding(.vertical, 14)
-                    .background(Constants.Colors.resellPurple)
+                    .background(isActive ? Constants.Colors.resellPurple : Constants.Colors.resellPurple.opacity(0.4))
                     .foregroundStyle(Constants.Colors.white)
                     .clipShape(.capsule)
             })
