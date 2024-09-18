@@ -13,7 +13,6 @@ class SetupProfileViewModel: ObservableObject {
 
     @Published var didAgreeWithEULA: Bool = false
     @Published var didShowWebView: Bool = false
-
     @Published var username: String = ""
     @Published var bio: String = ""
 

@@ -13,6 +13,7 @@ struct ResellApp: App {
     var body: some Scene {
         WindowGroup {
             MainView()
+//            SetupProfileView()
         }
     }
 }

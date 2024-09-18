@@ -41,17 +41,21 @@ struct MainView: View {
                             TabViewIcon(index: 3, selectionIndex: selection)
                         }.tag(3)
                 }
+                .transition(.opacity)
+                .animation(.easeInOut, value: viewModel.userDidLogin)
             } else {
                 LoginView(userDidLogin: $viewModel.userDidLogin)
+                    .transition(.opacity)
+                    .animation(.easeInOut, value: viewModel.userDidLogin)
             }
         }
         .onAppear {
             let signInConfig = GIDConfiguration.init(clientID: Keys.googleClientID)
             GIDSignIn.sharedInstance.configuration = signInConfig
             GIDSignIn.sharedInstance.restorePreviousSignIn { user, error in
-                if let user {
-                    viewModel.userDidLogin = true
-                }
+//                if let user {
+//                    viewModel.userDidLogin = true
+//                }
                 // Check if `user` exists; otherwise, do something with `error`
             }
         }

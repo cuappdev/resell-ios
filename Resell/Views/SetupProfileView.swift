@@ -12,19 +12,17 @@ struct SetupProfileView: View {
 
     // MARK: - Properties
 
+    @Environment(\.dismiss) var dismiss
     @StateObject private var viewModel = SetupProfileViewModel()
+    @Binding var userDidLogin: Bool
 
     // MARK: - UI
 
     var body: some View {
         NavigationStack {
             VStack {
-                Text("Setup your profile")
-                    .font(Constants.Fonts.h3)
-                    .padding(.bottom, 40)
-
                 profileImageView
-                    .padding(.bottom, 40)
+                    .padding(.vertical, 40)
 
                 LabeledTextField(label: "Username", text: $viewModel.username)
                     .padding(.bottom, 32)
@@ -36,13 +34,24 @@ struct SetupProfileView: View {
 
                 Spacer()
 
-                NavigationPurpleButton(isActive: viewModel.checkInputIsValid(), text: "Next", horizontalPadding: 80, destination: VenmoView())
+                NavigationPurpleButton(isActive: viewModel.checkInputIsValid(), text: "Next", horizontalPadding: 80, destination: VenmoView(userDidLogin: $userDidLogin))
             }
         }
         .padding(.horizontal, 24)
         .sheet(isPresented: $viewModel.didShowWebView) {
             WebView(url: URL(string: "https://www.cornellappdev.com/license/resell")!)
                 .edgesIgnoringSafeArea(.all)
+        }
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                BackButton(dismiss: self.dismiss)
+            }
+
+            ToolbarItem(placement: .principal) {
+                Text("Setup your profile")
+                    .font(Constants.Fonts.h3)
+            }
         }
 
     }
@@ -54,6 +63,7 @@ struct SetupProfileView: View {
                 .frame(width: 132, height: 132)
                 .background(Constants.Colors.stroke)
                 .clipShape(.circle)
+
             PhotosPicker(selection: $viewModel.imageSelection, matching: .images, photoLibrary: .shared()) {
                 Image("pencil.circle")
                     .shadow(radius: 2)
@@ -95,9 +105,4 @@ struct SetupProfileView: View {
             }
         }
     }
-}
-
-
-#Preview {
-    SetupProfileView()
 }

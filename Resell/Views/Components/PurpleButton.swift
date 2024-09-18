@@ -12,7 +12,7 @@ struct PurpleButton: View {
 
     // MARK: - Properties
 
-    var isActive: Bool = false
+    var isActive: Bool = true
 
     let text: String
     var horizontalPadding: CGFloat = 48
@@ -45,7 +45,7 @@ struct NavigationPurpleButton<Destination: View>: View {
 
     // MARK: - Properties
 
-    var isActive: Bool = false
+    var isActive: Bool = true
     let text: String
     var horizontalPadding: CGFloat = 48
     let destination: Destination

@@ -14,21 +14,25 @@ struct LoginView: View {
 
     var body: some View {
         NavigationView {
-            VStack {
-                Image("resell")
-                    .padding(.top, 180)
+            NavigationStack {
+                VStack {
+                    Image("resell")
+                        .padding(.top, 180)
 
-                Text("resell")
-                    .font(Constants.Fonts.resellLogo)
-                    .foregroundStyle(Constants.Colors.resellGradient)
-                    .multilineTextAlignment(.center)
-                
-                Spacer()
+                    Text("resell")
+                        .font(Constants.Fonts.resellLogo)
+                        .foregroundStyle(Constants.Colors.resellGradient)
+                        .multilineTextAlignment(.center)
 
-                PurpleButton(text: "Login with NetID", horizontalPadding: 28) {
-                    viewModel.googleSignIn {
-                        userDidLogin = true
-                    }
+                    Spacer()
+
+//                    PurpleButton(text: "Login with NetID", horizontalPadding: 28) {
+//                        viewModel.googleSignIn {
+//                            userDidLogin = true
+//                        }
+//                    }
+
+                    NavigationPurpleButton(text: "Login with NetID", horizontalPadding: 28, destination: SetupProfileView(userDidLogin: $userDidLogin))
                 }
             }
             .background(LoginGradient())
