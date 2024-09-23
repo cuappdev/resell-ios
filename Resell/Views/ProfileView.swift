@@ -45,10 +45,36 @@ struct ProfileView: View {
     }
 
     private var profileImageView: some View {
-        Image(viewModel.user?.profile ?? "justin")
-            .resizable()
-            .frame(width: 90, height: 90)
-            .clipShape(.circle)
+        ZStack(alignment: .top) {
+            HStack {
+                Button(action: {
+                    // TODO: Implement Settings
+                }, label: {
+                    Image("settings")
+                        .resizable()
+                        .frame(width: 24, height: 24)
+                        .foregroundStyle(Constants.Colors.black)
+                })
+
+                Spacer()
+
+                Button(action: {
+                    // TODO: Implement Search
+                }, label: {
+                    Image(systemName: "magnifyingglass")
+                        .resizable()
+                        .frame(width: 24, height: 24)
+                        .foregroundStyle(Constants.Colors.black)
+                })
+            }
+            .padding(.horizontal, 24)
+
+            Image(viewModel.user?.profile ?? "justin")
+                .resizable()
+                .frame(width: 90, height: 90)
+                .clipShape(.circle)
+        }
+
     }
 
     private var profileTabsView: some View {
