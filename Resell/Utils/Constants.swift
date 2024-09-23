@@ -68,10 +68,11 @@ struct Constants {
     enum Spacing {
         static let spacing64: CGFloat = 64.0
         static let spacing36: CGFloat = 36.0
-        static let spacing24: CGFloat = 24.0
         static let spacing16: CGFloat = 16.0
         static let spacing12: CGFloat = 12.0
         static let spacing8: CGFloat = 8.0
+
+        static let horizontalPadding: CGFloat = 24.0
     }
 
     /// Product filter categories used in Resell's design system

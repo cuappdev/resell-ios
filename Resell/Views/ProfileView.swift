@@ -42,6 +42,10 @@ struct ProfileView: View {
                 ProductsGalleryView(items: Constants.dummyItemsData)
             }
         }
+        .onChange(of: viewModel.selectedTab) { _ in
+            viewModel.updateItemsGallery()
+        }
+        
     }
 
     private var profileImageView: some View {
@@ -50,10 +54,7 @@ struct ProfileView: View {
                 NavigationLink {
                     SettingsView()
                 } label: {
-                    Image("settings")
-                        .resizable()
-                        .frame(width: 24, height: 24)
-                        .foregroundStyle(Constants.Colors.black)
+                    Icon(image: "settings")
                 }
 
                 Spacer()
@@ -61,13 +62,10 @@ struct ProfileView: View {
                 Button(action: {
                     // TODO: Implement Search
                 }, label: {
-                    Image(systemName: "magnifyingglass")
-                        .resizable()
-                        .frame(width: 24, height: 24)
-                        .foregroundStyle(Constants.Colors.black)
+                    Icon(image: "search")
                 })
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, Constants.Spacing.horizontalPadding)
 
             Image(viewModel.user?.profile ?? "justin")
                 .resizable()
@@ -79,43 +77,28 @@ struct ProfileView: View {
 
     private var profileTabsView: some View {
         HStack(spacing: 0) {
-            VStack {
-                Image("listing")
-                    .resizable()
-                    .frame(width: 24, height: 24)
-                    .foregroundStyle(Constants.Colors.black)
-
-                Rectangle()
-                    .foregroundStyle(Constants.Colors.black)
-                    .frame(width: UIScreen.width / 3, height: 1)
-            }
-
-            VStack {
-                Image("archive")
-                    .resizable()
-                    .frame(width: 24, height: 24)
-                    .foregroundStyle(Constants.Colors.inactiveGray)
-
-                Rectangle()
-                    .foregroundStyle(Constants.Colors.inactiveGray)
-                    .frame(width: UIScreen.width / 3, height: 1)
-            }
-
-            VStack {
-                Image("wishlist")
-                    .resizable()
-                    .frame(width: 24, height: 24)
-                    .foregroundStyle(Constants.Colors.inactiveGray)
-
-                Rectangle()
-                    .foregroundStyle(Constants.Colors.inactiveGray)
-                    .frame(width: UIScreen.width / 3, height: 1)
-            }
-
-
+            tabButton(for: .listing)
+            tabButton(for: .archive)
+            tabButton(for: .wishlist)
         }
+        .padding()
     }
 
+    private func tabButton(for tab: ProfileViewModel.Tab) -> some View {
+        VStack {
+            Icon(image: tab.rawValue)
+                .foregroundStyle(viewModel.selectedTab == tab ? Constants.Colors.black : Constants.Colors.inactiveGray)
+
+            Rectangle()
+                .foregroundStyle(viewModel.selectedTab == tab ? Constants.Colors.black : Constants.Colors.inactiveGray)
+                .frame(width: UIScreen.width / 3, height: 1)
+        }
+        .background(Constants.Colors.white)
+        .onTapGesture {
+            viewModel.selectedTab = tab
+        }
+    }
+    
 }
 
 #Preview {

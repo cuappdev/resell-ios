@@ -27,4 +27,5 @@ struct LoginGradient: View {
         }
         .padding(.top, UIScreen.height * 0.75)
     }
+    
 }

@@ -38,6 +38,7 @@ struct PurpleButton: View {
             .foregroundStyle(Constants.Colors.white)
             .clipShape(.capsule)
     }
+
 }
 
 /// Reusable purple button that works as a NavigationLink
@@ -69,5 +70,6 @@ struct NavigationPurpleButton<Destination: View>: View {
             .foregroundColor(Constants.Colors.white)
             .clipShape(Capsule())
     }
+    
 }
 

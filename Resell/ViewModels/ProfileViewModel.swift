@@ -19,7 +19,27 @@ struct DummyUser {
 
 @MainActor
 class ProfileViewModel: ObservableObject {
-    
+
+    @Published var selectedTab: Tab = .listing
     @Published var user: DummyUser? = DummyUser(name: "Justin", username: "DJBustin", profile: "justin", bio: "Follow me at @thiscooking_g")
-    
+
+    enum Tab: String {
+        case listing, archive, wishlist
+    }
+
+    func updateItemsGallery() {
+        // TODO: Implement Filtering for Profile Tabs
+        switch selectedTab {
+        case .listing:
+            print("List")
+            return
+        case .archive:
+            print("Arch")
+            return
+        case .wishlist:
+            print("Wish")
+            return
+        }
+    }
+
 }

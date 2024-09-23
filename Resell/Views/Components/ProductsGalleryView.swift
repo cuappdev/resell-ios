@@ -40,9 +40,10 @@ struct ProductsGalleryView: View {
                     }
                 }
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, Constants.Spacing.horizontalPadding)
         }
     }
+
 }
 
 struct ProductGalleryCell: View {
@@ -76,6 +77,7 @@ struct ProductGalleryCell: View {
                 .stroke(Constants.Colors.stroke, lineWidth: 1)
         }
     }
+
 }
 
 struct ProductGallery: Identifiable {
@@ -101,4 +103,5 @@ struct ProductGallery: Identifiable {
         self.width = (UIScreen.width - 68) / 2
         self.height = width / imageRatio
     }
+    
 }

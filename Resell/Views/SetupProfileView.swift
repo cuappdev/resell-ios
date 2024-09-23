@@ -39,7 +39,7 @@ struct SetupProfileView: View {
             .background(Constants.Colors.white)
             .endEditingOnTap()
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, Constants.Spacing.horizontalPadding)
         .sheet(isPresented: $viewModel.didShowWebView) {
             WebView(url: URL(string: "https://www.cornellappdev.com/license/resell")!)
                 .edgesIgnoringSafeArea(.all)

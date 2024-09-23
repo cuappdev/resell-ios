@@ -29,12 +29,9 @@ struct SavedView: View {
             Spacer()
             
             Button(action: {
-                // Search Endpoint
+                //TODO: Search Endpoint
             }, label: {
-                Image(systemName: "magnifyingglass")
-                    .resizable()
-                    .frame(width: 24, height: 24)
-                    .foregroundStyle(Constants.Colors.black)
+                Icon(image: "search")
             })
         }
         .padding(.horizontal, 25)

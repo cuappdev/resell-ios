@@ -50,7 +50,7 @@ struct VenmoView: View {
             .background(Constants.Colors.white)
             .endEditingOnTap()
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, Constants.Spacing.horizontalPadding)
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
