@@ -14,4 +14,5 @@ extension String {
 
         return cleanedString
     }
+    
 }

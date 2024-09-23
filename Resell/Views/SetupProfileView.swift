@@ -36,6 +36,8 @@ struct SetupProfileView: View {
 
                 NavigationPurpleButton(isActive: viewModel.checkInputIsValid(), text: "Next", horizontalPadding: 80, destination: VenmoView(userDidLogin: $userDidLogin))
             }
+            .background(Constants.Colors.white)
+            .endEditingOnTap()
         }
         .padding(.horizontal, 24)
         .sheet(isPresented: $viewModel.didShowWebView) {

@@ -28,14 +28,27 @@ struct VenmoView: View {
                 LabeledTextField(label: "Venmo Handle", text: $venmoHandle)
                     .padding(.top, 46)
 
-                PurpleButton(text: "Continue") {
+                Spacer()
+
+                PurpleButton(isActive: !venmoHandle.cleaned().isEmpty,text: "Continue") {
                     withAnimation {
                         userDidLogin = true
                     }
                 }
 
-                Spacer()
+                Button(action: {
+                    withAnimation {
+                        userDidLogin = true
+                    }
+                }, label: {
+                    Text("Skip")
+                        .font(Constants.Fonts.title1)
+                        .foregroundStyle(Constants.Colors.resellPurple)
+                        .padding(.top, 14)
+                })
             }
+            .background(Constants.Colors.white)
+            .endEditingOnTap()
         }
         .padding(.horizontal, 24)
         .navigationBarBackButtonHidden(true)

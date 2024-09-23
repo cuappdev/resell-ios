@@ -27,7 +27,7 @@ class SetupProfileViewModel: ObservableObject {
     var image: Image = Image("emptyProfile")
 
     func checkInputIsValid() -> Bool {
-        return !(username.isEmpty || bio.isEmpty) && didAgreeWithEULA
+        return !(username.cleaned().isEmpty || bio.cleaned().isEmpty) && didAgreeWithEULA
     }
 
     private func loadTransferable(from imageSelection: PhotosPickerItem) {

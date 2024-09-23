@@ -9,8 +9,10 @@ import SwiftUI
 import UIKit
 
 extension UIImage {
+
     var aspectRatio: CGFloat {
         return size.width / size.height
     }
+    
 }
 
