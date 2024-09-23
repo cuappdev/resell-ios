@@ -86,6 +86,21 @@ struct Constants {
         FilterCategory(id: 7, title: "Sports & Outdoors"),
         FilterCategory(id: 8, title: "Other")
     ]
+
+    static let dummyItemsData: [Item] = [
+        Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
+    ]
 }
 
 struct FilterCategory: Hashable {

@@ -12,20 +12,7 @@ class HomeViewModel: ObservableObject {
 
     static let shared = HomeViewModel()
 
-    @Published var allItems: [Item] = [
-        Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
-    ]
+    @Published var allItems: [Item] = Constants.dummyItemsData
 
     @Published var savedItems: [Item] = [
         Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),

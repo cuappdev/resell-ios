@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2C18FFE42CA1322300564577 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C18FFE32CA1322300564577 /* ProfileViewModel.swift */; };
 		2C30246F2C90FFB40057D3D9 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 2C30246E2C90FFB40057D3D9 /* GoogleSignIn */; };
 		2C3024712C90FFB40057D3D9 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 2C3024702C90FFB40057D3D9 /* GoogleSignInSwift */; };
 		2C3024732C90FFE60057D3D9 /* Keys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C3024722C90FFE60057D3D9 /* Keys.swift */; };
@@ -69,6 +70,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		2C18FFE32CA1322300564577 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
 		2C3024722C90FFE60057D3D9 /* Keys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keys.swift; sourceTree = "<group>"; };
 		2C3024842C9221940057D3D9 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		2C4DD9782C98CC410055D0AB /* SetupProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupProfileView.swift; sourceTree = "<group>"; };
@@ -307,6 +309,7 @@
 				2C9337472C92AAEE00818C8E /* HomeViewModel.swift */,
 				2C9B4D082C8FD8200029DF61 /* LoginViewModel.swift */,
 				2C52E4F42C926FDA0042312C /* MainViewModel.swift */,
+				2C18FFE32CA1322300564577 /* ProfileViewModel.swift */,
 				2C4DD97C2C98D45B0055D0AB /* SetupProfileViewModel.swift */,
 			);
 			path = ViewModels;
@@ -466,6 +469,7 @@
 				2C9337462C92A66C00818C8E /* FilterButton.swift in Sources */,
 				2C9B4D042C8FC8250029DF61 /* LoginView.swift in Sources */,
 				2C93374C2C92B6A500818C8E /* UIImage + Extensions.swift in Sources */,
+				2C18FFE42CA1322300564577 /* ProfileViewModel.swift in Sources */,
 				2C9B4CCB2C8FB7B70029DF61 /* ResellApp.swift in Sources */,
 				2C4DD97D2C98D45B0055D0AB /* SetupProfileViewModel.swift in Sources */,
 				2C9B4D072C8FCB070029DF61 /* PurpleButton.swift in Sources */,
