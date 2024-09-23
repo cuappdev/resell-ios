@@ -34,8 +34,8 @@ struct LoginView: View {
 
                     NavigationPurpleButton(text: "Login with NetID", horizontalPadding: 28, destination: SetupProfileView(userDidLogin: $userDidLogin))
                 }
+                .background(LoginGradient())
             }
-            .background(LoginGradient())
             .sheet(isPresented: $viewModel.didPresentError) {
                 VStack {
                     Text(viewModel.errorText)
