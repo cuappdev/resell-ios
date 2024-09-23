@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2C18FFE42CA1322300564577 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C18FFE32CA1322300564577 /* ProfileViewModel.swift */; };
+		2C18FFE62CA139D500564577 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C18FFE52CA139D500564577 /* SettingsView.swift */; };
 		2C30246F2C90FFB40057D3D9 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 2C30246E2C90FFB40057D3D9 /* GoogleSignIn */; };
 		2C3024712C90FFB40057D3D9 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 2C3024702C90FFB40057D3D9 /* GoogleSignInSwift */; };
 		2C3024732C90FFE60057D3D9 /* Keys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C3024722C90FFE60057D3D9 /* Keys.swift */; };
@@ -71,6 +72,7 @@
 
 /* Begin PBXFileReference section */
 		2C18FFE32CA1322300564577 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
+		2C18FFE52CA139D500564577 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		2C3024722C90FFE60057D3D9 /* Keys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keys.swift; sourceTree = "<group>"; };
 		2C3024842C9221940057D3D9 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		2C4DD9782C98CC410055D0AB /* SetupProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupProfileView.swift; sourceTree = "<group>"; };
@@ -272,6 +274,7 @@
 				2C52E4F22C926CFE0042312C /* MainView.swift */,
 				2C9337552C935CB600818C8E /* ProfileView.swift */,
 				2C9337512C935C8100818C8E /* SavedView.swift */,
+				2C18FFE52CA139D500564577 /* SettingsView.swift */,
 				2C4DD9782C98CC410055D0AB /* SetupProfileView.swift */,
 				2C4DD97A2C98CC4D0055D0AB /* VenmoView.swift */,
 				2C9B4D052C8FCAF20029DF61 /* Components */,
@@ -482,6 +485,7 @@
 				2C9B4D092C8FD8200029DF61 /* LoginViewModel.swift in Sources */,
 				2C9337522C935C8100818C8E /* SavedView.swift in Sources */,
 				2C4DD9812C98DC2D0055D0AB /* LabeledTextField.swift in Sources */,
+				2C18FFE62CA139D500564577 /* SettingsView.swift in Sources */,
 				2C9B4CF82C8FB84F0029DF61 /* Constants.swift in Sources */,
 				2C93375A2C93667600818C8E /* TabViewIcon.swift in Sources */,
 				2C93374A2C92AD2D00818C8E /* ProductsGalleryView.swift in Sources */,

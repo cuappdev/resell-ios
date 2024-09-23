@@ -47,14 +47,14 @@ struct ProfileView: View {
     private var profileImageView: some View {
         ZStack(alignment: .top) {
             HStack {
-                Button(action: {
-                    // TODO: Implement Settings
-                }, label: {
+                NavigationLink {
+                    SettingsView()
+                } label: {
                     Image("settings")
                         .resizable()
                         .frame(width: 24, height: 24)
                         .foregroundStyle(Constants.Colors.black)
-                })
+                }
 
                 Spacer()
 
@@ -100,7 +100,7 @@ struct ProfileView: View {
                     .foregroundStyle(Constants.Colors.inactiveGray)
                     .frame(width: UIScreen.width / 3, height: 1)
             }
-            
+
             VStack {
                 Image("wishlist")
                     .resizable()
