@@ -13,13 +13,14 @@ struct SettingsView: View {
     
     @Environment(\.dismiss) var dismiss
     @StateObject private var viewModel = SettingsViewModel()
+    var isAccountSettings: Bool = false
 
     // MARK: - UI
     
     var body: some View {
         NavigationStack {
             VStack {
-                ForEach(viewModel.settings, id: \.id) { setting in
+                ForEach(isAccountSettings ? viewModel.accountSettings : viewModel.settings, id: \.id) { setting in
                     NavigationLink(destination: setting.destination) {
                         settingsRow(item: setting)
                     }
@@ -36,7 +37,7 @@ struct SettingsView: View {
             }
             
             ToolbarItem(placement: .principal) {
-                Text("Settings")
+                Text(isAccountSettings ? "Account Settings" : "Settings")
                     .font(Constants.Fonts.h3)
             }
         }
