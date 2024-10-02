@@ -13,7 +13,7 @@ struct PurpleButton: View {
     // MARK: - Properties
 
     var isActive: Bool = true
-
+    var isAlert: Bool = false
     let text: String
     var horizontalPadding: CGFloat = 48
     let action: () -> Void
@@ -34,7 +34,7 @@ struct PurpleButton: View {
             .font(Constants.Fonts.title1)
             .padding(.horizontal, horizontalPadding)
             .padding(.vertical, 14)
-            .background(Constants.Colors.resellPurple)
+            .background(isAlert ? Constants.Colors.errorRed : Constants.Colors.resellPurple)
             .foregroundStyle(Constants.Colors.white)
             .clipShape(.capsule)
     }
@@ -47,6 +47,7 @@ struct NavigationPurpleButton<Destination: View>: View {
     // MARK: - Properties
 
     var isActive: Bool = true
+    var isAlert: Bool = false
     let text: String
     var horizontalPadding: CGFloat = 48
     let destination: Destination
@@ -66,7 +67,7 @@ struct NavigationPurpleButton<Destination: View>: View {
             .font(Constants.Fonts.title1)
             .padding(.horizontal, horizontalPadding)
             .padding(.vertical, 14)
-            .background(Constants.Colors.resellPurple)
+            .background(isAlert ? Constants.Colors.errorRed : Constants.Colors.resellPurple)
             .foregroundColor(Constants.Colors.white)
             .clipShape(Capsule())
     }

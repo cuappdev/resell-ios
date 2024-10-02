@@ -48,6 +48,9 @@ struct SettingsView: View {
             WebView(url: URL(string: "https://www.cornellappdev.com/license/resell")!)
                 .edgesIgnoringSafeArea(.all)
         }
+        .sheet(isPresented: $viewModel.didShowLogoutView) {
+            logoutView
+        }
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
@@ -73,9 +76,9 @@ struct SettingsView: View {
             Text(item.title)
                 .font(Constants.Fonts.body1)
                 .foregroundStyle(Constants.Colors.black)
-
+            
             Spacer()
-
+            
             Image(systemName: "chevron.right")
                 .foregroundColor(Constants.Colors.black)
         }
@@ -83,5 +86,22 @@ struct SettingsView: View {
         .padding(.vertical, 18.5)
         .background(Color.white)
     }
+    
+    private var logoutView: some View {
+        VStack {
+            Text("Log out of Resell?")
+                .font(Constants.Fonts.h3)
+                .multilineTextAlignment(.center)
+                .frame(width: 190)
+                .padding(.top, 48)
 
+            PurpleButton(isAlert: true, text: "Logout") {
+                print("Logout")
+            }
+        }
+    }
+}
+
+#Preview {
+    SettingsView(isAccountSettings: false)
 }

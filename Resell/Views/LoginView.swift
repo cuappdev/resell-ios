@@ -26,36 +26,34 @@ struct LoginView: View {
 
                     Spacer()
 
-//                    PurpleButton(text: "Login with NetID", horizontalPadding: 28) {
-//                        viewModel.googleSignIn {
-//                            userDidLogin = true
-//                        }
-//                    }
-
                     NavigationPurpleButton(text: "Login with NetID", horizontalPadding: 28, destination: SetupProfileView(userDidLogin: $userDidLogin))
                 }
                 .background(LoginGradient())
             }
             .sheet(isPresented: $viewModel.didPresentError) {
-                VStack {
-                    Text(viewModel.errorText)
-                        .font(Constants.Fonts.h3)
-                        .multilineTextAlignment(.center)
-                        .frame(width: 190)
-                        .padding(.top, 48)
-
-                    Spacer()
-
-                    PurpleButton(text: "Try Again", horizontalPadding: 60) {
-                        viewModel.googleSignIn {
-                            userDidLogin = true
-                        }
-                        viewModel.didPresentError = false
-                    }
-                }
-                .presentationDetents([.height(200)])
-                .presentationDragIndicator(.visible)
+                loginSheetView
             }
         }
+    }
+
+    private var loginSheetView: some View {
+        VStack {
+            Text(viewModel.errorText)
+                .font(Constants.Fonts.h3)
+                .multilineTextAlignment(.center)
+                .frame(width: 190)
+                .padding(.top, 48)
+
+            Spacer()
+
+            PurpleButton(text: "Try Again", horizontalPadding: 60) {
+                viewModel.googleSignIn {
+                    userDidLogin = true
+                }
+                viewModel.didPresentError = false
+            }
+        }
+        .presentationDetents([.height(200)])
+        .presentationDragIndicator(.visible)
     }
 }
