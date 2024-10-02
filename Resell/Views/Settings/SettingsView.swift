@@ -13,16 +13,30 @@ struct SettingsView: View {
     
     @Environment(\.dismiss) var dismiss
     @StateObject private var viewModel = SettingsViewModel()
-    var isAccountSettings: Bool = false
+    let isAccountSettings: Bool
+
+    // MARK: - Init
+
+    init(isAccountSettings: Bool) {
+        self.isAccountSettings = isAccountSettings
+    }
 
     // MARK: - UI
     
     var body: some View {
         NavigationStack {
             VStack {
-                ForEach(isAccountSettings ? viewModel.accountSettings : viewModel.settings, id: \.id) { setting in
-                    NavigationLink(destination: setting.destination) {
-                        settingsRow(item: setting)
+                ForEach(viewModel.settings, id: \.id) { setting in
+                    if setting.hasDestination {
+                        NavigationLink(destination: setting.destination) {
+                            settingsRow(item: setting)
+                        }
+                    } else {
+                        if let action = setting.action {
+                            Button(action: action, label: {
+                                settingsRow(item: setting)
+                            })
+                        }
                     }
                 }
             }
@@ -30,19 +44,26 @@ struct SettingsView: View {
 
             Spacer()
         }
+        .sheet(isPresented: $viewModel.didShowWebView) {
+            WebView(url: URL(string: "https://www.cornellappdev.com/license/resell")!)
+                .edgesIgnoringSafeArea(.all)
+        }
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 BackButton(dismiss: self.dismiss)
             }
-            
+
             ToolbarItem(placement: .principal) {
                 Text(isAccountSettings ? "Account Settings" : "Settings")
                     .font(Constants.Fonts.h3)
             }
         }
+        .onAppear {
+            viewModel.setSettingsOptions(isAccountSettings: isAccountSettings)
+        }
     }
-    
+
     private func settingsRow(item: SettingItem) -> some View {
         HStack(alignment: .top, spacing: 0) {
             Icon(image: item.icon)
@@ -54,7 +75,7 @@ struct SettingsView: View {
                 .foregroundStyle(Constants.Colors.black)
 
             Spacer()
-            
+
             Image(systemName: "chevron.right")
                 .foregroundColor(Constants.Colors.black)
         }

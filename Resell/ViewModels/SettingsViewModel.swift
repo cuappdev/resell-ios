@@ -10,21 +10,44 @@ import SwiftUI
 @MainActor
 class SettingsViewModel: ObservableObject {
 
-    // TODO: Change when implementing new screens
-    @Published var settings: [SettingItem] = [
-        SettingItem(id: 0, icon: "user", title: "Account Settings", destination: AnyView(SettingsView(isAccountSettings: true))),
-        SettingItem(id: 1, icon: "notifications", title: "Notifications", destination: AnyView(Text("Placeholder"))),
-        SettingItem(id: 2, icon: "feedback", title: "Send Feedback", destination: AnyView(Text("Placeholder"))),
-        SettingItem(id: 3, icon: "slash", title: "Blocked Users", destination: AnyView(Text("Placeholder"))),
-        SettingItem(id: 4, icon: "terms", title: "Terms and Conditions", destination: AnyView(WebView(url: URL(string: "https://www.cornellappdev.com/license/resell")!))),
-        SettingItem(id: 5, icon: "logout", title: "Log Out", destination: AnyView(Text("Placeholder"))),
-    ]
+    // MARK: - Properties
 
-    @Published var accountSettings: [SettingItem] = [
-        SettingItem(id: 5, icon: "edit", title: "Edit Profile", destination: AnyView(Text("Placeholder"))),
-        SettingItem(id: 5, icon: "logout", title: "Log Out", destination: AnyView(Text("Placeholder"))),
+    @Published var didShowDeleteAccountView: Bool = false
+    @Published var didShowLogoutView: Bool = false
+    @Published var didShowWebView: Bool = false
+    @Published var settings: [SettingItem] = []
 
-    ]
+    // MARK: - Functions
+
+    func setSettingsOptions(isAccountSettings: Bool) {
+        if isAccountSettings {
+            self.settings = [
+                SettingItem(id: 1, icon: "edit", title: "Edit Profile", destination: AnyView(Text("Placeholder"))),
+                SettingItem(id: 2, icon: "logout", title: "Delete Account", isRed: true, hasDestination: false, action: presentDeleteAccount),
+            ]
+        } else {
+            self.settings = [
+                SettingItem(id: 0, icon: "user", title: "Account Settings", destination: AnyView(SettingsView(isAccountSettings: true))),
+                SettingItem(id: 1, icon: "notifications", title: "Notifications"),
+                SettingItem(id: 2, icon: "feedback", title: "Send Feedback"),
+                SettingItem(id: 3, icon: "slash", title: "Blocked Users"),
+                SettingItem(id: 4, icon: "terms", title: "Terms and Conditions", hasDestination: false, action: presentEULA),
+                SettingItem(id: 5, icon: "logout", title: "Log Out", hasDestination: false, action: presentLogout),
+            ]
+        }
+    }
+
+    private func presentDeleteAccount() {
+        didShowDeleteAccountView = true
+    }
+
+    private func presentEULA() {
+        didShowWebView = true
+    }
+
+    private func presentLogout() {
+        didShowLogoutView = true
+    }
 
 }
 
@@ -32,6 +55,8 @@ struct SettingItem: Identifiable {
     let id: Int
     let icon: String
     let title: String
-    let destination: AnyView
-    var isAlert = false
+    var isRed = false
+    var hasDestination = true
+    var destination: AnyView = AnyView(Text("placeholder"))
+    var action: (() -> Void)?
 }

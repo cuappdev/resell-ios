@@ -11,6 +11,8 @@ import SwiftUI
 @MainActor
 class SetupProfileViewModel: ObservableObject {
 
+    // MARK: - Properties
+
     @Published var didAgreeWithEULA: Bool = false
     @Published var didShowWebView: Bool = false
     @Published var username: String = ""
@@ -25,6 +27,8 @@ class SetupProfileViewModel: ObservableObject {
     }
 
     var image: Image = Image("emptyProfile")
+
+    // MARK: - Functions
 
     func checkInputIsValid() -> Bool {
         return !(username.cleaned().isEmpty || bio.cleaned().isEmpty) && didAgreeWithEULA

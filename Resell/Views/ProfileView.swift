@@ -52,7 +52,7 @@ struct ProfileView: View {
         ZStack(alignment: .top) {
             HStack {
                 NavigationLink {
-                    SettingsView()
+                    SettingsView(isAccountSettings: false)
                 } label: {
                     Icon(image: "settings")
                 }

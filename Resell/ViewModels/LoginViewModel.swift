@@ -11,8 +11,12 @@ import SwiftUI
 @MainActor
 class LoginViewModel: ObservableObject {
 
+    // MARK: - Properties
+
     @Published var didPresentError: Bool = false
     @Published var errorText: String = ""
+
+    // MARK: - Functions
 
     func googleSignIn(success: @escaping () -> Void ) {
         guard let presentingViewController = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.windows.first?.rootViewController else { return }

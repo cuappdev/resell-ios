@@ -10,6 +10,8 @@ import SwiftUI
 @MainActor
 class MainViewModel: ObservableObject {
 
+    // MARK: - Properties
+
     @Published var userDidLogin: Bool = false
 
 }

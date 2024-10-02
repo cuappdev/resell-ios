@@ -9,7 +9,7 @@ import SwiftUI
 
 struct HomeView: View {
 
-    @StateObject private var viewModel = HomeViewModel()
+    @StateObject private var viewModel = HomeViewModel.shared
 
     var body: some View {
         NavigationStack {
@@ -18,20 +18,7 @@ struct HomeView: View {
 
                 filtersView
 
-                ProductsGalleryView(items: [
-                    Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
-                    Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
-                    Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
-                    Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
-                    Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
-                    Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
-                    Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
-                    Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
-                    Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
-                    Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
-                    Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
-                    Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
-                ])
+                ProductsGalleryView(items: viewModel.allItems)
             }
         }
     }
