@@ -13,13 +13,13 @@ struct MainView: View {
     // MARK: - Properties
 
     @State var selection = 0
-    @StateObject private var viewModel = MainViewModel()
+    @StateObject private var mainViewModel = MainViewModel()
 
     // MARK: - UI
 
     var body: some View {
         ZStack {
-            if viewModel.userDidLogin {
+            if mainViewModel.userDidLogin {
                 TabView(selection: $selection) {
                     HomeView()
                         .tabItem {
@@ -42,13 +42,14 @@ struct MainView: View {
                         }.tag(3)
                 }
                 .transition(.opacity)
-                .animation(.easeInOut, value: viewModel.userDidLogin)
+                .animation(.easeInOut, value: mainViewModel.userDidLogin)
             } else {
-                LoginView(userDidLogin: $viewModel.userDidLogin)
+                LoginView(userDidLogin: $mainViewModel.userDidLogin)
                     .transition(.opacity)
-                    .animation(.easeInOut, value: viewModel.userDidLogin)
+                    .animation(.easeInOut, value: mainViewModel.userDidLogin)
             }
         }
+        .environmentObject(mainViewModel)
         .onAppear {
             let signInConfig = GIDConfiguration.init(clientID: Keys.googleClientID)
             GIDSignIn.sharedInstance.configuration = signInConfig

@@ -14,4 +14,16 @@ class MainViewModel: ObservableObject {
 
     @Published var userDidLogin: Bool = false
 
+    // MARK: - Persistent Storage
+
+    @AppStorage("chatNotificationsEnabled") var chatNotificationsEnabled: Bool = true
+    @AppStorage("newListingsEnabled") var newListingsEnabled: Bool = true
+
+    // MARK: - Functions
+
+    func toggleAllNotifications(paused: Bool) {
+        chatNotificationsEnabled = !paused
+        newListingsEnabled = !paused
+    }
+
 }

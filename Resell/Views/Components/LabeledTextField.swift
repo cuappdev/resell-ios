@@ -40,7 +40,12 @@ struct LabeledTextField: View {
                         text = String(newText.prefix(maxCharacters))
                     }
                 }
+                .onSubmit {
+                    if !isMultiLine {
+                        UIApplication.shared.endEditing()
+                    }
+                }
         }
     }
-    
+
 }

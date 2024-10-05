@@ -26,6 +26,12 @@ struct LoginView: View {
 
                     Spacer()
 
+                    PurpleButton(text: "Login with NetID", horizontalPadding: 28) {
+//                        viewModel.googleSignIn {
+                            userDidLogin = true
+//                        }
+                    }
+
                     NavigationPurpleButton(text: "Login with NetID", horizontalPadding: 28, destination: SetupProfileView(userDidLogin: $userDidLogin))
                 }
                 .background(LoginGradient())
@@ -55,5 +61,6 @@ struct LoginView: View {
         }
         .presentationDetents([.height(200)])
         .presentationDragIndicator(.visible)
+        .presentationCornerRadius(25)
     }
 }

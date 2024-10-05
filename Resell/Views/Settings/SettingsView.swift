@@ -12,7 +12,9 @@ struct SettingsView: View {
     // MARK: - Properties
     
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var mainViewModel: MainViewModel
     @StateObject private var viewModel = SettingsViewModel()
+
     let isAccountSettings: Bool
 
     // MARK: - Init
@@ -88,17 +90,28 @@ struct SettingsView: View {
     }
     
     private var logoutView: some View {
-        VStack {
+        VStack(spacing: 24) {
             Text("Log out of Resell?")
                 .font(Constants.Fonts.h3)
                 .multilineTextAlignment(.center)
                 .frame(width: 190)
                 .padding(.top, 48)
 
-            PurpleButton(isAlert: true, text: "Logout") {
-                print("Logout")
+            PurpleButton(isAlert: true, text: "Logout", horizontalPadding: 70) {
+                mainViewModel.userDidLogin = false
             }
+
+            Button(action: {
+                viewModel.didShowLogoutView = false
+            }, label: {
+                Text("Cancel")
+                    .font(Constants.Fonts.title1)
+                    .foregroundStyle(Constants.Colors.black)
+            })
         }
+        .presentationDetents([.height(200)])
+        .presentationDragIndicator(.visible)
+        .presentationCornerRadius(25)
     }
 }
 

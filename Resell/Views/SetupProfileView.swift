@@ -108,3 +108,7 @@ struct SetupProfileView: View {
         }
     }
 }
+
+#Preview {
+    SetupProfileView(userDidLogin: .constant(true))
+}

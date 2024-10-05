@@ -21,6 +21,9 @@
 		2C4DD9812C98DC2D0055D0AB /* LabeledTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C4DD9802C98DC2D0055D0AB /* LabeledTextField.swift */; };
 		2C4DD9832C98E3110055D0AB /* View + Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C4DD9822C98E3110055D0AB /* View + Extensions.swift */; };
 		2C4DD9852C98EF5E0055D0AB /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C4DD9842C98EF5E0055D0AB /* WebView.swift */; };
+		2C525B7D2CB1DE55007D5B8E /* NotificationsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C525B7C2CB1DE55007D5B8E /* NotificationsSettingsView.swift */; };
+		2C525B7F2CB1E884007D5B8E /* SendFeedbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C525B7E2CB1E884007D5B8E /* SendFeedbackView.swift */; };
+		2C525B812CB1F195007D5B8E /* SendFeedbackViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C525B802CB1F195007D5B8E /* SendFeedbackViewModel.swift */; };
 		2C52E4F12C926C4B0042312C /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C52E4F02C926C4B0042312C /* HomeView.swift */; };
 		2C52E4F32C926CFE0042312C /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C52E4F22C926CFE0042312C /* MainView.swift */; };
 		2C52E4F52C926FDA0042312C /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C52E4F42C926FDA0042312C /* MainViewModel.swift */; };
@@ -85,6 +88,9 @@
 		2C4DD9802C98DC2D0055D0AB /* LabeledTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabeledTextField.swift; sourceTree = "<group>"; };
 		2C4DD9822C98E3110055D0AB /* View + Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View + Extensions.swift"; sourceTree = "<group>"; };
 		2C4DD9842C98EF5E0055D0AB /* WebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
+		2C525B7C2CB1DE55007D5B8E /* NotificationsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsSettingsView.swift; sourceTree = "<group>"; };
+		2C525B7E2CB1E884007D5B8E /* SendFeedbackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendFeedbackView.swift; sourceTree = "<group>"; };
+		2C525B802CB1F195007D5B8E /* SendFeedbackViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendFeedbackViewModel.swift; sourceTree = "<group>"; };
 		2C52E4F02C926C4B0042312C /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		2C52E4F22C926CFE0042312C /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		2C52E4F42C926FDA0042312C /* MainViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewModel.swift; sourceTree = "<group>"; };
@@ -153,6 +159,8 @@
 		2C18FFEB2CA1E51400564577 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				2C525B7C2CB1DE55007D5B8E /* NotificationsSettingsView.swift */,
+				2C525B7E2CB1E884007D5B8E /* SendFeedbackView.swift */,
 				2C18FFE52CA139D500564577 /* SettingsView.swift */,
 			);
 			path = Settings;
@@ -326,6 +334,7 @@
 				2C9B4D082C8FD8200029DF61 /* LoginViewModel.swift */,
 				2C52E4F42C926FDA0042312C /* MainViewModel.swift */,
 				2C18FFE32CA1322300564577 /* ProfileViewModel.swift */,
+				2C525B802CB1F195007D5B8E /* SendFeedbackViewModel.swift */,
 				2C18FFE92CA1E4C900564577 /* SettingsViewModel.swift */,
 				2C4DD97C2C98D45B0055D0AB /* SetupProfileViewModel.swift */,
 			);
@@ -480,6 +489,7 @@
 				2C52E4F32C926CFE0042312C /* MainView.swift in Sources */,
 				2C4DD97B2C98CC4D0055D0AB /* VenmoView.swift in Sources */,
 				2C9337502C92BF4400818C8E /* Array + Extensions.swift in Sources */,
+				2C525B7D2CB1DE55007D5B8E /* NotificationsSettingsView.swift in Sources */,
 				2C6410942C9A70B400E4B390 /* String + Extensions.swift in Sources */,
 				2C93374E2C92BE3000818C8E /* Item.swift in Sources */,
 				2C9337542C935C9500818C8E /* ChatsView.swift in Sources */,
@@ -490,6 +500,7 @@
 				2C9B4CCB2C8FB7B70029DF61 /* ResellApp.swift in Sources */,
 				2C4DD97D2C98D45B0055D0AB /* SetupProfileViewModel.swift in Sources */,
 				2C9B4D072C8FCB070029DF61 /* PurpleButton.swift in Sources */,
+				2C525B812CB1F195007D5B8E /* SendFeedbackViewModel.swift in Sources */,
 				2C9337562C935CB600818C8E /* ProfileView.swift in Sources */,
 				2C9337482C92AAEE00818C8E /* HomeViewModel.swift in Sources */,
 				2C4DD9832C98E3110055D0AB /* View + Extensions.swift in Sources */,
@@ -500,6 +511,7 @@
 				2C9B4D092C8FD8200029DF61 /* LoginViewModel.swift in Sources */,
 				2C9337522C935C8100818C8E /* SavedView.swift in Sources */,
 				2C18FFEA2CA1E4C900564577 /* SettingsViewModel.swift in Sources */,
+				2C525B7F2CB1E884007D5B8E /* SendFeedbackView.swift in Sources */,
 				2C4DD9812C98DC2D0055D0AB /* LabeledTextField.swift in Sources */,
 				2C18FFE62CA139D500564577 /* SettingsView.swift in Sources */,
 				2C9B4CF82C8FB84F0029DF61 /* Constants.swift in Sources */,
@@ -680,7 +692,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -711,7 +723,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
