@@ -60,17 +60,25 @@ struct SetupProfileView: View {
 
     private var profileImageView: some View {
         ZStack(alignment: .bottomTrailing) {
-            viewModel.image
+            Image(uiImage: viewModel.selectedImage)
                 .resizable()
                 .frame(width: 132, height: 132)
                 .background(Constants.Colors.stroke)
                 .clipShape(.circle)
 
-            PhotosPicker(selection: $viewModel.imageSelection, matching: .images, photoLibrary: .shared()) {
+            Button {
+                viewModel.didShowPhotosPicker = true
+            } label: {
                 Image("pencil.circle")
                     .shadow(radius: 2)
             }
             .buttonStyle(.borderless)
+        }
+        .photosPicker(isPresented: $viewModel.didShowPhotosPicker, selection: $viewModel.selectedItem, matching: .images, photoLibrary: .shared())
+        .onChange(of: viewModel.selectedItem) { newItem in
+            Task {
+                await viewModel.updateUserProfile(newItem: newItem)
+            }
         }
     }
 

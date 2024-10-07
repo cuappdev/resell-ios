@@ -12,10 +12,14 @@ class SendFeedbackViewModel: ObservableObject {
 
     // MARK: - Properties
 
+    @Published var didShowPopup: Bool = false
+    @Published var didShowPhotosPicker: Bool = false
     @Published var feedbackText: String = ""
+
     @Published var selectedImages: [UIImage] = []
     @Published var selectedItem: PhotosPickerItem? = nil
-    @Published var photosPickerPresented: Bool = false
+
+    var selectedIndex: Int = 0
 
     // MARK: - Functions
 
@@ -25,10 +29,28 @@ class SendFeedbackViewModel: ObservableObject {
             if let data = try? await newItem.loadTransferable(type: Data.self),
                let image = UIImage(data: data) {
                 if selectedImages.count < 3 {
-                    selectedImages.append(image)
+                    DispatchQueue.main.async {
+                        self.selectedImages.append(image)
+                        self.selectedItem = nil
+                    }
                 }
             }
         }
+    }
+
+    func submitFeedback() {
+        // TODO: Integrate SendFeedback Backend Call
+    }
+
+    func togglePopup(isPresenting: Bool) {
+        withAnimation {
+            didShowPopup = isPresenting
+        }
+    }
+
+    func removeImage() {
+        selectedImages.remove(at: selectedIndex)
+        togglePopup(isPresenting: false)
     }
 
 }

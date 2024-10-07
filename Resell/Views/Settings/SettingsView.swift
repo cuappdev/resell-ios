@@ -101,13 +101,13 @@ struct SettingsView: View {
                 mainViewModel.userDidLogin = false
             }
 
-            Button(action: {
+            Button{
                 viewModel.didShowLogoutView = false
-            }, label: {
+            } label: {
                 Text("Cancel")
                     .font(Constants.Fonts.title1)
                     .foregroundStyle(Constants.Colors.black)
-            })
+            }
         }
         .presentationDetents([.height(200)])
         .presentationDragIndicator(.visible)

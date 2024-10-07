@@ -9,19 +9,6 @@ import SwiftUI
 
 extension View {
 
-    /// Applies the given transform if the given condition evaluates to `true`.
-    /// - Parameters:
-    ///   - condition: The condition to evaluate.
-    ///   - transform: The transform to apply to the source `View`.
-    /// - Returns: Either the original `View` or the modified `View` if the condition is `true`.
-    @ViewBuilder func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
-        if condition {
-            transform(self)
-        } else {
-            self
-        }
-    }
-
     /// Dismisses the keyboard when the view is tapped.
     ///
     /// This view modifier can be applied to any SwiftUI view. When the user taps on the view,
@@ -30,6 +17,16 @@ extension View {
     /// - Returns: A modified view with keyboard dismissal functionality.
     func endEditingOnTap() -> some View {
         self.modifier(EndEditingOnTap())
+    }
+
+    /// Presents a popup modal at the center of the screen, over the view its applied to
+    ///
+    /// This view modifier can be applied to any SwiftUI view. When the user adds this modifier
+    /// a popup modal view will be presented over the view when isPresented is true
+    ///
+    /// - Returns: A modified view with popup modal functionality.
+    func popupModal<T: View>(isPresented: Binding<Bool>, @ViewBuilder content: () -> T) -> some View {
+        self.modifier(PopupModal(isPresented: isPresented, content: content))
     }
 
 }

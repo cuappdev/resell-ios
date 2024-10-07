@@ -56,6 +56,7 @@
 		2C9B4D0C2C90EF1D0029DF61 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2C9B4D0B2C90EF1D0029DF61 /* Launch Screen.storyboard */; };
 		2C9B4D0E2C90F54D0029DF61 /* LoginGradient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4D0D2C90F54D0029DF61 /* LoginGradient.swift */; };
 		2C9B4D102C90F69C0029DF61 /* UIScreen + Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4D0F2C90F69C0029DF61 /* UIScreen + Extensions.swift */; };
+		2CD6CA8C2CB48286005A4F78 /* PopupModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CD6CA8B2CB48286005A4F78 /* PopupModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -127,6 +128,7 @@
 		2C9B4D0B2C90EF1D0029DF61 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 		2C9B4D0D2C90F54D0029DF61 /* LoginGradient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginGradient.swift; sourceTree = "<group>"; };
 		2C9B4D0F2C90F69C0029DF61 /* UIScreen + Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIScreen + Extensions.swift"; sourceTree = "<group>"; };
+		2CD6CA8B2CB48286005A4F78 /* PopupModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopupModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -310,6 +312,7 @@
 				2C18FFE72CA1DC9800564577 /* Icon.swift */,
 				2C4DD9802C98DC2D0055D0AB /* LabeledTextField.swift */,
 				2C9B4D0D2C90F54D0029DF61 /* LoginGradient.swift */,
+				2CD6CA8B2CB48286005A4F78 /* PopupModel.swift */,
 				2C9B4D062C8FCB070029DF61 /* PurpleButton.swift */,
 				2C9337492C92AD2D00818C8E /* ProductsGalleryView.swift */,
 				2C9337592C93667600818C8E /* TabViewIcon.swift */,
@@ -493,6 +496,7 @@
 				2C6410942C9A70B400E4B390 /* String + Extensions.swift in Sources */,
 				2C93374E2C92BE3000818C8E /* Item.swift in Sources */,
 				2C9337542C935C9500818C8E /* ChatsView.swift in Sources */,
+				2CD6CA8C2CB48286005A4F78 /* PopupModel.swift in Sources */,
 				2C9337462C92A66C00818C8E /* FilterButton.swift in Sources */,
 				2C9B4D042C8FC8250029DF61 /* LoginView.swift in Sources */,
 				2C93374C2C92B6A500818C8E /* UIImage + Extensions.swift in Sources */,

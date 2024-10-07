@@ -14,19 +14,13 @@ class SetupProfileViewModel: ObservableObject {
     // MARK: - Properties
 
     @Published var didAgreeWithEULA: Bool = false
+    @Published var didShowPhotosPicker: Bool = false
     @Published var didShowWebView: Bool = false
     @Published var username: String = ""
     @Published var bio: String = ""
 
-    @Published var imageSelection: PhotosPickerItem? = nil {
-        didSet {
-            if let imageSelection {
-                loadTransferable(from: imageSelection)
-            }
-        }
-    }
-
-    var image: Image = Image("emptyProfile")
+    @Published var selectedImage: UIImage = UIImage(named: "emptyProfile")!
+    @Published var selectedItem: PhotosPickerItem? = nil
 
     // MARK: - Functions
 
@@ -34,25 +28,15 @@ class SetupProfileViewModel: ObservableObject {
         return !(username.cleaned().isEmpty || bio.cleaned().isEmpty) && didAgreeWithEULA
     }
 
-    private func loadTransferable(from imageSelection: PhotosPickerItem) {
-        imageSelection.loadTransferable(type: Image.self) { result in
-            DispatchQueue.main.async {
-                guard imageSelection == self.imageSelection else {
-                    print("Failed to get the selected item.")
-                    return
-                }
-                switch result {
-                case .success(let profileImage?):
-                    self.image = profileImage
-                case .success(nil):
-                    // Error action
-                    print("bruh")
-                case .failure(let error):
-                    // Error action
-                    print("bruh2")
+    /// Updates selectedImage with user profile
+    func updateUserProfile(newItem: PhotosPickerItem?) async {
+        if let newItem = newItem {
+            if let data = try? await newItem.loadTransferable(type: Data.self),
+               let image = UIImage(data: data) {
+                DispatchQueue.main.async {
+                    self.selectedImage = image
                 }
             }
         }
     }
-
 }

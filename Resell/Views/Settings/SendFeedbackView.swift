@@ -12,6 +12,7 @@ struct SendFeedbackView: View {
 
     // MARK: - Properties
 
+    @Environment(\.dismiss) var dismiss
     @StateObject private var viewModel = SendFeedbackViewModel()
     private let imageSize: CGFloat = (UIScreen.width - 72) / 3
 
@@ -31,17 +32,41 @@ struct SendFeedbackView: View {
                 .padding(.top, 32)
 
             imageSelectionView
-                .padding(.top, 20)
+                .padding(.top, 12)
 
             Spacer()
         }
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
         .padding(.top, 40)
-        .photosPicker(isPresented: $viewModel.photosPickerPresented, selection: $viewModel.selectedItem, matching: .images, photoLibrary: .shared())
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                BackButton(dismiss: self.dismiss)
+            }
+
+            ToolbarItem(placement: .principal) {
+                Text("Send Feedback")
+                    .font(Constants.Fonts.h3)
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    viewModel.submitFeedback()
+                } label: {
+                    Text("Submit")
+                        .font(Constants.Fonts.title1)
+                        .foregroundStyle(Constants.Colors.resellPurple)
+                }
+            }
+        }
+        .photosPicker(isPresented: $viewModel.didShowPhotosPicker, selection: $viewModel.selectedItem, matching: .images, photoLibrary: .shared())
         .onChange(of: viewModel.selectedItem) { newItem in
             Task {
                 await viewModel.updateFeedbackItems(newItem: newItem)
             }
+        }
+        .popupModal(isPresented: $viewModel.didShowPopup) {
+            popupModalContent
         }
     }
 
@@ -53,42 +78,63 @@ struct SendFeedbackView: View {
                         .resizable()
                         .scaledToFill()
                         .frame(width: imageSize, height: imageSize)
-                        .clipped()
-                        .cornerRadius(10)
+                        .clipShape(.rect(cornerRadius: 10))
+                        .padding(.top, 8)
 
-                    Button(action: {
-                        viewModel.selectedImages.remove(at: index)
-                    }) {
-                        Image(systemName: "xmark.circle.fill")
+                    Button {
+                        viewModel.selectedIndex = index
+                        viewModel.togglePopup(isPresenting: true)
+                    } label: {
+                        Image("deleteImage")
                             .resizable()
-                            .frame(width: 20, height: 20)
+                            .frame(width: 24, height: 24)
                             .foregroundColor(.red)
-                            .padding(4)
                     }
-                    .buttonStyle(PlainButtonStyle())
                 }
             }
 
             if viewModel.selectedImages.count < 3 {
-                Button(action: {
-                    viewModel.photosPickerPresented = true
-                }) {
+                Button {
+                    viewModel.didShowPhotosPicker = true
+                } label: {
                     VStack {
-                        Image(systemName: "plus")
-                            .resizable()
-                            .frame(width: 50, height: 50)
-                            .foregroundColor(.blue)
-                        Text("Add Image")
-                            .font(.caption)
+                        Image("addImage")
+                            .shadow(radius: 2)
                     }
                     .frame(width: imageSize, height: imageSize)
-                    .background(Color.gray.opacity(0.2))
-                    .cornerRadius(10)
+                    .background(Constants.Colors.wash)
+                    .clipShape(.rect(cornerRadius: 10))
+                    .padding(.top, 8)
                 }
             }
         }
     }
-    
+
+    private var popupModalContent: some View {
+        VStack(spacing: 24) {
+            Text("Delete Image")
+                .font(Constants.Fonts.h3)
+
+            Text("Are you sure you’d like to delete this image?")
+                .font(Constants.Fonts.body2)
+                .multilineTextAlignment(.center)
+                .frame(width: 200)
+
+            PurpleButton(text: "Delete", horizontalPadding: 100) {
+                viewModel.removeImage()
+            }
+
+            Button{
+                viewModel.togglePopup(isPresenting: false)
+            } label: {
+                Text("Cancel")
+                    .font(Constants.Fonts.title1)
+                    .foregroundStyle(Constants.Colors.secondaryGray)
+            }
+        }
+        .padding(Constants.Spacing.horizontalPadding)
+    }
+
 }
 
 #Preview {
