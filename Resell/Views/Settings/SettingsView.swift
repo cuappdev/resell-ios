@@ -54,6 +54,10 @@ struct SettingsView: View {
         .sheet(isPresented: $viewModel.didShowLogoutView) {
             logoutView
         }
+        .popupModal(isPresented: $viewModel.didShowDeleteAccountView) {
+            popupModalContent
+                .padding(Constants.Spacing.horizontalPadding)
+        }
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text(isAccountSettings ? "Account Settings" : "Settings")
@@ -67,18 +71,22 @@ struct SettingsView: View {
 
     private func settingsRow(item: SettingItem) -> some View {
         HStack(alignment: .top, spacing: 0) {
-            Icon(image: item.icon)
-                .foregroundStyle(Constants.Colors.black)
-                .padding(.trailing, 24)
+            if !item.isRed {
+                Icon(image: item.icon)
+                    .foregroundStyle(Constants.Colors.black)
+                    .padding(.trailing, 24)
+            }
 
             Text(item.title)
                 .font(Constants.Fonts.body1)
-                .foregroundStyle(Constants.Colors.black)
-            
+                .foregroundStyle(item.isRed ? Constants.Colors.errorRed : Constants.Colors.black)
+
             Spacer()
             
-            Image(systemName: "chevron.right")
-                .foregroundColor(Constants.Colors.black)
+            if !item.isRed {
+                Image(systemName: "chevron.right")
+                    .foregroundColor(Constants.Colors.black)
+            }
         }
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
         .padding(.vertical, 18.5)
@@ -107,9 +115,54 @@ struct SettingsView: View {
                     .foregroundStyle(Constants.Colors.black)
             }
         }
+        .background(Constants.Colors.white)
         .presentationDetents([.height(200)])
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(25)
+    }
+
+    private var popupModalContent: some View {
+        VStack(spacing: 16) {
+            Text("Delete Account")
+                .font(Constants.Fonts.h3)
+
+            Text("Once deleted, your account cannot be recovered. Enter your username to proceed with deletion.")
+                .font(Constants.Fonts.body2)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 12)
+
+            TextField("", text: $viewModel.confirmUsernameText)
+                .font(Constants.Fonts.body2)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Constants.Colors.secondaryGray, lineWidth: 0.5)
+                }
+
+            Button {
+                // TODO: Delete Account Backend Call
+                mainViewModel.userDidLogin = false
+            } label: {
+                Text("Delete Account")
+                    .font(Constants.Fonts.title1)
+                    .foregroundStyle(Constants.Colors.white)
+                    .padding(.horizontal, 70)
+                    .padding(.vertical, 14)
+                    .background(Constants.Colors.errorRed)
+                    .clipShape(.capsule)
+            }
+
+
+            Button {
+                viewModel.togglePopup(isPresenting: false)
+            } label: {
+                Text("Cancel")
+                    .font(Constants.Fonts.title1)
+                    .foregroundStyle(Constants.Colors.secondaryGray)
+            }
+        }
+        .frame(width: 300)
     }
 }
 
