@@ -40,12 +40,18 @@ struct ProfileView: View {
                     .padding(.bottom, 24)
 
                 ProductsGalleryView(items: Constants.dummyItemsData)
+                    .overlay(alignment: .bottomTrailing) {
+                        ExpandableAddButton()
+                            .padding(.trailing, Constants.Spacing.horizontalPadding)
+                            .padding(.bottom, 60)
+                    }
             }
+            .background(Constants.Colors.white)
+
         }
         .onChange(of: viewModel.selectedTab) { _ in
             viewModel.updateItemsGallery()
         }
-        
     }
 
     private var profileImageView: some View {

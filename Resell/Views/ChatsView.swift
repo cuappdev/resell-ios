@@ -15,7 +15,10 @@ struct ChatsView: View {
 
     var body: some View {
         VStack {
+            Spacer()
             Text("ChatsView")
+            Spacer()
         }
+        .background(Constants.Colors.white)
     }
 }

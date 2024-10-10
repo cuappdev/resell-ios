@@ -43,6 +43,7 @@ struct SettingsView: View {
                 }
             }
             .padding(.top, 24)
+            .background(Constants.Colors.white)
 
             Spacer()
         }
@@ -53,12 +54,7 @@ struct SettingsView: View {
         .sheet(isPresented: $viewModel.didShowLogoutView) {
             logoutView
         }
-        .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                BackButton(dismiss: self.dismiss)
-            }
-
             ToolbarItem(placement: .principal) {
                 Text(isAccountSettings ? "Account Settings" : "Settings")
                     .font(Constants.Fonts.h3)
@@ -102,7 +98,9 @@ struct SettingsView: View {
             }
 
             Button{
-                viewModel.didShowLogoutView = false
+                withAnimation {
+                    viewModel.didShowLogoutView = false
+                }
             } label: {
                 Text("Cancel")
                     .font(Constants.Fonts.title1)

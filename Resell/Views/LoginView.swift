@@ -13,32 +13,30 @@ struct LoginView: View {
     @Binding var userDidLogin: Bool
 
     var body: some View {
-        NavigationView {
-            NavigationStack {
-                VStack {
-                    Image("resell")
-                        .padding(.top, 180)
+        NavigationStack {
+            VStack {
+                Image("resell")
+                    .padding(.top, 180)
 
-                    Text("resell")
-                        .font(Constants.Fonts.resellLogo)
-                        .foregroundStyle(Constants.Colors.resellGradient)
-                        .multilineTextAlignment(.center)
+                Text("resell")
+                    .font(Constants.Fonts.resellLogo)
+                    .foregroundStyle(Constants.Colors.resellGradient)
+                    .multilineTextAlignment(.center)
 
-                    Spacer()
+                Spacer()
 
-                    PurpleButton(text: "Login with NetID", horizontalPadding: 28) {
-//                        viewModel.googleSignIn {
-                            userDidLogin = true
-//                        }
-                    }
-
-                    NavigationPurpleButton(text: "Login with NetID", horizontalPadding: 28, destination: SetupProfileView(userDidLogin: $userDidLogin))
+                PurpleButton(text: "Login with NetID", horizontalPadding: 28) {
+//                    viewModel.googleSignIn {
+                        userDidLogin = true
+//                    }
                 }
-                .background(LoginGradient())
+
+                NavigationPurpleButton(text: "Login with NetID", horizontalPadding: 28, destination: SetupProfileView(userDidLogin: $userDidLogin))
             }
-            .sheet(isPresented: $viewModel.didPresentError) {
-                loginSheetView
-            }
+            .background(LoginGradient())
+        }
+        .sheet(isPresented: $viewModel.didPresentError) {
+            loginSheetView
         }
     }
 

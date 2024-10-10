@@ -17,6 +17,7 @@ struct SavedView: View {
                 headerView
                 ProductsGalleryView(items: viewModel.savedItems)
             }
+            .background(Constants.Colors.white)
         }
     }
 

@@ -12,16 +12,22 @@ struct TabViewIcon: View {
 
     // MARK: - Properties
 
-    let index: Int
-    var selectionIndex: Int = 0
+    @Binding var selectionIndex: Int
+
+    let itemIndex: Int
     private let tabItems = ["home", "bookmark", "messages", "user"]
 
     // MARK: - UI
     
     var body: some View {
-        Image(index == selectionIndex ? "\(tabItems[index])-selected" : tabItems[index])
-            .resizable()
-            .frame(width: 21, height: 21)
+        Button {
+            selectionIndex = itemIndex
+        } label: {
+            Image(itemIndex == selectionIndex ? "\(tabItems[itemIndex])-selected" : tabItems[itemIndex])
+                .resizable()
+                .frame(width: 28, height: 28)
+                .tint(Constants.Colors.inactiveGray)
+        }
     }
     
 }

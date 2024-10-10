@@ -37,11 +37,8 @@ struct NotificationsSettingsView: View {
         }
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
         .padding(.top, 40)
-        .navigationBarBackButtonHidden(true)
+        .background(Constants.Colors.white)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                BackButton(dismiss: self.dismiss)
-            }
 
             ToolbarItem(placement: .principal) {
                 Text("Notification Preferences")

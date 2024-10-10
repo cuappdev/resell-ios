@@ -47,23 +47,19 @@ struct VenmoView: View {
                         .padding(.top, 14)
                 })
             }
-            .background(Constants.Colors.white)
-            .endEditingOnTap()
         }
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
-        .navigationBarBackButtonHidden(true)
+        .background(Constants.Colors.white)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                BackButton(dismiss: self.dismiss)
-            }
-
             ToolbarItem(placement: .principal) {
                 HStack {
                     Text("Link your")
                         .font(Constants.Fonts.h3)
+                        .foregroundStyle(Constants.Colors.black)
                     Image("venmoLogo")
                 }
             }
         }
+        .endEditingOnTap()
     }
 }

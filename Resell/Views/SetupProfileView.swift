@@ -36,26 +36,20 @@ struct SetupProfileView: View {
 
                 NavigationPurpleButton(isActive: viewModel.checkInputIsValid(), text: "Next", horizontalPadding: 80, destination: VenmoView(userDidLogin: $userDidLogin))
             }
-            .background(Constants.Colors.white)
-            .endEditingOnTap()
         }
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
+        .background(Constants.Colors.white)
         .sheet(isPresented: $viewModel.didShowWebView) {
             WebView(url: URL(string: "https://www.cornellappdev.com/license/resell")!)
                 .edgesIgnoringSafeArea(.all)
         }
-        .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                BackButton(dismiss: self.dismiss)
-            }
-
             ToolbarItem(placement: .principal) {
                 Text("Setup your profile")
                     .font(Constants.Fonts.h3)
             }
         }
-
+        .endEditingOnTap()
     }
 
     private var profileImageView: some View {
@@ -105,6 +99,7 @@ struct SetupProfileView: View {
 
             Text("I agree to Resell’s")
                 .font(Constants.Fonts.title4)
+                .foregroundStyle(Constants.Colors.black)
                 .padding(.leading, 16)
 
             Button { viewModel.didShowWebView = true } label: {

@@ -20,6 +20,12 @@ struct HomeView: View {
 
                 ProductsGalleryView(items: viewModel.allItems)
             }
+            .background(Constants.Colors.white)
+            .overlay(alignment: .bottomTrailing) {
+                ExpandableAddButton()
+                    .padding(.trailing, Constants.Spacing.horizontalPadding)
+                    .padding(.bottom, 60)
+            }
         }
     }
 
@@ -32,7 +38,7 @@ struct HomeView: View {
             Spacer()
 
             Button(action: {
-                // Search Endpoint
+                // TODO: Search Endpoint
             }, label: {
                 Icon(image: "search")
             })

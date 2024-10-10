@@ -26,25 +26,42 @@ struct LabeledTextField: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(Constants.Fonts.title1)
+                .foregroundStyle(Constants.Colors.black)
 
-            TextField("", text: $text, axis: isMultiLine ? .vertical : .horizontal)
-                .font(Constants.Fonts.body2)
-                .multilineTextAlignment(.leading)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .frame(height: frameHeight, alignment: isMultiLine ? .top : .center)
-                .background(Constants.Colors.wash)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .onChange(of: text) { newText in
-                    if let maxCharacters = maxCharacters, newText.count > maxCharacters {
-                        text = String(newText.prefix(maxCharacters))
+            if isMultiLine {
+                TextEditor(text: $text)
+                    .font(Constants.Fonts.body2)
+                    .foregroundColor(Constants.Colors.black)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .scrollContentBackground(.hidden)
+                    .background(Constants.Colors.wash)
+                    .cornerRadius(10)
+                    .frame(height: frameHeight)
+                    .onChange(of: text) { newText in
+                        if let maxCharacters = maxCharacters, newText.count > maxCharacters {
+                            text = String(newText.prefix(maxCharacters))
+                        }
                     }
-                }
-                .onSubmit {
-                    if !isMultiLine {
+            } else {
+                TextField("", text: $text)
+                    .font(Constants.Fonts.body2)
+                    .foregroundStyle(Constants.Colors.black)
+                    .multilineTextAlignment(.leading)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .frame(height: frameHeight, alignment: .center)
+                    .background(Constants.Colors.wash)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .onChange(of: text) { newText in
+                        if let maxCharacters = maxCharacters, newText.count > maxCharacters {
+                            text = String(newText.prefix(maxCharacters))
+                        }
+                    }
+                    .onSubmit {
                         UIApplication.shared.endEditing()
                     }
-                }
+            }
         }
     }
 

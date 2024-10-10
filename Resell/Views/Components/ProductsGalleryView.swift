@@ -64,9 +64,11 @@ struct ProductGalleryCell: View {
             HStack {
                 Text(galleryItem.item.title)
                     .font(Constants.Fonts.title3)
+                    .foregroundStyle(Constants.Colors.black)
                 Spacer()
                 Text(galleryItem.item.price)
                     .font(Constants.Fonts.title4)
+                    .foregroundStyle(Constants.Colors.black)
             }
             .padding(8)
         }

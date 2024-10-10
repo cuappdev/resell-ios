@@ -30,7 +30,7 @@ class SettingsViewModel: ObservableObject {
                 SettingItem(id: 0, icon: "user", title: "Account Settings", destination: AnyView(SettingsView(isAccountSettings: true))),
                 SettingItem(id: 1, icon: "notifications", title: "Notifications", destination: AnyView(NotificationsSettingsView())),
                 SettingItem(id: 2, icon: "feedback", title: "Send Feedback", destination: AnyView(SendFeedbackView())),
-                SettingItem(id: 3, icon: "slash", title: "Blocked Users"),
+                SettingItem(id: 3, icon: "slash", title: "Blocked Users", destination: AnyView(BlockerUsersView())),
                 SettingItem(id: 4, icon: "terms", title: "Terms and Conditions", hasDestination: false, action: presentEULA),
                 SettingItem(id: 5, icon: "logout", title: "Log Out", hasDestination: false, action: presentLogout),
             ]
