@@ -12,7 +12,6 @@ struct SetupProfileView: View {
 
     // MARK: - Properties
 
-    @Environment(\.dismiss) var dismiss
     @StateObject private var viewModel = SetupProfileViewModel()
     @Binding var userDidLogin: Bool
 

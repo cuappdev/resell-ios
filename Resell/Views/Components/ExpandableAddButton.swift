@@ -49,6 +49,7 @@ struct ExpandableAddButton: View {
         ZStack(alignment: .trailing) {
             NavigationLink {
                 NewListingView()
+                    .onAppear { withAnimation { isExpanded = false } }
             } label: {
                 buttonContent(name: "New Listing", image: "newListing")
             }
@@ -58,6 +59,7 @@ struct ExpandableAddButton: View {
 
             NavigationLink {
                 NewRequestView()
+                    .onAppear { withAnimation { isExpanded = false } }
             } label: {
                 buttonContent(name: "New Request", image: "newRequest")
             }

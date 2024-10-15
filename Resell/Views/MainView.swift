@@ -20,7 +20,7 @@ struct MainView: View {
     var body: some View {
         ZStack {
             if mainViewModel.userDidLogin {
-                CustomTabView(selection: $selection)
+                CustomTabView(isHidden: $mainViewModel.hidesTabBar, selection: $selection)
                     .transition(.opacity)
                     .animation(.easeInOut, value: mainViewModel.userDidLogin)
             } else {
@@ -41,15 +41,8 @@ struct MainView: View {
                 // Check if `user` exists; otherwise, do something with `error`
             }
 
-            let backButtonImage = UIImage(named: "chevron.left")?
-                .resized(to: CGSize(width: 38, height: 24))
-                .withRenderingMode(.alwaysOriginal)
-                .withTintColor(.black)
-            let appearance = UINavigationBarAppearance()
-            appearance.backButtonAppearance.normal.titlePositionAdjustment = UIOffset(horizontal: -100, vertical: 0)
-            appearance.backButtonAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.clear]
-            appearance.setBackIndicatorImage(backButtonImage, transitionMaskImage: backButtonImage)
-            UINavigationBar.appearance().standardAppearance = appearance
+            mainViewModel.setupNavBar()
+            mainViewModel.hidesTabBar = false
         }
         .onOpenURL { url in
             GIDSignIn.sharedInstance.handle(url)

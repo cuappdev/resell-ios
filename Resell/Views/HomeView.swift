@@ -9,6 +9,7 @@ import SwiftUI
 
 struct HomeView: View {
 
+    @EnvironmentObject private var mainViewModel: MainViewModel
     @StateObject private var viewModel = HomeViewModel.shared
 
     var body: some View {
@@ -24,7 +25,7 @@ struct HomeView: View {
             .overlay(alignment: .bottomTrailing) {
                 ExpandableAddButton()
                     .padding(.trailing, Constants.Spacing.horizontalPadding)
-                    .padding(.bottom, 60)
+                    .padding(.bottom, Constants.Spacing.horizontalPadding)
             }
         }
     }

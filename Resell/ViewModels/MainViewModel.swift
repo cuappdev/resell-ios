@@ -12,6 +12,7 @@ class MainViewModel: ObservableObject {
 
     // MARK: - Properties
 
+    @Published var hidesTabBar: Bool = false
     @Published var userDidLogin: Bool = false
 
     // MARK: - Persistent Storage
@@ -24,6 +25,18 @@ class MainViewModel: ObservableObject {
     func toggleAllNotifications(paused: Bool) {
         chatNotificationsEnabled = !paused
         newListingsEnabled = !paused
+    }
+
+    func setupNavBar() {
+        let backButtonImage = UIImage(named: "chevron.left")?
+            .resized(to: CGSize(width: 38, height: 24))
+            .withRenderingMode(.alwaysOriginal)
+            .withTintColor(.black)
+        let appearance = UINavigationBarAppearance()
+        appearance.backButtonAppearance.normal.titlePositionAdjustment = UIOffset(horizontal: -100, vertical: 0)
+        appearance.backButtonAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.clear]
+        appearance.setBackIndicatorImage(backButtonImage, transitionMaskImage: backButtonImage)
+        UINavigationBar.appearance().standardAppearance = appearance
     }
 
 }

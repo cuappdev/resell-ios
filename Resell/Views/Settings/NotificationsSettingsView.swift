@@ -11,7 +11,6 @@ struct NotificationsSettingsView: View {
 
     // MARK: - Properties
 
-    @Environment(\.dismiss) var dismiss
     @EnvironmentObject var mainViewModel: MainViewModel
 
     private var allNotificationsEnabled: Bool {

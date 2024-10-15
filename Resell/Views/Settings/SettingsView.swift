@@ -10,8 +10,7 @@ import SwiftUI
 struct SettingsView: View {
     
     // MARK: - Properties
-    
-    @Environment(\.dismiss) var dismiss
+
     @EnvironmentObject var mainViewModel: MainViewModel
     @StateObject private var viewModel = SettingsViewModel()
 

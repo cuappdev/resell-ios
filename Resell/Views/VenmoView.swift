@@ -11,7 +11,6 @@ struct VenmoView: View {
 
     // MARK: - Properties
 
-    @Environment(\.dismiss) private var dismiss
     @State var venmoHandle: String = ""
     @Binding var userDidLogin: Bool
 
