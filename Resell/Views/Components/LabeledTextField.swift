@@ -17,6 +17,7 @@ struct LabeledTextField: View {
     var maxCharacters: Int?
     var frameHeight: CGFloat = 40
     var isMultiLine: Bool = false
+    var placeholder: String = ""
 
     @Binding var text: String
 
@@ -29,22 +30,32 @@ struct LabeledTextField: View {
                 .foregroundStyle(Constants.Colors.black)
 
             if isMultiLine {
-                TextEditor(text: $text)
-                    .font(Constants.Fonts.body2)
-                    .foregroundColor(Constants.Colors.black)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .scrollContentBackground(.hidden)
-                    .background(Constants.Colors.wash)
-                    .cornerRadius(10)
-                    .frame(height: frameHeight)
-                    .onChange(of: text) { newText in
-                        if let maxCharacters = maxCharacters, newText.count > maxCharacters {
-                            text = String(newText.prefix(maxCharacters))
-                        }
+                ZStack(alignment: .topLeading) {
+                    if text.isEmpty {
+                        Text(placeholder)
+                            .font(Constants.Fonts.body2)
+                            .foregroundColor(Constants.Colors.secondaryGray)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
                     }
+
+                    TextEditor(text: $text)
+                        .font(Constants.Fonts.body2)
+                        .foregroundColor(Constants.Colors.black)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .scrollContentBackground(.hidden)
+                        .background(Constants.Colors.wash)
+                        .cornerRadius(10)
+                        .frame(height: frameHeight)
+                        .onChange(of: text) { newText in
+                            if let maxCharacters = maxCharacters, newText.count > maxCharacters {
+                                text = String(newText.prefix(maxCharacters))
+                            }
+                        }
+                }
             } else {
-                TextField("", text: $text)
+                TextField(placeholder, text: $text)
                     .font(Constants.Fonts.body2)
                     .foregroundStyle(Constants.Colors.black)
                     .multilineTextAlignment(.leading)

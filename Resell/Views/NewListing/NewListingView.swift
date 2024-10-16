@@ -7,6 +7,7 @@
 
 import PhotosUI
 import SwiftUI
+import UIKit
 
 struct NewListingView: View {
 
@@ -15,10 +16,8 @@ struct NewListingView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var mainViewModel: MainViewModel
 
-    @State var didShowPhotosPicker: Bool = false
-    @State var selectedImages: [UIImage] = []
-    @State var selectedItem: PhotosPickerItem? = nil
-    
+    @StateObject private var viewModel = NewListingViewModel()
+
     var selectedIndex: Int = 0
 
     // MARK: - UI
@@ -27,7 +26,7 @@ struct NewListingView: View {
         NavigationStack {
             Spacer()
 
-            if selectedImages.isEmpty {
+            if viewModel.selectedImages.isEmpty {
                 VStack(alignment: .center) {
                     Text("Image Upload")
                         .font(Constants.Fonts.h2)
@@ -47,7 +46,7 @@ struct NewListingView: View {
                         .padding(.horizontal, Constants.Spacing.horizontalPadding)
                         .padding(.bottom, 16)
 
-                    PaginatedImageView(didShowPhotosPicker: $didShowPhotosPicker, images: $selectedImages, maxImages: 3)
+                    PaginatedImageView(didShowActionSheet: $viewModel.didShowActionSheet, images: $viewModel.selectedImages, maxImages: 7)
                         .padding(.horizontal, Constants.Spacing.horizontalPadding)
                 }
                 .padding(.top, 48)
@@ -55,8 +54,16 @@ struct NewListingView: View {
 
             Spacer()
 
-            PurpleButton(text: selectedImages.isEmpty ? "Add Images" : "Continue") {
-                didShowPhotosPicker = true
+            if viewModel.selectedImages.isEmpty {
+                PurpleButton(text: "Add Images") {
+                    viewModel.didShowActionSheet = true
+                }
+            } else {
+                NavigationPurpleButton(
+                    text: "Continue",
+                    destination: NewListingDetailsView(parentIsActive: $viewModel.isActive)
+                        .environmentObject(viewModel)
+                )
             }
         }
         .background(Constants.Colors.white)
@@ -86,26 +93,32 @@ struct NewListingView: View {
                 mainViewModel.hidesTabBar = true
             }
         }
-        .photosPicker(isPresented: $didShowPhotosPicker, selection: $selectedItem, matching: .images, photoLibrary: .shared())
-        .onChange(of: selectedItem) { newItem in
+        .actionSheet(isPresented: $viewModel.didShowActionSheet) {
+            ActionSheet(
+                title: Text("Select Image Source"),
+                buttons: [
+                    .default(Text("Photo Library")) {
+                        viewModel.didShowPhotosPicker = true
+                    },
+                    .default(Text("Camera")) {
+                        viewModel.didShowCamera = true
+                    },
+                    .cancel()
+                ]
+            )
+        }
+        .photosPicker(isPresented: $viewModel.didShowPhotosPicker, selection: $viewModel.selectedItem, matching: .images, photoLibrary: .shared())
+        .sheet(isPresented: $viewModel.didShowCamera) {
+            ImagePicker(sourceType: .camera, selectedImages: $viewModel.selectedImages)
+        }
+        .onChange(of: viewModel.selectedItem) { newItem in
             Task {
-                await updateListingImage(newItem: newItem)
+                await viewModel.updateListingImage(newItem: newItem)
             }
         }
-    }
-
-    // MARK: - Functions
-
-    func updateListingImage(newItem: PhotosPickerItem?) async {
-        if let newItem = newItem {
-            if let data = try? await newItem.loadTransferable(type: Data.self),
-               let image = UIImage(data: data) {
-                if selectedImages.count < 3 {
-                    DispatchQueue.main.async {
-                        selectedImages.append(image)
-                        selectedItem = nil
-                    }
-                }
+        .onChange(of: viewModel.isActive) { newValue in
+            if !newValue {
+                dismiss()
             }
         }
     }

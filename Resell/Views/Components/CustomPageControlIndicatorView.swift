@@ -1,5 +1,5 @@
 //
-//  CustomPageControl.swift
+//  CustomPageControlIndicatorView.swift
 //  Resell
 //
 //  Created by Richie Sun on 10/14/24.

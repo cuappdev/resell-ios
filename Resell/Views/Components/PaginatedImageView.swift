@@ -12,7 +12,7 @@ struct PaginatedImageView: View {
 
     // MARK: - Properties
 
-    @Binding var didShowPhotosPicker: Bool
+    @Binding var didShowActionSheet: Bool
     @Binding var images: [UIImage]
     @State private var currentPage: Int = 0
 
@@ -69,7 +69,7 @@ struct PaginatedImageView: View {
     private var addImageView: some View {
         VStack {
             Button {
-                didShowPhotosPicker = true
+                didShowActionSheet = true
             } label: {
                 Image("addNewListing")
                     .resizable()

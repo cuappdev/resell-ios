@@ -8,6 +8,7 @@
 import SwiftUI
 import PhotosUI
 
+@MainActor
 class SendFeedbackViewModel: ObservableObject {
 
     // MARK: - Properties
