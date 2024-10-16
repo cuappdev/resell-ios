@@ -13,8 +13,7 @@ struct NewListingDetailsView: View {
 
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var viewModel: NewListingViewModel
-
-    @Binding var parentIsActive: Bool
+    @EnvironmentObject var mainViewModel: MainViewModel
 
     @State private var priceFieldPosition: CGFloat = 0.0
 
@@ -40,26 +39,44 @@ struct NewListingDetailsView: View {
 
             filtersView
 
+            Spacer()
+
             PurpleButton(isActive: viewModel.checkInputIsValid(), text: "Continue") {
                 viewModel.createNewListing()
-                viewModel.isActive = false
                 dismiss()
+                withAnimation {
+                    mainViewModel.hidesTabBar = false
+                }
             }
-
-            Spacer()
         }
         .padding(.horizontal, 24)
         .background(Constants.Colors.white)
+        .endEditingOnTap()
+        .navigationBarBackButtonHidden(true)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    withAnimation {
+                        viewModel.isDetailsView = false
+                    }
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .resizable()
+                        .tint(Constants.Colors.black)
+                }
+            }
+
             ToolbarItem(placement: .principal) {
                 Text("New Listing")
                     .font(Constants.Fonts.h3)
             }
-
+            
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    parentIsActive = false
                     dismiss()
+                    withAnimation {
+                        mainViewModel.hidesTabBar = false
+                    }
                 } label: {
                     Image(systemName: "xmark")
                         .resizable()
@@ -136,5 +153,5 @@ struct PriceFieldPositionKey: PreferenceKey {
 }
 
 #Preview {
-    NewListingDetailsView(parentIsActive: .constant(true))
+    NewListingDetailsView()
 }

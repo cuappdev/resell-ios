@@ -23,103 +23,13 @@ struct NewListingView: View {
     // MARK: - UI
 
     var body: some View {
-        NavigationStack {
-            Spacer()
-
-            if viewModel.selectedImages.isEmpty {
-                VStack(alignment: .center) {
-                    Text("Image Upload")
-                        .font(Constants.Fonts.h2)
-                        .foregroundStyle(Constants.Colors.black)
-                        .padding(.bottom, 20)
-                    Text("Add images of your item to get started with a new listing")
-                        .font(Constants.Fonts.body1)
-                        .foregroundStyle(Constants.Colors.secondaryGray)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.horizontal, 33)
-            } else {
-                VStack(alignment: .leading) {
-                    Text("Image Upload")
-                        .font(Constants.Fonts.title1)
-                        .foregroundStyle(Constants.Colors.black)
-                        .padding(.horizontal, Constants.Spacing.horizontalPadding)
-                        .padding(.bottom, 16)
-
-                    PaginatedImageView(didShowActionSheet: $viewModel.didShowActionSheet, images: $viewModel.selectedImages, maxImages: 7)
-                        .padding(.horizontal, Constants.Spacing.horizontalPadding)
-                }
-                .padding(.top, 48)
-            }
-
-            Spacer()
-
-            if viewModel.selectedImages.isEmpty {
-                PurpleButton(text: "Add Images") {
-                    viewModel.didShowActionSheet = true
-                }
-            } else {
-                NavigationPurpleButton(
-                    text: "Continue",
-                    destination: NewListingDetailsView(parentIsActive: $viewModel.isActive)
-                        .environmentObject(viewModel)
-                )
-            }
-        }
-        .background(Constants.Colors.white)
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("New Listing")
-                    .font(Constants.Fonts.h3)
-            }
-
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    dismiss()
-                    withAnimation {
-                        mainViewModel.hidesTabBar = false
-                    }
-                } label: {
-                    Image(systemName: "xmark")
-                        .resizable()
-                        .frame(width: 20, height: 20)
-                        .tint(Constants.Colors.black)
-                }
-            }
-        }
-        .onAppear {
-            withAnimation {
-                mainViewModel.hidesTabBar = true
-            }
-        }
-        .actionSheet(isPresented: $viewModel.didShowActionSheet) {
-            ActionSheet(
-                title: Text("Select Image Source"),
-                buttons: [
-                    .default(Text("Photo Library")) {
-                        viewModel.didShowPhotosPicker = true
-                    },
-                    .default(Text("Camera")) {
-                        viewModel.didShowCamera = true
-                    },
-                    .cancel()
-                ]
-            )
-        }
-        .photosPicker(isPresented: $viewModel.didShowPhotosPicker, selection: $viewModel.selectedItem, matching: .images, photoLibrary: .shared())
-        .sheet(isPresented: $viewModel.didShowCamera) {
-            ImagePicker(sourceType: .camera, selectedImages: $viewModel.selectedImages)
-        }
-        .onChange(of: viewModel.selectedItem) { newItem in
-            Task {
-                await viewModel.updateListingImage(newItem: newItem)
-            }
-        }
-        .onChange(of: viewModel.isActive) { newValue in
-            if !newValue {
-                dismiss()
-            }
+        if viewModel.isDetailsView {
+            NewListingDetailsView()
+                .environmentObject(viewModel)
+                .transition(.move(edge: .trailing))
+        } else {
+            NewListingImagesView()
+                .environmentObject(viewModel)
         }
     }
 }

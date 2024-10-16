@@ -13,10 +13,11 @@ class NewListingViewModel: ObservableObject {
     
     // MARK: - Properties
 
+    @Published var isDetailsView: Bool = false
+
     @Published var didShowActionSheet: Bool = false
     @Published var didShowCamera: Bool = false
     @Published var didShowPhotosPicker: Bool = false
-    @Published var isActive: Bool = true
 
     @Published var selectedImages: [UIImage] = []
     @Published var selectedItem: PhotosPickerItem? = nil

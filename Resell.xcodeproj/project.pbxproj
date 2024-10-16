@@ -10,6 +10,8 @@
 		2C02B3952CC031D00020DF90 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C02B3942CC031D00020DF90 /* ImagePicker.swift */; };
 		2C02B3972CC0336B0020DF90 /* NewListingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C02B3962CC0336B0020DF90 /* NewListingViewModel.swift */; };
 		2C02B3992CC040AE0020DF90 /* PriceInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C02B3982CC040AE0020DF90 /* PriceInputView.swift */; };
+		2C02B39D2CC069530020DF90 /* NewListingImagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C02B39C2CC069530020DF90 /* NewListingImagesView.swift */; };
+		2C02B39F2CC06D760020DF90 /* NewRequestViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C02B39E2CC06D760020DF90 /* NewRequestViewModel.swift */; };
 		2C18FFE42CA1322300564577 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C18FFE32CA1322300564577 /* ProfileViewModel.swift */; };
 		2C18FFE62CA139D500564577 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C18FFE52CA139D500564577 /* SettingsView.swift */; };
 		2C18FFE82CA1DC9800564577 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C18FFE72CA1DC9800564577 /* Icon.swift */; };
@@ -90,6 +92,8 @@
 		2C02B3942CC031D00020DF90 /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		2C02B3962CC0336B0020DF90 /* NewListingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewListingViewModel.swift; sourceTree = "<group>"; };
 		2C02B3982CC040AE0020DF90 /* PriceInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriceInputView.swift; sourceTree = "<group>"; };
+		2C02B39C2CC069530020DF90 /* NewListingImagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewListingImagesView.swift; sourceTree = "<group>"; };
+		2C02B39E2CC06D760020DF90 /* NewRequestViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewRequestViewModel.swift; sourceTree = "<group>"; };
 		2C18FFE32CA1322300564577 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
 		2C18FFE52CA139D500564577 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		2C18FFE72CA1DC9800564577 /* Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
@@ -364,6 +368,7 @@
 				2C9B4D082C8FD8200029DF61 /* LoginViewModel.swift */,
 				2C52E4F42C926FDA0042312C /* MainViewModel.swift */,
 				2C02B3962CC0336B0020DF90 /* NewListingViewModel.swift */,
+				2C02B39E2CC06D760020DF90 /* NewRequestViewModel.swift */,
 				2C18FFE32CA1322300564577 /* ProfileViewModel.swift */,
 				2C525B802CB1F195007D5B8E /* SendFeedbackViewModel.swift */,
 				2C18FFE92CA1E4C900564577 /* SettingsViewModel.swift */,
@@ -378,6 +383,7 @@
 				2CBC6B622CB772E300C842A4 /* NewRequestView.swift */,
 				2CBC6B602CB772D000C842A4 /* NewListingView.swift */,
 				2CBC6B6B2CBDF7CF00C842A4 /* NewListingDetailsView.swift */,
+				2C02B39C2CC069530020DF90 /* NewListingImagesView.swift */,
 			);
 			path = NewListing;
 			sourceTree = "<group>";
@@ -524,6 +530,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2C02B39D2CC069530020DF90 /* NewListingImagesView.swift in Sources */,
 				2C52E4F12C926C4B0042312C /* HomeView.swift in Sources */,
 				2C02B3972CC0336B0020DF90 /* NewListingViewModel.swift in Sources */,
 				2C9B4D0E2C90F54D0029DF61 /* LoginGradient.swift in Sources */,
@@ -568,6 +575,7 @@
 				2C9B4CF82C8FB84F0029DF61 /* Constants.swift in Sources */,
 				2C93375A2C93667600818C8E /* TabViewIcon.swift in Sources */,
 				2C93374A2C92AD2D00818C8E /* ProductsGalleryView.swift in Sources */,
+				2C02B39F2CC06D760020DF90 /* NewRequestViewModel.swift in Sources */,
 				2C4DD9852C98EF5E0055D0AB /* WebView.swift in Sources */,
 				2C4DD9792C98CC410055D0AB /* SetupProfileView.swift in Sources */,
 				2CBC6B6C2CBDF7CF00C842A4 /* NewListingDetailsView.swift in Sources */,
