@@ -24,8 +24,6 @@ struct HomeView: View {
             .background(Constants.Colors.white)
             .overlay(alignment: .bottomTrailing) {
                 ExpandableAddButton()
-                    .padding(.trailing, Constants.Spacing.horizontalPadding)
-                    .padding(.bottom, Constants.Spacing.horizontalPadding)
             }
         }
     }

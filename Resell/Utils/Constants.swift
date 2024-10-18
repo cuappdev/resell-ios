@@ -89,18 +89,18 @@ struct Constants {
     ]
 
     static let dummyItemsData: [Item] = [
-        Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin", price: "100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin_long", price: "100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin_long", price: "100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin", price: "100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin_long", price: "100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin", price: "100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin", price: "100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin_long", price: "100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin_long", price: "100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin", price: "100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin_long", price: "100", category: "School"),
+        Item(id: UUID(), title: "Justin", image: "justin", price: "100", category: "School"),
     ]
 }
 

@@ -35,7 +35,7 @@ struct NewListingDetailsView: View {
                     self.priceFieldPosition = value
                 }
 
-            LabeledTextField(label: "Item Description", maxCharacters: 1000, frameHeight: 250, isMultiLine: true, placeholder: "Enter item details... \nCondition \nDimensions", text: $viewModel.descriptionText)
+            LabeledTextField(label: "Item Description", maxCharacters: 1000, frameHeight: 120, isMultiLine: true, placeholder: "Enter item details... \nCondition \nDimensions", text: $viewModel.descriptionText)
 
             filtersView
 

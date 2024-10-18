@@ -12,6 +12,9 @@ struct ProductsGalleryView: View {
 
     // MARK: Properties
 
+    @State private var didPresentProductDetails: Bool = false
+    @State private var selectedItem: Item = Item.defaultItem
+
     let column1: [ProductGallery]
     let column2: [ProductGallery]
 
@@ -30,25 +33,34 @@ struct ProductsGalleryView: View {
             HStack(alignment: .top, spacing: 20) {
                 LazyVStack(spacing: 20) {
                     ForEach(column1) { item in
-                        ProductGalleryCell(galleryItem: item)
+                        ProductGalleryCell(didPresentProductDetails: $didPresentProductDetails, selectedItem: $selectedItem, galleryItem: item)
                     }
                 }
 
                 LazyVStack(spacing: 20) {
                     ForEach(column2) { item in
-                        ProductGalleryCell(galleryItem: item)
+                        ProductGalleryCell(didPresentProductDetails: $didPresentProductDetails, selectedItem: $selectedItem, galleryItem: item)
                     }
                 }
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
         }
+        .navigationDestination(isPresented: $didPresentProductDetails) {
+            // TODO: - Change with backend logic
+            ProductDetailsView(userIsSeller: false, item: selectedItem)
+        }
+        .onTapGesture {
+            didPresentProductDetails = true
+        }
     }
-
 }
 
 struct ProductGalleryCell: View {
 
     // MARK: Properties
+
+    @Binding var didPresentProductDetails: Bool
+    @Binding var selectedItem: Item
 
     let galleryItem: ProductGallery
 
@@ -66,7 +78,7 @@ struct ProductGalleryCell: View {
                     .font(Constants.Fonts.title3)
                     .foregroundStyle(Constants.Colors.black)
                 Spacer()
-                Text(galleryItem.item.price)
+                Text("$\(galleryItem.item.price)")
                     .font(Constants.Fonts.title4)
                     .foregroundStyle(Constants.Colors.black)
             }
@@ -77,6 +89,10 @@ struct ProductGalleryCell: View {
         .overlay {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(Constants.Colors.stroke, lineWidth: 1)
+        }
+        .onTapGesture {
+            selectedItem = galleryItem.item
+            didPresentProductDetails = true
         }
     }
 

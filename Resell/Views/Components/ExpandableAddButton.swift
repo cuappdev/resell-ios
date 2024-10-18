@@ -17,32 +17,46 @@ struct ExpandableAddButton: View {
     // MARK: - UI
 
     var body: some View {
-        VStack(alignment: .trailing, spacing: 24) {
-            buttonOptions
-
-            HStack {
-                Spacer()
-
-                Button {
-                    withAnimation {
-                        isExpanded.toggle()
+        ZStack(alignment: .bottomTrailing) {
+            if isExpanded {
+                Color.black
+                    .opacity(0.2)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        withAnimation {
+                            isExpanded.toggle()
+                        }
                     }
-                } label: {
-                    Image("addNewListing")
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 64, height: 64)
-                        .clipShape(.circle)
-                        .background(.red)
-
-                }
-                .rotationEffect(.degrees(isExpanded ? -45 : 0))
-                .buttonStyle(PlainButtonStyle())
-                .clipShape(.circle)
-
             }
-            .fixedSize(horizontal: true, vertical: false)
+
+            VStack(alignment: .trailing, spacing: 24) {
+                buttonOptions
+
+                HStack {
+                    Spacer()
+
+                    Button {
+                        withAnimation {
+                            isExpanded.toggle()
+                        }
+                    } label: {
+                        Image("addNewListing")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 64, height: 64)
+                            .clipShape(.circle)
+                            .background(.red)
+                    }
+                    .rotationEffect(.degrees(isExpanded ? -45 : 0))
+                    .buttonStyle(PlainButtonStyle())
+                    .clipShape(.circle)
+                }
+                .fixedSize(horizontal: true, vertical: false)
+            }
+            .padding(.trailing, Constants.Spacing.horizontalPadding)
+            .padding(.bottom, Constants.Spacing.horizontalPadding)
         }
+        .animation(.easeInOut, value: isExpanded)
     }
 
     private var buttonOptions: some View {
@@ -53,7 +67,6 @@ struct ExpandableAddButton: View {
             } label: {
                 buttonContent(name: "New Listing", image: "newListing")
             }
-            .animation(.easeInOut, value: isExpanded)
             .offset(y: isExpanded ? -64 : 64)
             .opacity(isExpanded ? 1 : 0)
 
@@ -63,7 +76,6 @@ struct ExpandableAddButton: View {
             } label: {
                 buttonContent(name: "New Request", image: "newRequest")
             }
-            .animation(.easeInOut, value: isExpanded)
             .offset(y: isExpanded ? 0 : 64)
             .opacity(isExpanded ? 1 : 0)
         }

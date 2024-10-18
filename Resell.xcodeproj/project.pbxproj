@@ -12,6 +12,8 @@
 		2C02B3992CC040AE0020DF90 /* PriceInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C02B3982CC040AE0020DF90 /* PriceInputView.swift */; };
 		2C02B39D2CC069530020DF90 /* NewListingImagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C02B39C2CC069530020DF90 /* NewListingImagesView.swift */; };
 		2C02B39F2CC06D760020DF90 /* NewRequestViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C02B39E2CC06D760020DF90 /* NewRequestViewModel.swift */; };
+		2C02B3A32CC074150020DF90 /* ProductDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C02B3A22CC074150020DF90 /* ProductDetailsView.swift */; };
+		2C02B3A52CC097AB0020DF90 /* OptionsMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C02B3A42CC097AB0020DF90 /* OptionsMenuView.swift */; };
 		2C18FFE42CA1322300564577 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C18FFE32CA1322300564577 /* ProfileViewModel.swift */; };
 		2C18FFE62CA139D500564577 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C18FFE52CA139D500564577 /* SettingsView.swift */; };
 		2C18FFE82CA1DC9800564577 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C18FFE72CA1DC9800564577 /* Icon.swift */; };
@@ -94,6 +96,8 @@
 		2C02B3982CC040AE0020DF90 /* PriceInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriceInputView.swift; sourceTree = "<group>"; };
 		2C02B39C2CC069530020DF90 /* NewListingImagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewListingImagesView.swift; sourceTree = "<group>"; };
 		2C02B39E2CC06D760020DF90 /* NewRequestViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewRequestViewModel.swift; sourceTree = "<group>"; };
+		2C02B3A22CC074150020DF90 /* ProductDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductDetailsView.swift; sourceTree = "<group>"; };
+		2C02B3A42CC097AB0020DF90 /* OptionsMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsMenuView.swift; sourceTree = "<group>"; };
 		2C18FFE32CA1322300564577 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
 		2C18FFE52CA139D500564577 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		2C18FFE72CA1DC9800564577 /* Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
@@ -182,6 +186,27 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2C02B3A02CC073340020DF90 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				2C9337532C935C9500818C8E /* ChatsView.swift */,
+				2C52E4F02C926C4B0042312C /* HomeView.swift */,
+				2C9337552C935CB600818C8E /* ProfileView.swift */,
+				2C9337512C935C8100818C8E /* SavedView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		2C02B3A12CC0734F0020DF90 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				2C9B4CCC2C8FB7B70029DF61 /* LoginView.swift */,
+				2C4DD97A2C98CC4D0055D0AB /* VenmoView.swift */,
+				2C4DD9782C98CC410055D0AB /* SetupProfileView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
 		2C18FFEB2CA1E51400564577 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
@@ -315,16 +340,12 @@
 		2C9B4D012C8FC7B00029DF61 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				2CBC6B6A2CBDF74700C842A4 /* NewListing */,
-				2C9337532C935C9500818C8E /* ChatsView.swift */,
-				2C52E4F02C926C4B0042312C /* HomeView.swift */,
-				2C9B4CCC2C8FB7B70029DF61 /* LoginView.swift */,
 				2C52E4F22C926CFE0042312C /* MainView.swift */,
-				2C9337552C935CB600818C8E /* ProfileView.swift */,
-				2C9337512C935C8100818C8E /* SavedView.swift */,
+				2C02B3A02CC073340020DF90 /* Home */,
+				2CBC6B6A2CBDF74700C842A4 /* NewListing */,
+				2C02B3A12CC0734F0020DF90 /* Onboarding */,
+				2C02B3A22CC074150020DF90 /* ProductDetailsView.swift */,
 				2C18FFEB2CA1E51400564577 /* Settings */,
-				2C4DD9782C98CC410055D0AB /* SetupProfileView.swift */,
-				2C4DD97A2C98CC4D0055D0AB /* VenmoView.swift */,
 				2C9B4D052C8FCAF20029DF61 /* Components */,
 			);
 			path = Views;
@@ -348,6 +369,7 @@
 				2C9337492C92AD2D00818C8E /* ProductsGalleryView.swift */,
 				2C9337592C93667600818C8E /* TabViewIcon.swift */,
 				2C4DD9842C98EF5E0055D0AB /* WebView.swift */,
+				2C02B3A42CC097AB0020DF90 /* OptionsMenuView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -562,6 +584,7 @@
 				2C9B4D102C90F69C0029DF61 /* UIScreen + Extensions.swift in Sources */,
 				2C18FFE82CA1DC9800564577 /* Icon.swift in Sources */,
 				2CBC6B632CB772E300C842A4 /* NewRequestView.swift in Sources */,
+				2C02B3A52CC097AB0020DF90 /* OptionsMenuView.swift in Sources */,
 				2CBC6B5B2CB72ED200C842A4 /* ExpandableAddButton.swift in Sources */,
 				2CBC6B5F2CB75ACD00C842A4 /* CustomTabView.swift in Sources */,
 				2C9B4D092C8FD8200029DF61 /* LoginViewModel.swift in Sources */,
@@ -574,6 +597,7 @@
 				2C18FFE62CA139D500564577 /* SettingsView.swift in Sources */,
 				2C9B4CF82C8FB84F0029DF61 /* Constants.swift in Sources */,
 				2C93375A2C93667600818C8E /* TabViewIcon.swift in Sources */,
+				2C02B3A32CC074150020DF90 /* ProductDetailsView.swift in Sources */,
 				2C93374A2C92AD2D00818C8E /* ProductsGalleryView.swift in Sources */,
 				2C02B39F2CC06D760020DF90 /* NewRequestViewModel.swift in Sources */,
 				2C4DD9852C98EF5E0055D0AB /* WebView.swift in Sources */,
