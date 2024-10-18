@@ -20,7 +20,7 @@ struct ExpandableAddButton: View {
         ZStack(alignment: .bottomTrailing) {
             if isExpanded {
                 Color.black
-                    .opacity(0.2)
+                    .opacity(0.3)
                     .ignoresSafeArea()
                     .onTapGesture {
                         withAnimation {

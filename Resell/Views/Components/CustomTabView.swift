@@ -29,7 +29,6 @@ struct CustomTabView: View {
                     ProfileView()
                 }
             }
-            .padding(.bottom, 40)
 
             if !isHidden {
                 HStack {

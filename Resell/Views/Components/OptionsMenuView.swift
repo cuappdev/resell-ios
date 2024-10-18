@@ -12,7 +12,7 @@ struct OptionsMenuView: View {
 
     // MARK: - Properties
 
-    @State var showMenu: Bool = false
+    @Binding var showMenu: Bool
 
     var options: [Option]
 
@@ -20,77 +20,79 @@ struct OptionsMenuView: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            if showMenu {
-                Color.black
-                    .opacity(0.2)
-                    .ignoresSafeArea()
-                    .onTapGesture {
-                        withAnimation {
-                            showMenu = false
-                        }
+            Color.black
+                .opacity(0.3)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    withAnimation {
+                        showMenu = false
                     }
-            }
+                }
 
-            VStack(alignment: .trailing, spacing: 30) {
-                Image(systemName: "ellipsis")
-                    .resizable()
-                    .frame(width: 24, height: 6)
-                    .foregroundStyle(Constants.Colors.white)
-                    .onTapGesture {
-                        withAnimation {
-                            showMenu = true
+            VStack(spacing: 0) {
+                ForEach(options.indices, id: \.self) { index in
+
+                    switch options[index] {
+                    case .share(let url, let item):
+                        ShareLink(item: url, subject: Text("Check out this \(item) on Resell")) {
+                            optionView(name: "Share", icon: "share")
                         }
-                    }
-                if showMenu {
-                    VStack {
-                        ForEach(options.indices, id: \.self) { index in
-                            HStack(alignment: .center) {
-                                Text(options[index].name)
-                                    .font(Constants.Fonts.body1)
-                                    .foregroundStyle(options[index].isRed ? Constants.Colors.errorRed : Constants.Colors.black)
-
-                                Spacer()
-
-                                Image(options[index].icon)
-                                    .resizable()
-                                    .frame(width: 20, height: 20)
-                                    .foregroundStyle(options[index].isRed ? Constants.Colors.errorRed : Constants.Colors.black)
-                            }
-                            .padding(.vertical, 11)
-                            .padding(.horizontal, 16)
-
-                            if index != options.count - 1 {
-                                Divider()
-                                    .frame(height: 0.5)
-                                    .background(Constants.Colors.black.opacity(0.36))
-                            }
-
+                    case .report(let destination):
+                        NavigationLink {
+                            destination
+                        } label: {
+                            optionView(name: "Report", icon: "flag")
                         }
+                    case .delete:
+                        optionView(name: "Delete", icon: "trash", isRed: true)
+                    case .block:
+                        optionView(name: "Block", icon: "block")
+                    case .unblock:
+                        optionView(name: "Unblock", icon: "block")
                     }
-                    .frame(width: 250)
-                    .background(Constants.Colors.wash.opacity(0.8))
-                    .clipShape(.rect(cornerRadius: 12))
+
+
+                    if index != options.count - 1 {
+                        Divider()
+                            .frame(height: 0.5)
+                            .background(Constants.Colors.black.opacity(0.36))
+                    }
+
                 }
             }
+            .frame(width: 250)
+            .background(Constants.Colors.wash.opacity(0.8))
+            .clipShape(.rect(cornerRadius: 12))
             .padding(.trailing, Constants.Spacing.horizontalPadding)
+            .scaleEffect(showMenu ? 1 : 0, anchor: .topTrailing)
+            .animation(.spring, value: showMenu)
+            .transition(.scale(scale: 0, anchor: .topTrailing))
         }
+    }
+
+    private func optionView(name: String, icon: String, isRed: Bool = false) -> some View {
+        HStack(alignment: .center) {
+            Text(name)
+                .font(.system(size: 17))
+                .foregroundStyle(isRed ? Constants.Colors.errorRed : Constants.Colors.black)
+
+            Spacer()
+
+            Image(icon)
+                .resizable()
+                .frame(width: 20, height: 20)
+                .foregroundStyle(isRed ? Constants.Colors.errorRed : Constants.Colors.black)
+        }
+        .frame(height: 44)
+        .padding(.horizontal, 16)
+
     }
 }
 
-struct Option {
-    let name: String
-    let icon: String
-    var isRed: Bool = true
-    let action: () -> Void
-}
-
-#Preview {
-    OptionsMenuView(options: [
-        Option(name: "Share", icon: "share", action: {
-            print("COOL")
-        }),
-        Option(name: "Report", icon: "flag", action: {
-            print("COOL")
-        })
-    ])
+enum Option {
+    case share(url: URL, itemName: String)
+    case report(destination: AnyView)
+    case block
+    case unblock
+    case delete
 }

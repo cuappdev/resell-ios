@@ -42,6 +42,7 @@ struct ProfileView: View {
                 ProductsGalleryView(items: Constants.dummyItemsData)
                     .overlay(alignment: .bottomTrailing) {
                         ExpandableAddButton()
+                            .padding(.bottom, 40)
                     }
             }
             .background(Constants.Colors.white)

@@ -11,9 +11,9 @@ struct ProductDetailsView: View {
 
     // MARK: - Properties
 
-    @State private var currentPage: Int = 0
-    @State private var images: [UIImage] = [UIImage(named: "justin")!, UIImage(named: "justin")!, UIImage(named: "justin_long")!, UIImage(named: "justin")!]
-    @State private var maxImgRatio: CGFloat = 0.0
+    @EnvironmentObject var mainViewModel: MainViewModel
+
+    @StateObject private var viewModel = ProductDetailsViewModel()
 
     var userIsSeller: Bool
     var item: Item
@@ -22,46 +22,69 @@ struct ProductDetailsView: View {
     // MARK: - UI
 
     var body: some View {
-        VStack {
-            imageGallery
-                .frame(height: max(150, UIScreen.main.bounds.width * maxImgRatio))
-                .onAppear {
-                    calculateMaxImgRatio()
-                }
+        ZStack(alignment: .bottom) {
+            VStack {
+                imageGallery
+                    .frame(height: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio))
+                    .onAppear {
+                        viewModel.calculateMaxImgRatio()
+                    }
 
-            if maxImgRatio > 0 {
+                if viewModel.maxImgRatio > 0 {
+                    Spacer()
+                }
+            }
+            .onChange(of: viewModel.maxImgRatio) { _ in
+                print(max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio))
+            }
+            
+            DraggableSheetView(maxDrag: viewModel.maxDrag) {
                 detailsView
             }
-
+            .ignoresSafeArea()
         }
+        .ignoresSafeArea()
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                OptionsMenuView(options: [
-                    Option(name: "Share", icon: "share") {
-
-                    },
-                    Option(name: "Report", icon: "flag") {
-
-                    },
-                    Option(name: "Delete", icon: "trash", isRed: true) {
-                        
+                Button {
+                    withAnimation {
+                        viewModel.didShowOptionsMenu.toggle()
                     }
-                ])
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .resizable()
+                        .frame(width: 24, height: 6)
+                        .foregroundStyle(Constants.Colors.white)
+                }
+                .padding()
             }
+        }
+        .background {
+            NavigationConfigurator { nc in
+                nc.setLighterBackButton()
+            }
+        }
+        .onAppear {
+            withAnimation {
+                mainViewModel.hidesTabBar = true
+            }
+
+            // TODO: move this when the image finishes downloading
+            viewModel.maxDrag = max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio)
         }
     }
 
     private var imageGallery: some View {
         ZStack(alignment: .bottom) {
-            TabView(selection: $currentPage) {
-                ForEach(images.indices, id: \.self) { index in
+            TabView(selection: $viewModel.currentPage) {
+                ForEach(viewModel.images.indices, id: \.self) { index in
                     imageView(index)
                 }
             }
             .background(Constants.Colors.white)
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
 
-            CustomPageControlIndicatorView(currentPage: $currentPage, numberOfPages: $images.count)
+            CustomPageControlIndicatorView(currentPage: $viewModel.currentPage, numberOfPages: $viewModel.images.count)
                 .frame(height: 20)
                 .padding()
         }
@@ -70,7 +93,7 @@ struct ProductDetailsView: View {
 
     private func imageView(_ index: Int) -> some View {
         GeometryReader { geometry in
-            Image(uiImage: images[index])
+            Image(uiImage: viewModel.images[index])
                 .resizable()
                 .scaledToFill()
                 .frame(width: geometry.size.width)
@@ -80,45 +103,45 @@ struct ProductDetailsView: View {
     }
 
     private var detailsView: some View {
-        VStack {
-            HStack {
-                Text(item.title)
-                    .font(Constants.Fonts.h2)
-                    .foregroundStyle(Constants.Colors.black)
+        GeometryReader { geometry in
+            VStack {
+                RoundedRectangle(cornerRadius: 4)
+                    .frame(width: 50, height: 8)
+                    .foregroundStyle(Constants.Colors.inactiveGray)
+                    .padding(.top, 12)
+                HStack {
+                    Text(item.title)
+                        .font(Constants.Fonts.h2)
+                        .foregroundStyle(Constants.Colors.black)
+
+                    Spacer()
+
+                    Text("$\(item.price)")
+                        .font(Constants.Fonts.h2)
+                        .foregroundStyle(Constants.Colors.black)
+                }
+
+                HStack {
+                    Image(seller.1)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 32, height: 32)
+                        .clipShape(Circle())
+
+                    Text(seller.0)
+                        .font(Constants.Fonts.body2)
+                        .foregroundStyle(Constants.Colors.black)
+
+                    Spacer()
+                }
 
                 Spacer()
-
-                Text("$\(item.price)")
-                    .font(Constants.Fonts.h2)
-                    .foregroundStyle(Constants.Colors.black)
             }
-
-            HStack() {
-                Image(seller.1)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 32, height: 32)
-                    .clipShape(.circle)
-
-                Text(seller.0)
-                    .font(Constants.Fonts.body2)
-                    .foregroundStyle(Constants.Colors.black)
-
-                Spacer()
-            }
+            .padding(.horizontal, Constants.Spacing.horizontalPadding)
+            .background(Color.white)
+            .cornerRadius(40)
+            .position(x: UIScreen.width / 2, y: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio - 50) + geometry.size.height / 2)
         }
-        .frame(maxHeight: 400)
-        .background(Color.white)
-        .padding(Constants.Spacing.horizontalPadding)
-        .cornerRadius(20)
     }
 
-    // MARK: - Functions
-
-    private func calculateMaxImgRatio() {
-        let maxAspectRatio = images.map { $0.aspectRatio }.max() ?? 1.0
-        maxImgRatio = maxAspectRatio
-    }
 }
-
-
