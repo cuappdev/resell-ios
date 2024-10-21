@@ -26,6 +26,11 @@ struct HomeView: View {
                 ExpandableAddButton()
                     .padding(.bottom, 40)
             }
+            .onAppear {
+                withAnimation {
+                    mainViewModel.hidesTabBar = false
+                }
+            }
         }
     }
 

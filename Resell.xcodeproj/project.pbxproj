@@ -74,6 +74,12 @@
 		2CE473912CC2126C00BD7E2C /* UINavigationView + Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE473902CC2126C00BD7E2C /* UINavigationView + Extensions.swift */; };
 		2CE473932CC2148B00BD7E2C /* ProductDetailsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE473922CC2148B00BD7E2C /* ProductDetailsViewModel.swift */; };
 		2CE473952CC2204500BD7E2C /* DraggableSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE473942CC2204500BD7E2C /* DraggableSheetView.swift */; };
+		2CE4739C2CC4574A00BD7E2C /* ReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE4739B2CC4574A00BD7E2C /* ReportView.swift */; };
+		2CE4739E2CC4575F00BD7E2C /* ReportOptionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE4739D2CC4575F00BD7E2C /* ReportOptionsView.swift */; };
+		2CE473A02CC4576B00BD7E2C /* ReportDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE4739F2CC4576B00BD7E2C /* ReportDetailsView.swift */; };
+		2CE473A22CC4577500BD7E2C /* ReportConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE473A12CC4577500BD7E2C /* ReportConfirmationView.swift */; };
+		2CE473A42CC4595C00BD7E2C /* ReportViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE473A32CC4595C00BD7E2C /* ReportViewModel.swift */; };
+		2CE473AC2CC5FF8A00BD7E2C /* Router.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE473AB2CC5FF8A00BD7E2C /* Router.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -163,6 +169,12 @@
 		2CE473902CC2126C00BD7E2C /* UINavigationView + Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UINavigationView + Extensions.swift"; sourceTree = "<group>"; };
 		2CE473922CC2148B00BD7E2C /* ProductDetailsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductDetailsViewModel.swift; sourceTree = "<group>"; };
 		2CE473942CC2204500BD7E2C /* DraggableSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableSheetView.swift; sourceTree = "<group>"; };
+		2CE4739B2CC4574A00BD7E2C /* ReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportView.swift; sourceTree = "<group>"; };
+		2CE4739D2CC4575F00BD7E2C /* ReportOptionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportOptionsView.swift; sourceTree = "<group>"; };
+		2CE4739F2CC4576B00BD7E2C /* ReportDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportDetailsView.swift; sourceTree = "<group>"; };
+		2CE473A12CC4577500BD7E2C /* ReportConfirmationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportConfirmationView.swift; sourceTree = "<group>"; };
+		2CE473A32CC4595C00BD7E2C /* ReportViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportViewModel.swift; sourceTree = "<group>"; };
+		2CE473AB2CC5FF8A00BD7E2C /* Router.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -326,6 +338,7 @@
 				2C9B4D002C8FC0570029DF61 /* Extensions */,
 				2C9B4CF72C8FB84F0029DF61 /* Constants.swift */,
 				2C3024722C90FFE60057D3D9 /* Keys.swift */,
+				2CE473AB2CC5FF8A00BD7E2C /* Router.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -352,6 +365,7 @@
 				2CBC6B6A2CBDF74700C842A4 /* NewListing */,
 				2C02B3A12CC0734F0020DF90 /* Onboarding */,
 				2C02B3A22CC074150020DF90 /* ProductDetailsView.swift */,
+				2CE4739A2CC456EB00BD7E2C /* Report */,
 				2C18FFEB2CA1E51400564577 /* Settings */,
 				2C9B4D052C8FCAF20029DF61 /* Components */,
 			);
@@ -401,6 +415,7 @@
 				2C02B39E2CC06D760020DF90 /* NewRequestViewModel.swift */,
 				2CE473922CC2148B00BD7E2C /* ProductDetailsViewModel.swift */,
 				2C18FFE32CA1322300564577 /* ProfileViewModel.swift */,
+				2CE473A32CC4595C00BD7E2C /* ReportViewModel.swift */,
 				2C525B802CB1F195007D5B8E /* SendFeedbackViewModel.swift */,
 				2C18FFE92CA1E4C900564577 /* SettingsViewModel.swift */,
 				2C4DD97C2C98D45B0055D0AB /* SetupProfileViewModel.swift */,
@@ -411,12 +426,23 @@
 		2CBC6B6A2CBDF74700C842A4 /* NewListing */ = {
 			isa = PBXGroup;
 			children = (
-				2CBC6B622CB772E300C842A4 /* NewRequestView.swift */,
 				2CBC6B602CB772D000C842A4 /* NewListingView.swift */,
 				2CBC6B6B2CBDF7CF00C842A4 /* NewListingDetailsView.swift */,
 				2C02B39C2CC069530020DF90 /* NewListingImagesView.swift */,
+				2CBC6B622CB772E300C842A4 /* NewRequestView.swift */,
 			);
 			path = NewListing;
+			sourceTree = "<group>";
+		};
+		2CE4739A2CC456EB00BD7E2C /* Report */ = {
+			isa = PBXGroup;
+			children = (
+				2CE473A12CC4577500BD7E2C /* ReportConfirmationView.swift */,
+				2CE4739F2CC4576B00BD7E2C /* ReportDetailsView.swift */,
+				2CE4739D2CC4575F00BD7E2C /* ReportOptionsView.swift */,
+				2CE4739B2CC4574A00BD7E2C /* ReportView.swift */,
+			);
+			path = Report;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -579,16 +605,20 @@
 				2C02B3992CC040AE0020DF90 /* PriceInputView.swift in Sources */,
 				2C9337462C92A66C00818C8E /* FilterButton.swift in Sources */,
 				2C02B3952CC031D00020DF90 /* ImagePicker.swift in Sources */,
+				2CE4739C2CC4574A00BD7E2C /* ReportView.swift in Sources */,
 				2C9B4D042C8FC8250029DF61 /* LoginView.swift in Sources */,
 				2C93374C2C92B6A500818C8E /* UIImage + Extensions.swift in Sources */,
 				2C18FFE42CA1322300564577 /* ProfileViewModel.swift in Sources */,
 				2C9B4CCB2C8FB7B70029DF61 /* ResellApp.swift in Sources */,
 				2C4DD97D2C98D45B0055D0AB /* SetupProfileViewModel.swift in Sources */,
+				2CE473A42CC4595C00BD7E2C /* ReportViewModel.swift in Sources */,
+				2CE473AC2CC5FF8A00BD7E2C /* Router.swift in Sources */,
 				2C9B4D072C8FCB070029DF61 /* PurpleButton.swift in Sources */,
 				2CBC6B652CB7A5A000C842A4 /* BlockerUsersView.swift in Sources */,
 				2CE473952CC2204500BD7E2C /* DraggableSheetView.swift in Sources */,
 				2C525B812CB1F195007D5B8E /* SendFeedbackViewModel.swift in Sources */,
 				2C9337562C935CB600818C8E /* ProfileView.swift in Sources */,
+				2CE4739E2CC4575F00BD7E2C /* ReportOptionsView.swift in Sources */,
 				2C9337482C92AAEE00818C8E /* HomeViewModel.swift in Sources */,
 				2C4DD9832C98E3110055D0AB /* View + Extensions.swift in Sources */,
 				2C6410982C9DFD8B00E4B390 /* UIApplication + Extensions.swift in Sources */,
@@ -596,12 +626,14 @@
 				2C18FFE82CA1DC9800564577 /* Icon.swift in Sources */,
 				2CBC6B632CB772E300C842A4 /* NewRequestView.swift in Sources */,
 				2C02B3A52CC097AB0020DF90 /* OptionsMenuView.swift in Sources */,
+				2CE473A02CC4576B00BD7E2C /* ReportDetailsView.swift in Sources */,
 				2CBC6B5B2CB72ED200C842A4 /* ExpandableAddButton.swift in Sources */,
 				2CBC6B5F2CB75ACD00C842A4 /* CustomTabView.swift in Sources */,
 				2C9B4D092C8FD8200029DF61 /* LoginViewModel.swift in Sources */,
 				2C9337522C935C8100818C8E /* SavedView.swift in Sources */,
 				2CE473912CC2126C00BD7E2C /* UINavigationView + Extensions.swift in Sources */,
 				2CBC6B672CBDDB6400C842A4 /* PaginatedImageView.swift in Sources */,
+				2CE473A22CC4577500BD7E2C /* ReportConfirmationView.swift in Sources */,
 				2C18FFEA2CA1E4C900564577 /* SettingsViewModel.swift in Sources */,
 				2C525B7F2CB1E884007D5B8E /* SendFeedbackView.swift in Sources */,
 				2CBC6B692CBDDC8100C842A4 /* CustomPageControlIndicatorView.swift in Sources */,

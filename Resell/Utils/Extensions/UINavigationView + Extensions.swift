@@ -27,8 +27,8 @@ struct NavigationConfigurator: UIViewControllerRepresentable {
 
 
 extension UINavigationController {
-    func setLighterBackButton() {
-        let backButtonImage = UIImage(named: "chevron.left.white")?
+    func setBackButtonTint(isWhite: Bool = false) {
+        let backButtonImage = UIImage(named: "chevron.left\(isWhite ? ".white" : "")")?
             .resized(to: CGSize(width: 38, height: 24))
             .withRenderingMode(.alwaysOriginal)
 
@@ -41,5 +41,15 @@ extension UINavigationController {
         self.navigationBar.standardAppearance = appearance
         self.navigationBar.scrollEdgeAppearance = appearance
         self.navigationBar.compactAppearance = appearance
+    }
+}
+
+extension UIImage {
+    func resized(to size: CGSize) -> UIImage {
+        UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
+        self.draw(in: CGRect(origin: .zero, size: size))
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return newImage ?? self
     }
 }

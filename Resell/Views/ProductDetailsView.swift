@@ -37,12 +37,12 @@ struct ProductDetailsView: View {
             .onChange(of: viewModel.maxImgRatio) { _ in
                 print(max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio))
             }
-            
+
             DraggableSheetView(maxDrag: viewModel.maxDrag) {
                 detailsView
-                    .ignoresSafeArea()
             }
             .ignoresSafeArea()
+
 
             buttonGradientView
 
@@ -50,9 +50,10 @@ struct ProductDetailsView: View {
                 OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, options: [
                     // TODO: Replace with Deeplink
                     .share(url: URL(string: "https://www.google.com")!, itemName: item.title),
-                    .report(destination: AnyView(Text("Placeholder"))),
+                    .report(destination: AnyView(ReportView(reportType: "Post"))),
                     .delete
                 ])
+                .padding(.top, (UIApplication.shared.keyWindow?.safeAreaInsets.top ?? 0) + 30)
                 .zIndex(1)
             }
         }
@@ -69,12 +70,13 @@ struct ProductDetailsView: View {
                         .frame(width: 24, height: 6)
                         .foregroundStyle(Constants.Colors.white)
                 }
+
                 .padding()
             }
         }
         .background {
             NavigationConfigurator { nc in
-                nc.setLighterBackButton()
+                nc.setBackButtonTint(isWhite: true)
             }
         }
         .onAppear {
@@ -84,6 +86,9 @@ struct ProductDetailsView: View {
 
             // TODO: move this when the image finishes downloading
             viewModel.maxDrag = max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio)
+        }
+        .onDisappear {
+            viewModel.didShowOptionsMenu = false
         }
     }
 
@@ -210,6 +215,7 @@ struct ProductDetailsView: View {
             }
         }
         .frame(width: UIScreen.width, height: 50)
+        .padding(.bottom, 24)
         .background(
             LinearGradient(stops: [
                 .init(color: Color.clear, location: 0.0),

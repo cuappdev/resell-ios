@@ -11,7 +11,7 @@ struct DraggableSheetView<Content: View>: View {
     // MARK: - Properties
 
     @State private var dragOffset: CGFloat = 0.0
-    @State private var lastDragOffset: CGFloat = 0.0
+    @State private var lastDragOffset: CGFloat = -50
     @State private var isDragging: Bool = false
 
     var maxDrag: CGFloat
