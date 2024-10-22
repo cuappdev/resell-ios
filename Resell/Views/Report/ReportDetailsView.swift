@@ -11,6 +11,7 @@ struct ReportDetailsView: View {
 
     // MARK: - Properties
 
+    @EnvironmentObject var router: Router
     @EnvironmentObject var viewModel: ReportViewModel
 
     // MARK: - UI
@@ -41,30 +42,14 @@ struct ReportDetailsView: View {
 
             Spacer()
 
-            PurpleButton(text: "Submit") {
-                withAnimation {
-                    viewModel.didSubmitReport = true
-                }
+            PurpleButton(isActive: !viewModel.reportDetailsText.cleaned().isEmpty,text: "Submit") {
+                router.push(.reportConfirmation)
             }
             .padding(.bottom, Constants.Spacing.horizontalPadding)
         }
         .background(Constants.Colors.white)
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
-        .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    withAnimation {
-                        viewModel.isDetailsView = false
-                    }
-                } label: {
-                    Image("chevron.left")
-                        .resizable()
-                        .frame(width: 38, height: 24)
-                        .tint(Constants.Colors.black)
-                }
-            }
-
             ToolbarItem(placement: .principal) {
                 Text("Report \(viewModel.reportType)")
                     .font(Constants.Fonts.h3)

@@ -11,7 +11,7 @@ struct ReportConfirmationView: View {
 
     // MARK: - Properties
     
-    @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var router: Router
     @EnvironmentObject var viewModel: ReportViewModel
 
     // MARK: - UI
@@ -43,7 +43,6 @@ struct ReportConfirmationView: View {
                 .multilineTextAlignment(.center)
 
             Button {
-                // TODO: Unblock Account Backend Call
                 withAnimation {
                     viewModel.didShowPopup = true
                 }
@@ -72,7 +71,7 @@ struct ReportConfirmationView: View {
 
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    dismiss()
+                    router.popToRoot()
                 } label: {
                     Image(systemName: "xmark")
                         .resizable()
@@ -102,12 +101,12 @@ struct ReportConfirmationView: View {
                             .font(Constants.Fonts.title1)
                             .foregroundStyle(Constants.Colors.resellPurple)
                             .padding(.vertical, 12)
-                            .padding(.horizontal, 50)
+                            .padding(.horizontal, 40)
                     }
 
                     Button {
                         // TODO: Backend Call Block User
-                        dismiss()
+                        router.popToRoot()
                     } label: {
                         Text("Block")
                             .font(Constants.Fonts.body1)

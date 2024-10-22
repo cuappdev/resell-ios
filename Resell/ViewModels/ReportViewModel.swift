@@ -24,7 +24,8 @@ class ReportViewModel: ObservableObject {
         }
     }
 
-    @Published var reportType: String = ""
+    // TODO: Add Logic to change this later
+    @Published var reportType: String = "Post"
     @Published var selectedOption: String = ""
 
     // TODO: - Replace with actual user name

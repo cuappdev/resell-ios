@@ -12,6 +12,7 @@ struct ProductDetailsView: View {
     // MARK: - Properties
 
     @EnvironmentObject var mainViewModel: MainViewModel
+    @EnvironmentObject var router: Router
 
     @StateObject private var viewModel = ProductDetailsViewModel()
 
@@ -43,14 +44,12 @@ struct ProductDetailsView: View {
             }
             .ignoresSafeArea()
 
-
             buttonGradientView
 
             if viewModel.didShowOptionsMenu {
                 OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, options: [
-                    // TODO: Replace with Deeplink
                     .share(url: URL(string: "https://www.google.com")!, itemName: item.title),
-                    .report(destination: AnyView(ReportView(reportType: "Post"))),
+                    .report, // Use report case which pushes to the report screen using router
                     .delete
                 ])
                 .padding(.top, (UIApplication.shared.keyWindow?.safeAreaInsets.top ?? 0) + 30)
@@ -70,13 +69,7 @@ struct ProductDetailsView: View {
                         .frame(width: 24, height: 6)
                         .foregroundStyle(Constants.Colors.white)
                 }
-
                 .padding()
-            }
-        }
-        .background {
-            NavigationConfigurator { nc in
-                nc.setBackButtonTint(isWhite: true)
             }
         }
         .onAppear {
@@ -84,11 +77,14 @@ struct ProductDetailsView: View {
                 mainViewModel.hidesTabBar = true
             }
 
-            // TODO: move this when the image finishes downloading
+            // Set the max drag when the image finishes downloading
             viewModel.maxDrag = max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio)
         }
         .onDisappear {
             viewModel.didShowOptionsMenu = false
+            withAnimation {
+                mainViewModel.hidesTabBar = false
+            }
         }
     }
 
@@ -131,7 +127,6 @@ struct ProductDetailsView: View {
                         .frame(alignment: .center)
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
-
 
                 titlePriceView
 
@@ -196,7 +191,6 @@ struct ProductDetailsView: View {
 
             HStack {
                 let imageSize = (UIScreen.width - 72) / 4
-                // TODO: Replace with similar items logic
                 ForEach(0..<4, id: \.self) { _ in
                     Image("justin_long")
                         .resizable()
@@ -224,5 +218,4 @@ struct ProductDetailsView: View {
             ], startPoint: .top, endPoint: .bottom)
         )
     }
-
 }

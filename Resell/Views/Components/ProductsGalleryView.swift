@@ -12,8 +12,8 @@ struct ProductsGalleryView: View {
 
     // MARK: Properties
 
-    @State private var didPresentProductDetails: Bool = false
     @State private var selectedItem: Item = Item.defaultItem
+    @EnvironmentObject var router: Router  // Inject router
 
     let column1: [ProductGallery]
     let column2: [ProductGallery]
@@ -33,24 +33,23 @@ struct ProductsGalleryView: View {
             HStack(alignment: .top, spacing: 20) {
                 LazyVStack(spacing: 20) {
                     ForEach(column1) { item in
-                        ProductGalleryCell(didPresentProductDetails: $didPresentProductDetails, selectedItem: $selectedItem, galleryItem: item)
+                        ProductGalleryCell(selectedItem: $selectedItem, galleryItem: item)
                     }
                 }
 
                 LazyVStack(spacing: 20) {
                     ForEach(column2) { item in
-                        ProductGalleryCell(didPresentProductDetails: $didPresentProductDetails, selectedItem: $selectedItem, galleryItem: item)
+                        ProductGalleryCell(selectedItem: $selectedItem, galleryItem: item)
                     }
                 }
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
         }
-        .navigationDestination(isPresented: $didPresentProductDetails) {
-            // TODO: - Change with backend logic
-            ProductDetailsView(userIsSeller: false, item: selectedItem)
-        }
-        .onTapGesture {
-            didPresentProductDetails = true
+        .onChange(of: selectedItem) { item in
+            if selectedItem != Item.defaultItem {
+                router.push(.productDetails(selectedItem.id.uuidString))
+                selectedItem = Item.defaultItem
+            }
         }
     }
 }
@@ -59,7 +58,6 @@ struct ProductGalleryCell: View {
 
     // MARK: Properties
 
-    @Binding var didPresentProductDetails: Bool
     @Binding var selectedItem: Item
 
     let galleryItem: ProductGallery
@@ -86,16 +84,14 @@ struct ProductGalleryCell: View {
         }
         .clipped()
         .clipShape(.rect(cornerRadius: 8))
+        .onTapGesture {
+            selectedItem = galleryItem.item
+        }
         .overlay {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(Constants.Colors.stroke, lineWidth: 1)
         }
-        .onTapGesture {
-            selectedItem = galleryItem.item
-            didPresentProductDetails = true
-        }
     }
-
 }
 
 struct ProductGallery: Identifiable {

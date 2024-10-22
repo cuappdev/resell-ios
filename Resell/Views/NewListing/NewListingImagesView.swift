@@ -11,7 +11,7 @@ struct NewListingImagesView: View {
 
     // MARK: - Properties
 
-    @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var router: Router
     @EnvironmentObject var viewModel: NewListingViewModel
     @EnvironmentObject var mainViewModel: MainViewModel
 
@@ -55,9 +55,7 @@ struct NewListingImagesView: View {
                 }
             } else {
                 PurpleButton(text: "Continue") {
-                    withAnimation {
-                        viewModel.isDetailsView = true
-                    }
+                    router.push(.newListingDetails)
                 }
             }
         }
@@ -71,8 +69,8 @@ struct NewListingImagesView: View {
 
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    dismiss()
                     withAnimation {
+                        router.popToRoot()
                         mainViewModel.hidesTabBar = false
                     }
                 } label: {

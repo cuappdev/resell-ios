@@ -10,10 +10,11 @@ import SwiftUI
 struct HomeView: View {
 
     @EnvironmentObject private var mainViewModel: MainViewModel
+    @EnvironmentObject var router: Router
     @StateObject private var viewModel = HomeViewModel.shared
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $router.path) {
             VStack(spacing: 0) {
                 headerView
 
@@ -27,6 +28,7 @@ struct HomeView: View {
                     .padding(.bottom, 40)
             }
             .onAppear {
+                print("Appear")
                 withAnimation {
                     mainViewModel.hidesTabBar = false
                 }

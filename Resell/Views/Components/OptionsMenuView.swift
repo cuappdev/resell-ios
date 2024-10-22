@@ -13,6 +13,7 @@ struct OptionsMenuView: View {
     // MARK: - Properties
 
     @Binding var showMenu: Bool
+    @EnvironmentObject var router: Router
 
     var options: [Option]
 
@@ -37,9 +38,12 @@ struct OptionsMenuView: View {
                         ShareLink(item: url, subject: Text("Check out this \(item) on Resell")) {
                             optionView(name: "Share", icon: "share")
                         }
-                    case .report(let destination):
-                        NavigationLink {
-                            destination
+                    case .report:
+                        Button {
+                            withAnimation {
+                                router.push(.reportOptions)
+                                showMenu = false
+                            }
                         } label: {
                             optionView(name: "Report", icon: "flag")
                         }
@@ -50,7 +54,6 @@ struct OptionsMenuView: View {
                     case .unblock:
                         optionView(name: "Unblock", icon: "block")
                     }
-
 
                     if index != options.count - 1 {
                         Divider()
@@ -85,13 +88,12 @@ struct OptionsMenuView: View {
         }
         .frame(height: 44)
         .padding(.horizontal, 16)
-
     }
 }
 
 enum Option {
     case share(url: URL, itemName: String)
-    case report(destination: AnyView)
+    case report
     case block
     case unblock
     case delete

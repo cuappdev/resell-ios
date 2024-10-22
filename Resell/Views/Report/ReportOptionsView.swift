@@ -11,6 +11,7 @@ struct ReportOptionsView: View {
 
     // MARK: - Properties
 
+    @EnvironmentObject var router: Router
     @EnvironmentObject var mainViewModel: MainViewModel
     @EnvironmentObject var viewModel: ReportViewModel
 
@@ -26,10 +27,7 @@ struct ReportOptionsView: View {
             ForEach(viewModel.reportOptions, id: \.self) { option in
                 Button {
                     viewModel.selectedOption = option
-
-                    withAnimation {
-                        viewModel.isDetailsView = true
-                    }
+                    router.push(.reportDetails)
                 } label: {
                     reportOptionsRow(option: option)
                 }
@@ -42,6 +40,11 @@ struct ReportOptionsView: View {
             ToolbarItem(placement: .principal) {
                 Text("Report \(viewModel.reportType)")
                     .font(Constants.Fonts.h3)
+            }
+        }
+        .background {
+            NavigationConfigurator { nc in
+                nc.setBackButtonTint()
             }
         }
     }

@@ -15,9 +15,14 @@ class Router: ObservableObject {
         case home
         case saved
         case chats
+        case newListingDetails
+        case newListingImages
+        case newRequest
         case profile
         case productDetails(String)
-        case report
+        case reportOptions
+        case reportDetails
+        case reportConfirmation
     }
 
     func push(_ route: Route) {
@@ -32,5 +37,9 @@ class Router: ObservableObject {
 
     func popToRoot() {
         path.removeAll()
+    }
+
+    func lastPushedView() -> Route {
+        return path.last ?? .home
     }
 }
