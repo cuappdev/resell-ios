@@ -42,10 +42,8 @@ struct ReportOptionsView: View {
                     .font(Constants.Fonts.h3)
             }
         }
-        .background {
-            NavigationConfigurator { nc in
-                nc.setBackButtonTint()
-            }
+        .onAppear {
+            viewModel.clear()
         }
     }
 

@@ -23,6 +23,12 @@ class Router: ObservableObject {
         case reportOptions
         case reportDetails
         case reportConfirmation
+        case settings(Bool)
+        case blockerUsers
+        case feedback
+        case notifications
+        case setupProfile
+        case venmo
     }
 
     func push(_ route: Route) {
@@ -43,3 +49,4 @@ class Router: ObservableObject {
         return path.last ?? .home
     }
 }
+

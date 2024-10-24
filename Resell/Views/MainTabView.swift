@@ -11,9 +11,11 @@ struct MainTabView: View {
 
     // MARK: - Properties
 
+    @EnvironmentObject private var mainViewModel: MainViewModel
+    @EnvironmentObject var router: Router
+
     @Binding var isHidden: Bool
     @Binding var selection: Int
-    @EnvironmentObject var router: Router
 
     // MARK: - ViewModels
 
@@ -47,6 +49,7 @@ struct MainTabView: View {
                     case .newRequest:
                         NewRequestView()
                     case .productDetails(let itemID):
+                        // TODO: - Integrate with itemID
                         ProductDetailsView(userIsSeller: false, item: Item.defaultItem)
                     case .reportConfirmation:
                         ReportConfirmationView()
@@ -57,6 +60,16 @@ struct MainTabView: View {
                     case .reportOptions:
                         ReportOptionsView()
                             .environmentObject(reportViewModel)
+                    case .settings(let isAccountSettings):
+                        SettingsView(isAccountSettings: isAccountSettings)
+                    case .blockerUsers:
+                        BlockerUsersView()
+                    case .feedback:
+                        SendFeedbackView()
+                    case .notifications:
+                        NotificationsSettingsView()
+                    case .login:
+                        LoginView(userDidLogin: $mainViewModel.userDidLogin)
                     default:
                         EmptyView()
                     }
@@ -78,6 +91,7 @@ struct MainTabView: View {
                     .padding(.horizontal, 40)
                     .padding(.top, 16)
                     .padding(.bottom, 36)
+                    .frame(width: UIScreen.width)
                     .background(Constants.Colors.white)
                     .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
                     .shadow(radius: 4)

@@ -44,6 +44,7 @@ struct ProductsGalleryView: View {
                 }
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
+            .padding(.top, Constants.Spacing.horizontalPadding)
         }
         .onChange(of: selectedItem) { item in
             if selectedItem != Item.defaultItem {

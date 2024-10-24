@@ -19,23 +19,25 @@ class ProductDetailsViewModel: ObservableObject {
         UIImage(named: "justin")!,
         UIImage(named: "justin")!,
         UIImage(named: "justin_long")!,
-        UIImage(named: "justin")!
+        UIImage(named: "justin")!,
+        UIImage(named: "tall_image")!
     ]
+    @Published var isSaved: Bool = false
     @Published var maxDrag: CGFloat = UIScreen.height / 2
     @Published var maxImgRatio: CGFloat = 0.0
 
     // MARK: - Functions
 
-    func deleteAction() {
-        // MARK: - TODO Integrate backend delete post call
+    func getItem() {
+        // TODO: Backend get Item Call
     }
 
-    func reportAction() {
-
+    func updateItemSaved() {
+        // TODO: Insert backend saveItem call
     }
 
-    func shareAction() {
-
+    func changeItem() {
+        // TODO: Backend Call to change item to similar item
     }
 
     func calculateMaxImgRatio() {

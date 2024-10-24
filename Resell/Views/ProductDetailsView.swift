@@ -49,7 +49,7 @@ struct ProductDetailsView: View {
             if viewModel.didShowOptionsMenu {
                 OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, options: [
                     .share(url: URL(string: "https://www.google.com")!, itemName: item.title),
-                    .report, // Use report case which pushes to the report screen using router
+                    .report,
                     .delete
                 ])
                 .padding(.top, (UIApplication.shared.keyWindow?.safeAreaInsets.top ?? 0) + 30)
@@ -57,7 +57,18 @@ struct ProductDetailsView: View {
             }
         }
         .ignoresSafeArea()
+        .navigationBarBackButtonHidden(true)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    router.pop()
+                } label: {
+                    Image("chevron.left.white")
+                        .resizable()
+                        .frame(width: 36, height: 24)
+                }
+            }
+
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     withAnimation {
@@ -144,6 +155,10 @@ struct ProductDetailsView: View {
             .background(Color.white)
             .cornerRadius(40)
             .position(x: UIScreen.width / 2, y: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio - 50) + geometry.size.height / 2)
+            .overlay(alignment: .trailing) {
+                saveButton
+                    .position(x: UIScreen.width - 60, y: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio - 110))
+            }
         }
     }
 
@@ -197,6 +212,9 @@ struct ProductDetailsView: View {
                         .scaledToFill()
                         .frame(width: imageSize, height: imageSize)
                         .clipShape(.rect(cornerRadius: 25))
+                        .onTapGesture {
+                            viewModel.changeItem()
+                        }
                 }
             }
         }
@@ -217,5 +235,24 @@ struct ProductDetailsView: View {
                 .init(color: Constants.Colors.white, location: 1.0)
             ], startPoint: .top, endPoint: .bottom)
         )
+    }
+
+    private var saveButton: some View {
+        Button {
+            viewModel.isSaved.toggle()
+            viewModel.updateItemSaved()
+        } label: {
+            ZStack {
+                Circle()
+                    .frame(width: 72, height: 72)
+                    .foregroundStyle(Constants.Colors.white)
+                    .opacity(viewModel.isSaved ? 1.0 : 0.9)
+                    .shadow(radius: 2)
+
+                Image(viewModel.isSaved ? "saved.fill" : "saved")
+                    .resizable()
+                    .frame(width: 21, height: 27)
+            }
+        }
     }
 }

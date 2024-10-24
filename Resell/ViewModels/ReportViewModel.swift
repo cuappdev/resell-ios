@@ -13,8 +13,6 @@ class ReportViewModel: ObservableObject {
     // MARK: - Properties
 
     @Published var didShowPopup: Bool = false
-    @Published var didSubmitReport: Bool = false
-    @Published var isDetailsView: Bool = false
 
     @Published var reportDetailsText: String = "" {
         didSet {
@@ -53,6 +51,12 @@ class ReportViewModel: ObservableObject {
 
     func reportUser() {
         // TODO: Backend Report Call
+    }
+
+    func clear() {
+        didShowPopup = false
+        reportDetailsText = ""
+        selectedOption = ""
     }
 
 }

@@ -9,10 +9,11 @@ import SwiftUI
 
 struct SavedView: View {
 
+    @EnvironmentObject var router: Router
     @StateObject private var viewModel = HomeViewModel.shared
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $router.path) {
             VStack(spacing: 0) {
                 headerView
                 ProductsGalleryView(items: viewModel.savedItems)
@@ -36,6 +37,5 @@ struct SavedView: View {
             })
         }
         .padding(.horizontal, 25)
-        .padding(.bottom, 24)
     }
 }

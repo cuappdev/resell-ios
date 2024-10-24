@@ -72,6 +72,7 @@ struct ReportConfirmationView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     router.popToRoot()
+                    viewModel.clear()
                 } label: {
                     Image(systemName: "xmark")
                         .resizable()
@@ -107,6 +108,7 @@ struct ReportConfirmationView: View {
                     Button {
                         // TODO: Backend Call Block User
                         router.popToRoot()
+                        viewModel.clear()
                     } label: {
                         Text("Block")
                             .font(Constants.Fonts.body1)

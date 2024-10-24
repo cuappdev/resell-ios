@@ -33,6 +33,7 @@ struct HomeView: View {
                     mainViewModel.hidesTabBar = false
                 }
             }
+            .navigationBarBackButtonHidden()
         }
     }
 
@@ -50,7 +51,7 @@ struct HomeView: View {
                 Icon(image: "search")
             })
         }
-        .padding(.horizontal, 25)
+        .padding(.horizontal, Constants.Spacing.horizontalPadding)
     }
 
     private var filtersView: some View {
@@ -62,9 +63,8 @@ struct HomeView: View {
                     }
                 }
             }
-            .padding(.leading, 25)
+            .padding(.leading, Constants.Spacing.horizontalPadding)
             .padding(.vertical, 1)
-            .padding(.bottom, 12)
         }
     }
 }

@@ -69,8 +69,10 @@ struct NewListingImagesView: View {
 
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
+                    router.pop()
+                    viewModel.clear()
+
                     withAnimation {
-                        router.popToRoot()
                         mainViewModel.hidesTabBar = false
                     }
                 } label: {
@@ -79,11 +81,6 @@ struct NewListingImagesView: View {
                         .frame(width: 20, height: 20)
                         .tint(Constants.Colors.black)
                 }
-            }
-        }
-        .onAppear {
-            withAnimation {
-                mainViewModel.hidesTabBar = true
             }
         }
         .actionSheet(isPresented: $viewModel.didShowActionSheet) {

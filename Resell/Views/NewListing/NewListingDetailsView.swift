@@ -44,6 +44,7 @@ struct NewListingDetailsView: View {
             PurpleButton(isActive: viewModel.checkInputIsValid(), text: "Continue") {
                 viewModel.createNewListing()
                 router.popToRoot()
+                viewModel.clear()
                 withAnimation {
                     mainViewModel.hidesTabBar = false
                 }
@@ -60,10 +61,9 @@ struct NewListingDetailsView: View {
             
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    router.popToRoot()
-                    withAnimation {
-                        mainViewModel.hidesTabBar = false
-                    }
+                    router.pop()
+                    router.pop()
+                    viewModel.clear()
                 } label: {
                     Image(systemName: "xmark")
                         .resizable()

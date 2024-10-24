@@ -48,9 +48,17 @@ struct OptionsMenuView: View {
                             optionView(name: "Report", icon: "flag")
                         }
                     case .delete:
-                        optionView(name: "Delete", icon: "trash", isRed: true)
+                        Button {
+                            // TODO: Call Backend to delete item
+                        } label: {
+                            optionView(name: "Delete", icon: "trash", isRed: true)
+                        }
                     case .block:
-                        optionView(name: "Block", icon: "block")
+                        Button {
+                            // TODO: Call Backend to block user
+                        } label: {
+                            optionView(name: "Block", icon: "block")
+                        }
                     case .unblock:
                         optionView(name: "Unblock", icon: "block")
                     }
