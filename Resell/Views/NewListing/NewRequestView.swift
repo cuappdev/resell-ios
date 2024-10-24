@@ -11,7 +11,7 @@ struct NewRequestView: View {
 
     // MARK: - Properties
 
-    @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var router: Router
     @EnvironmentObject var mainViewModel: MainViewModel
     @StateObject private var viewModel = NewRequestViewModel()
 
@@ -41,7 +41,7 @@ struct NewRequestView: View {
 
             PurpleButton(isActive: viewModel.checkInputIsValid(), text: "Continue") {
                 viewModel.createNewRequest()
-                dismiss()
+                router.pop()
                 withAnimation {
                     mainViewModel.hidesTabBar = false
                 }
@@ -59,7 +59,7 @@ struct NewRequestView: View {
 
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    dismiss()
+                    router.pop()
                     withAnimation {
                         mainViewModel.hidesTabBar = false
                     }

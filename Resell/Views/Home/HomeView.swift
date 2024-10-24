@@ -10,10 +10,11 @@ import SwiftUI
 struct HomeView: View {
 
     @EnvironmentObject private var mainViewModel: MainViewModel
+    @EnvironmentObject var router: Router
     @StateObject private var viewModel = HomeViewModel.shared
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $router.path) {
             VStack(spacing: 0) {
                 headerView
 
@@ -24,7 +25,15 @@ struct HomeView: View {
             .background(Constants.Colors.white)
             .overlay(alignment: .bottomTrailing) {
                 ExpandableAddButton()
+                    .padding(.bottom, 40)
             }
+            .onAppear {
+                print("Appear")
+                withAnimation {
+                    mainViewModel.hidesTabBar = false
+                }
+            }
+            .navigationBarBackButtonHidden()
         }
     }
 
@@ -42,7 +51,7 @@ struct HomeView: View {
                 Icon(image: "search")
             })
         }
-        .padding(.horizontal, 25)
+        .padding(.horizontal, Constants.Spacing.horizontalPadding)
     }
 
     private var filtersView: some View {
@@ -54,9 +63,8 @@ struct HomeView: View {
                     }
                 }
             }
-            .padding(.leading, 25)
+            .padding(.leading, Constants.Spacing.horizontalPadding)
             .padding(.vertical, 1)
-            .padding(.bottom, 12)
         }
     }
 }

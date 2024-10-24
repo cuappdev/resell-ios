@@ -11,9 +11,10 @@ struct ProductDetailsView: View {
 
     // MARK: - Properties
 
-    @State private var currentPage: Int = 0
-    @State private var images: [UIImage] = [UIImage(named: "justin")!, UIImage(named: "justin")!, UIImage(named: "justin_long")!, UIImage(named: "justin")!]
-    @State private var maxImgRatio: CGFloat = 0.0
+    @EnvironmentObject var mainViewModel: MainViewModel
+    @EnvironmentObject var router: Router
+
+    @StateObject private var viewModel = ProductDetailsViewModel()
 
     var userIsSeller: Bool
     var item: Item
@@ -22,46 +23,93 @@ struct ProductDetailsView: View {
     // MARK: - UI
 
     var body: some View {
-        VStack {
-            imageGallery
-                .frame(height: max(150, UIScreen.main.bounds.width * maxImgRatio))
-                .onAppear {
-                    calculateMaxImgRatio()
-                }
+        ZStack(alignment: .bottom) {
+            VStack {
+                imageGallery
+                    .frame(height: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio))
+                    .onAppear {
+                        viewModel.calculateMaxImgRatio()
+                    }
 
-            if maxImgRatio > 0 {
-                detailsView
+                if viewModel.maxImgRatio > 0 {
+                    Spacer()
+                }
+            }
+            .onChange(of: viewModel.maxImgRatio) { _ in
+                print(max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio))
             }
 
-        }
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                OptionsMenuView(options: [
-                    Option(name: "Share", icon: "share") {
+            DraggableSheetView(maxDrag: viewModel.maxDrag) {
+                detailsView
+            }
+            .ignoresSafeArea()
 
-                    },
-                    Option(name: "Report", icon: "flag") {
+            buttonGradientView
 
-                    },
-                    Option(name: "Delete", icon: "trash", isRed: true) {
-                        
-                    }
+            if viewModel.didShowOptionsMenu {
+                OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, options: [
+                    .share(url: URL(string: "https://www.google.com")!, itemName: item.title),
+                    .report,
+                    .delete
                 ])
+                .padding(.top, (UIApplication.shared.keyWindow?.safeAreaInsets.top ?? 0) + 30)
+                .zIndex(1)
+            }
+        }
+        .ignoresSafeArea()
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    router.pop()
+                } label: {
+                    Image("chevron.left.white")
+                        .resizable()
+                        .frame(width: 36, height: 24)
+                }
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    withAnimation {
+                        viewModel.didShowOptionsMenu.toggle()
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .resizable()
+                        .frame(width: 24, height: 6)
+                        .foregroundStyle(Constants.Colors.white)
+                }
+                .padding()
+            }
+        }
+        .onAppear {
+            withAnimation {
+                mainViewModel.hidesTabBar = true
+            }
+
+            // Set the max drag when the image finishes downloading
+            viewModel.maxDrag = max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio)
+        }
+        .onDisappear {
+            viewModel.didShowOptionsMenu = false
+            withAnimation {
+                mainViewModel.hidesTabBar = false
             }
         }
     }
 
     private var imageGallery: some View {
         ZStack(alignment: .bottom) {
-            TabView(selection: $currentPage) {
-                ForEach(images.indices, id: \.self) { index in
+            TabView(selection: $viewModel.currentPage) {
+                ForEach(viewModel.images.indices, id: \.self) { index in
                     imageView(index)
                 }
             }
             .background(Constants.Colors.white)
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
 
-            CustomPageControlIndicatorView(currentPage: $currentPage, numberOfPages: $images.count)
+            CustomPageControlIndicatorView(currentPage: $viewModel.currentPage, numberOfPages: $viewModel.images.count)
                 .frame(height: 20)
                 .padding()
         }
@@ -70,7 +118,7 @@ struct ProductDetailsView: View {
 
     private func imageView(_ index: Int) -> some View {
         GeometryReader { geometry in
-            Image(uiImage: images[index])
+            Image(uiImage: viewModel.images[index])
                 .resizable()
                 .scaledToFill()
                 .frame(width: geometry.size.width)
@@ -80,45 +128,131 @@ struct ProductDetailsView: View {
     }
 
     private var detailsView: some View {
-        VStack {
-            HStack {
-                Text(item.title)
-                    .font(Constants.Fonts.h2)
-                    .foregroundStyle(Constants.Colors.black)
+        GeometryReader { geometry in
+            VStack(alignment: .leading) {
+                HStack {
+                    RoundedRectangle(cornerRadius: 4)
+                        .frame(width: 50, height: 8)
+                        .foregroundStyle(Constants.Colors.inactiveGray)
+                        .padding(.top, 12)
+                        .frame(alignment: .center)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+
+                titlePriceView
+
+                sellerProfileView
+                    .padding(.bottom, 24)
+
+                itemDescriptionView
+                    .padding(.bottom, 32)
+
+                similarItemsView
 
                 Spacer()
-
-                Text("$\(item.price)")
-                    .font(Constants.Fonts.h2)
-                    .foregroundStyle(Constants.Colors.black)
             }
-
-            HStack() {
-                Image(seller.1)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 32, height: 32)
-                    .clipShape(.circle)
-
-                Text(seller.0)
-                    .font(Constants.Fonts.body2)
-                    .foregroundStyle(Constants.Colors.black)
-
-                Spacer()
+            .padding(.horizontal, Constants.Spacing.horizontalPadding)
+            .background(Color.white)
+            .cornerRadius(40)
+            .position(x: UIScreen.width / 2, y: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio - 50) + geometry.size.height / 2)
+            .overlay(alignment: .trailing) {
+                saveButton
+                    .position(x: UIScreen.width - 60, y: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio - 110))
             }
         }
-        .frame(maxHeight: 400)
-        .background(Color.white)
-        .padding(Constants.Spacing.horizontalPadding)
-        .cornerRadius(20)
     }
 
-    // MARK: - Functions
+    private var titlePriceView: some View {
+        HStack {
+            Text(item.title)
+                .font(Constants.Fonts.h2)
+                .foregroundStyle(Constants.Colors.black)
 
-    private func calculateMaxImgRatio() {
-        let maxAspectRatio = images.map { $0.aspectRatio }.max() ?? 1.0
-        maxImgRatio = maxAspectRatio
+            Spacer()
+
+            Text("$\(item.price)")
+                .font(Constants.Fonts.h2)
+                .foregroundStyle(Constants.Colors.black)
+        }
+    }
+
+    private var sellerProfileView: some View {
+        HStack {
+            Image(seller.1)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 32, height: 32)
+                .clipShape(Circle())
+
+            Text(seller.0)
+                .font(Constants.Fonts.body2)
+                .foregroundStyle(Constants.Colors.black)
+
+            Spacer()
+        }
+    }
+
+    private var itemDescriptionView: some View {
+        Text("Vintage blue pants that are super cool!\nCondition\nISBN\nAdditional Information")
+            .font(Constants.Fonts.body2)
+            .foregroundStyle(Constants.Colors.black)
+    }
+
+    private var similarItemsView: some View {
+        VStack(alignment: .leading) {
+            Text("Similar Items")
+                .font(Constants.Fonts.title1)
+                .foregroundStyle(Constants.Colors.black)
+
+            HStack {
+                let imageSize = (UIScreen.width - 72) / 4
+                ForEach(0..<4, id: \.self) { _ in
+                    Image("justin_long")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: imageSize, height: imageSize)
+                        .clipShape(.rect(cornerRadius: 25))
+                        .onTapGesture {
+                            viewModel.changeItem()
+                        }
+                }
+            }
+        }
+    }
+
+    private var buttonGradientView: some View {
+        VStack {
+            PurpleButton(text: "Contact Seller") {
+                // TODO: Chat with Seller
+            }
+        }
+        .frame(width: UIScreen.width, height: 50)
+        .padding(.bottom, 24)
+        .background(
+            LinearGradient(stops: [
+                .init(color: Color.clear, location: 0.0),
+                .init(color: Constants.Colors.white.opacity(0.8), location: 0.5),
+                .init(color: Constants.Colors.white, location: 1.0)
+            ], startPoint: .top, endPoint: .bottom)
+        )
+    }
+
+    private var saveButton: some View {
+        Button {
+            viewModel.isSaved.toggle()
+            viewModel.updateItemSaved()
+        } label: {
+            ZStack {
+                Circle()
+                    .frame(width: 72, height: 72)
+                    .foregroundStyle(Constants.Colors.white)
+                    .opacity(viewModel.isSaved ? 1.0 : 0.9)
+                    .shadow(radius: 2)
+
+                Image(viewModel.isSaved ? "saved.fill" : "saved")
+                    .resizable()
+                    .frame(width: 21, height: 27)
+            }
+        }
     }
 }
-
-

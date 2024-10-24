@@ -11,7 +11,7 @@ struct NewListingDetailsView: View {
 
     // MARK: - Properties
 
-    @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var router: Router
     @EnvironmentObject var viewModel: NewListingViewModel
     @EnvironmentObject var mainViewModel: MainViewModel
 
@@ -43,7 +43,8 @@ struct NewListingDetailsView: View {
 
             PurpleButton(isActive: viewModel.checkInputIsValid(), text: "Continue") {
                 viewModel.createNewListing()
-                dismiss()
+                router.popToRoot()
+                viewModel.clear()
                 withAnimation {
                     mainViewModel.hidesTabBar = false
                 }
@@ -52,20 +53,7 @@ struct NewListingDetailsView: View {
         .padding(.horizontal, 24)
         .background(Constants.Colors.white)
         .endEditingOnTap()
-        .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    withAnimation {
-                        viewModel.isDetailsView = false
-                    }
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .resizable()
-                        .tint(Constants.Colors.black)
-                }
-            }
-
             ToolbarItem(placement: .principal) {
                 Text("New Listing")
                     .font(Constants.Fonts.h3)
@@ -73,10 +61,9 @@ struct NewListingDetailsView: View {
             
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    dismiss()
-                    withAnimation {
-                        mainViewModel.hidesTabBar = false
-                    }
+                    router.pop()
+                    router.pop()
+                    viewModel.clear()
                 } label: {
                     Image(systemName: "xmark")
                         .resizable()

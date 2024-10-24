@@ -11,6 +11,7 @@ struct NotificationsSettingsView: View {
 
     // MARK: - Properties
 
+    @EnvironmentObject var router: Router
     @EnvironmentObject var mainViewModel: MainViewModel
 
     private var allNotificationsEnabled: Bool {

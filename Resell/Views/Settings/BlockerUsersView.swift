@@ -11,6 +11,8 @@ struct BlockerUsersView: View {
 
     // MARK: - Properties
 
+    @EnvironmentObject var router: Router
+    
     // TODO: Replace wtih backend type
     @State private var selectedUser: String = ""
     @State private var didShowPopup: Bool = false

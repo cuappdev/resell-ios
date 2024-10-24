@@ -13,8 +13,6 @@ class NewListingViewModel: ObservableObject {
     
     // MARK: - Properties
 
-    @Published var isDetailsView: Bool = false
-
     @Published var didShowActionSheet: Bool = false
     @Published var didShowCamera: Bool = false
     @Published var didShowPhotosPicker: Bool = false
@@ -51,5 +49,17 @@ class NewListingViewModel: ObservableObject {
 
     func createNewListing() {
         // TODO: Backend Call
+    }
+
+    func clear() {
+        didShowActionSheet = false
+        didShowCamera = false
+        didShowPhotosPicker = false
+        selectedImages = []
+        selectedItem = nil
+        didShowPriceInput = false
+        descriptionText = ""
+        priceText = ""
+        selectedFilter = "Clothing"
     }
 }

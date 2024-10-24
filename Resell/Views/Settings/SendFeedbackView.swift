@@ -12,6 +12,7 @@ struct SendFeedbackView: View {
 
     // MARK: - Properties
 
+    @EnvironmentObject var router: Router
     @StateObject private var viewModel = SendFeedbackViewModel()
     private let imageSize: CGFloat = (UIScreen.width - 72) / 3
 

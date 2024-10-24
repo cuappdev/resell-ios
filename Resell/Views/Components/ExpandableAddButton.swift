@@ -12,6 +12,7 @@ struct ExpandableAddButton: View {
 
     // MARK: - Properties
 
+    @EnvironmentObject var router: Router
     @State private var isExpanded: Bool = false
 
     // MARK: - UI
@@ -20,7 +21,7 @@ struct ExpandableAddButton: View {
         ZStack(alignment: .bottomTrailing) {
             if isExpanded {
                 Color.black
-                    .opacity(0.2)
+                    .opacity(0.3)
                     .ignoresSafeArea()
                     .onTapGesture {
                         withAnimation {
@@ -61,18 +62,22 @@ struct ExpandableAddButton: View {
 
     private var buttonOptions: some View {
         ZStack(alignment: .trailing) {
-            NavigationLink {
-                NewListingView()
-                    .onAppear { withAnimation { isExpanded = false } }
+            Button {
+                router.push(.newListingImages)
+                withAnimation {
+                    isExpanded = false
+                }
             } label: {
                 buttonContent(name: "New Listing", image: "newListing")
             }
             .offset(y: isExpanded ? -64 : 64)
             .opacity(isExpanded ? 1 : 0)
 
-            NavigationLink {
-                NewRequestView()
-                    .onAppear { withAnimation { isExpanded = false } }
+            Button {
+                router.push(.newRequest)
+                withAnimation {
+                    isExpanded = false
+                }
             } label: {
                 buttonContent(name: "New Request", image: "newRequest")
             }
