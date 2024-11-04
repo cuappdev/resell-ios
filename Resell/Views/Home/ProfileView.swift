@@ -39,7 +39,7 @@ struct ProfileView: View {
 
                 profileTabsView
 
-                ProductsGalleryView(items: Constants.dummyItemsData)
+//                ProductsGalleryView(items: Constants.dummyItemsData)
             }
             .background(Constants.Colors.white)
             .toolbar {

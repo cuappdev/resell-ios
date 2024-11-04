@@ -16,14 +16,12 @@ class HomeViewModel: ObservableObject {
 
     // MARK: - Properties
 
-    @Published var allItems: [Item] = Constants.dummyItemsData
+    @Published var allItems: [Post] = []
     @Published var selectedFilter: String = "Recent"
 
-    @Published var savedItems: [Item] = [
-        Item(id: UUID(), title: "Justin", image: "justin", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School"),
-        Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School")
-    ]
+    @Published var savedItems: [Post] = []
+
+
 
     // MARK: - Functions
 
@@ -31,7 +29,7 @@ class HomeViewModel: ObservableObject {
         Task {
             do {
                 let posts = try await NetworkManager.shared.getAllPosts()
-                print(posts)
+                allItems = posts.posts
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.getAllPosts: \(error)")
             }

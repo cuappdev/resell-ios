@@ -11,7 +11,7 @@ struct PostResponse: Codable {
     let posts: [Post]
 }
 
-struct Post: Codable {
+struct Post: Codable, Equatable, Identifiable {
     let id: String
     let title: String
     let description: String
@@ -29,6 +29,10 @@ struct Post: Codable {
         case originalPrice = "original_price"
         case alteredPrice = "altered_price"
         case images, created, location, archive, user
+    }
+    
+    static func == (lhs: Post, rhs: Post) -> Bool {
+        return lhs.id == rhs.id
     }
 }
 

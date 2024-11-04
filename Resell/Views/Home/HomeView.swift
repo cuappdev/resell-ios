@@ -5,6 +5,7 @@
 //  Created by Richie Sun on 9/11/24.
 //
 
+import Kingfisher
 import SwiftUI
 
 struct HomeView: View {
@@ -30,7 +31,6 @@ struct HomeView: View {
             .onAppear {
                 viewModel.getAllPosts()
                 
-                print("Appear")
                 withAnimation {
                     mainViewModel.hidesTabBar = false
                 }

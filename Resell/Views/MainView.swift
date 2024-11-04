@@ -40,10 +40,7 @@ struct MainView: View {
         .onAppear {
             let signInConfig = GIDConfiguration.init(clientID: Keys.googleClientID)
             GIDSignIn.sharedInstance.configuration = signInConfig
-            GIDSignIn.sharedInstance.restorePreviousSignIn { user, error in
-                // Check if `user` exists; otherwise, do something with `error`
-            }
-
+            mainViewModel.restoreSignIn()
             mainViewModel.setupNavBar()
             mainViewModel.hidesTabBar = false
         }
