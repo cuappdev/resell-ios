@@ -39,3 +39,7 @@ struct Post: Codable, Equatable, Identifiable {
 struct FilterRequest: Codable {
     let category: String
 }
+
+struct SearchRequest: Codable {
+    let keywords: String
+}

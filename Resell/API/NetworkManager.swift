@@ -163,4 +163,10 @@ class NetworkManager: APIClient {
         return try await post(url: url, body: FilterRequest(category: filter))
     }
 
+    func getSearchedPosts(with keywords: String) async throws -> PostResponse {
+        let url = try constructURL(endpoint: "/post/search/")
+
+        return try await post(url: url, body: SearchRequest(keywords: keywords))
+    }
+
 }

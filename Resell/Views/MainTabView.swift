@@ -48,9 +48,8 @@ struct MainTabView: View {
                             .environmentObject(newListingViewModel)
                     case .newRequest:
                         NewRequestView()
-                    case .messages(let chatsViewModel):
+                    case .messages:
                         MessagesView()
-                            .environmentObject(chatsViewModel)
                     case .productDetails(let itemID):
                         // TODO: - Integrate with itemID
                         ProductDetailsView(userIsSeller: false, item: Item.defaultItem)
@@ -63,6 +62,8 @@ struct MainTabView: View {
                     case .reportOptions:
                         ReportOptionsView()
                             .environmentObject(reportViewModel)
+                    case .search:
+                        SearchView()
                     case .settings(let isAccountSettings):
                         SettingsView(isAccountSettings: isAccountSettings)
                     case .blockedUsers:

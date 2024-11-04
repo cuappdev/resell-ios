@@ -51,7 +51,7 @@ struct HomeView: View {
             Spacer()
 
             Button(action: {
-                // TODO: Search Endpoint
+                router.push(.search)
             }, label: {
                 Icon(image: "search")
             })

@@ -13,7 +13,9 @@ struct MessagesView: View {
     // MARK: - Properties
 
     @EnvironmentObject var router: Router
-    @EnvironmentObject var viewModel: ChatsViewModel
+
+    //TODO: Change back to Env Object
+    @StateObject var viewModel = ChatsViewModel()
 
     // MARK: - UI
 
