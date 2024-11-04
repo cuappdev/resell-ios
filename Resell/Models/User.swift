@@ -31,3 +31,15 @@ struct User: Codable {
 struct UserResponse: Codable {
     let user: User
 }
+
+struct UserSessionData: Codable {
+    let sessions: [UserSession]
+
+    struct UserSession: Codable {
+        let userId: String
+        let accessToken: String
+        let active: Bool
+        let expiresAt: Int
+        let refreshToken: String
+    }
+}

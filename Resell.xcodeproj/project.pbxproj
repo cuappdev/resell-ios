@@ -24,6 +24,7 @@
 		2C3024852C9221940057D3D9 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2C3024842C9221940057D3D9 /* GoogleService-Info.plist */; };
 		2C3859E12CCD9FDE00DA20EA /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 2C3859E02CCD9FDE00DA20EA /* FirebaseCore */; };
 		2C3859E32CCD9FEA00DA20EA /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 2C3859E22CCD9FEA00DA20EA /* FirebaseFirestore */; };
+		2C41BB832CD8718600EFF69E /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C41BB822CD8718600EFF69E /* KeychainManager.swift */; };
 		2C4DD9792C98CC410055D0AB /* SetupProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C4DD9782C98CC410055D0AB /* SetupProfileView.swift */; };
 		2C4DD97B2C98CC4D0055D0AB /* VenmoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C4DD97A2C98CC4D0055D0AB /* VenmoView.swift */; };
 		2C4DD97D2C98D45B0055D0AB /* SetupProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C4DD97C2C98D45B0055D0AB /* SetupProfileViewModel.swift */; };
@@ -75,6 +76,7 @@
 		2CDCEE5F2CD6BE99008DF5E8 /* NetworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CDCEE5E2CD6BE99008DF5E8 /* NetworkManager.swift */; };
 		2CDCEE612CD6BEAD008DF5E8 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CDCEE602CD6BEAD008DF5E8 /* APIClient.swift */; };
 		2CDCEE642CD6D146008DF5E8 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CDCEE632CD6D146008DF5E8 /* User.swift */; };
+		2CDCEE662CD8708B008DF5E8 /* UserSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CDCEE652CD8708B008DF5E8 /* UserSessionManager.swift */; };
 		2CDDF30C2CCD871A0061A564 /* ChatsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CDDF30B2CCD871A0061A564 /* ChatsViewModel.swift */; };
 		2CDDF30E2CCD915E0061A564 /* MessagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CDDF30D2CCD915E0061A564 /* MessagesView.swift */; };
 		2CDDF3102CCD99B70061A564 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CDDF30F2CCD99B70061A564 /* Message.swift */; };
@@ -118,6 +120,7 @@
 		2C18FFE92CA1E4C900564577 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 		2C3024722C90FFE60057D3D9 /* Keys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keys.swift; sourceTree = "<group>"; };
 		2C3024842C9221940057D3D9 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		2C41BB822CD8718600EFF69E /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
 		2C4DD9782C98CC410055D0AB /* SetupProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupProfileView.swift; sourceTree = "<group>"; };
 		2C4DD97A2C98CC4D0055D0AB /* VenmoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VenmoView.swift; sourceTree = "<group>"; };
 		2C4DD97C2C98D45B0055D0AB /* SetupProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupProfileViewModel.swift; sourceTree = "<group>"; };
@@ -174,6 +177,7 @@
 		2CDCEE602CD6BEAD008DF5E8 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		2CDCEE622CD6C4B0008DF5E8 /* Keys.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Keys.xcconfig; sourceTree = "<group>"; };
 		2CDCEE632CD6D146008DF5E8 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		2CDCEE652CD8708B008DF5E8 /* UserSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSessionManager.swift; sourceTree = "<group>"; };
 		2CDDF30B2CCD871A0061A564 /* ChatsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatsViewModel.swift; sourceTree = "<group>"; };
 		2CDDF30D2CCD915E0061A564 /* MessagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesView.swift; sourceTree = "<group>"; };
 		2CDDF30F2CCD99B70061A564 /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
@@ -460,8 +464,10 @@
 		2CDCEE5D2CD6BE8D008DF5E8 /* API */ = {
 			isa = PBXGroup;
 			children = (
-				2CDCEE5E2CD6BE99008DF5E8 /* NetworkManager.swift */,
 				2CDCEE602CD6BEAD008DF5E8 /* APIClient.swift */,
+				2C41BB822CD8718600EFF69E /* KeychainManager.swift */,
+				2CDCEE5E2CD6BE99008DF5E8 /* NetworkManager.swift */,
+				2CDCEE652CD8708B008DF5E8 /* UserSessionManager.swift */,
 			);
 			path = API;
 			sourceTree = "<group>";
@@ -634,6 +640,7 @@
 				2C9337502C92BF4400818C8E /* Array + Extensions.swift in Sources */,
 				2C525B7D2CB1DE55007D5B8E /* NotificationsSettingsView.swift in Sources */,
 				2C6410942C9A70B400E4B390 /* String + Extensions.swift in Sources */,
+				2CDCEE662CD8708B008DF5E8 /* UserSessionManager.swift in Sources */,
 				2CE473932CC2148B00BD7E2C /* ProductDetailsViewModel.swift in Sources */,
 				2C93374E2C92BE3000818C8E /* Item.swift in Sources */,
 				2C9337542C935C9500818C8E /* ChatsView.swift in Sources */,
@@ -681,6 +688,7 @@
 				2C02B3A32CC074150020DF90 /* ProductDetailsView.swift in Sources */,
 				2C93374A2C92AD2D00818C8E /* ProductsGalleryView.swift in Sources */,
 				2C02B39F2CC06D760020DF90 /* NewRequestViewModel.swift in Sources */,
+				2C41BB832CD8718600EFF69E /* KeychainManager.swift in Sources */,
 				2C4DD9852C98EF5E0055D0AB /* WebView.swift in Sources */,
 				2C4DD9792C98CC410055D0AB /* SetupProfileView.swift in Sources */,
 				2CBC6B6C2CBDF7CF00C842A4 /* NewListingDetailsView.swift in Sources */,
