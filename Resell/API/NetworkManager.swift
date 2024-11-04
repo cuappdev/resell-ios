@@ -135,8 +135,18 @@ class NetworkManager: APIClient {
         return try await get(url: url)
     }
 
+    // MARK: - User Networking Functions
+
     func getUserByGoogleID(googleID: String) async throws -> UserResponse {
         let url = try constructURL(endpoint: "/user/googleId/\(googleID)/")
+
+        return try await get(url: url)
+    }
+
+    // MARK: - Post Networking Functions
+
+    func getAllPosts() async throws -> PostResponse {
+        let url = try constructURL(endpoint: "/post/")
 
         return try await get(url: url)
     }

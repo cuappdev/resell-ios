@@ -28,6 +28,8 @@ struct HomeView: View {
                     .padding(.bottom, 40)
             }
             .onAppear {
+                viewModel.getAllPosts()
+                
                 print("Appear")
                 withAnimation {
                     mainViewModel.hidesTabBar = false

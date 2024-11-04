@@ -25,4 +25,17 @@ class HomeViewModel: ObservableObject {
         Item(id: UUID(), title: "Justin", image: "justin_long", price: "$100", category: "School")
     ]
 
+    // MARK: - Functions
+
+    func getAllPosts() {
+        Task {
+            do {
+                let posts = try await NetworkManager.shared.getAllPosts()
+                print(posts)
+            } catch {
+                NetworkManager.shared.logger.error("Error in HomeViewModel.getAllPosts: \(error)")
+            }
+        }
+    }
+
 }

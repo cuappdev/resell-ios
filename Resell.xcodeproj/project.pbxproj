@@ -25,6 +25,7 @@
 		2C3859E12CCD9FDE00DA20EA /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 2C3859E02CCD9FDE00DA20EA /* FirebaseCore */; };
 		2C3859E32CCD9FEA00DA20EA /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 2C3859E22CCD9FEA00DA20EA /* FirebaseFirestore */; };
 		2C41BB832CD8718600EFF69E /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C41BB822CD8718600EFF69E /* KeychainManager.swift */; };
+		2C41BB852CD8811400EFF69E /* Post.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C41BB842CD8811400EFF69E /* Post.swift */; };
 		2C4DD9792C98CC410055D0AB /* SetupProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C4DD9782C98CC410055D0AB /* SetupProfileView.swift */; };
 		2C4DD97B2C98CC4D0055D0AB /* VenmoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C4DD97A2C98CC4D0055D0AB /* VenmoView.swift */; };
 		2C4DD97D2C98D45B0055D0AB /* SetupProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C4DD97C2C98D45B0055D0AB /* SetupProfileViewModel.swift */; };
@@ -121,6 +122,7 @@
 		2C3024722C90FFE60057D3D9 /* Keys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keys.swift; sourceTree = "<group>"; };
 		2C3024842C9221940057D3D9 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		2C41BB822CD8718600EFF69E /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
+		2C41BB842CD8811400EFF69E /* Post.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Post.swift; sourceTree = "<group>"; };
 		2C4DD9782C98CC410055D0AB /* SetupProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupProfileView.swift; sourceTree = "<group>"; };
 		2C4DD97A2C98CC4D0055D0AB /* VenmoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VenmoView.swift; sourceTree = "<group>"; };
 		2C4DD97C2C98D45B0055D0AB /* SetupProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupProfileViewModel.swift; sourceTree = "<group>"; };
@@ -273,6 +275,7 @@
 				2C93374D2C92BE3000818C8E /* Item.swift */,
 				2CDDF30F2CCD99B70061A564 /* Message.swift */,
 				2CDCEE632CD6D146008DF5E8 /* User.swift */,
+				2C41BB842CD8811400EFF69E /* Post.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -660,6 +663,7 @@
 				2C9B4D072C8FCB070029DF61 /* PurpleButton.swift in Sources */,
 				2CBC6B652CB7A5A000C842A4 /* BlockerUsersView.swift in Sources */,
 				2CE473952CC2204500BD7E2C /* DraggableSheetView.swift in Sources */,
+				2C41BB852CD8811400EFF69E /* Post.swift in Sources */,
 				2C525B812CB1F195007D5B8E /* SendFeedbackViewModel.swift in Sources */,
 				2C9337562C935CB600818C8E /* ProfileView.swift in Sources */,
 				2CE4739E2CC4575F00BD7E2C /* ReportOptionsView.swift in Sources */,
