@@ -75,6 +75,12 @@ struct Constants {
         static let horizontalPadding: CGFloat = 24.0
     }
 
+    /// Chat  categories used in Resell's design system
+    static let chats = [
+        FilterCategory(id: 0, title: "Purchases"),
+        FilterCategory(id: 1, title: "Offers")
+    ]
+
     /// Product filter categories used in Resell's design system
     static let filters = [
         FilterCategory(id: 0, title: "Recent"),

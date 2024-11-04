@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Item {
+struct Item: Codable, Hashable {
 
     static let defaultItem = Item(id: UUID(), title: "DJ Bustin", image: "justin", price: "25.00", category: "")
 

@@ -11,12 +11,13 @@ struct ProfileView: View {
 
     // MARK: - Properties
 
+    @EnvironmentObject var router: Router
     @StateObject private var viewModel = ProfileViewModel()
 
     // MARK: - UI
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $router.path) {
             VStack(spacing: 0) {
                 profileImageView
                     .padding(.bottom, 12)
@@ -37,15 +38,31 @@ struct ProfileView: View {
                     .padding(.bottom, 28)
 
                 profileTabsView
-                    .padding(.bottom, 24)
 
-                ProductsGalleryView(items: Constants.dummyItemsData)
-                    .overlay(alignment: .bottomTrailing) {
-                        ExpandableAddButton()
-                    }
+//                ProductsGalleryView(items: Constants.dummyItemsData)
             }
             .background(Constants.Colors.white)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        router.push(.settings(false))
+                    } label: {
+                        Icon(image: "settings")
+                    }
+                }
 
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        // TODO: Implement Search
+                    } label: {
+                        Icon(image: "search")
+                    }
+                }
+            }
+            .overlay(alignment: .bottomTrailing) {
+                ExpandableAddButton()
+                    .padding(.bottom, 40)
+            }
         }
         .onChange(of: viewModel.selectedTab) { _ in
             viewModel.updateItemsGallery()
@@ -53,30 +70,10 @@ struct ProfileView: View {
     }
 
     private var profileImageView: some View {
-        ZStack(alignment: .top) {
-            HStack {
-                NavigationLink {
-                    SettingsView(isAccountSettings: false)
-                } label: {
-                    Icon(image: "settings")
-                }
-
-                Spacer()
-
-                Button(action: {
-                    // TODO: Implement Search
-                }, label: {
-                    Icon(image: "search")
-                })
-            }
-            .padding(.horizontal, Constants.Spacing.horizontalPadding)
-
-            Image(viewModel.user?.profile ?? "justin")
-                .resizable()
-                .frame(width: 90, height: 90)
-                .clipShape(.circle)
-        }
-
+        Image(viewModel.user?.profile ?? "justin")
+            .resizable()
+            .frame(width: 90, height: 90)
+            .clipShape(.circle)
     }
 
     private var profileTabsView: some View {
@@ -85,7 +82,6 @@ struct ProfileView: View {
             tabButton(for: .archive)
             tabButton(for: .wishlist)
         }
-        .padding()
     }
 
     private func tabButton(for tab: ProfileViewModel.Tab) -> some View {
@@ -102,7 +98,7 @@ struct ProfileView: View {
             viewModel.selectedTab = tab
         }
     }
-    
+
 }
 
 #Preview {

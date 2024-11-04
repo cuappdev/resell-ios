@@ -33,7 +33,26 @@ class LoginViewModel: ObservableObject {
                 return
             }
 
+            guard let id = result?.user.userID else { return }
+
+            self.getUserSession(googleID: id)
+
             success()
+        }
+    }
+
+    private func getUserSession(googleID: String) {
+        Task {
+            do {
+                let user = try await NetworkManager.shared.getUserByGoogleID(googleID: googleID).user
+                let userSession = try await NetworkManager.shared.getUserSession(id: user.id).sessions.first
+
+                UserSessionManager.shared.accessToken = userSession?.accessToken
+                UserSessionManager.shared.googleID = googleID
+                UserSessionManager.shared.userID = user.id
+            } catch {
+                NetworkManager.shared.logger.error("Error in LoginViewModel.getUserSession: \(error)")
+            }
         }
     }
 }

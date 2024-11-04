@@ -8,9 +8,10 @@
 import SwiftUI
 
 struct SettingsView: View {
-    
+
     // MARK: - Properties
 
+    @EnvironmentObject var router: Router
     @EnvironmentObject var mainViewModel: MainViewModel
     @StateObject private var viewModel = SettingsViewModel()
 
@@ -23,29 +24,51 @@ struct SettingsView: View {
     }
 
     // MARK: - UI
-    
+
     var body: some View {
-        NavigationStack {
-            VStack {
-                ForEach(viewModel.settings, id: \.id) { setting in
-                    if setting.hasDestination {
-                        NavigationLink(destination: setting.destination) {
-                            settingsRow(item: setting)
-                        }
-                    } else {
-                        if let action = setting.action {
-                            Button(action: action, label: {
-                                settingsRow(item: setting)
-                            })
-                        }
+        VStack {
+            ForEach(isAccountSettings ? viewModel.accountSettings : viewModel.settings, id: \.self) { setting in
+                switch setting {
+                case .accountSettings:
+                    settingsRow(title: "Account Settings", icon: "user") {
+                        router.push(.settings(true))
+                    }
+                case .editProfile:
+                    settingsRow(title: "Edit Profile", icon: "edit") {
+                        // TODO: Edit view pushed
+                    }
+                case .deleteAccount:
+                    settingsRow(isRed: true, title: "Delete Account", icon: "") {
+                        withAnimation { viewModel.didShowDeleteAccountView = true }
+                    }
+                case .notifications:
+                    settingsRow(title: "Notifications", icon: "notifications") {
+                        router.push(.notifications)
+                    }
+                case .sendFeedback:
+                    settingsRow(title: "Send Feedback", icon: "feedback") {
+                        router.push(.feedback)
+                    }
+                case .blockerUsers:
+                    settingsRow(title: "Blocker Users", icon: "slash") {
+                        router.push(.blockedUsers)
+                    }
+                case .eula:
+                    settingsRow(title: "Term and Conditions", icon: "terms") {
+                        viewModel.didShowWebView = true
+                    }
+                case .logout:
+                    settingsRow(title: "Log Out", icon: "logout") {
+                        viewModel.didShowLogoutView = true
                     }
                 }
+
             }
-            .padding(.top, 24)
-            .background(Constants.Colors.white)
 
             Spacer()
         }
+        .padding(.top, 24)
+        .background(Constants.Colors.white)
         .sheet(isPresented: $viewModel.didShowWebView) {
             WebView(url: URL(string: "https://www.cornellappdev.com/license/resell")!)
                 .edgesIgnoringSafeArea(.all)
@@ -63,35 +86,34 @@ struct SettingsView: View {
                     .font(Constants.Fonts.h3)
             }
         }
-        .onAppear {
-            viewModel.setSettingsOptions(isAccountSettings: isAccountSettings)
-        }
     }
 
-    private func settingsRow(item: SettingItem) -> some View {
-        HStack(alignment: .top, spacing: 0) {
-            if !item.isRed {
-                Icon(image: item.icon)
-                    .foregroundStyle(Constants.Colors.black)
-                    .padding(.trailing, 24)
-            }
+    private func settingsRow(isRed: Bool = false, title: String, icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action, label: {
+            HStack(alignment: .top, spacing: 0) {
+                if !isRed {
+                    Icon(image: icon)
+                        .foregroundStyle(Constants.Colors.black)
+                        .padding(.trailing, 24)
+                }
 
-            Text(item.title)
-                .font(Constants.Fonts.body1)
-                .foregroundStyle(item.isRed ? Constants.Colors.errorRed : Constants.Colors.black)
+                Text(title)
+                    .font(Constants.Fonts.body1)
+                    .foregroundStyle(isRed ? Constants.Colors.errorRed : Constants.Colors.black)
 
-            Spacer()
-            
-            if !item.isRed {
-                Image(systemName: "chevron.right")
-                    .foregroundColor(Constants.Colors.black)
+                Spacer()
+
+                if !isRed {
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(Constants.Colors.black)
+                }
             }
-        }
-        .padding(.horizontal, Constants.Spacing.horizontalPadding)
-        .padding(.vertical, 18.5)
-        .background(Color.white)
+            .padding(.horizontal, Constants.Spacing.horizontalPadding)
+            .padding(.vertical, 18.5)
+            .background(Color.white)
+        })
     }
-    
+
     private var logoutView: some View {
         VStack(spacing: 24) {
             Text("Log out of Resell?")

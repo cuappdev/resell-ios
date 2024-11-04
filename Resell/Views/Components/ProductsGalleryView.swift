@@ -12,18 +12,18 @@ struct ProductsGalleryView: View {
 
     // MARK: Properties
 
-    @State private var didPresentProductDetails: Bool = false
-    @State private var selectedItem: Item = Item.defaultItem
+    @State private var selectedItem: Post? = nil
+    @EnvironmentObject var router: Router  // Inject router
 
-    let column1: [ProductGallery]
-    let column2: [ProductGallery]
+    let column1: [Post]
+    let column2: [Post]
 
     // MARK: Init
 
-    init(items: [Item]) {
-        let (items1, items2): ([Item], [Item]) = items.splitIntoTwo()
-        self.column1 = items1.map { ProductGallery(item: $0) }
-        self.column2 = items2.map { ProductGallery(item: $0) }
+    init(items: [Post]) {
+        let (items1, items2): ([Post], [Post]) = items.splitIntoTwo()
+        self.column1 = items1
+        self.column2 = items2
     }
 
     // MARK: UI
@@ -32,25 +32,25 @@ struct ProductsGalleryView: View {
         ScrollView(.vertical, showsIndicators: true) {
             HStack(alignment: .top, spacing: 20) {
                 LazyVStack(spacing: 20) {
-                    ForEach(column1) { item in
-                        ProductGalleryCell(didPresentProductDetails: $didPresentProductDetails, selectedItem: $selectedItem, galleryItem: item)
+                    ForEach(column1) { post in
+                        ProductGalleryCell(selectedItem: $selectedItem, post: post)
                     }
                 }
 
                 LazyVStack(spacing: 20) {
-                    ForEach(column2) { item in
-                        ProductGalleryCell(didPresentProductDetails: $didPresentProductDetails, selectedItem: $selectedItem, galleryItem: item)
+                    ForEach(column2) { post in
+                        ProductGalleryCell(selectedItem: $selectedItem, post: post)
                     }
                 }
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
+            .padding(.top, Constants.Spacing.horizontalPadding)
         }
-        .navigationDestination(isPresented: $didPresentProductDetails) {
-            // TODO: - Change with backend logic
-            ProductDetailsView(userIsSeller: false, item: selectedItem)
-        }
-        .onTapGesture {
-            didPresentProductDetails = true
+        .onChange(of: selectedItem) { item in
+            if let selectedItem {
+                router.push(.productDetails(selectedItem.id))
+                self.selectedItem = nil
+            }
         }
     }
 }
@@ -59,26 +59,22 @@ struct ProductGalleryCell: View {
 
     // MARK: Properties
 
-    @Binding var didPresentProductDetails: Bool
-    @Binding var selectedItem: Item
+    @Binding var selectedItem: Post?
+    @State private var isImageLoaded: Bool = false
 
-    let galleryItem: ProductGallery
+    let post: Post
 
     // MARK: UI
 
     var body: some View {
         VStack(spacing: 0) {
-            Image(galleryItem.item.image)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: galleryItem.width, height: galleryItem.height)
-                .clipped()
+            CachedImageView(isImageLoaded: $isImageLoaded, imageURL: post.images.first)
             HStack {
-                Text(galleryItem.item.title)
+                Text(post.title)
                     .font(Constants.Fonts.title3)
                     .foregroundStyle(Constants.Colors.black)
                 Spacer()
-                Text("$\(galleryItem.item.price)")
+                Text("$\(post.originalPrice)")
                     .font(Constants.Fonts.title4)
                     .foregroundStyle(Constants.Colors.black)
             }
@@ -86,40 +82,14 @@ struct ProductGalleryCell: View {
         }
         .clipped()
         .clipShape(.rect(cornerRadius: 8))
+        .scaleEffect(isImageLoaded ? CGSize(width: 1, height: 1) : CGSize(width: 1, height: 0.9), anchor: .center)
+        .onTapGesture {
+            selectedItem = post
+        }
         .overlay {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(Constants.Colors.stroke, lineWidth: 1)
-        }
-        .onTapGesture {
-            selectedItem = galleryItem.item
-            didPresentProductDetails = true
+                .scaleEffect(isImageLoaded ? CGSize(width: 1, height: 1) : CGSize(width: 1, height: 0.9), anchor: .center)
         }
     }
-
-}
-
-struct ProductGallery: Identifiable {
-    
-    var id: UUID
-    let aspectRatio: CGFloat
-    let item: Item
-    let width: CGFloat
-    let height: CGFloat
-
-    init(item: Item) {
-        self.id = item.id
-        self.item = item
-
-        var imageRatio: CGFloat {
-            guard let uiImage = UIImage(named: item.image) else {
-                return 1.0
-            }
-            return uiImage.aspectRatio
-        }
-
-        self.aspectRatio = imageRatio
-        self.width = (UIScreen.width - 68) / 2
-        self.height = width / imageRatio
-    }
-    
 }

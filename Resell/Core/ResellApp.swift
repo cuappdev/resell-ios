@@ -6,14 +6,16 @@
 //
 
 import GoogleSignIn
+import Kingfisher
 import SwiftUI
 
 @main
 struct ResellApp: App {
+
+
     var body: some Scene {
         WindowGroup {
             MainView()
-//            SetupProfileView()
         }
     }
 }
