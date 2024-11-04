@@ -37,7 +37,7 @@ struct ShimmerView: View {
             )
             .onAppear {
                 withAnimation(
-                    Animation.linear(duration: 1.5)
+                    Animation.linear(duration: 1.0)
                         .repeatForever(autoreverses: false)
                 ) {
                     shimmerOffset = UIScreen.main.bounds.width

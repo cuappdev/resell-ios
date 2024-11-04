@@ -99,7 +99,7 @@ struct ChatsView: View {
                     .padding(.horizontal, 15)
                     .background(Constants.Colors.white)
                     .onTapGesture {
-                        router.push(.messages(viewModel))
+                        router.push(.messages)
                     }
                 }
             }

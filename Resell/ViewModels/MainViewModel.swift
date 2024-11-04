@@ -20,12 +20,53 @@ class MainViewModel: ObservableObject {
 
     @AppStorage("chatNotificationsEnabled") var chatNotificationsEnabled: Bool = true
     @AppStorage("newListingsEnabled") var newListingsEnabled: Bool = true
+    @AppStorage("userSearchHistory") private var storedHistoryData: String = ""
+
+    // Decoded search history array from persistent storage
+    var searchHistory: [String] {
+        get {
+            decodeHistory(from: storedHistoryData)
+        }
+        set {
+            storedHistoryData = encodeHistory(newValue)
+        }
+    }
 
     // MARK: - Functions
 
     func toggleAllNotifications(paused: Bool) {
         chatNotificationsEnabled = !paused
         newListingsEnabled = !paused
+    }
+
+    func saveSearchQuery(_ query: String) {
+        var history = searchHistory
+
+        history.removeAll { $0 == query }
+
+        history.insert(query, at: 0)
+
+        if history.count > 10 {
+            history.removeLast()
+        }
+
+        searchHistory = history
+    }
+
+    private func encodeHistory(_ history: [String]) -> String {
+        guard let data = try? JSONEncoder().encode(history),
+              let jsonString = String(data: data, encoding: .utf8) else {
+            return "[]"
+        }
+        return jsonString
+    }
+
+    private func decodeHistory(from jsonString: String) -> [String] {
+        guard let data = jsonString.data(using: .utf8),
+              let history = try? JSONDecoder().decode([String].self, from: data) else {
+            return []
+        }
+        return history
     }
 
     func setupNavBar() {

@@ -64,11 +64,14 @@ struct ProductGalleryCell: View {
 
     let post: Post
 
+    private let cellWidth = (UIScreen.width - 68) / 2
+
     // MARK: UI
 
     var body: some View {
         VStack(spacing: 0) {
             CachedImageView(isImageLoaded: $isImageLoaded, imageURL: post.images.first)
+                .frame(width: cellWidth, height: cellWidth / 0.75)
             HStack {
                 Text(post.title)
                     .font(Constants.Fonts.title3)
@@ -80,6 +83,7 @@ struct ProductGalleryCell: View {
             }
             .padding(8)
         }
+        .frame(width: cellWidth)
         .clipped()
         .clipShape(.rect(cornerRadius: 8))
         .scaleEffect(isImageLoaded ? CGSize(width: 1, height: 1) : CGSize(width: 1, height: 0.9), anchor: .center)

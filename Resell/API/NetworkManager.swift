@@ -105,7 +105,7 @@ class NetworkManager: APIClient {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         if let accessToken = UserSessionManager.shared.accessToken {
-            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+            request.setValue("\(accessToken)", forHTTPHeaderField: "Authorization")
         }
 
         request.httpBody = body
@@ -149,6 +149,24 @@ class NetworkManager: APIClient {
         let url = try constructURL(endpoint: "/post/")
 
         return try await get(url: url)
+    }
+
+    func getSavedPosts() async throws -> PostResponse {
+        let url = try constructURL(endpoint: "/post/save/")
+
+        return try await get(url: url)
+    }
+
+    func getFilteredPosts(by filter: String) async throws -> PostResponse {
+        let url = try constructURL(endpoint: "/post/filter/")
+
+        return try await post(url: url, body: FilterRequest(category: filter))
+    }
+
+    func getSearchedPosts(with keywords: String) async throws -> PostResponse {
+        let url = try constructURL(endpoint: "/post/search/")
+
+        return try await post(url: url, body: SearchRequest(keywords: keywords))
     }
 
 }
