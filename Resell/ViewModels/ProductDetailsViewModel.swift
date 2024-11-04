@@ -44,5 +44,6 @@ class ProductDetailsViewModel: ObservableObject {
         let maxAspectRatio = images.map { $0.aspectRatio }.max() ?? 1.0
         maxImgRatio = maxAspectRatio
     }
+    
 
 }

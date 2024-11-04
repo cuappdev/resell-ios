@@ -1,0 +1,17 @@
+//
+//  Keys.xcconfig
+//  Resell
+//
+//  Created by Richie Sun on 11/2/24.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+// SERVER URL
+RESELL_DEV_URL = https:/$()/resell-dev.cornellappdev.com/api
+RESELL_PROD_URL = https:/$()/resell-backend.cornellappdev.com/api
+
+// FIRESTORE
+DEV_DATABASE_ID = resell-dev
+PROD_DATABASE_ID = resell-prod

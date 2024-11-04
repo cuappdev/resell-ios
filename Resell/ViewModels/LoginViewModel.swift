@@ -33,6 +33,17 @@ class LoginViewModel: ObservableObject {
                 return
             }
 
+            guard let id = result?.user.userID else { return }
+
+            Task {
+                do {
+                    let user = try await NetworkManager.shared.getUserByGoogleID(googleID: id).user
+                    print(user.givenName)
+                } catch {
+                    print(error)
+                }
+            }
+
             success()
         }
     }

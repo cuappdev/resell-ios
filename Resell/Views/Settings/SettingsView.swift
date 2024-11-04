@@ -51,7 +51,7 @@ struct SettingsView: View {
                     }
                 case .blockerUsers:
                     settingsRow(title: "Blocker Users", icon: "slash") {
-                        router.push(.blockerUsers)
+                        router.push(.blockedUsers)
                     }
                 case .eula:
                     settingsRow(title: "Term and Conditions", icon: "terms") {

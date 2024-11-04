@@ -48,6 +48,9 @@ struct MainTabView: View {
                             .environmentObject(newListingViewModel)
                     case .newRequest:
                         NewRequestView()
+                    case .messages(let chatsViewModel):
+                        MessagesView()
+                            .environmentObject(chatsViewModel)
                     case .productDetails(let itemID):
                         // TODO: - Integrate with itemID
                         ProductDetailsView(userIsSeller: false, item: Item.defaultItem)
@@ -62,7 +65,7 @@ struct MainTabView: View {
                             .environmentObject(reportViewModel)
                     case .settings(let isAccountSettings):
                         SettingsView(isAccountSettings: isAccountSettings)
-                    case .blockerUsers:
+                    case .blockedUsers:
                         BlockerUsersView()
                     case .feedback:
                         SendFeedbackView()
@@ -100,6 +103,19 @@ struct MainTabView: View {
                     .animation(.easeInOut, value: isHidden)
                 }
             }
+        }
+    }
+
+    func test() -> Int? {
+        return nil
+    }
+
+    func test2() {
+        let work = test()
+        let work2 = test()
+
+        if let work, let work2 {
+
         }
     }
 }
