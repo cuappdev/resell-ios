@@ -36,10 +36,6 @@ struct Post: Codable, Equatable, Identifiable {
     }
 }
 
-struct MatchedItem: Codable {
-    let id: String
-    let title: String
-    let description: String
-    let user: User
-    let matches: [Post]
+struct FilterRequest: Codable {
+    let category: String
 }

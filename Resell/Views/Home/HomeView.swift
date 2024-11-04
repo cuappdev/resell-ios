@@ -21,7 +21,7 @@ struct HomeView: View {
 
                 filtersView
 
-                ProductsGalleryView(items: viewModel.allItems)
+                ProductsGalleryView(items: viewModel.filteredItems)
             }
             .background(Constants.Colors.white)
             .overlay(alignment: .bottomTrailing) {
@@ -34,6 +34,9 @@ struct HomeView: View {
                 withAnimation {
                     mainViewModel.hidesTabBar = false
                 }
+            }
+            .refreshable {
+                viewModel.getAllPosts()
             }
             .navigationBarBackButtonHidden()
         }
