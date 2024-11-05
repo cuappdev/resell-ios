@@ -130,8 +130,8 @@ struct SearchView: View {
 
         Task {
             do {
-                let searchedPosts = try await NetworkManager.shared.getSearchedPosts(with: searchText)
-                searchedItems = searchedPosts.posts
+                let postsResponse = try await NetworkManager.shared.getSearchedPosts(with: searchText)
+                searchedItems = postsResponse.posts
                 mainViewModel.saveSearchQuery(searchText)
                 isLoading = false
             } catch {

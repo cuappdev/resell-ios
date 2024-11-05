@@ -11,7 +11,7 @@ import UIKit
 extension UIImage {
 
     var aspectRatio: CGFloat {
-        return size.width / size.height
+        return size.height / size.width
     }
 
     func resized(to size: CGSize) -> UIImage {

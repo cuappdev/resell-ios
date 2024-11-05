@@ -145,28 +145,34 @@ class NetworkManager: APIClient {
 
     // MARK: - Post Networking Functions
 
-    func getAllPosts() async throws -> PostResponse {
+    func getAllPosts() async throws -> PostsResponse {
         let url = try constructURL(endpoint: "/post/")
 
         return try await get(url: url)
     }
 
-    func getSavedPosts() async throws -> PostResponse {
+    func getSavedPosts() async throws -> PostsResponse {
         let url = try constructURL(endpoint: "/post/save/")
 
         return try await get(url: url)
     }
 
-    func getFilteredPosts(by filter: String) async throws -> PostResponse {
+    func getFilteredPosts(by filter: String) async throws -> PostsResponse {
         let url = try constructURL(endpoint: "/post/filter/")
 
         return try await post(url: url, body: FilterRequest(category: filter))
     }
 
-    func getSearchedPosts(with keywords: String) async throws -> PostResponse {
+    func getSearchedPosts(with keywords: String) async throws -> PostsResponse {
         let url = try constructURL(endpoint: "/post/search/")
 
         return try await post(url: url, body: SearchRequest(keywords: keywords))
+    }
+
+    func getPostByID(id: String) async throws -> PostResponse {
+        let url = try constructURL(endpoint: "/post/id/\(id)/")
+
+        return try await get(url: url)
     }
 
 }

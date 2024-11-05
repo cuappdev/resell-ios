@@ -51,8 +51,7 @@ struct MainTabView: View {
                     case .messages:
                         MessagesView()
                     case .productDetails(let itemID):
-                        // TODO: - Integrate with itemID
-                        ProductDetailsView(userIsSeller: false, item: Item.defaultItem)
+                        ProductDetailsView(id: itemID)
                     case .reportConfirmation:
                         ReportConfirmationView()
                             .environmentObject(reportViewModel)
