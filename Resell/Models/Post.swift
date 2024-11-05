@@ -7,10 +7,6 @@
 
 import Foundation
 
-struct PostResponse: Codable {
-    let posts: [Post]
-}
-
 struct Post: Codable, Equatable, Identifiable {
     let id: String
     let title: String
@@ -34,6 +30,14 @@ struct Post: Codable, Equatable, Identifiable {
     static func == (lhs: Post, rhs: Post) -> Bool {
         return lhs.id == rhs.id
     }
+}
+
+struct PostsResponse: Codable {
+    let posts: [Post]
+}
+
+struct PostResponse: Codable {
+    let post: Post
 }
 
 struct FilterRequest: Codable {

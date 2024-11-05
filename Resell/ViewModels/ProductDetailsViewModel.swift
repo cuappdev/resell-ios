@@ -15,21 +15,27 @@ class ProductDetailsViewModel: ObservableObject {
     @Published var didShowOptionsMenu: Bool = false
 
     @Published var currentPage: Int = 0
-    @Published var images: [UIImage] = [
-        UIImage(named: "justin")!,
-        UIImage(named: "justin")!,
-        UIImage(named: "justin_long")!,
-        UIImage(named: "justin")!,
-        UIImage(named: "tall_image")!
-    ]
+    @Published var images: [URL] = []
+
     @Published var isSaved: Bool = false
     @Published var maxDrag: CGFloat = UIScreen.height / 2
-    @Published var maxImgRatio: CGFloat = 0.0
+    @Published var maxImgRatio: CGFloat = 1.0
+    @Published var item: Post?
 
     // MARK: - Functions
 
-    func getItem() {
-        // TODO: Backend get Item Call
+    func getPost(id: String) {
+        Task {
+            do {
+                let postResponse = try await NetworkManager.shared.getPostByID(id: id)
+                item = postResponse.post
+                images = postResponse.post.images
+
+                await calculateMaxImgRatio()
+            } catch {
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getPost: \(error.localizedDescription)")
+            }
+        }
     }
 
     func updateItemSaved() {
@@ -40,10 +46,19 @@ class ProductDetailsViewModel: ObservableObject {
         // TODO: Backend Call to change item to similar item
     }
 
-    func calculateMaxImgRatio() {
-        let maxAspectRatio = images.map { $0.aspectRatio }.max() ?? 1.0
-        maxImgRatio = maxAspectRatio
-    }
-    
+    private func calculateMaxImgRatio() async {
+        var maxRatio = 0.0
+        for imageUrl in images {
+            guard let data = try? await URLSession.shared.data(from: imageUrl).0,
+                  let image = UIImage(data: data) else { continue }
 
+            let aspectRatio = image.aspectRatio
+
+            maxRatio = max(maxRatio, aspectRatio)
+        }
+
+        withAnimation {
+            maxImgRatio = maxRatio
+        }
+    }
 }

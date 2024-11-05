@@ -5,6 +5,7 @@
 //  Created by Richie Sun on 10/16/24.
 //
 
+import Kingfisher
 import SwiftUI
 
 struct ProductDetailsView: View {
@@ -16,8 +17,7 @@ struct ProductDetailsView: View {
 
     @StateObject private var viewModel = ProductDetailsViewModel()
 
-    var userIsSeller: Bool
-    var item: Item
+    var id: String
     var seller = ("Justin", "justin_long")
 
     // MARK: - UI
@@ -27,9 +27,6 @@ struct ProductDetailsView: View {
             VStack {
                 imageGallery
                     .frame(height: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio))
-                    .onAppear {
-                        viewModel.calculateMaxImgRatio()
-                    }
 
                 if viewModel.maxImgRatio > 0 {
                     Spacer()
@@ -48,7 +45,7 @@ struct ProductDetailsView: View {
 
             if viewModel.didShowOptionsMenu {
                 OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, options: [
-                    .share(url: URL(string: "https://www.google.com")!, itemName: item.title),
+                    .share(url: URL(string: "https://www.google.com")!, itemName: viewModel.item?.title ?? ""),
                     .report,
                     .delete
                 ])
@@ -56,6 +53,7 @@ struct ProductDetailsView: View {
                 .zIndex(1)
             }
         }
+        .background(Constants.Colors.white)
         .ignoresSafeArea()
         .navigationBarBackButtonHidden(true)
         .toolbar {
@@ -84,6 +82,8 @@ struct ProductDetailsView: View {
             }
         }
         .onAppear {
+            viewModel.getPost(id: id)
+
             withAnimation {
                 mainViewModel.hidesTabBar = true
             }
@@ -118,11 +118,21 @@ struct ProductDetailsView: View {
 
     private func imageView(_ index: Int) -> some View {
         GeometryReader { geometry in
-            Image(uiImage: viewModel.images[index])
+            KFImage(viewModel.images[index])
+                .placeholder {
+                    ShimmerView()
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+                .fade(duration: 0.3)
+                .scaleFactor(UIScreen.main.scale)
+                .backgroundDecode()
+                .cacheOriginalImage()
                 .resizable()
                 .scaledToFill()
                 .frame(width: geometry.size.width)
                 .tag(index)
+                .aspectRatio(contentMode: .fill)
+                .clipped()
                 .ignoresSafeArea(edges: .top)
         }
     }
@@ -164,13 +174,13 @@ struct ProductDetailsView: View {
 
     private var titlePriceView: some View {
         HStack {
-            Text(item.title)
+            Text(viewModel.item?.title ?? "")
                 .font(Constants.Fonts.h2)
                 .foregroundStyle(Constants.Colors.black)
 
             Spacer()
 
-            Text("$\(item.price)")
+            Text("$\(viewModel.item?.originalPrice ?? "")")
                 .font(Constants.Fonts.h2)
                 .foregroundStyle(Constants.Colors.black)
         }
@@ -193,7 +203,7 @@ struct ProductDetailsView: View {
     }
 
     private var itemDescriptionView: some View {
-        Text("Vintage blue pants that are super cool!\nCondition\nISBN\nAdditional Information")
+        Text(viewModel.item?.description ?? "")
             .font(Constants.Fonts.body2)
             .foregroundStyle(Constants.Colors.black)
     }
