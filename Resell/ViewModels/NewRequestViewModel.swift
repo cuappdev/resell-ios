@@ -28,7 +28,19 @@ class NewRequestViewModel: ObservableObject {
     }
 
     func createNewRequest() {
-        // TODO: Backend Call
+        Task {
+            do {
+                guard let userID = UserSessionManager.shared.userID else {
+                    UserSessionManager.shared.logger.error("Error in NewRequestViewModel.createNewRequest: userID not found")
+                    return
+                }
+
+                let requestBody = RequestBody(title: titleText, description: descriptionText, userId: userID)
+                let _ = try await NetworkManager.shared.postRequest(request: requestBody)
+            } catch {
+                NetworkManager.shared.logger.error("Error in NewRequestViewModel.createNewRequest: \(error.localizedDescription)")
+            }
+        }
     }
 }
 
