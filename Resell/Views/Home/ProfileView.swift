@@ -77,6 +77,9 @@ struct ProfileView: View {
                 viewModel.getUser()
             }
         }
+        .onAppear {
+            viewModel.getUser()
+        }
     }
 
     private var profileImageView: some View {

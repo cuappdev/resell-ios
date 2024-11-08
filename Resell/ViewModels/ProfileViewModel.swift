@@ -17,7 +17,6 @@ class ProfileViewModel: ObservableObject {
     @Published var selectedTab: Tab = .listing
     @Published var user: User? = nil
 
-
     private var archivedPosts: [Post] = []
     private var userPosts: [Post] = []
 
