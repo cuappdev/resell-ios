@@ -7,14 +7,25 @@
 
 import SwiftUI
 
+/// A view modifier that displays a modal popup overlay on top of the modified view when `isPresented` is true.
 struct PopupModal<T: View>: ViewModifier {
+
+    // MARK: - Properties
+
+    /// The content view for the popup modal.
     let popupModal: T
+
+    /// A binding to determine whether the modal is presented.
     @Binding var isPresented: Bool
+
+    // MARK: - Init
 
     init(isPresented: Binding<Bool>, @ViewBuilder content: () -> T) {
         self._isPresented = isPresented
         self.popupModal = content()
     }
+
+    // MARK: - ViewModifier
 
     func body(content: Content) -> some View {
         content
@@ -54,5 +65,20 @@ struct PopupModal<T: View>: ViewModifier {
                 .transition(.scale)
             }
         }
+    }
+}
+
+// MARK: - View Extension
+
+extension View {
+    
+    /// Presents a popup modal at the center of the screen, over the view its applied to
+    ///
+    /// This view modifier can be applied to any SwiftUI view. When the user adds this modifier
+    /// a popup modal view will be presented over the view when isPresented is true
+    ///
+    /// - Returns: A modified view with popup modal functionality.
+    func popupModal<T: View>(isPresented: Binding<Bool>, @ViewBuilder content: () -> T) -> some View {
+        self.modifier(PopupModal(isPresented: isPresented, content: content))
     }
 }

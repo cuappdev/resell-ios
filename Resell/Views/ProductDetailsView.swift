@@ -188,13 +188,19 @@ struct ProductDetailsView: View {
 
     private var sellerProfileView: some View {
         HStack {
-            Image(seller.1)
+            KFImage(viewModel.item?.user.photoUrl)
+                .cacheOriginalImage()
+                .placeholder {
+                    ShimmerView()
+                        .frame(width: 32, height: 32)
+                        .clipShape(Circle())
+                }
                 .resizable()
                 .scaledToFill()
                 .frame(width: 32, height: 32)
                 .clipShape(Circle())
 
-            Text(seller.0)
+            Text(viewModel.item?.user.username ?? "")
                 .font(Constants.Fonts.body2)
                 .foregroundStyle(Constants.Colors.black)
 

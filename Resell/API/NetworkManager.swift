@@ -143,6 +143,12 @@ class NetworkManager: APIClient {
         return try await get(url: url)
     }
 
+    func getUserByID(id: String) async throws -> UserResponse {
+        let url = try constructURL(endpoint: "/user/id/\(id)/")
+
+        return try await get(url: url)
+    }
+
     // MARK: - Post Networking Functions
 
     func getAllPosts() async throws -> PostsResponse {
@@ -169,10 +175,21 @@ class NetworkManager: APIClient {
         return try await post(url: url, body: SearchRequest(keywords: keywords))
     }
 
+    func getPostsByUserID(id: String) async throws -> PostsResponse {
+        let url = try constructURL(endpoint: "/post/userId/\(id)/")
+
+        return try await get(url: url)
+    }
+
+    func getArchivedPostsByUserID(id: String) async throws -> PostsResponse {
+        let url = try constructURL(endpoint: "/post/archive/userId/\(id)/")
+
+        return try await get(url: url)
+    }
+
     func getPostByID(id: String) async throws -> PostResponse {
         let url = try constructURL(endpoint: "/post/id/\(id)/")
 
         return try await get(url: url)
     }
-
 }

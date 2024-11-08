@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 import SwiftUI
 
 class UserSessionManager: ObservableObject {
@@ -45,6 +46,8 @@ class UserSessionManager: ObservableObject {
             }
         }
     }
+
+    let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.cornellappdev.Resell", category: "UserSession")
 
     // MARK: - Init
 

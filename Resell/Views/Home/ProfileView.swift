@@ -5,6 +5,7 @@
 //  Created by Richie Sun on 9/12/24.
 //
 
+import Kingfisher
 import SwiftUI
 
 struct ProfileView: View {
@@ -27,7 +28,7 @@ struct ProfileView: View {
                     .foregroundStyle(Constants.Colors.black)
                     .padding(.bottom, 4)
 
-                Text(viewModel.user?.name ?? "")
+                Text(viewModel.user?.givenName ?? "")
                     .font(Constants.Fonts.body2)
                     .foregroundStyle(Constants.Colors.secondaryGray)
                     .padding(.bottom, 16)
@@ -39,7 +40,12 @@ struct ProfileView: View {
 
                 profileTabsView
 
-//                ProductsGalleryView(items: Constants.dummyItemsData)
+                if viewModel.selectedTab == .wishlist {
+
+                } else {
+                    ProductsGalleryView(items: viewModel.selectedPosts)
+                        .emptyState(isEmpty: $viewModel.selectedPosts.isEmpty, title: viewModel.selectedTab == .listing ? "No listings posted" : "No items archived", text: viewModel.selectedTab == .listing ? "When you post a listing, it will be displayed here" : "When a listing is sold or archived, it will be displayed here")
+                }
             }
             .background(Constants.Colors.white)
             .toolbar {
@@ -67,10 +73,18 @@ struct ProfileView: View {
         .onChange(of: viewModel.selectedTab) { _ in
             viewModel.updateItemsGallery()
         }
+        .onAppear {
+            viewModel.getUser()
+        }
     }
 
     private var profileImageView: some View {
-        Image(viewModel.user?.profile ?? "justin")
+        KFImage(viewModel.user?.photoUrl)
+            .cacheOriginalImage()
+            .placeholder {
+                ShimmerView()
+                    .frame(width: 90, height: 90)
+            }
             .resizable()
             .frame(width: 90, height: 90)
             .clipShape(.circle)

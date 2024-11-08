@@ -37,7 +37,7 @@ class HomeViewModel: ObservableObject {
         Task {
             do {
                 let postsResponse = try await NetworkManager.shared.getAllPosts()
-                allItems = postsResponse.posts
+                allItems = Post.sortPostsByDate(postsResponse.posts)
 
                 if selectedFilter == "Recent" {
                     filteredItems = allItems
