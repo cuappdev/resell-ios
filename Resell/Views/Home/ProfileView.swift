@@ -43,6 +43,7 @@ struct ProfileView: View {
 
                 if viewModel.selectedTab == .wishlist {
                     requestsView
+                        .emptyState(isEmpty: viewModel.requests.isEmpty, title: "No active requests", text: "Submit a request and get notified when someone lists something similar")
                 } else {
                     ProductsGalleryView(items: viewModel.selectedPosts)
                         .emptyState(isEmpty: $viewModel.selectedPosts.isEmpty, title: viewModel.selectedTab == .listing ? "No listings posted" : "No items archived", text: viewModel.selectedTab == .listing ? "When you post a listing, it will be displayed here" : "When a listing is sold or archived, it will be displayed here")
@@ -149,7 +150,7 @@ struct ProfileView: View {
                     }
                 }
             }
-            .padding(.horizontal)
+            .padding(Constants.Spacing.horizontalPadding)
         }
         .background(Constants.Colors.white)
     }

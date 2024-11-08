@@ -67,6 +67,8 @@ struct MainTabView: View {
                         SettingsView(isAccountSettings: isAccountSettings)
                     case .blockedUsers:
                         BlockerUsersView()
+                    case .editProfile:
+                        EditProfileView()
                     case .feedback:
                         SendFeedbackView()
                     case .notifications:
