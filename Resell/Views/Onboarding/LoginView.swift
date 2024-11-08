@@ -31,7 +31,7 @@ struct LoginView: View {
                     }
                 }
 
-                NavigationPurpleButton(text: "Login with NetID", horizontalPadding: 28, destination: SetupProfileView(userDidLogin: $userDidLogin))
+//                NavigationPurpleButton(text: "Login with NetID", horizontalPadding: 28, destination: SetupProfileView(userDidLogin: $userDidLogin))
             }
             .background(LoginGradient())
         }

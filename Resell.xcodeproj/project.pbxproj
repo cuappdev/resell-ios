@@ -96,6 +96,8 @@
 		2CF356172CDDC2110045A173 /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF356162CDDC2110045A173 /* Request.swift */; };
 		2CF356192CDDD4A30045A173 /* HapticFeedbackGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF356182CDDD4A30045A173 /* HapticFeedbackGenerator.swift */; };
 		2CF3561B2CDDD65F0045A173 /* SwipeableRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF3561A2CDDD65F0045A173 /* SwipeableRow.swift */; };
+		2CF3561D2CDE91170045A173 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF3561C2CDE91170045A173 /* EditProfileView.swift */; };
+		2CF3561F2CDE93E00045A173 /* EditProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF3561E2CDE93E00045A173 /* EditProfileViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -205,6 +207,8 @@
 		2CF356162CDDC2110045A173 /* Request.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
 		2CF356182CDDD4A30045A173 /* HapticFeedbackGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticFeedbackGenerator.swift; sourceTree = "<group>"; };
 		2CF3561A2CDDD65F0045A173 /* SwipeableRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipeableRow.swift; sourceTree = "<group>"; };
+		2CF3561C2CDE91170045A173 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
+		2CF3561E2CDE93E00045A173 /* EditProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -264,6 +268,7 @@
 			isa = PBXGroup;
 			children = (
 				2CBC6B642CB7A5A000C842A4 /* BlockerUsersView.swift */,
+				2CF3561C2CDE91170045A173 /* EditProfileView.swift */,
 				2C525B7C2CB1DE55007D5B8E /* NotificationsSettingsView.swift */,
 				2C525B7E2CB1E884007D5B8E /* SendFeedbackView.swift */,
 				2C18FFE52CA139D500564577 /* SettingsView.swift */,
@@ -461,6 +466,7 @@
 			isa = PBXGroup;
 			children = (
 				2CDDF30B2CCD871A0061A564 /* ChatsViewModel.swift */,
+				2CF3561E2CDE93E00045A173 /* EditProfileViewModel.swift */,
 				2C9337472C92AAEE00818C8E /* HomeViewModel.swift */,
 				2C9B4D082C8FD8200029DF61 /* LoginViewModel.swift */,
 				2C52E4F42C926FDA0042312C /* MainViewModel.swift */,
@@ -678,10 +684,12 @@
 				2C525B7D2CB1DE55007D5B8E /* NotificationsSettingsView.swift in Sources */,
 				2C6410942C9A70B400E4B390 /* String + Extensions.swift in Sources */,
 				2CDCEE662CD8708B008DF5E8 /* UserSessionManager.swift in Sources */,
+				2CF3561D2CDE91170045A173 /* EditProfileView.swift in Sources */,
 				2CE473932CC2148B00BD7E2C /* ProductDetailsViewModel.swift in Sources */,
 				2C93374E2C92BE3000818C8E /* Item.swift in Sources */,
 				2C9337542C935C9500818C8E /* ChatsView.swift in Sources */,
 				2CD6CA8C2CB48286005A4F78 /* PopupModal.swift in Sources */,
+				2CF3561F2CDE93E00045A173 /* EditProfileViewModel.swift in Sources */,
 				2C02B3992CC040AE0020DF90 /* PriceInputView.swift in Sources */,
 				2C9337462C92A66C00818C8E /* FilterButton.swift in Sources */,
 				2C02B3952CC031D00020DF90 /* ImagePicker.swift in Sources */,

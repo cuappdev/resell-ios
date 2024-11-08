@@ -200,4 +200,10 @@ class NetworkManager: APIClient {
 
         return try await get(url: url)
     }
+
+    func postRequest(request: RequestBody) async throws -> RequestResponse {
+        let url = try constructURL(endpoint: "/request/")
+
+        return try await post(url: url, body: request)
+    }
 }

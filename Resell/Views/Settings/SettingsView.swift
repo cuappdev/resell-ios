@@ -35,7 +35,7 @@ struct SettingsView: View {
                     }
                 case .editProfile:
                     settingsRow(title: "Edit Profile", icon: "edit") {
-                        // TODO: Edit view pushed
+                        router.push(.editProfile)
                     }
                 case .deleteAccount:
                     settingsRow(isRed: true, title: "Delete Account", icon: "") {
