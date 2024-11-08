@@ -37,11 +37,12 @@ struct ProfileView: View {
                     .font(Constants.Fonts.body2)
                     .foregroundStyle(Constants.Colors.black)
                     .padding(.bottom, 28)
+                    .lineLimit(3)
 
                 profileTabsView
 
                 if viewModel.selectedTab == .wishlist {
-
+                    requestsView
                 } else {
                     ProductsGalleryView(items: viewModel.selectedPosts)
                         .emptyState(isEmpty: $viewModel.selectedPosts.isEmpty, title: viewModel.selectedTab == .listing ? "No listings posted" : "No items archived", text: viewModel.selectedTab == .listing ? "When you post a listing, it will be displayed here" : "When a listing is sold or archived, it will be displayed here")
@@ -69,9 +70,12 @@ struct ProfileView: View {
                 ExpandableAddButton()
                     .padding(.bottom, 40)
             }
-        }
-        .onChange(of: viewModel.selectedTab) { _ in
-            viewModel.updateItemsGallery()
+            .onChange(of: viewModel.selectedTab) { _ in
+                viewModel.updateItemsGallery()
+            }
+            .onAppear {
+                viewModel.getUser()
+            }
         }
         .onAppear {
             viewModel.getUser()
@@ -113,8 +117,40 @@ struct ProfileView: View {
         }
     }
 
-}
+    private var requestsView: some View {
+        ScrollView {
+            LazyVStack(spacing: 20) {
+                ForEach(viewModel.requests, id: \.self.id) { request in
+                    SwipeableRow {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(request.title)
+                                    .font(Constants.Fonts.title2)
+                                    .foregroundStyle(Constants.Colors.black)
+                                    .multilineTextAlignment(.leading)
 
-#Preview {
-    ProfileView()
+                                Text(request.description)
+                                    .font(Constants.Fonts.body2)
+                                    .foregroundStyle(Constants.Colors.black)
+                                    .multilineTextAlignment(.leading)
+                            }
+                            Spacer()
+                        }
+                        .padding(.vertical, 16)
+                        .padding(.horizontal, 12)
+                        .background(Constants.Colors.white)
+                        .clipShape(.rect(cornerRadius: 15))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 15)
+                                .stroke(Constants.Colors.stroke, lineWidth: 1)
+                        }
+                    } onDelete: {
+                        viewModel.requests.removeAll { $0.id == request.id }
+                    }
+                }
+            }
+            .padding(.horizontal)
+        }
+        .background(Constants.Colors.white)
+    }
 }

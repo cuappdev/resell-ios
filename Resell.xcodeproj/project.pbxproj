@@ -93,6 +93,9 @@
 		2CE473A42CC4595C00BD7E2C /* ReportViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE473A32CC4595C00BD7E2C /* ReportViewModel.swift */; };
 		2CE473AC2CC5FF8A00BD7E2C /* Router.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE473AB2CC5FF8A00BD7E2C /* Router.swift */; };
 		2CF356152CDD8C020045A173 /* EmptyState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF356142CDD8C020045A173 /* EmptyState.swift */; };
+		2CF356172CDDC2110045A173 /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF356162CDDC2110045A173 /* Request.swift */; };
+		2CF356192CDDD4A30045A173 /* HapticFeedbackGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF356182CDDD4A30045A173 /* HapticFeedbackGenerator.swift */; };
+		2CF3561B2CDDD65F0045A173 /* SwipeableRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF3561A2CDDD65F0045A173 /* SwipeableRow.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -199,6 +202,9 @@
 		2CE473A32CC4595C00BD7E2C /* ReportViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportViewModel.swift; sourceTree = "<group>"; };
 		2CE473AB2CC5FF8A00BD7E2C /* Router.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router.swift; sourceTree = "<group>"; };
 		2CF356142CDD8C020045A173 /* EmptyState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyState.swift; sourceTree = "<group>"; };
+		2CF356162CDDC2110045A173 /* Request.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
+		2CF356182CDDD4A30045A173 /* HapticFeedbackGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticFeedbackGenerator.swift; sourceTree = "<group>"; };
+		2CF3561A2CDDD65F0045A173 /* SwipeableRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipeableRow.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -285,8 +291,9 @@
 			children = (
 				2C93374D2C92BE3000818C8E /* Item.swift */,
 				2CDDF30F2CCD99B70061A564 /* Message.swift */,
-				2CDCEE632CD6D146008DF5E8 /* User.swift */,
 				2C41BB842CD8811400EFF69E /* Post.swift */,
+				2CF356162CDDC2110045A173 /* Request.swift */,
+				2CDCEE632CD6D146008DF5E8 /* User.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -379,6 +386,7 @@
 			children = (
 				2C9B4D002C8FC0570029DF61 /* Extensions */,
 				2C9B4CF72C8FB84F0029DF61 /* Constants.swift */,
+				2CF356182CDDD4A30045A173 /* HapticFeedbackGenerator.swift */,
 				2C3024722C90FFE60057D3D9 /* Keys.swift */,
 				2CE473AB2CC5FF8A00BD7E2C /* Router.swift */,
 			);
@@ -433,6 +441,7 @@
 				2C02B3982CC040AE0020DF90 /* PriceInputView.swift */,
 				2C9337492C92AD2D00818C8E /* ProductsGalleryView.swift */,
 				2C41BB8B2CD9276E00EFF69E /* ShimmerView.swift */,
+				2CF3561A2CDDD65F0045A173 /* SwipeableRow.swift */,
 				2C9337592C93667600818C8E /* TabViewIcon.swift */,
 				2C4DD9842C98EF5E0055D0AB /* WebView.swift */,
 			);
@@ -679,11 +688,13 @@
 				2CDCEE5F2CD6BE99008DF5E8 /* NetworkManager.swift in Sources */,
 				2C9B4D042C8FC8250029DF61 /* LoginView.swift in Sources */,
 				2C93374C2C92B6A500818C8E /* UIImage + Extensions.swift in Sources */,
+				2CF356172CDDC2110045A173 /* Request.swift in Sources */,
 				2C18FFE42CA1322300564577 /* ProfileViewModel.swift in Sources */,
 				2CDDF30E2CCD915E0061A564 /* MessagesView.swift in Sources */,
 				2C9B4CCB2C8FB7B70029DF61 /* ResellApp.swift in Sources */,
 				2C4DD97D2C98D45B0055D0AB /* SetupProfileViewModel.swift in Sources */,
 				2CE473A42CC4595C00BD7E2C /* ReportViewModel.swift in Sources */,
+				2CF3561B2CDDD65F0045A173 /* SwipeableRow.swift in Sources */,
 				2CE473AC2CC5FF8A00BD7E2C /* Router.swift in Sources */,
 				2C9B4D072C8FCB070029DF61 /* PurpleButton.swift in Sources */,
 				2CBC6B652CB7A5A000C842A4 /* BlockerUsersView.swift in Sources */,
@@ -696,6 +707,7 @@
 				2C4DD9832C98E3110055D0AB /* View + Extensions.swift in Sources */,
 				2C6410982C9DFD8B00E4B390 /* UIApplication + Extensions.swift in Sources */,
 				2C9B4D102C90F69C0029DF61 /* UIScreen + Extensions.swift in Sources */,
+				2CF356192CDDD4A30045A173 /* HapticFeedbackGenerator.swift in Sources */,
 				2C18FFE82CA1DC9800564577 /* Icon.swift in Sources */,
 				2CBC6B632CB772E300C842A4 /* NewRequestView.swift in Sources */,
 				2C02B3A52CC097AB0020DF90 /* OptionsMenuView.swift in Sources */,

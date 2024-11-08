@@ -104,9 +104,9 @@ class NetworkManager: APIClient {
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        if let accessToken = UserSessionManager.shared.accessToken {
-            request.setValue("\(accessToken)", forHTTPHeaderField: "Authorization")
-        }
+//        if let accessToken = UserSessionManager.shared.accessToken {
+//            request.setValue("\(accessToken)", forHTTPHeaderField: "Authorization")
+//        }
 
         request.httpBody = body
         return request
@@ -189,6 +189,14 @@ class NetworkManager: APIClient {
 
     func getPostByID(id: String) async throws -> PostResponse {
         let url = try constructURL(endpoint: "/post/id/\(id)/")
+
+        return try await get(url: url)
+    }
+
+    // MARK: - Request Networking Functions
+
+    func getRequestsByUserID(id: String) async throws -> RequestsResponse {
+        let url = try constructURL(endpoint: "/request/userId/\(id)/")
 
         return try await get(url: url)
     }
