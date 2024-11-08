@@ -21,6 +21,9 @@ struct SavedView: View {
                 }
             }
             .background(Constants.Colors.white)
+            .onAppear {
+                viewModel.getSavedPosts()
+            }
             .emptyState(isEmpty: $viewModel.savedItems.isEmpty, title: "No saved posts", text: "Posts you have bookmarked will be displayed here.")
         }
     }
