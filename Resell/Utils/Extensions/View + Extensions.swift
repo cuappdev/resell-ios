@@ -18,17 +18,6 @@ extension View {
     func endEditingOnTap() -> some View {
         self.modifier(EndEditingOnTap())
     }
-
-    /// Presents a popup modal at the center of the screen, over the view its applied to
-    ///
-    /// This view modifier can be applied to any SwiftUI view. When the user adds this modifier
-    /// a popup modal view will be presented over the view when isPresented is true
-    ///
-    /// - Returns: A modified view with popup modal functionality.
-    func popupModal<T: View>(isPresented: Binding<Bool>, @ViewBuilder content: () -> T) -> some View {
-        self.modifier(PopupModal(isPresented: isPresented, content: content))
-    }
-
 }
 
 struct EndEditingOnTap: ViewModifier {

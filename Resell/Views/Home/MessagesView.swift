@@ -30,6 +30,7 @@ struct MessagesView: View {
             }
 
         }
+        .background(Constants.Colors.white)
 
 
 

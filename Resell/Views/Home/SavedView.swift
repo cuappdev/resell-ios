@@ -19,13 +19,9 @@ struct SavedView: View {
                     headerView
                     ProductsGalleryView(items: viewModel.savedItems)
                 }
-
-                if viewModel.savedItems.isEmpty {
-                    emptyState
-                }
             }
             .background(Constants.Colors.white)
-
+            .emptyState(isEmpty: $viewModel.savedItems.isEmpty, title: "No saved posts", text: "Posts you have bookmarked will be displayed here.")
         }
     }
 
@@ -44,19 +40,5 @@ struct SavedView: View {
             })
         }
         .padding(.horizontal, 25)
-    }
-
-    private var emptyState: some View {
-        VStack(spacing: 16) {
-            Text("No saved posts")
-                .font(Constants.Fonts.h2)
-                .foregroundStyle(Constants.Colors.black)
-
-            Text("Posts you have bookmarked will be displayed here")
-                .font(Constants.Fonts.body1)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(Constants.Colors.secondaryGray)
-        }
-        .frame(width: 300)
     }
 }
