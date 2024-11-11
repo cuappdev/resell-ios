@@ -123,6 +123,7 @@ struct SettingsView: View {
                 .padding(.top, 48)
 
             PurpleButton(isAlert: true, text: "Logout", horizontalPadding: 70) {
+                UserSessionManager.shared.logout()
                 mainViewModel.userDidLogin = false
             }
 

@@ -70,6 +70,8 @@ struct SwipeableRow<Content: View>: View {
                                 offset = gesture.translation.width
                             } else if offset < 0 {
                                 offset = gesture.translation.width
+                            } else if gesture.translation.width > -78 {
+                                offset = 0
                             }
 
                             withAnimation(.easeInOut(duration: 0.15)) {
@@ -96,6 +98,9 @@ struct SwipeableRow<Content: View>: View {
                 .animation(.easeInOut, value: offset)
         }
         .contentShape(Rectangle())
+        .onDisappear {
+            offset = 0
+        }
     }
 
     // MARK: - Functions

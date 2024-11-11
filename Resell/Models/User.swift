@@ -43,3 +43,10 @@ struct UserSessionData: Codable {
         let refreshToken: String
     }
 }
+
+struct EditUser: Codable {
+    let username: String
+    let bio: String
+    let venmoHandle: String
+    let photoUrlBase64: String
+}

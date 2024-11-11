@@ -14,6 +14,7 @@ class NewRequestViewModel: ObservableObject {
     // MARK: - Properties
 
     @Published var didShowPriceInput: Bool = false
+    @Published var isLoading: Bool = false
     @Published var isMinText: Bool = true
 
     @Published var descriptionText: String = ""
@@ -29,6 +30,8 @@ class NewRequestViewModel: ObservableObject {
 
     func createNewRequest() {
         Task {
+            isLoading = true
+
             do {
                 guard let userID = UserSessionManager.shared.userID else {
                     UserSessionManager.shared.logger.error("Error in NewRequestViewModel.createNewRequest: userID not found")
@@ -36,7 +39,9 @@ class NewRequestViewModel: ObservableObject {
                 }
 
                 let requestBody = RequestBody(title: titleText, description: descriptionText, userId: userID)
-                let _ = try await NetworkManager.shared.postRequest(request: requestBody)
+                let request = try await NetworkManager.shared.postRequest(request: requestBody)
+
+                isLoading = false
             } catch {
                 NetworkManager.shared.logger.error("Error in NewRequestViewModel.createNewRequest: \(error.localizedDescription)")
             }

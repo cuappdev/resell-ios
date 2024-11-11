@@ -52,7 +52,16 @@ class EditProfileViewModel: ObservableObject {
     }
 
     func updateProfile() {
-        
+        Task {
+            do {
+                if let user {
+                    let edit = EditUser(username: username, bio: bio, venmoHandle: venmoLink, photoUrlBase64: selectedImage.toBase64() ?? "")
+                    let _ = try await NetworkManager.shared.updateUserProfile(edit: edit)
+                }
+            } catch {
+                NetworkManager.shared.logger.error("Error in EditProfileViewModel.updateProfile: \(error)")
+            }
+        }
     }
 
     /// Updates selectedImage with user profile

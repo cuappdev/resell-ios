@@ -32,9 +32,6 @@ struct ProductDetailsView: View {
                     Spacer()
                 }
             }
-            .onChange(of: viewModel.maxImgRatio) { _ in
-                print(max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio))
-            }
 
             DraggableSheetView(maxDrag: viewModel.maxDrag) {
                 detailsView

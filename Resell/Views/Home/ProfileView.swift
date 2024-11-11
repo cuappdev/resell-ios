@@ -146,6 +146,7 @@ struct ProfileView: View {
                                 .stroke(Constants.Colors.stroke, lineWidth: 1)
                         }
                     } onDelete: {
+                        viewModel.deleteRequest(id: request.id)
                         viewModel.requests.removeAll { $0.id == request.id }
                     }
                 }
