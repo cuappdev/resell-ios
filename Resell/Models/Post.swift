@@ -18,7 +18,7 @@ struct Post: Codable, Equatable, Identifiable {
     let created: String
     let location: String?
     let archive: Bool
-    let user: User
+    let user: User?
 
     enum CodingKeys: String, CodingKey {
         case id, title, description, categories

@@ -53,6 +53,7 @@ struct ReportDetailsView: View {
             ToolbarItem(placement: .principal) {
                 Text("Report \(viewModel.reportType)")
                     .font(Constants.Fonts.h3)
+                    .foregroundStyle(Constants.Colors.black)
             }
         }
         .endEditingOnTap()

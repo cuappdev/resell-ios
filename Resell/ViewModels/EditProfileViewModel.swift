@@ -14,6 +14,7 @@ class EditProfileViewModel: ObservableObject {
     // MARK: - Properties
 
     @Published var didShowPhotosPicker: Bool = false
+    @Published var isLoading: Bool = false
 
     @Published var selectedImage: UIImage = UIImage(named: "emptyProfile")!
     @Published var selectedItem: PhotosPickerItem? = nil
@@ -53,13 +54,15 @@ class EditProfileViewModel: ObservableObject {
 
     func updateProfile() {
         Task {
+            isLoading = true
+
             do {
-                if let user {
-                    let edit = EditUser(username: username, bio: bio, venmoHandle: venmoLink, photoUrlBase64: selectedImage.toBase64() ?? "")
-                    let _ = try await NetworkManager.shared.updateUserProfile(edit: edit)
-                }
+                let edit = EditUser(username: username, bio: bio, venmoHandle: venmoLink, photoUrlBase64: selectedImage.toBase64() ?? "")
+                let _ = try await NetworkManager.shared.updateUserProfile(edit: edit)
+                isLoading = false
             } catch {
                 NetworkManager.shared.logger.error("Error in EditProfileViewModel.updateProfile: \(error)")
+                isLoading = false
             }
         }
     }

@@ -39,11 +39,11 @@ class NewRequestViewModel: ObservableObject {
                 }
 
                 let requestBody = RequestBody(title: titleText, description: descriptionText, userId: userID)
-                let request = try await NetworkManager.shared.postRequest(request: requestBody)
-
+                let _ = try await NetworkManager.shared.postRequest(request: requestBody)
                 isLoading = false
             } catch {
                 NetworkManager.shared.logger.error("Error in NewRequestViewModel.createNewRequest: \(error.localizedDescription)")
+                isLoading = false
             }
         }
     }

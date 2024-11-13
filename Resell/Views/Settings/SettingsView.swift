@@ -84,6 +84,7 @@ struct SettingsView: View {
             ToolbarItem(placement: .principal) {
                 Text(isAccountSettings ? "Account Settings" : "Settings")
                     .font(Constants.Fonts.h3)
+                    .foregroundStyle(Constants.Colors.black)
             }
         }
     }

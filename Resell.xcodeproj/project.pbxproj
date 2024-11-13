@@ -14,6 +14,10 @@
 		2C02B39F2CC06D760020DF90 /* NewRequestViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C02B39E2CC06D760020DF90 /* NewRequestViewModel.swift */; };
 		2C02B3A32CC074150020DF90 /* ProductDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C02B3A22CC074150020DF90 /* ProductDetailsView.swift */; };
 		2C02B3A52CC097AB0020DF90 /* OptionsMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C02B3A42CC097AB0020DF90 /* OptionsMenuView.swift */; };
+		2C16928D2CE41727009D2291 /* ErrorResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C16928C2CE41727009D2291 /* ErrorResponse.swift */; };
+		2C16928F2CE43409009D2291 /* Feedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C16928E2CE43409009D2291 /* Feedback.swift */; };
+		2C1692912CE4361C009D2291 /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C1692902CE4361C009D2291 /* LoadingView.swift */; };
+		2C1692932CE43737009D2291 /* CustomProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C1692922CE43737009D2291 /* CustomProgressView.swift */; };
 		2C18FFE42CA1322300564577 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C18FFE32CA1322300564577 /* ProfileViewModel.swift */; };
 		2C18FFE62CA139D500564577 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C18FFE52CA139D500564577 /* SettingsView.swift */; };
 		2C18FFE82CA1DC9800564577 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C18FFE72CA1DC9800564577 /* Icon.swift */; };
@@ -125,6 +129,10 @@
 		2C02B39E2CC06D760020DF90 /* NewRequestViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewRequestViewModel.swift; sourceTree = "<group>"; };
 		2C02B3A22CC074150020DF90 /* ProductDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductDetailsView.swift; sourceTree = "<group>"; };
 		2C02B3A42CC097AB0020DF90 /* OptionsMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsMenuView.swift; sourceTree = "<group>"; };
+		2C16928C2CE41727009D2291 /* ErrorResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorResponse.swift; sourceTree = "<group>"; };
+		2C16928E2CE43409009D2291 /* Feedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Feedback.swift; sourceTree = "<group>"; };
+		2C1692902CE4361C009D2291 /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
+		2C1692922CE43737009D2291 /* CustomProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomProgressView.swift; sourceTree = "<group>"; };
 		2C18FFE32CA1322300564577 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
 		2C18FFE52CA139D500564577 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		2C18FFE72CA1DC9800564577 /* Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
@@ -294,6 +302,8 @@
 		2C9337442C929B0600818C8E /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				2C16928C2CE41727009D2291 /* ErrorResponse.swift */,
+				2C16928E2CE43409009D2291 /* Feedback.swift */,
 				2C93374D2C92BE3000818C8E /* Item.swift */,
 				2CDDF30F2CCD99B70061A564 /* Message.swift */,
 				2C41BB842CD8811400EFF69E /* Post.swift */,
@@ -433,6 +443,7 @@
 			children = (
 				2C41BB872CD90DF800EFF69E /* CachedImageView.swift */,
 				2CBC6B682CBDDC8100C842A4 /* CustomPageControlIndicatorView.swift */,
+				2C1692922CE43737009D2291 /* CustomProgressView.swift */,
 				2CE473942CC2204500BD7E2C /* DraggableSheetView.swift */,
 				2CBC6B5A2CB72ED200C842A4 /* ExpandableAddButton.swift */,
 				2C9337452C92A66C00818C8E /* FilterButton.swift */,
@@ -517,6 +528,7 @@
 			isa = PBXGroup;
 			children = (
 				2CF356142CDD8C020045A173 /* EmptyState.swift */,
+				2C1692902CE4361C009D2291 /* LoadingView.swift */,
 				2CD6CA8B2CB48286005A4F78 /* PopupModal.swift */,
 			);
 			path = ViewModifiers;
@@ -710,6 +722,7 @@
 				2C41BB852CD8811400EFF69E /* Post.swift in Sources */,
 				2C525B812CB1F195007D5B8E /* SendFeedbackViewModel.swift in Sources */,
 				2C9337562C935CB600818C8E /* ProfileView.swift in Sources */,
+				2C16928D2CE41727009D2291 /* ErrorResponse.swift in Sources */,
 				2CE4739E2CC4575F00BD7E2C /* ReportOptionsView.swift in Sources */,
 				2C9337482C92AAEE00818C8E /* HomeViewModel.swift in Sources */,
 				2C4DD9832C98E3110055D0AB /* View + Extensions.swift in Sources */,
@@ -717,6 +730,7 @@
 				2C9B4D102C90F69C0029DF61 /* UIScreen + Extensions.swift in Sources */,
 				2CF356192CDDD4A30045A173 /* HapticFeedbackGenerator.swift in Sources */,
 				2C18FFE82CA1DC9800564577 /* Icon.swift in Sources */,
+				2C16928F2CE43409009D2291 /* Feedback.swift in Sources */,
 				2CBC6B632CB772E300C842A4 /* NewRequestView.swift in Sources */,
 				2C02B3A52CC097AB0020DF90 /* OptionsMenuView.swift in Sources */,
 				2CE473A02CC4576B00BD7E2C /* ReportDetailsView.swift in Sources */,
@@ -730,6 +744,7 @@
 				2CE473A22CC4577500BD7E2C /* ReportConfirmationView.swift in Sources */,
 				2C18FFEA2CA1E4C900564577 /* SettingsViewModel.swift in Sources */,
 				2C41BB8C2CD9276E00EFF69E /* ShimmerView.swift in Sources */,
+				2C1692912CE4361C009D2291 /* LoadingView.swift in Sources */,
 				2C525B7F2CB1E884007D5B8E /* SendFeedbackView.swift in Sources */,
 				2CBC6B692CBDDC8100C842A4 /* CustomPageControlIndicatorView.swift in Sources */,
 				2C4DD9812C98DC2D0055D0AB /* LabeledTextField.swift in Sources */,
@@ -740,6 +755,7 @@
 				2CF356152CDD8C020045A173 /* EmptyState.swift in Sources */,
 				2C93374A2C92AD2D00818C8E /* ProductsGalleryView.swift in Sources */,
 				2C02B39F2CC06D760020DF90 /* NewRequestViewModel.swift in Sources */,
+				2C1692932CE43737009D2291 /* CustomProgressView.swift in Sources */,
 				2C41BB832CD8718600EFF69E /* KeychainManager.swift in Sources */,
 				2C4DD9852C98EF5E0055D0AB /* WebView.swift in Sources */,
 				2C4DD9792C98CC410055D0AB /* SetupProfileView.swift in Sources */,

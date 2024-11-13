@@ -46,6 +46,7 @@ struct SetupProfileView: View {
             ToolbarItem(placement: .principal) {
                 Text("Setup your profile")
                     .font(Constants.Fonts.h3)
+                    .foregroundStyle(Constants.Colors.black)
             }
         }
         .endEditingOnTap()

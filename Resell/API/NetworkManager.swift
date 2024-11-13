@@ -47,9 +47,7 @@ class NetworkManager: APIClient {
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw URLError(.badServerResponse)
-        }
+        try handleResponse(data: data, response: response)
 
         return try JSONDecoder().decode(T.self, from: data)
     }
@@ -72,9 +70,7 @@ class NetworkManager: APIClient {
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw URLError(.badServerResponse)
-        }
+        try handleResponse(data: data, response: response)
 
         return try JSONDecoder().decode(T.self, from: data)
     }
@@ -85,9 +81,7 @@ class NetworkManager: APIClient {
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw URLError(.badServerResponse)
-        }
+        try handleResponse(data: data, response: response)
 
         return try JSONDecoder().decode(T.self, from: data)
     }
@@ -98,9 +92,7 @@ class NetworkManager: APIClient {
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw URLError(.badServerResponse)
-        }
+        try handleResponse(data: data, response: response)
     }
 
     private func createRequest(url: URL, method: String, body: Data? = nil) throws -> URLRequest {
@@ -123,6 +115,20 @@ class NetworkManager: APIClient {
         }
 
         return url
+    }
+
+    private func handleResponse(data: Data, response: URLResponse) throws {
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+
+        if httpResponse.statusCode != 200 {
+            if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
+                throw errorResponse
+            } else {
+                throw URLError(.init(rawValue: httpResponse.statusCode))
+            }
+        }
     }
 
     // MARK: - Auth Networking Functions

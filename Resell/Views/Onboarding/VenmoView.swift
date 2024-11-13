@@ -55,6 +55,7 @@ struct VenmoView: View {
                     Text("Link your")
                         .font(Constants.Fonts.h3)
                         .foregroundStyle(Constants.Colors.black)
+                    
                     Image("venmoLogo")
                 }
             }

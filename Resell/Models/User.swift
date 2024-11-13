@@ -24,8 +24,8 @@ struct User: Codable {
     let blockers: [String]?
     let reports: [String]?
     let reportedBy: [String]?
-    let posts: [String]?
-    let feedbacks: [String]?
+    let posts: [Post]?
+    let feedbacks: [Feedback]?
 }
 
 struct UserResponse: Codable {
