@@ -49,12 +49,12 @@ struct NewRequestView: View {
         }
         .padding(.horizontal, 24)
         .background(Constants.Colors.white)
-        .endEditingOnTap()
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text("Request Details")
                     .font(Constants.Fonts.h3)
+                    .foregroundStyle(Constants.Colors.black)
             }
 
             ToolbarItem(placement: .topBarTrailing) {
@@ -71,17 +71,22 @@ struct NewRequestView: View {
                 }
             }
         }
-        .onAppear {
-            withAnimation {
-                mainViewModel.hidesTabBar = true
-            }
-        }
+        .loadingView(isLoading: viewModel.isLoading)
         .sheet(isPresented: $viewModel.didShowPriceInput) {
             PriceInputView(price: viewModel.isMinText ? $viewModel.priceTextMin : $viewModel.priceTextMax, isPresented: $viewModel.didShowPriceInput, titleText: "What is the \(viewModel.isMinText ? "minimum" : "maximum") of your preferred price range?")
                 .presentationDetents([.height(UIScreen.height - priceFieldPosition - (UIScreen.height < 700 ? 0 : 50))])
                 .presentationDragIndicator(.visible)
                 .presentationCornerRadius(25)
         }
+        .onAppear {
+            withAnimation {
+                mainViewModel.hidesTabBar = true
+            }
+        }
+        .onChange(of: viewModel.isLoading) { newValue in
+            router.pop()
+        }
+        .endEditingOnTap()
     }
 
     private var minMaxTextFields: some View {

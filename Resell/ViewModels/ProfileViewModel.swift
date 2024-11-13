@@ -67,8 +67,19 @@ class ProfileViewModel: ObservableObject {
                 } else {
                     UserSessionManager.shared.logger.error("Error in ProfileViewModel.getUser: No userID or googleID found in UserSessionManager")
                 }
+
             } catch {
                 NetworkManager.shared.logger.error("Error in ProfileViewModel.getUser: \(error)")
+            }
+        }
+    }
+
+    func deleteRequest(id: String) {
+        Task {
+            do {
+                try await NetworkManager.shared.deleteRequest(id: id)
+            } catch {
+                NetworkManager.shared.logger.error("Error in ProfileViewModel.deleteRequest: \(error)")
             }
         }
     }

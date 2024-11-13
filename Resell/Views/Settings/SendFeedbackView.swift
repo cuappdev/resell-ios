@@ -43,6 +43,7 @@ struct SendFeedbackView: View {
             ToolbarItem(placement: .principal) {
                 Text("Send Feedback")
                     .font(Constants.Fonts.h3)
+                    .foregroundStyle(Constants.Colors.black)
             }
 
             ToolbarItem(placement: .topBarTrailing) {

@@ -53,6 +53,7 @@ struct BlockerUsersView: View {
             ToolbarItem(placement: .principal) {
                 Text("Blocker Users")
                     .font(Constants.Fonts.h3)
+                    .foregroundStyle(Constants.Colors.black)
             }
         }
         .popupModal(isPresented: $didShowPopup) {

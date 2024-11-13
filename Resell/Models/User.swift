@@ -24,8 +24,8 @@ struct User: Codable {
     let blockers: [String]?
     let reports: [String]?
     let reportedBy: [String]?
-    let posts: [String]?
-    let feedbacks: [String]?
+    let posts: [Post]?
+    let feedbacks: [Feedback]?
 }
 
 struct UserResponse: Codable {
@@ -42,4 +42,11 @@ struct UserSessionData: Codable {
         let expiresAt: Int
         let refreshToken: String
     }
+}
+
+struct EditUser: Codable {
+    let username: String
+    let bio: String
+    let venmoHandle: String
+    let photoUrlBase64: String
 }

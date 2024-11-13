@@ -84,6 +84,7 @@ struct SettingsView: View {
             ToolbarItem(placement: .principal) {
                 Text(isAccountSettings ? "Account Settings" : "Settings")
                     .font(Constants.Fonts.h3)
+                    .foregroundStyle(Constants.Colors.black)
             }
         }
     }
@@ -123,6 +124,7 @@ struct SettingsView: View {
                 .padding(.top, 48)
 
             PurpleButton(isAlert: true, text: "Logout", horizontalPadding: 70) {
+                UserSessionManager.shared.logout()
                 mainViewModel.userDidLogin = false
             }
 

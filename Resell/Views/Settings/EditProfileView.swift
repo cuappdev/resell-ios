@@ -11,6 +11,7 @@ struct EditProfileView: View {
 
     // MARK: - Properties
 
+    @EnvironmentObject var router: Router
     @StateObject private var viewModel = EditProfileViewModel()
 
     // MARK: - UI
@@ -32,6 +33,7 @@ struct EditProfileView: View {
             ToolbarItem(placement: .principal) {
                 Text("Edit Profile")
                     .font(Constants.Fonts.h3)
+                    .foregroundStyle(Constants.Colors.black)
             }
 
             ToolbarItem(placement: .topBarTrailing) {
@@ -44,8 +46,16 @@ struct EditProfileView: View {
                 }
             }
         }
+        .loadingView(isLoading: viewModel.isLoading)
         .onAppear {
             viewModel.getUser()
+        }
+        .onChange(of: viewModel.isLoading) { newValue in
+            if !newValue {
+                router.pop()
+                router.pop()
+                router.pop()
+            }
         }
         .endEditingOnTap()
     }

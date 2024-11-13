@@ -32,9 +32,6 @@ struct ProductDetailsView: View {
                     Spacer()
                 }
             }
-            .onChange(of: viewModel.maxImgRatio) { _ in
-                print(max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio))
-            }
 
             DraggableSheetView(maxDrag: viewModel.maxDrag) {
                 detailsView
@@ -188,7 +185,7 @@ struct ProductDetailsView: View {
 
     private var sellerProfileView: some View {
         HStack {
-            KFImage(viewModel.item?.user.photoUrl)
+            KFImage(viewModel.item?.user?.photoUrl)
                 .cacheOriginalImage()
                 .placeholder {
                     ShimmerView()
@@ -200,7 +197,7 @@ struct ProductDetailsView: View {
                 .frame(width: 32, height: 32)
                 .clipShape(Circle())
 
-            Text(viewModel.item?.user.username ?? "")
+            Text(viewModel.item?.user?.username ?? "")
                 .font(Constants.Fonts.body2)
                 .foregroundStyle(Constants.Colors.black)
 

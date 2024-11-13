@@ -65,6 +65,7 @@ struct NewListingImagesView: View {
             ToolbarItem(placement: .principal) {
                 Text("New Listing")
                     .font(Constants.Fonts.h3)
+                    .foregroundStyle(Constants.Colors.black)
             }
 
             ToolbarItem(placement: .topBarTrailing) {

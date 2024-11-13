@@ -45,18 +45,9 @@ class NetworkManager: APIClient {
     func get<T: Decodable>(url: URL) async throws -> T {
         let request = try createRequest(url: url, method: "GET")
 
-        if let cachedResponse = urlCache.cachedResponse(for: request) {
-            return try JSONDecoder().decode(T.self, from: cachedResponse.data)
-        }
-
         let (data, response) = try await URLSession.shared.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw URLError(.badServerResponse)
-        }
-
-        let cachedResponse = CachedURLResponse(response: response, data: data)
-        urlCache.storeCachedResponse(cachedResponse, for: request)
+        try handleResponse(data: data, response: response)
 
         return try JSONDecoder().decode(T.self, from: data)
     }
@@ -79,24 +70,29 @@ class NetworkManager: APIClient {
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw URLError(.badServerResponse)
-        }
+        try handleResponse(data: data, response: response)
 
         return try JSONDecoder().decode(T.self, from: data)
     }
 
-    // Overloaded post function for requests without a body
+    /// Overloaded post function for requests without a body
     func post<T: Decodable>(url: URL) async throws -> T {
         let request = try createRequest(url: url, method: "POST")
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw URLError(.badServerResponse)
-        }
+        try handleResponse(data: data, response: response)
 
         return try JSONDecoder().decode(T.self, from: data)
+    }
+
+    /// Template function to DELETE data to a specified URL with an encodable body and decodes the response into a specified type `T`.
+    func delete(url: URL) async throws {
+        let request = try createRequest(url: url, method: "DELETE")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        try handleResponse(data: data, response: response)
     }
 
     private func createRequest(url: URL, method: String, body: Data? = nil) throws -> URLRequest {
@@ -104,9 +100,9 @@ class NetworkManager: APIClient {
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-//        if let accessToken = UserSessionManager.shared.accessToken {
-//            request.setValue("\(accessToken)", forHTTPHeaderField: "Authorization")
-//        }
+        if let accessToken = UserSessionManager.shared.accessToken {
+            request.setValue("\(accessToken)", forHTTPHeaderField: "Authorization")
+        }
 
         request.httpBody = body
         return request
@@ -119,6 +115,20 @@ class NetworkManager: APIClient {
         }
 
         return url
+    }
+
+    private func handleResponse(data: Data, response: URLResponse) throws {
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+
+        if httpResponse.statusCode != 200 {
+            if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
+                throw errorResponse
+            } else {
+                throw URLError(.init(rawValue: httpResponse.statusCode))
+            }
+        }
     }
 
     // MARK: - Auth Networking Functions
@@ -147,6 +157,12 @@ class NetworkManager: APIClient {
         let url = try constructURL(endpoint: "/user/id/\(id)/")
 
         return try await get(url: url)
+    }
+
+    func updateUserProfile(edit: EditUser) async throws -> UserResponse {
+        let url = try constructURL(endpoint: "/user/")
+
+        return try await post(url: url, body: edit)
     }
 
     // MARK: - Post Networking Functions
@@ -205,5 +221,11 @@ class NetworkManager: APIClient {
         let url = try constructURL(endpoint: "/request/")
 
         return try await post(url: url, body: request)
+    }
+
+    func deleteRequest(id: String) async throws {
+        let url = try constructURL(endpoint: "/request/id/\(id)/")
+
+        try await delete(url: url)
     }
 }

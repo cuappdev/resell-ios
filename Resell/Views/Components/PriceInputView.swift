@@ -54,6 +54,7 @@ struct PriceInputView: View {
             }
         }
         .padding(.top, UIScreen.height < 700 ? 0 : 48)
+        .background(Constants.Colors.white)
     }
 
     private var numberPadView: some View {

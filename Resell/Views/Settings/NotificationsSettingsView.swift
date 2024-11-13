@@ -43,6 +43,7 @@ struct NotificationsSettingsView: View {
             ToolbarItem(placement: .principal) {
                 Text("Notification Preferences")
                     .font(Constants.Fonts.h3)
+                    .foregroundStyle(Constants.Colors.black)
             }
         }
     }
