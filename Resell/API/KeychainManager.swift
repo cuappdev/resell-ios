@@ -14,6 +14,10 @@ class KeychainManager {
 
     static let shared = KeychainManager()
 
+    // MARK: - Init
+
+    private init() { }
+
     // MARK: - Keychain Management Functions
 
     func save(_ value: String, forKey key: String) {

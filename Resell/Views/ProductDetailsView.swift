@@ -18,7 +18,6 @@ struct ProductDetailsView: View {
     @StateObject private var viewModel = ProductDetailsViewModel()
 
     var id: String
-    var seller = ("Justin", "justin_long")
 
     // MARK: - UI
 
@@ -41,11 +40,16 @@ struct ProductDetailsView: View {
             buttonGradientView
 
             if viewModel.didShowOptionsMenu {
-                OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, options: [
-                    .share(url: URL(string: "https://www.google.com")!, itemName: viewModel.item?.title ?? ""),
-                    .report,
-                    .delete
-                ])
+                OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowDeleteView: $viewModel.didShowDeleteView, options: {
+                    var options: [Option] = [
+                        .share(url: URL(string: "https://www.google.com")!, itemName: viewModel.item?.title ?? ""),
+                        .report
+                    ]
+                    if viewModel.isUserPost() {
+                        options.append(.delete)
+                    }
+                    return options
+                }())
                 .padding(.top, (UIApplication.shared.keyWindow?.safeAreaInsets.top ?? 0) + 30)
                 .zIndex(1)
             }
@@ -77,6 +81,9 @@ struct ProductDetailsView: View {
                 }
                 .padding()
             }
+        }
+        .sheet(isPresented: $viewModel.didShowDeleteView) {
+            deletePostView
         }
         .onAppear {
             viewModel.getPost(id: id)
@@ -123,7 +130,6 @@ struct ProductDetailsView: View {
                 .fade(duration: 0.3)
                 .scaleFactor(UIScreen.main.scale)
                 .backgroundDecode()
-                .cacheOriginalImage()
                 .resizable()
                 .scaledToFill()
                 .frame(width: geometry.size.width)
@@ -186,7 +192,6 @@ struct ProductDetailsView: View {
     private var sellerProfileView: some View {
         HStack {
             KFImage(viewModel.item?.user?.photoUrl)
-                .cacheOriginalImage()
                 .placeholder {
                     ShimmerView()
                         .frame(width: 32, height: 32)
@@ -267,5 +272,34 @@ struct ProductDetailsView: View {
                     .frame(width: 21, height: 27)
             }
         }
+    }
+
+    private var deletePostView: some View {
+        VStack(spacing: 24) {
+            Text("Delete Listing Permanently?")
+                .font(Constants.Fonts.h3)
+                .multilineTextAlignment(.center)
+                .padding(.top, 48)
+
+            PurpleButton(isAlert: true, text: "Delete", horizontalPadding: 70) {
+                viewModel.deletePost()
+                viewModel.didShowOptionsMenu = false
+                router.pop()
+            }
+
+            Button {
+                viewModel.archivePost()
+                viewModel.didShowOptionsMenu = false
+                router.pop()
+            } label: {
+                Text("Archive Only")
+                    .font(Constants.Fonts.title1)
+                    .foregroundStyle(Constants.Colors.black)
+            }
+        }
+        .background(Constants.Colors.white)
+        .presentationDetents([.height(200)])
+        .presentationDragIndicator(.visible)
+        .presentationCornerRadius(25)
     }
 }

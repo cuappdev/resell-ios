@@ -61,3 +61,7 @@ struct FilterRequest: Codable {
 struct SearchRequest: Codable {
     let keywords: String
 }
+
+struct SavedResponse: Codable {
+    let isSaved: Bool
+}

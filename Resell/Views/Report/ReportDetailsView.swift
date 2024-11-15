@@ -47,8 +47,8 @@ struct ReportDetailsView: View {
             }
             .padding(.bottom, Constants.Spacing.horizontalPadding)
         }
-        .background(Constants.Colors.white)
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
+        .background(Constants.Colors.white)
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text("Report \(viewModel.reportType)")

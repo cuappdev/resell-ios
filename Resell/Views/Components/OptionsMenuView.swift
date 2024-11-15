@@ -13,6 +13,7 @@ struct OptionsMenuView: View {
     // MARK: - Properties
 
     @Binding var showMenu: Bool
+    @Binding var didShowDeleteView: Bool
     @EnvironmentObject var router: Router
 
     var options: [Option]
@@ -49,7 +50,9 @@ struct OptionsMenuView: View {
                         }
                     case .delete:
                         Button {
-                            // TODO: Call Backend to delete item
+                            withAnimation {
+                                didShowDeleteView = true
+                            }
                         } label: {
                             optionView(name: "Delete", icon: "trash", isRed: true)
                         }

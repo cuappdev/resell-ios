@@ -60,8 +60,8 @@ struct ReportConfirmationView: View {
             .padding(.bottom, Constants.Spacing.horizontalPadding)
 
         }
-        .background(Constants.Colors.white)
         .padding(.horizontal, 55)
+        .background(Constants.Colors.white)
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .principal) {

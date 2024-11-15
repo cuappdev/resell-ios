@@ -51,7 +51,7 @@ class UserSessionManager: ObservableObject {
 
     // MARK: - Init
 
-    init() {
+    private init() {
         self.accessToken = KeychainManager.shared.get(forKey: "accessToken")
         self.googleID = KeychainManager.shared.get(forKey: "googleID")
         self.userID = KeychainManager.shared.get(forKey: "userID")

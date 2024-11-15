@@ -13,6 +13,7 @@ class ProductDetailsViewModel: ObservableObject {
     // MARK: - Properties
 
     @Published var didShowOptionsMenu: Bool = false
+    @Published var didShowDeleteView: Bool = false
 
     @Published var currentPage: Int = 0
     @Published var images: [URL] = []
@@ -32,6 +33,7 @@ class ProductDetailsViewModel: ObservableObject {
                 images = postResponse.post.images
 
                 await calculateMaxImgRatio()
+                getIsSaved()
             } catch {
                 NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getPost: \(error.localizedDescription)")
             }
@@ -39,7 +41,68 @@ class ProductDetailsViewModel: ObservableObject {
     }
 
     func updateItemSaved() {
-        // TODO: Insert backend saveItem call
+        Task {
+            do {
+                if let id = item?.id {
+                    if !isSaved {
+                        let _ = try await NetworkManager.shared.unsavePostByID(id: id)
+                    } else {
+                        let _ = try await NetworkManager.shared.savePostByID(id: id)
+                    }
+                }
+            } catch {
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel:.updateItemSaved \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func getIsSaved() {
+        Task {
+            do {
+                if let id = item?.id {
+                    isSaved = try await NetworkManager.shared.postIsSaved(id: id).isSaved
+                }
+            } catch {
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getIsSaved: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func archivePost() {
+        Task {
+            do {
+                if let id = item?.id {
+                    let _ = try await NetworkManager.shared.archivePost(id: id)
+                }
+
+                didShowDeleteView = false
+            } catch {
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.archivePost: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func deletePost() {
+        Task {
+            do {
+                if let id = item?.id {
+                    try await NetworkManager.shared.deletePost(id: id)
+                }
+
+                didShowDeleteView = false
+            } catch {
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.deletePost: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func isUserPost() -> Bool {
+        if let userId = UserSessionManager.shared.userID,
+           let itemUserId = item?.user?.id {
+            return userId == itemUserId
+        }
+
+        return false
     }
 
     func changeItem() {

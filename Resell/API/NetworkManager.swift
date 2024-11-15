@@ -22,13 +22,10 @@ class NetworkManager: APIClient {
     // MARK: - Properties
 
     private let hostURL: String = Keys.prodServerURL
-    private let urlCache: URLCache
 
-    // MARK: - Initializer
+    // MARK: - Init
 
-    private init(urlCache: URLCache = .shared) {
-        self.urlCache = urlCache
-    }
+    private init() { }
 
     // MARK: - Template Helper Functions
 
@@ -207,6 +204,36 @@ class NetworkManager: APIClient {
         let url = try constructURL(endpoint: "/post/id/\(id)/")
 
         return try await get(url: url)
+    }
+
+    func savePostByID(id: String) async throws -> PostResponse {
+        let url = try constructURL(endpoint: "/post/save/postId/\(id)/")
+
+        return try await post(url: url)
+    }
+
+    func unsavePostByID(id: String) async throws -> PostResponse {
+        let url = try constructURL(endpoint: "/post/unsave/postId/\(id)/")
+
+        return try await post(url: url)
+    }
+
+    func postIsSaved(id: String) async throws -> SavedResponse {
+        let url = try constructURL(endpoint: "/post/isSaved/postId/\(id)/")
+
+        return try await get(url: url)
+    }
+
+    func archivePost(id: String) async throws -> PostResponse {
+        let url = try constructURL(endpoint: "/post/archive/postId/\(id)/")
+
+        return try await post(url: url)
+    }
+
+    func deletePost(id: String) async throws {
+        let url = try constructURL(endpoint: "/post/id/\(id)/")
+
+        try await delete(url: url)
     }
 
     // MARK: - Request Networking Functions
