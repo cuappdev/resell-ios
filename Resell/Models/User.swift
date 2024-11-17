@@ -28,6 +28,10 @@ struct User: Codable {
     let feedbacks: [Feedback]?
 }
 
+struct UsersResponse: Codable {
+    let users: [User]
+}
+
 struct UserResponse: Codable {
     let user: User
 }
@@ -49,4 +53,12 @@ struct EditUser: Codable {
     let bio: String
     let venmoHandle: String
     let photoUrlBase64: String
+}
+
+struct BlockUser: Codable {
+    let blocked: String
+}
+
+struct UnblockUser: Codable {
+    let unblocked: String
 }

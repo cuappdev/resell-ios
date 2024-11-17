@@ -20,8 +20,12 @@ struct LoadingViewModifier: ViewModifier {
             if isLoading {
                 Color.black.opacity(0.2)
                     .ignoresSafeArea()
+                    .transition(.opacity)
+                    .animation(.easeInOut, value: isLoading)
 
                 CustomProgressView(size: size)
+                    .transition(.opacity)
+                    .animation(.easeInOut, value: isLoading)
             }
         }
     }

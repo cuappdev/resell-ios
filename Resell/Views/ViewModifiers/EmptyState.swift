@@ -29,6 +29,8 @@ struct EmptyStateModifier: ViewModifier {
 
             if isEmpty {
                 VStack(spacing: 16) {
+                    Spacer()
+
                     Text(title)
                         .font(Constants.Fonts.h2)
                         .foregroundStyle(Constants.Colors.black)
@@ -37,6 +39,8 @@ struct EmptyStateModifier: ViewModifier {
                         .font(Constants.Fonts.body1)
                         .multilineTextAlignment(.center)
                         .foregroundStyle(Constants.Colors.secondaryGray)
+
+                    Spacer()
                 }
                 .frame(width: 300)
             }

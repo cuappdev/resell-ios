@@ -39,7 +39,7 @@ struct NewRequestView: View {
 
             Spacer()
 
-            PurpleButton(isActive: viewModel.checkInputIsValid(), text: "Continue") {
+            PurpleButton(isLoading: viewModel.isLoading, isActive: viewModel.checkInputIsValid(), text: "Continue") {
                 viewModel.createNewRequest()
                 router.pop()
                 withAnimation {
@@ -71,7 +71,6 @@ struct NewRequestView: View {
                 }
             }
         }
-        .loadingView(isLoading: viewModel.isLoading)
         .sheet(isPresented: $viewModel.didShowPriceInput) {
             PriceInputView(price: viewModel.isMinText ? $viewModel.priceTextMin : $viewModel.priceTextMax, isPresented: $viewModel.didShowPriceInput, titleText: "What is the \(viewModel.isMinText ? "minimum" : "maximum") of your preferred price range?")
                 .presentationDetents([.height(UIScreen.height - priceFieldPosition - (UIScreen.height < 700 ? 0 : 50))])

@@ -14,9 +14,20 @@ struct OptionsMenuView: View {
 
     @Binding var showMenu: Bool
     @Binding var didShowDeleteView: Bool
+    @Binding var didShowBlockView: Bool
+
     @EnvironmentObject var router: Router
 
     var options: [Option]
+
+    // MARK: Init
+
+    init(showMenu: Binding<Bool>, didShowDeleteView: Binding<Bool> = .constant(false), didShowBlockView: Binding<Bool> = .constant(false), options: [Option]) {
+        self._showMenu = showMenu
+        self._didShowDeleteView = didShowDeleteView
+        self._didShowBlockView = didShowBlockView
+        self.options = options
+    }
 
     // MARK: - UI
 
@@ -33,7 +44,6 @@ struct OptionsMenuView: View {
 
             VStack(spacing: 0) {
                 ForEach(options.indices, id: \.self) { index in
-
                     switch options[index] {
                     case .share(let url, let item):
                         ShareLink(item: url, subject: Text("Check out this \(item) on Resell")) {
@@ -58,12 +68,14 @@ struct OptionsMenuView: View {
                         }
                     case .block:
                         Button {
-                            // TODO: Call Backend to block user
+                            withAnimation {
+                                didShowBlockView = true
+                            }
                         } label: {
-                            optionView(name: "Block", icon: "block")
+                            optionView(name: "Block", icon: "slash")
                         }
                     case .unblock:
-                        optionView(name: "Unblock", icon: "block")
+                        optionView(name: "Unblock", icon: "slash")
                     }
 
                     if index != options.count - 1 {
@@ -75,7 +87,7 @@ struct OptionsMenuView: View {
                 }
             }
             .frame(width: 250)
-            .background(Constants.Colors.wash.opacity(0.8))
+            .background(Constants.Colors.wash.opacity(0.9))
             .clipShape(.rect(cornerRadius: 12))
             .padding(.trailing, Constants.Spacing.horizontalPadding)
             .scaleEffect(showMenu ? 1 : 0, anchor: .topTrailing)

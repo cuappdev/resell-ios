@@ -21,7 +21,7 @@ class SettingsViewModel: ObservableObject {
         .accountSettings,
         .notifications,
         .sendFeedback,
-        .blockerUsers,
+        .blockedUsers,
         .eula,
         .logout
     ]
@@ -58,7 +58,7 @@ enum Settings {
     case accountSettings
     case notifications
     case sendFeedback
-    case blockerUsers
+    case blockedUsers
     case eula
     case logout
 }

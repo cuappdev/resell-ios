@@ -41,10 +41,9 @@ struct NewListingDetailsView: View {
 
             Spacer()
 
-            PurpleButton(isActive: viewModel.checkInputIsValid(), text: "Continue") {
+            PurpleButton(isLoading: viewModel.isLoading, isActive: viewModel.checkInputIsValid(), text: "Continue") {
                 viewModel.createNewListing()
-                router.popToRoot()
-                viewModel.clear()
+
                 withAnimation {
                     mainViewModel.hidesTabBar = false
                 }
@@ -62,8 +61,7 @@ struct NewListingDetailsView: View {
             
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    router.pop()
-                    router.pop()
+                    router.popToRoot()
                     viewModel.clear()
                 } label: {
                     Image(systemName: "xmark")
@@ -78,6 +76,11 @@ struct NewListingDetailsView: View {
                 .presentationDetents([.height(UIScreen.height - priceFieldPosition - (UIScreen.height < 700 ? 0 : 50))])
                 .presentationDragIndicator(.visible)
                 .presentationCornerRadius(25)
+        }
+        .onChange(of: viewModel.isLoading) { newValue in
+            if !newValue {
+                router.popToRoot()
+            }
         }
     }
 

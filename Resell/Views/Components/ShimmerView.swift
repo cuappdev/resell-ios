@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-/// A resuable view that provides a shimmer (glimmer) effect,  used as a placeholder for content that is loading
+/// A reusable view that provides a shimmer (glimmer) effect, used as a placeholder for content that is loading.
 struct ShimmerView: View {
 
     // MARK: - Properties
@@ -17,31 +17,37 @@ struct ShimmerView: View {
     // MARK: - UI
 
     var body: some View {
-        Rectangle()
-            .fill(
+        GeometryReader { geometry in
+            let gradientWidth = geometry.size.width * 0.6
+
+            ZStack {
+                Rectangle()
+                    .fill(Color.gray.opacity(0.3))
+
                 LinearGradient(
-                    gradient: Gradient(colors: [.gray.opacity(0.3), .gray.opacity(0.1), .gray.opacity(0.3)]),
+                    gradient: Gradient(colors: [.clear, .white.opacity(0.5), .clear]),
                     startPoint: .leading,
                     endPoint: .trailing
                 )
-            )
-            .mask(Rectangle())
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .overlay(
-                LinearGradient(
-                    gradient: Gradient(colors: [.clear, .white.opacity(0.3), .clear]),
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
+                .frame(width: gradientWidth)
                 .offset(x: shimmerOffset)
-            )
-            .onAppear {
-                withAnimation(
-                    Animation.linear(duration: 1.0)
-                        .repeatForever(autoreverses: false)
-                ) {
-                    shimmerOffset = UIScreen.main.bounds.width
+                .onAppear {
+                    shimmerOffset = -gradientWidth
+                    withAnimation(
+                        Animation.linear(duration: 1.5)
+                            .repeatForever(autoreverses: false)
+                    ) {
+                        shimmerOffset = geometry.size.width + gradientWidth
+                    }
                 }
             }
+            .clipShape(Rectangle())
+        }
     }
 }
+
+#Preview {
+    ShimmerView()
+        .frame(width: 300, height: 100)
+}
+

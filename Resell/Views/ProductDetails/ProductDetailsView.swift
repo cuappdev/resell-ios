@@ -84,6 +84,7 @@ struct ProductDetailsView: View {
         }
         .sheet(isPresented: $viewModel.didShowDeleteView) {
             deletePostView
+                .background(Constants.Colors.white)
         }
         .onAppear {
             viewModel.getPost(id: id)
@@ -190,23 +191,27 @@ struct ProductDetailsView: View {
     }
 
     private var sellerProfileView: some View {
-        HStack {
-            KFImage(viewModel.item?.user?.photoUrl)
-                .placeholder {
-                    ShimmerView()
-                        .frame(width: 32, height: 32)
-                        .clipShape(Circle())
-                }
-                .resizable()
-                .scaledToFill()
-                .frame(width: 32, height: 32)
-                .clipShape(Circle())
+        Button {
+            router.push(.profile(viewModel.item?.user?.id ?? ""))
+        } label: {
+            HStack {
+                KFImage(viewModel.item?.user?.photoUrl)
+                    .placeholder {
+                        ShimmerView()
+                            .frame(width: 32, height: 32)
+                            .clipShape(Circle())
+                    }
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 32, height: 32)
+                    .clipShape(Circle())
 
-            Text(viewModel.item?.user?.username ?? "")
-                .font(Constants.Fonts.body2)
-                .foregroundStyle(Constants.Colors.black)
+                Text(viewModel.item?.user?.username ?? "")
+                    .font(Constants.Fonts.body2)
+                    .foregroundStyle(Constants.Colors.black)
 
-            Spacer()
+                Spacer()
+            }
         }
     }
 
@@ -278,6 +283,7 @@ struct ProductDetailsView: View {
         VStack(spacing: 24) {
             Text("Delete Listing Permanently?")
                 .font(Constants.Fonts.h3)
+                .foregroundStyle(Constants.Colors.black)
                 .multilineTextAlignment(.center)
                 .padding(.top, 48)
 
@@ -301,5 +307,6 @@ struct ProductDetailsView: View {
         .presentationDetents([.height(200)])
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(25)
+        .presentationBackground(Constants.Colors.white)
     }
 }

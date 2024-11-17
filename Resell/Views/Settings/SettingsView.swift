@@ -49,8 +49,8 @@ struct SettingsView: View {
                     settingsRow(title: "Send Feedback", icon: "feedback") {
                         router.push(.feedback)
                     }
-                case .blockerUsers:
-                    settingsRow(title: "Blocker Users", icon: "slash") {
+                case .blockedUsers:
+                    settingsRow(title: "Blocked Users", icon: "slash") {
                         router.push(.blockedUsers)
                     }
                 case .eula:
@@ -119,6 +119,7 @@ struct SettingsView: View {
         VStack(spacing: 24) {
             Text("Log out of Resell?")
                 .font(Constants.Fonts.h3)
+                .foregroundStyle(Constants.Colors.black)
                 .multilineTextAlignment(.center)
                 .frame(width: 190)
                 .padding(.top, 48)
@@ -142,20 +143,24 @@ struct SettingsView: View {
         .presentationDetents([.height(200)])
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(25)
+        .presentationBackground(Constants.Colors.white)
     }
 
     private var popupModalContent: some View {
         VStack(spacing: 16) {
             Text("Delete Account")
                 .font(Constants.Fonts.h3)
+                .foregroundStyle(Constants.Colors.black)
 
             Text("Once deleted, your account cannot be recovered. Enter your username to proceed with deletion.")
                 .font(Constants.Fonts.body2)
+                .foregroundStyle(Constants.Colors.black)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 12)
 
             TextField("", text: $viewModel.confirmUsernameText)
                 .font(Constants.Fonts.body2)
+                .foregroundStyle(Constants.Colors.black)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
                 .overlay {

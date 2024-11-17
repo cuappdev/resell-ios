@@ -66,7 +66,7 @@ struct MainTabView: View {
                     case .settings(let isAccountSettings):
                         SettingsView(isAccountSettings: isAccountSettings)
                     case .blockedUsers:
-                        BlockerUsersView()
+                        BlockedUsersView()
                     case .editProfile:
                         EditProfileView()
                     case .feedback:
@@ -75,6 +75,8 @@ struct MainTabView: View {
                         NotificationsSettingsView()
                     case .login:
                         LoginView(userDidLogin: $mainViewModel.userDidLogin)
+                    case .profile(let id):
+                        ExternalProfileView(userID: id)
                     default:
                         EmptyView()
                     }
