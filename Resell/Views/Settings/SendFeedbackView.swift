@@ -111,11 +111,13 @@ struct SendFeedbackView: View {
         VStack(spacing: 24) {
             Text("Delete Image")
                 .font(Constants.Fonts.h3)
+                .foregroundStyle(Constants.Colors.black)
 
             Text("Are you sure you’d like to delete this image?")
                 .font(Constants.Fonts.body2)
+                .foregroundStyle(Constants.Colors.black)
                 .multilineTextAlignment(.center)
-                .frame(width: 200)
+                .frame(width: 275)
 
             PurpleButton(text: "Delete", horizontalPadding: 100) {
                 viewModel.removeImage()

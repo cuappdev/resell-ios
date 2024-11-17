@@ -17,6 +17,8 @@ class NewListingViewModel: ObservableObject {
     @Published var didShowCamera: Bool = false
     @Published var didShowPhotosPicker: Bool = false
 
+    @Published var isLoading: Bool = false
+
     @Published var selectedImages: [UIImage] = []
     @Published var selectedItem: PhotosPickerItem? = nil
 
@@ -48,7 +50,25 @@ class NewListingViewModel: ObservableObject {
     }
 
     func createNewListing() {
-        // TODO: Backend Call
+        Task {
+            isLoading = true
+
+            do {
+                if let userID = UserSessionManager.shared.userID {
+                    let imagesBase64 = selectedImages.map { $0.toBase64() ?? "" }
+                    let postBody = PostBody(title: titleText, description: descriptionText, categories: [selectedFilter], originalPrice: Double(priceText) ?? 0, imagesBase64: imagesBase64, userId: userID)
+                    let _ = try await NetworkManager.shared.createPost(postBody: postBody)
+
+                    clear()
+                } else {
+                    UserSessionManager.shared.logger.error("Error in NewListingViewModel.createNewListing: userID not found")
+                    clear()
+                }
+            } catch {
+                NetworkManager.shared.logger.error("Error in NewListingViewModel.createNewListing: \(error)")
+                clear()
+            }
+        }
     }
 
     func clear() {
@@ -61,5 +81,6 @@ class NewListingViewModel: ObservableObject {
         descriptionText = ""
         priceText = ""
         selectedFilter = "Clothing"
+        isLoading = false
     }
 }

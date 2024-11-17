@@ -46,7 +46,8 @@ struct ProfileView: View {
                         .emptyState(isEmpty: viewModel.requests.isEmpty, title: "No active requests", text: "Submit a request and get notified when someone lists something similar")
                 } else {
                     ProductsGalleryView(items: viewModel.selectedPosts)
-                        .emptyState(isEmpty: $viewModel.selectedPosts.isEmpty, title: viewModel.selectedTab == .listing ? "No listings posted" : "No items archived", text: viewModel.selectedTab == .listing ? "When you post a listing, it will be displayed here" : "When a listing is sold or archived, it will be displayed here")
+                        .emptyState(isEmpty: viewModel.selectedPosts.isEmpty && !viewModel.isLoading, title: viewModel.selectedTab == .listing ? "No listings posted" : "No items archived", text: viewModel.selectedTab == .listing ? "When you post a listing, it will be displayed here" : "When a listing is sold or archived, it will be displayed here")
+                        .loadingView(isLoading: viewModel.isLoading)
                 }
             }
             .background(Constants.Colors.white)
@@ -77,9 +78,6 @@ struct ProfileView: View {
             .onAppear {
                 viewModel.getUser()
             }
-        }
-        .onAppear {
-            viewModel.getUser()
         }
     }
 

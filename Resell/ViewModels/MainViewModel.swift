@@ -87,7 +87,7 @@ class MainViewModel: ObservableObject {
                 if let _ = UserSessionManager.shared.accessToken,
                    let _ = UserSessionManager.shared.userID {
                     // Verify that the accessToken is valid by attempting to prefetch post URLs
-                    let urls = try await NetworkManager.shared.getAllPosts().posts.compactMap { $0.images.first }
+                    let urls = try await NetworkManager.shared.getSavedPosts().posts.compactMap { $0.images.first }
                     let prefetcher = ImagePrefetcher(urls: urls)
                     prefetcher.start()
 

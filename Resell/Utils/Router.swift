@@ -20,7 +20,7 @@ class Router: ObservableObject {
         case newListingDetails
         case newListingImages
         case newRequest
-        case profile
+        case profile(String)
         case productDetails(String)
         case reportOptions
         case reportDetails
@@ -41,6 +41,12 @@ class Router: ObservableObject {
     func pop() {
         if !path.isEmpty {
             path.removeLast()
+        }
+    }
+
+    func popTo(_ route: Route) {
+        if let index = path.firstIndex(of: route) {
+            path.removeLast(path.count - index - 1)
         }
     }
 

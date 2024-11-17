@@ -12,6 +12,7 @@ struct PurpleButton: View {
 
     // MARK: - Properties
 
+    var isLoading: Bool = false
     var isActive: Bool = true
     var isAlert: Bool = false
     let text: String
@@ -30,13 +31,20 @@ struct PurpleButton: View {
     }
 
     private var buttonContent: some View {
-        Text(text)
-            .font(Constants.Fonts.title1)
-            .padding(.horizontal, horizontalPadding)
-            .padding(.vertical, 14)
-            .background(isAlert ? Constants.Colors.errorRed : Constants.Colors.resellPurple)
-            .foregroundStyle(Constants.Colors.white)
-            .clipShape(.capsule)
+        HStack(spacing: 12) {
+            if isLoading {
+                CustomProgressView(color: Constants.Colors.white, size: 20, lineWidth: 4)
+            }
+
+            Text(text)
+                .font(Constants.Fonts.title1)
+
+                .foregroundStyle(Constants.Colors.white)
+        }
+        .padding(.horizontal, horizontalPadding)
+        .padding(.vertical, 14)
+        .background(isAlert ? Constants.Colors.errorRed : Constants.Colors.resellPurple)
+        .clipShape(.capsule)
     }
 
 }

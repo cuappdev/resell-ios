@@ -15,10 +15,12 @@ struct CustomProgressView: View {
 
     var size: CGFloat = 100
 
+    var lineWidth: CGFloat = 8
+
     var body: some View {
         Circle()
             .trim(from: 0, to: 0.75)
-            .stroke(color, lineWidth: 8)
+            .stroke(color, lineWidth: lineWidth)
             .frame(width: size, height: size)
             .rotationEffect(Angle(degrees: isAnimating ? 360 : 0))
             .animation(

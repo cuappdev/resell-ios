@@ -61,3 +61,25 @@ struct FilterRequest: Codable {
 struct SearchRequest: Codable {
     let keywords: String
 }
+
+struct SavedResponse: Codable {
+    let isSaved: Bool
+}
+
+struct PostBody: Codable {
+    let title: String
+    let description: String
+    let categories: [String]
+    let originalPrice: Double
+    let imagesBase64: [String]
+    let userId: String
+
+    enum CodingKeys: String, CodingKey {
+        case title
+        case description
+        case categories
+        case originalPrice = "original_price"
+        case imagesBase64
+        case userId
+    }
+}

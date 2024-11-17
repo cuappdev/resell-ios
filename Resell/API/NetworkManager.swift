@@ -22,13 +22,10 @@ class NetworkManager: APIClient {
     // MARK: - Properties
 
     private let hostURL: String = Keys.prodServerURL
-    private let urlCache: URLCache
 
-    // MARK: - Initializer
+    // MARK: - Init
 
-    private init(urlCache: URLCache = .shared) {
-        self.urlCache = urlCache
-    }
+    private init() { }
 
     // MARK: - Template Helper Functions
 
@@ -73,6 +70,16 @@ class NetworkManager: APIClient {
         try handleResponse(data: data, response: response)
 
         return try JSONDecoder().decode(T.self, from: data)
+    }
+
+    /// Overloaded post function for requests without a return
+    func post<U: Encodable>(url: URL, body: U) async throws{
+        let requestData = try JSONEncoder().encode(body)
+        let request = try createRequest(url: url, method: "POST", body: requestData)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        try handleResponse(data: data, response: response)
     }
 
     /// Overloaded post function for requests without a body
@@ -165,6 +172,24 @@ class NetworkManager: APIClient {
         return try await post(url: url, body: edit)
     }
 
+    func getBlockedUsers(id: String) async throws -> UsersResponse {
+        let url = try constructURL(endpoint: "/user/blocked/id/\(id)")
+
+        return try await get(url: url)
+    }
+
+    func blockUser(blocked: BlockUser) async throws {
+        let url = try constructURL(endpoint: "/user/block/")
+
+        try await post(url: url, body: blocked)
+    }
+
+    func unblockUser(unblocked: UnblockUser) async throws {
+        let url = try constructURL(endpoint: "/user/unblock/")
+
+        try await post(url: url, body: unblocked)
+    }
+
     // MARK: - Post Networking Functions
 
     func getAllPosts() async throws -> PostsResponse {
@@ -207,6 +232,42 @@ class NetworkManager: APIClient {
         let url = try constructURL(endpoint: "/post/id/\(id)/")
 
         return try await get(url: url)
+    }
+
+    func savePostByID(id: String) async throws -> PostResponse {
+        let url = try constructURL(endpoint: "/post/save/postId/\(id)/")
+
+        return try await post(url: url)
+    }
+
+    func unsavePostByID(id: String) async throws -> PostResponse {
+        let url = try constructURL(endpoint: "/post/unsave/postId/\(id)/")
+
+        return try await post(url: url)
+    }
+
+    func postIsSaved(id: String) async throws -> SavedResponse {
+        let url = try constructURL(endpoint: "/post/isSaved/postId/\(id)/")
+
+        return try await get(url: url)
+    }
+
+    func createPost(postBody: PostBody) async throws -> ListingResponse {
+        let url = try constructURL(endpoint: "/post/")
+
+        return try await post(url: url, body: postBody)
+    }
+
+    func archivePost(id: String) async throws -> PostResponse {
+        let url = try constructURL(endpoint: "/post/archive/postId/\(id)/")
+
+        return try await post(url: url)
+    }
+
+    func deletePost(id: String) async throws {
+        let url = try constructURL(endpoint: "/post/id/\(id)/")
+
+        try await delete(url: url)
     }
 
     // MARK: - Request Networking Functions
