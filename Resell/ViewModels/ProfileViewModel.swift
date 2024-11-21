@@ -14,6 +14,7 @@ class ProfileViewModel: ObservableObject {
 
     @Published var didShowOptionsMenu: Bool = false
     @Published var didShowBlockView: Bool = false
+    @Published var sellerIsBlocked: Bool = false
 
     @Published var isLoading: Bool = false
 
@@ -28,6 +29,10 @@ class ProfileViewModel: ObservableObject {
     enum Tab: String {
         case listing, archive, wishlist
     }
+
+    // MARK: - Persistent Storage
+
+    @AppStorage("blockedUsers") private var blockedUsersStorage: String = "[]"
 
     // MARK: - Functions
 
@@ -91,11 +96,21 @@ class ProfileViewModel: ObservableObject {
         Task {
             do {
                 user = try await NetworkManager.shared.getUserByID(id: id).user
+                checkUserIsBlocked()
                 selectedPosts = try await NetworkManager.shared.getPostsByUserID(id: user?.id ?? "").posts
             } catch {
                 NetworkManager.shared.logger.error("Error in ProfileViewModel: \(error.localizedDescription)")
             }
 
+        }
+    }
+
+    func checkUserIsBlocked() {
+        if let jsonData = $blockedUsersStorage.wrappedValue.data(using: .utf8),
+           let savedBlockedUsers = try? JSONDecoder().decode([String].self, from: jsonData) {
+            withAnimation {
+                sellerIsBlocked = savedBlockedUsers.contains(user?.id ?? "")
+            }
         }
     }
 

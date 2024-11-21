@@ -15,6 +15,9 @@ class SendFeedbackViewModel: ObservableObject {
 
     @Published var didShowPopup: Bool = false
     @Published var didShowPhotosPicker: Bool = false
+
+    @Published var isLoading: Bool = false
+
     @Published var feedbackText: String = ""
 
     @Published var selectedImages: [UIImage] = []
@@ -23,6 +26,10 @@ class SendFeedbackViewModel: ObservableObject {
     var selectedIndex: Int = 0
 
     // MARK: - Functions
+
+    func checkInputIsValid() -> Bool {
+        return !feedbackText.cleaned().isEmpty
+    }
 
     /// Updates selectedImages and feedback image gallery with the new PhotosPickerItem selected from the PhotosPicker
     func updateFeedbackItems(newItem: PhotosPickerItem?) async {
@@ -40,7 +47,24 @@ class SendFeedbackViewModel: ObservableObject {
     }
 
     func submitFeedback() {
-        // TODO: Integrate SendFeedback Backend Call
+        Task {
+            isLoading = true
+
+            do {
+                if let userID = UserSessionManager.shared.userID {
+                    let imagesBase64 = selectedImages.map { $0.toBase64() ?? "" }
+                    let feedbackBody = FeedbackBody(description: feedbackText, images: imagesBase64, userId: userID)
+                    try await NetworkManager.shared.postFeedback(feedback: feedbackBody)
+                } else {
+                    UserSessionManager.shared.logger.error("Error in SendFeedbackViewModel.submitFeedback: userID not found")
+                }
+
+                isLoading = false
+            } catch {
+                NetworkManager.shared.logger.error("Error in SendFeedbackViewModel.submitFeedback: \(error)")
+                isLoading = false
+            }
+        }
     }
 
     func togglePopup(isPresenting: Bool) {

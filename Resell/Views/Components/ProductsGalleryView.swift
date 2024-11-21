@@ -68,7 +68,6 @@ struct ProductsGalleryView: View {
         }
     }
 
-
 }
 
 struct ProductGalleryCell: View {

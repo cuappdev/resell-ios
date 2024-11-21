@@ -31,6 +31,10 @@ class HomeViewModel: ObservableObject {
 
     private var allItems: [Post] = []
 
+    // MARK: - Persistent Storage
+
+    @AppStorage("blockedUsers") private var blockedUsersStorage: String = "[]"
+
     // MARK: - Functions
 
     func getAllPosts() {
@@ -68,6 +72,25 @@ class HomeViewModel: ObservableObject {
                 filteredItems = postsResponse.posts
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.filterPosts: \(error)")
+            }
+        }
+    }
+
+    func getBlockedUsers() {
+        Task {
+            do {
+                if let userID = UserSessionManager.shared.userID {
+                    let blockedUsers = try await NetworkManager.shared.getBlockedUsers(id: userID).users.map { $0.id }
+                    if let jsonData = try? JSONEncoder().encode(blockedUsers),
+                       let jsonString = String(data: jsonData, encoding: .utf8) {
+                        blockedUsersStorage = jsonString
+                    }
+                } else {
+                    UserSessionManager.shared.logger.error("Error in BlockedUsersView: userID not found.")
+                }
+
+            } catch {
+                NetworkManager.shared.logger.error("Error in BlockedUsersView: \(error.localizedDescription)")
             }
         }
     }

@@ -24,6 +24,7 @@ struct SendFeedbackView: View {
                 .font(Constants.Fonts.body1)
                 .foregroundStyle(Constants.Colors.black)
                 .multilineTextAlignment(.center)
+                .frame(height: 50)
 
             LabeledTextField(label: "", maxCharacters: 1000, frameHeight: 190, isMultiLine: true, text: $viewModel.feedbackText)
 
@@ -53,18 +54,27 @@ struct SendFeedbackView: View {
                     Text("Submit")
                         .font(Constants.Fonts.title1)
                         .foregroundStyle(Constants.Colors.resellPurple)
+                        .opacity(viewModel.checkInputIsValid() ? 1.0 : 0.4)
                 }
+                .disabled(!viewModel.checkInputIsValid())
             }
         }
         .photosPicker(isPresented: $viewModel.didShowPhotosPicker, selection: $viewModel.selectedItem, matching: .images, photoLibrary: .shared())
+        .popupModal(isPresented: $viewModel.didShowPopup) {
+            popupModalContent
+        }
+        .loadingView(isLoading: viewModel.isLoading)
         .onChange(of: viewModel.selectedItem) { newItem in
             Task {
                 await viewModel.updateFeedbackItems(newItem: newItem)
             }
         }
-        .popupModal(isPresented: $viewModel.didShowPopup) {
-            popupModalContent
+        .onChange(of: viewModel.isLoading) { newValue in
+            if !newValue {
+                router.popToRoot()
+            }
         }
+        .endEditingOnTap()
     }
 
     private var imageSelectionView: some View {
@@ -96,7 +106,11 @@ struct SendFeedbackView: View {
                 } label: {
                     VStack {
                         Image("addImage")
-                            .shadow(radius: 2)
+                            .resizable()
+                            .frame(width: imageSize/3, height: imageSize/3)
+                            .scaledToFill()
+                            .shadow(radius: 1)
+
                     }
                     .frame(width: imageSize, height: imageSize)
                     .background(Constants.Colors.wash)

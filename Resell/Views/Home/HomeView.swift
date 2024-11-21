@@ -30,7 +30,8 @@ struct HomeView: View {
             }
             .onAppear {
                 viewModel.getAllPosts()
-                
+                viewModel.getBlockedUsers()
+
                 withAnimation {
                     mainViewModel.hidesTabBar = false
                 }

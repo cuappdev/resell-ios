@@ -21,6 +21,7 @@ class MainViewModel: ObservableObject {
     @AppStorage("chatNotificationsEnabled") var chatNotificationsEnabled: Bool = true
     @AppStorage("newListingsEnabled") var newListingsEnabled: Bool = true
     @AppStorage("userSearchHistory") private var storedHistoryData: String = ""
+    @AppStorage("blockedUsers") private var blockedUsersStorage: String = "[]"
 
     // Decoded search history array from persistent storage
     var searchHistory: [String] {

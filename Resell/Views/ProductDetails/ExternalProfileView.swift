@@ -63,15 +63,36 @@ struct ExternalProfileView: View {
                             Image(systemName: "ellipsis")
                                 .resizable()
                                 .frame(width: 24, height: 6)
-                                .foregroundStyle(Constants.Colors.black)
+                                .foregroundStyle(viewModel.sellerIsBlocked ? Constants.Colors.white : Constants.Colors.black)
                         }
                     }
+                }
+
+                ToolbarItem(placement: .topBarLeading) {
+                    Image(systemName: "chevron.left")
+                        .resizable()
+                        .frame(width: 18, height: 24)
+                        .foregroundStyle(Constants.Colors.white)
+                        .offset(x: -20)
                 }
             }
             .onAppear {
                 viewModel.getExternalUser(id: userID)
             }
-            
+
+            if viewModel.sellerIsBlocked {
+                ZStack {
+                    Constants.Colors.black
+                        .opacity(0.75)
+                        .ignoresSafeArea()
+
+                    Text("This profile is blocked")
+                        .font(Constants.Fonts.title1)
+                        .foregroundStyle(Constants.Colors.white)
+                }
+                .animation(.easeInOut, value: viewModel.sellerIsBlocked)
+            }
+
             if viewModel.didShowOptionsMenu {
                 OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowBlockView: $viewModel.didShowBlockView, options: [
                     .report,

@@ -289,4 +289,12 @@ class NetworkManager: APIClient {
 
         try await delete(url: url)
     }
+
+    // MARK: - Feedback Networking Functions
+
+    func postFeedback(feedback: FeedbackBody) async throws {
+        let url = try constructURL(endpoint: "/feedback/")
+
+        try await post(url: url, body: feedback)
+    }
 }
