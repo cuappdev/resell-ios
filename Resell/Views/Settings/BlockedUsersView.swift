@@ -160,7 +160,7 @@ struct BlockedUsersView: View {
         Task {
             do {
                 if let id = selectedUser?.id {
-                    let unblocked = UnblockUser(unblocked: id)
+                    let unblocked = UnblockUserBody(unblocked: id)
                     let _ = try await NetworkManager.shared.unblockUser(unblocked: unblocked)
                     
                     getBlockedUsers()

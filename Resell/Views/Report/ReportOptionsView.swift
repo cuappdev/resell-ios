@@ -15,11 +15,14 @@ struct ReportOptionsView: View {
     @EnvironmentObject var mainViewModel: MainViewModel
     @EnvironmentObject var viewModel: ReportViewModel
 
+    var type: String
+    var id: String
+
     // MARK: - UI
 
     var body: some View {
         VStack {
-            Text("Why do you want to report this \(viewModel.reportType)?")
+            Text("Why do you want to report this \(type)?")
                 .font(Constants.Fonts.title1)
                 .foregroundStyle(Constants.Colors.black)
                 .padding(.top, 32)
@@ -45,6 +48,13 @@ struct ReportOptionsView: View {
         }
         .onAppear {
             viewModel.clear()
+            viewModel.reportType = type
+            
+            if type == "Post" {
+                viewModel.getPostUser(id: id)
+            } else {
+                viewModel.getUser(id: id)
+            }
         }
     }
 

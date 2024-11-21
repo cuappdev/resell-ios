@@ -52,7 +52,7 @@ struct HomeView: View {
             Spacer()
 
             Button(action: {
-                router.push(.search)
+                router.push(.search(nil))
             }, label: {
                 Icon(image: "search")
             })

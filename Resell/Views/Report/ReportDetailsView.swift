@@ -43,7 +43,11 @@ struct ReportDetailsView: View {
             Spacer()
 
             PurpleButton(isActive: !viewModel.reportDetailsText.cleaned().isEmpty,text: "Submit") {
-                router.push(.reportConfirmation)
+                if viewModel.reportType == "Post" {
+                    viewModel.reportPost()
+                } else {
+                    viewModel.reportUser()
+                }
             }
             .padding(.bottom, Constants.Spacing.horizontalPadding)
         }
@@ -54,6 +58,12 @@ struct ReportDetailsView: View {
                 Text("Report \(viewModel.reportType)")
                     .font(Constants.Fonts.h3)
                     .foregroundStyle(Constants.Colors.black)
+            }
+        }
+        .loadingView(isLoading: viewModel.isLoading)
+        .onChange(of: viewModel.isLoading) { newValue in
+            if !newValue {
+                router.push(.reportConfirmation)
             }
         }
         .endEditingOnTap()

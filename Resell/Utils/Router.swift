@@ -22,10 +22,10 @@ class Router: ObservableObject {
         case newRequest
         case profile(String)
         case productDetails(String)
-        case reportOptions
+        case reportOptions(type: String, id: String)
         case reportDetails
         case reportConfirmation
-        case search
+        case search(String?)
         case settings(Bool)
         case blockedUsers
         case feedback

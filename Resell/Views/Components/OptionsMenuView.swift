@@ -49,10 +49,10 @@ struct OptionsMenuView: View {
                         ShareLink(item: url, subject: Text("Check out this \(item) on Resell")) {
                             optionView(name: "Share", icon: "share")
                         }
-                    case .report:
+                    case .report(let type, let id):
                         Button {
                             withAnimation {
-                                router.push(.reportOptions)
+                                router.push(.reportOptions(type: type, id: id))
                                 showMenu = false
                             }
                         } label: {
@@ -75,7 +75,13 @@ struct OptionsMenuView: View {
                             optionView(name: "Block", icon: "slash")
                         }
                     case .unblock:
-                        optionView(name: "Unblock", icon: "slash")
+                        Button {
+                            withAnimation {
+                                didShowBlockView = true
+                            }
+                        } label: {
+                            optionView(name: "Unblock", icon: "slash")
+                        }
                     }
 
                     if index != options.count - 1 {
@@ -116,7 +122,7 @@ struct OptionsMenuView: View {
 
 enum Option {
     case share(url: URL, itemName: String)
-    case report
+    case report(type: String, id: String)
     case block
     case unblock
     case delete

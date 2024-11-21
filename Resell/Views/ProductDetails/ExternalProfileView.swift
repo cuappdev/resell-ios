@@ -50,7 +50,7 @@ struct ExternalProfileView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack {
                         Button {
-                            // TODO: Implement Search
+                            router.push(.search(userID))
                         } label: {
                             Icon(image: "search")
                         }
@@ -94,10 +94,17 @@ struct ExternalProfileView: View {
             }
 
             if viewModel.didShowOptionsMenu {
-                OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowBlockView: $viewModel.didShowBlockView, options: [
-                    .report,
-                    .block
-                ])
+                OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowBlockView: $viewModel.didShowBlockView, options: {
+                    var options: [Option] = [
+                        .report(type: "User", id: userID),
+                    ]
+                    if viewModel.sellerIsBlocked {
+                        options.append(.unblock)
+                    } else {
+                        options.append(.block)
+                    }
+                    return options
+                }())
                 .zIndex(1)
             }
         }
@@ -129,14 +136,18 @@ struct ExternalProfileView: View {
                 .font(Constants.Fonts.h3)
                 .foregroundStyle(Constants.Colors.black)
 
-            Text("Are you sure you’d like to block this user?")
+            Text("Are you sure you’d like to \(viewModel.sellerIsBlocked ? "un" : "")block this user?")
                 .font(Constants.Fonts.body2)
                 .foregroundStyle(Constants.Colors.black)
                 .multilineTextAlignment(.center)
                 .frame(width: 275)
 
-            PurpleButton(isLoading: viewModel.isLoading,text: "Block", horizontalPadding: 100) {
-                viewModel.blockUser(id: userID)
+            PurpleButton(isLoading: viewModel.isLoading,text: viewModel.sellerIsBlocked ? "Unblock" : "Block", horizontalPadding: 100) {
+                if viewModel.sellerIsBlocked {
+                    viewModel.unblockUser(id: userID)
+                } else {
+                    viewModel.blockUser(id: userID)
+                }
             }
 
             Button{

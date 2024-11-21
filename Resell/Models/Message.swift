@@ -20,3 +20,7 @@ struct Message: Codable, Identifiable {
     var user: FirebaseUser
     var isSentByCurrentUser: Bool
 }
+
+struct MessageBody: Codable {
+    let id: String
+}

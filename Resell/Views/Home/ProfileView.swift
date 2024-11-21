@@ -62,7 +62,7 @@ struct ProfileView: View {
 
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        // TODO: Implement Search
+                        router.push(.search(viewModel.user?.id))
                     } label: {
                         Icon(image: "search")
                     }

@@ -55,10 +55,10 @@ struct EditUser: Codable {
     let photoUrlBase64: String
 }
 
-struct BlockUser: Codable {
+struct BlockUserBody: Codable {
     let blocked: String
 }
 
-struct UnblockUser: Codable {
+struct UnblockUserBody: Codable {
     let unblocked: String
 }

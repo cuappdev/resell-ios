@@ -58,11 +58,11 @@ struct MainTabView: View {
                     case .reportDetails:
                         ReportDetailsView()
                             .environmentObject(reportViewModel)
-                    case .reportOptions:
-                        ReportOptionsView()
+                    case .reportOptions(let type, let id):
+                        ReportOptionsView(type: type, id: id)
                             .environmentObject(reportViewModel)
-                    case .search:
-                        SearchView()
+                    case .search(let id):
+                        SearchView(userID: id)
                     case .settings(let isAccountSettings):
                         SettingsView(isAccountSettings: isAccountSettings)
                     case .blockedUsers:

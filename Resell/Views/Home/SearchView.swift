@@ -17,8 +17,11 @@ struct SearchView: View {
 
     @State private var isLoading: Bool = false
     @State private var isSearching: Bool = true
+
     @State private var searchedItems: [Post] = []
     @State private var searchText: String = ""
+
+    var userID: String? = nil
 
     // MARK: - UI
 
@@ -72,6 +75,7 @@ struct SearchView: View {
         }
         .navigationBarBackButtonHidden()
         .background(Constants.Colors.white)
+        .loadingView(isLoading: isLoading)
         .onChange(of: isFocused) { newValue in
             isSearching = newValue
         }
@@ -131,12 +135,18 @@ struct SearchView: View {
         Task {
             do {
                 let postsResponse = try await NetworkManager.shared.getSearchedPosts(with: searchText)
-                searchedItems = postsResponse.posts
+
+                if let userID {
+                    searchedItems = postsResponse.posts.filter { $0.user?.id == userID }
+                } else {
+                    searchedItems = postsResponse.posts
+                }
+                
                 mainViewModel.saveSearchQuery(searchText)
-                isLoading = false
+                withAnimation { isLoading = false }
             } catch {
                 NetworkManager.shared.logger.error("Error in SearchView.searchItems: \(error.localizedDescription)")
-                isLoading = false
+                withAnimation { isLoading = false }
             }
         }
     }

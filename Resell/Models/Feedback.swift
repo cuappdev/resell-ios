@@ -17,3 +17,9 @@ struct Feedback: Codable {
     let images: [String]
     let user: User?
 }
+
+struct FeedbackBody: Codable {
+    let description: String
+    let images: [String]
+    let userId: String
+}

@@ -28,12 +28,14 @@ struct ReportConfirmationView: View {
                 .font(Constants.Fonts.h2)
                 .foregroundStyle(Constants.Colors.black)
                 .multilineTextAlignment(.center)
+                .frame(width: 300)
                 .padding(.top, 32)
 
             Text("Your report is valued in keeping Resell a safe community. We will be carefully reviewing the \(viewModel.reportType) and taking any necessary action. ")
                 .font(.custom("Rubik-Regular", size: 16))
                 .foregroundStyle(Constants.Colors.secondaryGray)
                 .multilineTextAlignment(.center)
+                .frame(width: 300)
 
             Spacer()
 
@@ -47,7 +49,7 @@ struct ReportConfirmationView: View {
                     viewModel.didShowPopup = true
                 }
             } label: {
-                Text("Block \(viewModel.username)")
+                Text("Block \(viewModel.user?.username ?? "")")
                     .font(Constants.Fonts.body1)
                     .foregroundStyle(Constants.Colors.errorRed)
                     .padding(.vertical, 14)
@@ -60,6 +62,7 @@ struct ReportConfirmationView: View {
             .padding(.bottom, Constants.Spacing.horizontalPadding)
 
         }
+        .frame(width: UIScreen.width)
         .padding(.horizontal, 55)
         .background(Constants.Colors.white)
         .navigationBarBackButtonHidden(true)
@@ -107,7 +110,7 @@ struct ReportConfirmationView: View {
                     }
 
                     Button {
-                        // TODO: Backend Call Block User
+                        viewModel.blockUser()
                         router.popToRoot()
                         viewModel.clear()
                     } label: {

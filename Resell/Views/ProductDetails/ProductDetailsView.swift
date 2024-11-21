@@ -43,7 +43,7 @@ struct ProductDetailsView: View {
                 OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowDeleteView: $viewModel.didShowDeleteView, options: {
                     var options: [Option] = [
                         .share(url: URL(string: "https://www.google.com")!, itemName: viewModel.item?.title ?? ""),
-                        .report
+                        .report(type: "Post", id: id)
                     ]
                     if viewModel.isUserPost() {
                         options.append(.delete)

@@ -119,12 +119,28 @@ class ProfileViewModel: ObservableObject {
             isLoading = true
 
             do {
-                let blocked = BlockUser(blocked: id)
+                let blocked = BlockUserBody(blocked: id)
                 try await NetworkManager.shared.blockUser(blocked: blocked)
 
                 isLoading = false
             } catch {
                 NetworkManager.shared.logger.error("Error in ProfileViewModel.blockUser: \(error.localizedDescription)")
+                isLoading = false
+            }
+        }
+    }
+
+    func unblockUser(id: String) {
+        Task {
+            isLoading = true
+
+            do {
+                let unblocked = UnblockUserBody(unblocked: id)
+                try await NetworkManager.shared.unblockUser(unblocked: unblocked)
+
+                isLoading = false
+            } catch {
+                NetworkManager.shared.logger.error("Error in ProfileViewModel.unblockUser: \(error.localizedDescription)")
                 isLoading = false
             }
         }

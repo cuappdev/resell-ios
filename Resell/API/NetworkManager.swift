@@ -178,13 +178,13 @@ class NetworkManager: APIClient {
         return try await get(url: url)
     }
 
-    func blockUser(blocked: BlockUser) async throws {
+    func blockUser(blocked: BlockUserBody) async throws {
         let url = try constructURL(endpoint: "/user/block/")
 
         try await post(url: url, body: blocked)
     }
 
-    func unblockUser(unblocked: UnblockUser) async throws {
+    func unblockUser(unblocked: UnblockUserBody) async throws {
         let url = try constructURL(endpoint: "/user/unblock/")
 
         try await post(url: url, body: unblocked)
@@ -296,5 +296,25 @@ class NetworkManager: APIClient {
         let url = try constructURL(endpoint: "/feedback/")
 
         try await post(url: url, body: feedback)
+    }
+
+    // MARK: - Reporting Networking Functions
+
+    func reportPost(reportBody: ReportPostBody) async throws {
+        let url = try constructURL(endpoint: "/report/post/")
+
+        try await post(url: url, body: reportBody)
+    }
+
+    func reportUser(reportBody: ReportUserBody) async throws {
+        let url = try constructURL(endpoint: "/report/user/")
+
+        try await post(url: url, body: reportBody)
+    }
+
+    func reportMessage(reportBody: ReportMessageBody) async throws {
+        let url = try constructURL(endpoint: "/report/message/")
+
+        try await post(url: url, body: reportBody)
     }
 }
