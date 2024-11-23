@@ -66,8 +66,6 @@
 		2C9B4CE62C8FB7B80029DF61 /* ResellUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4CE52C8FB7B80029DF61 /* ResellUITests.swift */; };
 		2C9B4CE82C8FB7B80029DF61 /* ResellUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4CE72C8FB7B80029DF61 /* ResellUITestsLaunchTests.swift */; };
 		2C9B4CF82C8FB84F0029DF61 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4CF72C8FB84F0029DF61 /* Constants.swift */; };
-		2C9B4CFA2C8FBC180029DF61 /* Rubik-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2C9B4CF92C8FBC180029DF61 /* Rubik-Medium.ttf */; };
-		2C9B4CFC2C8FBC200029DF61 /* Rubik-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2C9B4CFB2C8FBC200029DF61 /* Rubik-Regular.ttf */; };
 		2C9B4CFE2C8FBC580029DF61 /* ReemKufi-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2C9B4CFD2C8FBC580029DF61 /* ReemKufi-Regular.ttf */; };
 		2C9B4D042C8FC8250029DF61 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4CCC2C8FB7B70029DF61 /* LoginView.swift */; };
 		2C9B4D072C8FCB070029DF61 /* PurpleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4D062C8FCB070029DF61 /* PurpleButton.swift */; };
@@ -183,8 +181,6 @@
 		2C9B4CE52C8FB7B80029DF61 /* ResellUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResellUITests.swift; sourceTree = "<group>"; };
 		2C9B4CE72C8FB7B80029DF61 /* ResellUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResellUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		2C9B4CF72C8FB84F0029DF61 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
-		2C9B4CF92C8FBC180029DF61 /* Rubik-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Rubik-Medium.ttf"; path = "../../../../../Downloads/Rubik/static/Rubik-Medium.ttf"; sourceTree = "<group>"; };
-		2C9B4CFB2C8FBC200029DF61 /* Rubik-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Rubik-Regular.ttf"; path = "../../../../../Downloads/Rubik/static/Rubik-Regular.ttf"; sourceTree = "<group>"; };
 		2C9B4CFD2C8FBC580029DF61 /* ReemKufi-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "ReemKufi-Regular.ttf"; sourceTree = "<group>"; };
 		2C9B4CFF2C8FBC860029DF61 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2C9B4D062C8FCB070029DF61 /* PurpleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurpleButton.swift; sourceTree = "<group>"; };
@@ -192,6 +188,8 @@
 		2C9B4D0B2C90EF1D0029DF61 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 		2C9B4D0D2C90F54D0029DF61 /* LoginGradient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginGradient.swift; sourceTree = "<group>"; };
 		2C9B4D0F2C90F69C0029DF61 /* UIScreen + Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIScreen + Extensions.swift"; sourceTree = "<group>"; };
+		2C9EAF6D2CF268480010A44C /* Rubik-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Rubik-Medium.ttf"; sourceTree = "<group>"; };
+		2C9EAF6E2CF268480010A44C /* Rubik-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Rubik-Regular.ttf"; sourceTree = "<group>"; };
 		2CBC6B5A2CB72ED200C842A4 /* ExpandableAddButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandableAddButton.swift; sourceTree = "<group>"; };
 		2CBC6B5E2CB75ACD00C842A4 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		2CBC6B622CB772E300C842A4 /* NewRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewRequestView.swift; sourceTree = "<group>"; };
@@ -398,8 +396,8 @@
 			isa = PBXGroup;
 			children = (
 				2C9B4CFD2C8FBC580029DF61 /* ReemKufi-Regular.ttf */,
-				2C9B4CFB2C8FBC200029DF61 /* Rubik-Regular.ttf */,
-				2C9B4CF92C8FBC180029DF61 /* Rubik-Medium.ttf */,
+				2C9EAF6D2CF268480010A44C /* Rubik-Medium.ttf */,
+				2C9EAF6E2CF268480010A44C /* Rubik-Regular.ttf */,
 			);
 			path = Fonts;
 			sourceTree = "<group>";
@@ -669,8 +667,6 @@
 			files = (
 				2C3024852C9221940057D3D9 /* GoogleService-Info.plist in Resources */,
 				2C9B4D0C2C90EF1D0029DF61 /* Launch Screen.storyboard in Resources */,
-				2C9B4CFA2C8FBC180029DF61 /* Rubik-Medium.ttf in Resources */,
-				2C9B4CFC2C8FBC200029DF61 /* Rubik-Regular.ttf in Resources */,
 				2C9B4CD22C8FB7B80029DF61 /* Preview Assets.xcassets in Resources */,
 				2C9B4CCF2C8FB7B80029DF61 /* Assets.xcassets in Resources */,
 				2C9B4CFE2C8FBC580029DF61 /* ReemKufi-Regular.ttf in Resources */,

@@ -62,3 +62,7 @@ struct BlockUserBody: Codable {
 struct UnblockUserBody: Codable {
     let unblocked: String
 }
+
+struct LogoutResponse: Codable {
+    let logoutSuccess: Bool
+}

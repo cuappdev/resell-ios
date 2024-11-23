@@ -30,10 +30,6 @@ class ProfileViewModel: ObservableObject {
         case listing, archive, wishlist
     }
 
-    // MARK: - Persistent Storage
-
-    @AppStorage("blockedUsers") private var blockedUsersStorage: String = "[]"
-
     // MARK: - Functions
 
     func updateItemsGallery() {
@@ -106,10 +102,16 @@ class ProfileViewModel: ObservableObject {
     }
 
     func checkUserIsBlocked() {
-        if let jsonData = $blockedUsersStorage.wrappedValue.data(using: .utf8),
-           let savedBlockedUsers = try? JSONDecoder().decode([String].self, from: jsonData) {
-            withAnimation {
-                sellerIsBlocked = savedBlockedUsers.contains(user?.id ?? "")
+        Task {
+            do {
+                if let userID = UserSessionManager.shared.userID {
+                    let blockedUsers = try await NetworkManager.shared.getBlockedUsers(id: userID).users.map { $0.id }
+                    sellerIsBlocked = blockedUsers.contains(user?.id ?? "")
+                } else {
+                    UserSessionManager.shared.logger.error("Error in BlockedUsersView: userID not found.")
+                }
+            } catch {
+                NetworkManager.shared.logger.error("Error in BlockedUsersView: \(error.localizedDescription)")
             }
         }
     }

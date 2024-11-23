@@ -152,6 +152,18 @@ class NetworkManager: APIClient {
         return try await get(url: url)
     }
 
+    func logout() async throws -> LogoutResponse {
+        let url = try constructURL(endpoint: "/auth/logout/")
+
+        return try await post(url: url)
+    }
+
+    func deleteAccount(userID: String) async throws {
+        let url = try constructURL(endpoint: "/auth/id/\(userID)/")
+
+        try await delete(url: url)
+    }
+
     // MARK: - User Networking Functions
 
     func getUserByGoogleID(googleID: String) async throws -> UserResponse {

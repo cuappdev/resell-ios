@@ -52,9 +52,7 @@ struct EditProfileView: View {
         }
         .onChange(of: viewModel.isLoading) { newValue in
             if !newValue {
-                router.pop()
-                router.pop()
-                router.pop()
+                router.popToRoot()
             }
         }
         .endEditingOnTap()

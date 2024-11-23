@@ -87,7 +87,7 @@ struct ReportConfirmationView: View {
         }
         .popupModal(isPresented: $viewModel.didShowPopup) {
             VStack(spacing: 16) {
-                Text("Blocker User")
+                Text("Block User")
                     .font(Constants.Fonts.h3)
                     .foregroundStyle(Constants.Colors.black)
 
