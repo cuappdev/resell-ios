@@ -9,11 +9,13 @@ import SwiftUI
 
 struct LoginView: View {
 
+    @EnvironmentObject var router: Router
+
     @StateObject private var viewModel = LoginViewModel()
     @Binding var userDidLogin: Bool
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $router.path) {
             VStack {
                 Image("resell")
                     .padding(.top, 180)
@@ -37,6 +39,16 @@ struct LoginView: View {
         }
         .sheet(isPresented: $viewModel.didPresentError) {
             loginSheetView
+        }
+        .navigationDestination(for: Router.Route.self) { route in
+            switch route {
+            case .setupProfile:
+                SetupProfileView(userDidLogin: $userDidLogin)
+            case .venmo:
+                VenmoView(userDidLogin: $userDidLogin)
+            default:
+                EmptyView()
+            }
         }
     }
 

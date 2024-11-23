@@ -126,6 +126,8 @@ struct SettingsView: View {
 
             PurpleButton(isAlert: true, text: "Logout", horizontalPadding: 70) {
                 UserSessionManager.shared.logout()
+                viewModel.logout()
+                router.popToRoot()
                 mainViewModel.userDidLogin = false
             }
 
@@ -169,7 +171,7 @@ struct SettingsView: View {
                 }
 
             Button {
-                // TODO: Delete Account Backend Call
+                viewModel.deleteAccount()
                 mainViewModel.userDidLogin = false
             } label: {
                 Text("Delete Account")

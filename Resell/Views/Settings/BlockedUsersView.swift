@@ -89,6 +89,9 @@ struct BlockedUsersView: View {
                     .clipShape(.capsule)
             }
         }
+        .onTapGesture {
+            router.push(.profile(user.id))
+        }
     }
 
     private var popupModalContent: some View {
@@ -166,7 +169,7 @@ struct BlockedUsersView: View {
                     getBlockedUsers()
                 }
             } catch {
-                NetworkManager.shared.logger.error("Error in BlockerUsersView: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in BlockedUsersView: \(error.localizedDescription)")
             }
         }
     }

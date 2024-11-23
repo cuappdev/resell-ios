@@ -78,6 +78,9 @@ struct ProfileView: View {
             .onAppear {
                 viewModel.getUser()
             }
+            .refreshable {
+                viewModel.getUser()
+            }
         }
     }
 
