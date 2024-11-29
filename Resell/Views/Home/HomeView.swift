@@ -53,12 +53,17 @@ struct HomeView: View {
                 .foregroundStyle(Constants.Colors.resellGradient)
 
             Spacer()
-
+            
             Button(action: {
                 router.push(.search(nil))
             }, label: {
-                Icon(image: "search")
+                Icon(image: "bell")
             })
+//            Button(action: {
+//                router.push(.search(nil))
+//            }, label: {
+//                Icon(image: "search")
+//            })
         }
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
     }
