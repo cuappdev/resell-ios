@@ -71,8 +71,10 @@ struct MainTabView: View {
                         EditProfileView()
                     case .feedback:
                         SendFeedbackView()
-                    case .notifications:
+                    case .notificationsSettings:
                         NotificationsSettingsView()
+                    case .notifications:
+                        NotificationsView()
                     case .login:
                         LoginView(userDidLogin: $mainViewModel.userDidLogin)
                     case .profile(let id):

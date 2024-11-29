@@ -20,6 +20,7 @@ class Router: ObservableObject {
         case newListingDetails
         case newListingImages
         case newRequest
+        case notifications
         case profile(String)
         case productDetails(String)
         case reportOptions
@@ -29,7 +30,7 @@ class Router: ObservableObject {
         case settings(Bool)
         case blockedUsers
         case feedback
-        case notifications
+        case notificationsSettings
         case setupProfile
         case venmo
     }

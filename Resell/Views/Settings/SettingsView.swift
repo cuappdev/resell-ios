@@ -43,7 +43,7 @@ struct SettingsView: View {
                     }
                 case .notifications:
                     settingsRow(title: "Notifications", icon: "notifications") {
-                        router.push(.notifications)
+                        router.push(.notificationsSettings)
                     }
                 case .sendFeedback:
                     settingsRow(title: "Send Feedback", icon: "feedback") {
