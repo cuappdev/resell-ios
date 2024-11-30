@@ -10,6 +10,7 @@ import SwiftUI
 struct LoginView: View {
 
     @EnvironmentObject var router: Router
+    @EnvironmentObject private var mainViewModel: MainViewModel
 
     @StateObject private var viewModel = LoginViewModel()
     @StateObject private var onboardingViewModel = SetupProfileViewModel()
@@ -41,6 +42,7 @@ struct LoginView: View {
             .background(LoginGradient())
             .onAppear {
                 onboardingViewModel.clear()
+                mainViewModel.addFCMToken()
             }
             .navigationDestination(for: Router.Route.self) { route in
                 switch route {
