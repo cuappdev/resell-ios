@@ -152,6 +152,12 @@ class NetworkManager: APIClient {
         return try await get(url: url)
     }
 
+    func createUser(user: CreateUserBody) async throws {
+        let url = try constructURL(endpoint: "/auth/")
+
+        try await post(url: url, body: user)
+    }
+
     func logout() async throws -> LogoutResponse {
         let url = try constructURL(endpoint: "/auth/logout/")
 
@@ -178,7 +184,7 @@ class NetworkManager: APIClient {
         return try await get(url: url)
     }
 
-    func updateUserProfile(edit: EditUser) async throws -> UserResponse {
+    func updateUserProfile(edit: EditUserBody) async throws -> UserResponse {
         let url = try constructURL(endpoint: "/user/")
 
         return try await post(url: url, body: edit)

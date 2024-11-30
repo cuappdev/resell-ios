@@ -109,17 +109,4 @@ struct MainTabView: View {
             }
         }
     }
-
-    func test() -> Int? {
-        return nil
-    }
-
-    func test2() {
-        let work = test()
-        let work2 = test()
-
-        if let work, let work2 {
-
-        }
-    }
 }

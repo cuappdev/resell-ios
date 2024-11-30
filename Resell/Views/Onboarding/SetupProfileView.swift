@@ -12,28 +12,36 @@ struct SetupProfileView: View {
 
     // MARK: - Properties
 
-    @StateObject private var viewModel = SetupProfileViewModel()
+    @EnvironmentObject var router: Router
+    @EnvironmentObject private var viewModel: SetupProfileViewModel
+
     @Binding var userDidLogin: Bool
+
+    let netid: String
+    let givenName: String
+    let familyName: String
+    let email: String
+    let googleID: String
 
     // MARK: - UI
 
     var body: some View {
-        NavigationStack {
-            VStack {
-                profileImageView
-                    .padding(.vertical, 40)
+        VStack {
+            profileImageView
+                .padding(.vertical, 40)
 
-                LabeledTextField(label: "Username", text: $viewModel.username)
-                    .padding(.bottom, 32)
+            LabeledTextField(label: "Username", text: $viewModel.username)
+                .padding(.bottom, 32)
 
-                LabeledTextField(label: "Bio", maxCharacters: 255, frameHeight: 83, isMultiLine: true, text: $viewModel.bio)
-                    .padding(.bottom, 24)
+            LabeledTextField(label: "Bio", maxCharacters: 255, frameHeight: 83, isMultiLine: true, text: $viewModel.bio)
+                .padding(.bottom, 24)
 
-                eulaView
+            eulaView
 
-                Spacer()
+            Spacer()
 
-                NavigationPurpleButton(isActive: viewModel.checkInputIsValid(), text: "Next", horizontalPadding: 80, destination: VenmoView(userDidLogin: $userDidLogin))
+            PurpleButton(isActive: viewModel.checkInputIsValid(), text: "Next", horizontalPadding: 80) {
+                router.push(.venmo)
             }
         }
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
@@ -48,6 +56,13 @@ struct SetupProfileView: View {
                     .font(Constants.Fonts.h3)
                     .foregroundStyle(Constants.Colors.black)
             }
+        }
+        .onAppear {
+            viewModel.netid = netid
+            viewModel.givenName = givenName
+            viewModel.familyName = familyName
+            viewModel.email = email
+            viewModel.googleID = googleID
         }
         .endEditingOnTap()
     }
@@ -110,8 +125,4 @@ struct SetupProfileView: View {
             }
         }
     }
-}
-
-#Preview {
-    SetupProfileView(userDidLogin: .constant(true))
 }

@@ -13,7 +13,7 @@ struct ProductsGalleryView: View {
     // MARK: Properties
 
     @State private var selectedItem: Post? = nil
-    @EnvironmentObject var router: Router  // Inject router
+    @EnvironmentObject var router: Router
 
     let column1: [Post]
     let column2: [Post]

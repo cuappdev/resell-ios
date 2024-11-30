@@ -12,6 +12,7 @@ struct LoginView: View {
     @EnvironmentObject var router: Router
 
     @StateObject private var viewModel = LoginViewModel()
+    @StateObject private var onboardingViewModel = SetupProfileViewModel()
     @Binding var userDidLogin: Bool
 
     var body: some View {
@@ -30,25 +31,32 @@ struct LoginView: View {
                 PurpleButton(text: "Login with NetID", horizontalPadding: 28) {
                     viewModel.googleSignIn {
                         userDidLogin = true
+                    } failure: { netid, givenName, familyName, email, googleId in
+                        userDidLogin = false
+                        router.push(.setupProfile(netid: netid, givenName: givenName, familyName: familyName, email: email, googleId: googleId))
                     }
-                }
 
-//                NavigationPurpleButton(text: "Login with NetID", horizontalPadding: 28, destination: SetupProfileView(userDidLogin: $userDidLogin))
+                }
             }
             .background(LoginGradient())
+            .onAppear {
+                onboardingViewModel.clear()
+            }
+            .navigationDestination(for: Router.Route.self) { route in
+                switch route {
+                case .setupProfile(let netid, let givenName, let familyName, let email, let googleId):
+                    SetupProfileView(userDidLogin: $userDidLogin, netid: netid, givenName: givenName, familyName: familyName, email: email, googleID: googleId)
+                        .environmentObject(onboardingViewModel)
+                case .venmo:
+                    VenmoView(userDidLogin: $userDidLogin)
+                        .environmentObject(onboardingViewModel)
+                default:
+                    EmptyView()
+                }
+            }
         }
         .sheet(isPresented: $viewModel.didPresentError) {
             loginSheetView
-        }
-        .navigationDestination(for: Router.Route.self) { route in
-            switch route {
-            case .setupProfile:
-                SetupProfileView(userDidLogin: $userDidLogin)
-            case .venmo:
-                VenmoView(userDidLogin: $userDidLogin)
-            default:
-                EmptyView()
-            }
         }
     }
 
@@ -65,6 +73,9 @@ struct LoginView: View {
             PurpleButton(text: "Try Again", horizontalPadding: 60) {
                 viewModel.googleSignIn {
                     userDidLogin = true
+                } failure: { netid, givenName, familyName, email, googleId in
+                    userDidLogin = false
+                    router.push(.setupProfile(netid: netid, givenName: givenName, familyName: familyName, email: email, googleId: googleId))
                 }
                 viewModel.didPresentError = false
             }
