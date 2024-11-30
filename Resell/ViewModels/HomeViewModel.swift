@@ -16,6 +16,8 @@ class HomeViewModel: ObservableObject {
 
     // MARK: - Properties
 
+    @Published var isLoading: Bool = false
+
     @Published var filteredItems: [Post] = []
     @Published var selectedFilter: String = "Recent" {
         didSet {
@@ -56,11 +58,15 @@ class HomeViewModel: ObservableObject {
 
     func getSavedPosts() {
         Task {
+            isLoading = true
+
             do {
                 let postsResponse = try await NetworkManager.shared.getSavedPosts()
                 savedItems = postsResponse.posts
+                withAnimation { isLoading = false }
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.getSavedPosts: \(error)")
+                withAnimation { isLoading = false }
             }
         }
     }
