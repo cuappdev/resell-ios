@@ -16,16 +16,21 @@ struct ProductDetailsView: View {
     @EnvironmentObject var router: Router
 
     @StateObject private var viewModel = ProductDetailsViewModel()
-
-    var id: String
+    @State var id: String
 
     // MARK: - UI
 
     var body: some View {
         ZStack(alignment: .bottom) {
             VStack {
-                imageGallery
-                    .frame(height: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio))
+                if viewModel.isLoading {
+                    ShimmerView()
+                        .frame(height: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio))
+                        .ignoresSafeArea()
+                } else {
+                    imageGallery
+                        .frame(height: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio))
+                }
 
                 if viewModel.maxImgRatio > 0 {
                     Spacer()
@@ -86,8 +91,10 @@ struct ProductDetailsView: View {
             deletePostView
                 .background(Constants.Colors.white)
         }
+        .loadingView(isLoading: viewModel.isLoading)
         .onAppear {
             viewModel.getPost(id: id)
+            viewModel.getSimilarPosts(id: id)
 
             withAnimation {
                 mainViewModel.hidesTabBar = true
@@ -104,6 +111,7 @@ struct ProductDetailsView: View {
         }
     }
 
+    @ViewBuilder
     private var imageGallery: some View {
         ZStack(alignment: .bottom) {
             TabView(selection: $viewModel.currentPage) {
@@ -229,17 +237,54 @@ struct ProductDetailsView: View {
 
             HStack {
                 let imageSize = (UIScreen.width - 72) / 4
-                ForEach(0..<4, id: \.self) { _ in
-                    Image("justin_long")
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: imageSize, height: imageSize)
-                        .clipShape(.rect(cornerRadius: 25))
-                        .onTapGesture {
-                            viewModel.changeItem()
-                        }
+                if viewModel.isLoadingImages {
+                    ForEach(0..<4, id: \.self) { item in
+                        ShimmerView()
+                            .frame(width: imageSize, height: imageSize)
+                            .clipShape(.rect(cornerRadius: 10))
+                    }
+                } else {
+                    ForEach(viewModel.similarPosts, id: \.self.id) { item in
+                        KFImage(item.images.first)
+                            .placeholder {
+                                ShimmerView()
+                                    .frame(width: imageSize, height: imageSize)
+                                    .clipShape(.rect(cornerRadius: 10))
+                            }
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: imageSize, height: imageSize)
+                            .clipShape(.rect(cornerRadius: 10))
+                            .onTapGesture {
+                                changeItem(postID: item.id)
+                            }
+                    }
                 }
             }
+        }
+    }
+
+    private func changeItem(postID: String) {
+        id = postID
+        viewModel.clear()
+        viewModel.getPost(id: postID)
+        viewModel.getSimilarPosts(id: postID)
+
+        withAnimation {
+            mainViewModel.hidesTabBar = true
+        }
+
+        viewModel.maxDrag = max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio)
+
+        if let existingIndex = router.path.lastIndex(where: {
+            if case .productDetails = $0 {
+                return true
+            }
+            return false
+        }) {
+            router.path[existingIndex] = .productDetails(postID)
+        } else {
+            router.push(.productDetails(postID))
         }
     }
 

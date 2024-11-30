@@ -15,7 +15,6 @@ struct MainView: View {
 
     // MARK: - Properties
 
-    @State var selection = 0
     @StateObject private var mainViewModel = MainViewModel()
     @StateObject private var router = Router()
 
@@ -24,7 +23,7 @@ struct MainView: View {
     var body: some View {
         ZStack {
             if mainViewModel.userDidLogin {
-                MainTabView(isHidden: $mainViewModel.hidesTabBar, selection: $selection)
+                MainTabView(isHidden: $mainViewModel.hidesTabBar, selection: $mainViewModel.selection)
                     .transition(.opacity)
                     .animation(.easeInOut, value: mainViewModel.userDidLogin)
                     .environmentObject(router)

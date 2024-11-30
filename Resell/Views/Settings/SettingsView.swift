@@ -128,6 +128,7 @@ struct SettingsView: View {
                 UserSessionManager.shared.logout()
                 viewModel.logout()
                 router.popToRoot()
+                mainViewModel.selection = 0
                 mainViewModel.userDidLogin = false
             }
 
@@ -172,6 +173,7 @@ struct SettingsView: View {
 
             Button {
                 viewModel.deleteAccount()
+                mainViewModel.selection = 0
                 mainViewModel.userDidLogin = false
             } label: {
                 Text("Delete Account")

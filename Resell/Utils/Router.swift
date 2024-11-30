@@ -30,7 +30,7 @@ class Router: ObservableObject {
         case blockedUsers
         case feedback
         case notifications
-        case setupProfile
+        case setupProfile(netid: String, givenName: String, familyName: String, email: String, googleId: String)
         case venmo
     }
 

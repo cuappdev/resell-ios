@@ -11,7 +11,8 @@ struct VenmoView: View {
 
     // MARK: - Properties
 
-    @State var venmoHandle: String = ""
+    @EnvironmentObject private var router: Router
+    @EnvironmentObject private var viewModel: SetupProfileViewModel
     @Binding var userDidLogin: Bool
 
     // MARK: - UI
@@ -24,15 +25,13 @@ struct VenmoView: View {
                     .foregroundStyle(Constants.Colors.secondaryGray)
                     .padding(.top, 24)
 
-                LabeledTextField(label: "Venmo Handle", text: $venmoHandle)
+                LabeledTextField(label: "Venmo Handle", text: $viewModel.venmoHandle)
                     .padding(.top, 46)
 
                 Spacer()
 
-                PurpleButton(isActive: !venmoHandle.cleaned().isEmpty,text: "Continue") {
-                    withAnimation {
-                        userDidLogin = true
-                    }
+                PurpleButton(isLoading: viewModel.isLoading, isActive: !viewModel.venmoHandle.cleaned().isEmpty,text: "Continue") {
+                    viewModel.createNewUser()
                 }
 
                 Button(action: {
@@ -57,6 +56,14 @@ struct VenmoView: View {
                         .foregroundStyle(Constants.Colors.black)
                     
                     Image("venmoLogo")
+                }
+            }
+        }
+        .onChange(of: viewModel.isLoading) { newValue in
+            if !newValue {
+                withAnimation {
+                    router.popToRoot()
+                    userDidLogin = true
                 }
             }
         }

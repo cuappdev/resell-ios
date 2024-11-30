@@ -57,7 +57,7 @@ class EditProfileViewModel: ObservableObject {
             isLoading = true
 
             do {
-                let edit = EditUser(username: username, bio: bio, venmoHandle: venmoLink, photoUrlBase64: selectedImage.toBase64() ?? "")
+                let edit = EditUserBody(username: username, bio: bio, venmoHandle: venmoLink, photoUrlBase64: selectedImage.toBase64() ?? "")
                 let _ = try await NetworkManager.shared.updateUserProfile(edit: edit)
                 isLoading = false
             } catch {

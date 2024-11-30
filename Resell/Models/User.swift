@@ -48,7 +48,18 @@ struct UserSessionData: Codable {
     }
 }
 
-struct EditUser: Codable {
+struct CreateUserBody: Codable {
+    let username: String
+    let netid: String
+    let givenName: String
+    let familyName: String
+    let photoUrl: String
+    let email: String
+    let googleID: String
+    let bio: String
+}
+
+struct EditUserBody: Codable {
     let username: String
     let bio: String
     let venmoHandle: String
