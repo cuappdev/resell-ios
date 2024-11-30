@@ -5,6 +5,7 @@
 //  Created by Richie Sun on 9/11/24.
 //
 
+import FirebaseMessaging
 import Kingfisher
 import SwiftUI
 
@@ -115,6 +116,32 @@ class MainViewModel: ObservableObject {
                 // Session Token has expired
                 withAnimation { userDidLogin = false }
                 NetworkManager.shared.logger.log("User Session Has Expired")
+            }
+        }
+    }
+
+    func addFCMToken() {
+        let messaging = Messaging.messaging()
+
+        Task {
+            do {
+                guard let email = UserSessionManager.shared.email else {
+                    UserSessionManager.shared.logger.error("Error in MainViewModel: email not found")
+                    return
+                }
+
+                let firestoreToken = try await FirestoreManager.shared.getUserFCMToken(email: email)
+
+                guard let deviceToken = messaging.fcmToken else {
+                    FirestoreManager.shared.logger.error("Device FCM token is missing.")
+                    return
+                }
+
+                if firestoreToken == nil || firestoreToken != deviceToken {
+                    try await FirestoreManager.shared.saveDeviceToken(userEmail: email, deviceToken: deviceToken)
+                }
+            } catch {
+                FirestoreManager.shared.logger.error("Error adding FCM token: \(error.localizedDescription)")
             }
         }
     }

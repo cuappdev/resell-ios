@@ -29,5 +29,9 @@
 		<string>Rubik-Medium.ttf</string>
 		<string>ReemKufi-Regular.ttf</string>
 	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>
