@@ -12,7 +12,9 @@ struct VenmoView: View {
     // MARK: - Properties
 
     @EnvironmentObject private var router: Router
+    @EnvironmentObject private var mainViewModel: MainViewModel
     @EnvironmentObject private var viewModel: SetupProfileViewModel
+    
     @Binding var userDidLogin: Bool
 
     // MARK: - UI
@@ -62,6 +64,7 @@ struct VenmoView: View {
         .onChange(of: viewModel.isLoading) { newValue in
             if !newValue {
                 withAnimation {
+                    mainViewModel.addFCMToken()
                     router.popToRoot()
                     userDidLogin = true
                 }

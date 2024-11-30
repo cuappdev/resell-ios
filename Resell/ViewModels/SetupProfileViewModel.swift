@@ -57,11 +57,11 @@ class SetupProfileViewModel: ObservableObject {
                 if let imageBase64 = selectedImage.toBase64() {
                     let user = CreateUserBody(username: username.cleaned(), netid: netid, givenName: givenName, familyName: familyName, photoUrl: imageBase64, email: email, googleID: googleID, bio: bio.cleaned())
                     try await NetworkManager.shared.createUser(user: user)
+                    
+                    loginUser(id: googleID)
                 } else {
                     // TODO: Present Toast Error
                 }
-
-                // TODO: Login User after Account Creation
 
                 isLoading = false
             } catch {
@@ -87,6 +87,24 @@ class SetupProfileViewModel: ObservableObject {
         familyName = ""
         email = ""
         googleID = ""
+    }
+
+    private func loginUser(id: String) {
+        Task {
+            do {
+                let user = try await NetworkManager.shared.getUserByGoogleID(googleID: id).user
+                let userSession = try await NetworkManager.shared.getUserSession(id: user.id).sessions.first
+
+                UserSessionManager.shared.accessToken = userSession?.accessToken
+                UserSessionManager.shared.googleID = id
+                UserSessionManager.shared.userID = user.id
+                UserSessionManager.shared.email = user.email
+                UserSessionManager.shared.profileURL = user.photoUrl
+                UserSessionManager.shared.name = "\(user.givenName) \(user.familyName)"
+            } catch {
+                NetworkManager.shared.logger.error("Error in LoginViewModel.getUserSession: \(error)")
+            }
+        }
     }
 
 }
