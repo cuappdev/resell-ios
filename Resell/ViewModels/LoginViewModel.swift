@@ -44,6 +44,7 @@ class LoginViewModel: ObservableObject {
                     UserSessionManager.shared.accessToken = userSession?.accessToken
                     UserSessionManager.shared.googleID = id
                     UserSessionManager.shared.userID = user.id
+                    UserSessionManager.shared.email = user.email
 
                     success()
                 } catch {

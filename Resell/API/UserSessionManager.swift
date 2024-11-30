@@ -17,6 +17,8 @@ class UserSessionManager: ObservableObject {
 
     // MARK: - Properties
 
+    let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.cornellappdev.Resell", category: "UserSession")
+
     @Published var accessToken: String? {
         didSet {
             if let token = accessToken {
@@ -47,7 +49,15 @@ class UserSessionManager: ObservableObject {
         }
     }
 
-    let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.cornellappdev.Resell", category: "UserSession")
+    @Published var email: String? {
+        didSet {
+            if let email {
+                KeychainManager.shared.save(email, forKey: "email")
+            } else {
+                KeychainManager.shared.delete(forKey: "email")
+            }
+        }
+    }
 
     // MARK: - Init
 
