@@ -58,16 +58,6 @@ struct LoginView: View {
         .sheet(isPresented: $viewModel.didPresentError) {
             loginSheetView
         }
-        .navigationDestination(for: Router.Route.self) { route in
-            switch route {
-            case .setupProfile:
-                SetupProfileView(userDidLogin: $userDidLogin)
-            case .venmo:
-                VenmoView(userDidLogin: $userDidLogin)
-            default:
-                EmptyView()
-            }
-        }
     }
 
     private var loginSheetView: some View {
