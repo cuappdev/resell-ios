@@ -40,7 +40,7 @@ struct ResellApp: App {
                             UIApplication.shared.registerForRemoteNotifications()
                         }
                     } else {
-                        FirestoreManager.shared.logger.info("Notifications permission denied.")
+                        FirestoreManager.shared.logger.log("Notifications permission denied.")
                     }
                 }
             case .authorized, .provisional:
@@ -48,12 +48,12 @@ struct ResellApp: App {
                     UIApplication.shared.registerForRemoteNotifications()
                 }
             case .denied:
-                FirestoreManager.shared.logger.info("Notifications permission denied. Cannot register for remote notifications.")
+                FirestoreManager.shared.logger.log("Notifications permission denied. Cannot register for remote notifications.")
             case .ephemeral:
                 DispatchQueue.main.async {
                     UIApplication.shared.registerForRemoteNotifications()
                 }
-                FirestoreManager.shared.logger.info("App has ephemeral authorization for notifications.")
+                FirestoreManager.shared.logger.log("App has ephemeral authorization for notifications.")
             @unknown default:
                 break
             }
@@ -89,7 +89,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         Messaging.messaging().appDidReceiveMessage(userInfo)
         // Handle custom data from notification if needed
         if let customData = userInfo["customKey"] as? String {
-            FirestoreManager.shared.logger.info("Received custom data: \(customData)")
+            FirestoreManager.shared.logger.log("Received custom data: \(customData)")
         }
 
         completionHandler(.newData)

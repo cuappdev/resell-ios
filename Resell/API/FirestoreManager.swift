@@ -139,7 +139,7 @@ class FirestoreManager {
             }
 
             guard let documents = querySnapshot?.documents else {
-                logger.info("No documents found.")
+                logger.log("No documents found.")
                 completion([])
                 return
             }
@@ -230,7 +230,7 @@ class FirestoreManager {
             }
 
             guard let documents = querySnapshot?.documents else {
-                logger.info("No documents found.")
+                logger.log("No documents found.")
                 completion([])
                 return
             }
@@ -308,7 +308,7 @@ class FirestoreManager {
             if let error = error {
                 FirestoreManager.shared.logger.error("Error updating chat viewed status: \(error.localizedDescription)")
             } else {
-                FirestoreManager.shared.logger.info("Successfully updated chat viewed status for chat \(chatId).")
+                FirestoreManager.shared.logger.log("Successfully updated chat viewed status for chat \(chatId).")
             }
         }
     }
