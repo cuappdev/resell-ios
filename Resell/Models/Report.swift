@@ -23,3 +23,7 @@ struct ReportMessageBody: Codable {
     let message: MessageBody
     let reason: String
 }
+
+struct MessageBody: Codable {
+    let id: String
+}
