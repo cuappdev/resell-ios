@@ -14,6 +14,16 @@ class ChatsViewModel: ObservableObject {
 
     // MARK: - Properties
 
+    @Published var isLoading: Bool = false
+
+    @Published var purchaseChats: [ChatPreview] = []
+    @Published var offerChats: [ChatPreview] = []
+
+    @Published var purchaseUnread: Int = 0
+    @Published var offerUnread: Int = 0
+
+    @Published var selectedChat: ChatPreview? = nil
+
     @Published var buyersHistory: [TransactionSummary] = []
     @Published var sellersHistory: [TransactionSummary] = []
     @Published var subscribedChat: Chat?
@@ -24,6 +34,45 @@ class ChatsViewModel: ObservableObject {
     private let firestoreManager = FirestoreManager.shared
 
     // MARK: - Functions
+
+    func getAllChats() {
+        getPurchaceChats()
+        getOfferChats()
+    }
+
+    func getPurchaceChats() {
+        isLoading = true
+
+        firestoreManager.getPurchaseChats { [weak self] purchaseChats in
+            guard let self else { return }
+
+            self.purchaseChats = purchaseChats
+            purchaseUnread = countUnviewedChats(chats: purchaseChats)
+            isLoading = false
+        }
+    }
+
+    func getOfferChats() {
+        isLoading = true
+
+        firestoreManager.getOfferChats { [weak self] offerChats in
+            guard let self else { return }
+
+            self.offerChats = offerChats
+            offerUnread = countUnviewedChats(chats: offerChats)
+            isLoading = false
+        }
+    }
+
+    func countUnviewedChats(chats: [ChatPreview]) -> Int {
+        return chats.filter { !$0.viewed }.count
+    }
+
+    func updateChatViewed() {
+        guard let userEmail = UserSessionManager.shared.email,
+              let chatID = selectedChat?.id else { return }
+        firestoreManager.updateChatViewedStatus(chatType: selectedTab, userEmail: userEmail, chatId: chatID, isViewed: true)
+    }
 
     /// Fetch seller's transaction history
     func fetchSellersHistory() {
@@ -199,13 +248,5 @@ class ChatsViewModel: ObservableObject {
                 messages: newMessages
             )
         }
-    }
-}
-
-private extension Date {
-    func toFormattedString() -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter.string(from: self)
     }
 }
