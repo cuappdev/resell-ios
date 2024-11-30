@@ -81,6 +81,21 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         Messaging.messaging().apnsToken = deviceToken
     }
 
+    func application(
+        _ application: UIApplication,
+        didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+        fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
+    ) {
+        Messaging.messaging().appDidReceiveMessage(userInfo)
+        // Handle custom data from notification if needed
+        if let customData = userInfo["customKey"] as? String {
+            FirestoreManager.shared.logger.info("Received custom data: \(customData)")
+        }
+
+        completionHandler(.newData)
+    }
+
+    
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
