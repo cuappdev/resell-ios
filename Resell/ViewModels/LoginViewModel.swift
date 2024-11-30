@@ -38,7 +38,6 @@ class LoginViewModel: ObservableObject {
 
             Task {
                 do {
-                    throw URLError(.badURL)
                     let user = try await NetworkManager.shared.getUserByGoogleID(googleID: id).user
                     let userSession = try await NetworkManager.shared.getUserSession(id: user.id).sessions.first
 

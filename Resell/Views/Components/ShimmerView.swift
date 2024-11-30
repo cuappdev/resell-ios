@@ -34,7 +34,7 @@ struct ShimmerView: View {
                 .onAppear {
                     shimmerOffset = -gradientWidth
                     withAnimation(
-                        Animation.linear(duration: 1.5)
+                        Animation.linear(duration: 1)
                             .repeatForever(autoreverses: false)
                     ) {
                         shimmerOffset = geometry.size.width + gradientWidth

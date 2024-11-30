@@ -14,6 +14,8 @@ class ProductDetailsViewModel: ObservableObject {
 
     @Published var didShowOptionsMenu: Bool = false
     @Published var didShowDeleteView: Bool = false
+    @Published var isLoading: Bool = false
+    @Published var isLoadingImages: Bool = false
 
     @Published var currentPage: Int = 0
     @Published var images: [URL] = []
@@ -22,11 +24,14 @@ class ProductDetailsViewModel: ObservableObject {
     @Published var maxDrag: CGFloat = UIScreen.height / 2
     @Published var maxImgRatio: CGFloat = 1.0
     @Published var item: Post?
+    @Published var similarPosts: [Post] = []
 
     // MARK: - Functions
 
     func getPost(id: String) {
         Task {
+            isLoading = true
+
             do {
                 let postResponse = try await NetworkManager.shared.getPostByID(id: id)
                 item = postResponse.post
@@ -34,12 +39,35 @@ class ProductDetailsViewModel: ObservableObject {
 
                 await calculateMaxImgRatio()
                 getIsSaved()
+
+                isLoading = false
             } catch {
                 NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getPost: \(error.localizedDescription)")
+                isLoading = false
             }
         }
     }
 
+    func getSimilarPosts(id: String) {
+        Task {
+            isLoadingImages = true
+
+            do {
+                let postsResponse = try await NetworkManager.shared.getSimilarPostsByID(id: id)
+                if postsResponse.posts.count >= 4 {
+                    similarPosts = Array(postsResponse.posts.prefix(4))
+                } else {
+                    similarPosts = postsResponse.posts
+                }
+
+                isLoadingImages = false
+            } catch {
+                NetworkManager.shared.logger.error("Errror in ProductDetailsViewModel.getSimilarPosts: \(error.localizedDescription)")
+                isLoadingImages = false
+            }
+        }
+    }
+    
     func updateItemSaved() {
         Task {
             do {
@@ -105,8 +133,14 @@ class ProductDetailsViewModel: ObservableObject {
         return false
     }
 
-    func changeItem() {
-        // TODO: Backend Call to change item to similar item
+    func clear() {
+        isSaved = false
+        maxDrag = UIScreen.height / 2
+        currentPage = 0
+        images = []
+        maxImgRatio = 1.0
+        item = nil
+        similarPosts = []
     }
 
     private func calculateMaxImgRatio() async {

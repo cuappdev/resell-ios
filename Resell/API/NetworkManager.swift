@@ -252,6 +252,12 @@ class NetworkManager: APIClient {
         return try await get(url: url)
     }
 
+    func getSimilarPostsByID(id: String) async throws -> PostsResponse {
+        let url = try constructURL(endpoint: "/post/similar/postId/\(id)/")
+
+        return try await get(url: url)
+    }
+
     func savePostByID(id: String) async throws -> PostResponse {
         let url = try constructURL(endpoint: "/post/save/postId/\(id)/")
 
