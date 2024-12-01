@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UserNotifications
 
 @MainActor
 class ProductDetailsViewModel: ObservableObject {
@@ -175,6 +176,7 @@ class ProductDetailsViewModel: ObservableObject {
         item = nil
         similarPosts = []
     }
+
 
     private func calculateMaxImgRatio() async {
         var maxRatio = 0.0
