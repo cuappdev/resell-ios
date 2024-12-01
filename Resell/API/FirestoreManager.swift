@@ -184,7 +184,7 @@ class FirestoreManager {
                     let chatPreview = ChatPreview(
                         sellerName: sellerName,
                         email: sellerId,
-                        recentItem: (data["item"] as? [String: Any])?["title"] as? String ?? "",
+                        recentItem: data["item"] as? [String: Any] ?? [:],
                         image: URL(string: image),
                         recentMessage: recentMessage,
                         recentSender: recentSender == userEmail ? 1 : 0,
@@ -275,7 +275,7 @@ class FirestoreManager {
                     let chatPreview = ChatPreview(
                         sellerName: buyerName,
                         email: buyerId,
-                        recentItem: (data["item"] as? [String: Any])?["title"] as? String ?? "",
+                        recentItem: data["item"] as? [String: Any] ?? [:],
                         image: URL(string: image),
                         recentMessage: recentMessage,
                         recentSender: recentSender == userEmail ? 1 : 0,
@@ -404,5 +404,9 @@ extension Date {
         return relativeFormatter.localizedString(for: date, relativeTo: now)
     }
 
+    var iso8601String: String {
+        let formatter = ISO8601DateFormatter()
+        return formatter.string(from: self)
+    }
 }
 
