@@ -109,6 +109,50 @@ class ProductDetailsViewModel: ObservableObject {
     func changeItem() {
         // TODO: Backend Call to change item to similar item
     }
+    
+//    // Creates a new notification for type = bookmarks
+//    // __(person)__ has bookmarked __(item)__
+    
+    func createNewNotif() {
+        Task {
+            do {
+                // Checks product exists
+                guard let product = item else {
+                    NetworkManager.shared.logger.error("Error in createNewNotif: Product not available.")
+                        return
+                }
+                
+                guard let userID = UserSessionManager.shared.userID else {
+                    UserSessionManager.shared.logger.error("Error in createNewNotif: userID not found")
+                    return
+                }
+                
+                // Checks
+                guard let sellerID = product.user?.id else {
+                    NetworkManager.shared.logger.error("Error in createNewNotif: Seller ID not found.")
+                        return
+                }
+                
+                let productName = product.title
+                
+                // Posts a notification under the sellerID
+                let notification = Notification(
+                    userID: sellerID,
+                    title: "\(userID) has bookmarked \(productName)",
+                    body: "\(productName) was bookmarked!",
+                    data: NotificationData(type: "bookmarks", messageId: UUID().uuidString)
+                )
+                
+                try await NetworkManager.shared.createNotif(notifBody: notification)
+                
+                NetworkManager.shared.logger.info("Notification sent!!")
+            } catch {
+
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.createNewNotif: \(error.localizedDescription)")
+
+            }
+        }
+    }
 
 
     private func calculateMaxImgRatio() async {
