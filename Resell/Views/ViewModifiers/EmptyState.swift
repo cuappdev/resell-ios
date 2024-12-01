@@ -33,6 +33,7 @@ struct EmptyStateModifier: ViewModifier {
 
                     Text(title)
                         .font(Constants.Fonts.h2)
+                        .multilineTextAlignment(.center)
                         .foregroundStyle(Constants.Colors.black)
 
                     Text(text)
