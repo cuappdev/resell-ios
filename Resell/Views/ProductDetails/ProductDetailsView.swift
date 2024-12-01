@@ -291,7 +291,9 @@ struct ProductDetailsView: View {
     private var buttonGradientView: some View {
         VStack {
             PurpleButton(text: "Contact Seller") {
-                // TODO: Chat with Seller
+                if let item = viewModel.item {
+                    navigateToChats(post: item)
+                }
             }
         }
         .frame(width: UIScreen.width, height: 50)
@@ -353,5 +355,21 @@ struct ProductDetailsView: View {
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(25)
         .presentationBackground(Constants.Colors.white)
+    }
+
+    // MARK: - Functions
+
+    private func navigateToChats(post: Post) {
+        if let existingIndex = router.path.firstIndex(where: {
+            if case .messages = $0 {
+                return true
+            }
+            return false
+        }) {
+            router.path[existingIndex] = .messages(post: post)
+            router.popTo(router.path[existingIndex])
+        } else {
+            router.push(.messages(post: post))
+        }
     }
 }

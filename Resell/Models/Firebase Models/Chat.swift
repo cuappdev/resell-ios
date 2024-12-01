@@ -11,7 +11,7 @@ import Foundation
 struct ChatPreview {
     let sellerName: String
     let email: String
-    let recentItem: String
+    let recentItem: [String: Any]
     let image: URL?
     let recentMessage: String
     let recentSender: Int
