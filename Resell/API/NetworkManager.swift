@@ -289,4 +289,12 @@ class NetworkManager: APIClient {
 
         try await delete(url: url)
     }
+    
+    // MARK: - Notifications Networking Functions
+    
+    func createNotif(notifBody: Notification) async throws -> ListingResponse {
+        let url = try constructURL(endpoint: "/notif/")
+
+        return try await post(url: url, body: notifBody)
+    }
 }

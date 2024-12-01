@@ -51,7 +51,6 @@ struct HomeView: View {
             Spacer()
             
             Button(action: {
-//                router.push(.search)
                 router.push(.notifications)
             }, label: {
                 Icon(image: "bell")
