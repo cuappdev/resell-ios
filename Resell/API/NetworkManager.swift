@@ -184,6 +184,13 @@ class NetworkManager: APIClient {
         return try await get(url: url)
     }
 
+    func getUserByEmail(email: String) async throws -> UserResponse {
+        let url = try constructURL(endpoint: "/user/email/")
+        let emailBody = UserEmailBody(email: email)
+
+        return try await post(url: url, body: emailBody)
+    }
+
     func updateUserProfile(edit: EditUserBody) async throws -> UserResponse {
         let url = try constructURL(endpoint: "/user/")
 

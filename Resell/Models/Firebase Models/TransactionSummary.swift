@@ -8,7 +8,7 @@
 import Foundation
 
 struct TransactionSummary: Codable, Identifiable {
-    var id: String { email ?? UUID().uuidString }
+    var id: String { UUID().uuidString }
     let item: Post
     let recentMessage: String
     let recentMessageTime: String
@@ -18,5 +18,4 @@ struct TransactionSummary: Codable, Identifiable {
     let name: String
     let image: String
     let viewed: Bool
-    let email: String?
 }
