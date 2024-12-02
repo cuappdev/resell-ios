@@ -33,6 +33,7 @@ class ChatsViewModel: ObservableObject {
 
     private let firestoreManager = FirestoreManager.shared
     private var blockedUsers: [String] = []
+    var otherUser: User?
     var venmoURL: URL?
 
     // MARK: - Functions
@@ -121,11 +122,21 @@ class ChatsViewModel: ObservableObject {
         }
     }
 
+    func getOtherUser(email: String) {
+        Task {
+            do {
+                let userResponse = try await NetworkManager.shared.getUserByEmail(email: email)
+                otherUser = userResponse.user
+            } catch {
+                NetworkManager.shared.logger.error("Error in ChatsViewModel: \(error.localizedDescription)")
+            }
+        }
+    }
+
     func parsePayWithVenmoURL(email: String) {
         Task {
             do {
                 let venmoHandle = try await firestoreManager.getVenmoHandle(email: email)
-                print(venmoHandle)
                 let url = URL(string: "https://account.venmo.com/u/\(venmoHandle)")
                 venmoURL = url
             } catch {
@@ -217,13 +228,13 @@ class ChatsViewModel: ObservableObject {
                       let name = UserSessionManager.shared.name else { return }
                 let userDocument = UserDocument(id: myEmail, avatar: imageUrl, name: name)
                 let chatDocument = ChatDocument(
-                    id: UUID().uuidString,
+                    _id: UUID().uuidString,
                     createdAt: Timestamp(date: Date()),
-                    image: "",
-                    text: text,
-                    user: userDocument,
-                    availability: nil,
-                    product: nil
+                    user: "",
+                    availability: text,
+                    product: userDocument,
+                    image: nil,
+                    text: nil
                 )
 
                 try await firestoreManager.sendTextMessage(
@@ -309,4 +320,107 @@ class ChatsViewModel: ObservableObject {
             )
         }
     }
+}
+
+extension ChatsViewModel {
+    func sendGenericMessage(
+        senderEmail: String,
+        recipientEmail: String,
+        senderName: String,
+        recipientName: String,
+        senderImageUrl: String,
+        recipientImageUrl: String,
+        isBuyer: Bool,
+        postId: String,
+        imageUrl: String? = nil,
+        messageText: String? = nil,
+        availability: AvailabilityDocument? = nil,
+        meetingInfo: MeetingInfo? = nil
+    ) async throws {
+        let currentTimeMillis = Int(Date().timeIntervalSince1970 * 1000)
+
+        let buyerEmail = isBuyer ? senderEmail : recipientEmail
+        let sellerEmail = isBuyer ? recipientEmail : senderEmail
+        let buyerName = isBuyer ? senderName : recipientName
+        let sellerName = isBuyer ? recipientName : senderName
+        let buyerImageUrl = isBuyer ? senderImageUrl : recipientImageUrl
+        let sellerImageUrl = isBuyer ? recipientImageUrl : senderImageUrl
+        let timestamp = Timestamp(date: Date())
+
+        let senderDocument = UserDocument(id: senderEmail, name: senderName, avatar: senderImageUrl)
+        var chatDocument = ChatDocument(
+            _id: "\(currentTimeMillis)",
+            createdAt: timestamp,
+            user: senderDocument,
+            availability: availability,
+            product: nil,
+            image: imageUrl ?? "",
+            text: messageText ?? "",
+            meetingInfo: meetingInfo
+        )
+
+        let post = try await fetchPostById(postId: postId)
+
+        if try await isFirstMessage(buyerEmail: buyerEmail, sellerEmail: sellerEmail) {
+            try await firestoreManager.sendProductMessage(
+                buyerEmail: buyerEmail,
+                sellerEmail: sellerEmail,
+                otherDocument: chatDocument,
+                post: post
+            )
+        }
+
+        try await firestoreManager.sendChatMessage(buyerEmail: buyerEmail, sellerEmail: sellerEmail, chatDocument: chatDocument)
+
+        let recentMessage = determineRecentMessage(
+            text: messageText,
+            imageUrl: imageUrl,
+            availability: availability,
+            meetingInfo: meetingInfo
+        )
+
+        let notificationText = determineNotificationText(
+            text: messageText,
+            imageUrl: imageUrl,
+            availability: availability,
+            meetingInfo: meetingInfo
+        )
+
+        let sellerData = TransactionSummary(
+            item: post,
+            recentMessage: recentMessage,
+            recentMessageTime: timestamp.dateValue().iso8601String,
+            recentSender: senderName,
+            confirmedTime: "",
+            confirmedViewed: false,
+            name: sellerName,
+            image: sellerImageUrl,
+            viewed: isBuyer
+        )
+
+        let buyerData = TransactionSummary(
+            item: post,
+            recentMessage: recentMessage,
+            recentMessageTime: timestamp.dateValue().iso8601String,
+            recentSender: senderName,
+            confirmedTime: "",
+            confirmedViewed: false,
+            name: buyerName,
+            image: buyerImageUrl,
+            viewed: !isBuyer
+        )
+
+        try await firestoreManager.updateBuyerHistory(buyerEmail: buyerEmail, sellerEmail: sellerEmail, data: buyerData)
+        try await firestoreManager.updateSellerHistory(buyerEmail: buyerEmail, sellerEmail: sellerEmail, data: sellerData)
+        try await firestoreManager.updateItems(email: buyerEmail, postId: postId, post: post)
+
+        if let token = try await firestoreManager.getUserFCMToken(email: recipientEmail) {
+            try await firestoreManager.sendNotification(
+                recipientToken: token,
+                senderName: senderName,
+                notificationText: notificationText
+            )
+        }
+    }
+
 }
