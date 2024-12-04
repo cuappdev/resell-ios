@@ -17,6 +17,7 @@ class ProfileViewModel: ObservableObject {
     @Published var sellerIsBlocked: Bool = false
 
     @Published var isLoading: Bool = false
+    @Published var isLoadingUser: Bool = false
 
     @Published var requests: [Request] = []
     @Published var selectedPosts: [Post] = []
@@ -90,14 +91,18 @@ class ProfileViewModel: ObservableObject {
 
     func getExternalUser(id: String) {
         Task {
+            isLoadingUser = true
+
             do {
                 user = try await NetworkManager.shared.getUserByID(id: id).user
                 checkUserIsBlocked()
                 selectedPosts = try await NetworkManager.shared.getPostsByUserID(id: user?.id ?? "").posts
+
+                isLoadingUser = false
             } catch {
                 NetworkManager.shared.logger.error("Error in ProfileViewModel: \(error.localizedDescription)")
+                isLoadingUser = false
             }
-
         }
     }
 

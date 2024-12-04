@@ -42,7 +42,7 @@ struct LoginView: View {
             .background(LoginGradient())
             .onAppear {
                 onboardingViewModel.clear()
-                mainViewModel.addFCMToken()
+                FirebaseNotificationService.shared.setupFCMToken()
             }
             .navigationDestination(for: Router.Route.self) { route in
                 switch route {

@@ -48,23 +48,23 @@ struct ProductsGalleryView: View {
         }
         .onChange(of: selectedItem) { item in
             if let selectedItem {
-                navigateToProductDetails(postID: selectedItem.id)
+                navigateToProductDetails(post: selectedItem)
                 self.selectedItem = nil
             }
         }
     }
 
-    private func navigateToProductDetails(postID: String) {
+    private func navigateToProductDetails(post: Post) {
         if let existingIndex = router.path.firstIndex(where: {
             if case .productDetails = $0 {
                 return true
             }
             return false
         }) {
-            router.path[existingIndex] = .productDetails(postID)
+            router.path[existingIndex] = .productDetails(post)
             router.popTo(router.path[existingIndex])
         } else {
-            router.push(.productDetails(postID))
+            router.push(.productDetails(post))
         }
     }
 

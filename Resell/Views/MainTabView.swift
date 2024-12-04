@@ -53,8 +53,8 @@ struct MainTabView: View {
                     case .messages(let post):
                         MessagesView(post: post)
                             .environmentObject(chatsViewModel)
-                    case .productDetails(let itemID):
-                        ProductDetailsView(id: itemID)
+                    case .productDetails(let item):
+                        ProductDetailsView(post: item)
                     case .reportConfirmation:
                         ReportConfirmationView()
                             .environmentObject(reportViewModel)

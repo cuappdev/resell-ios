@@ -24,28 +24,32 @@ struct ExternalProfileView: View {
             VStack(spacing: 0) {
                 profileImageView
                     .padding(.bottom, 12)
+                    .padding(.horizontal, 24)
 
                 Text(viewModel.user?.username ?? "")
                     .font(Constants.Fonts.h3)
                     .foregroundStyle(Constants.Colors.black)
                     .padding(.bottom, 4)
+                    .padding(.horizontal, 24)
 
                 Text(viewModel.user?.givenName ?? "")
                     .font(Constants.Fonts.body2)
                     .foregroundStyle(Constants.Colors.secondaryGray)
                     .padding(.bottom, 16)
+                    .padding(.horizontal, 24)
 
                 Text(viewModel.user?.bio ?? "")
                     .font(Constants.Fonts.body2)
                     .foregroundStyle(Constants.Colors.black)
                     .padding(.bottom, 28)
+                    .padding(.horizontal, 24)
                     .lineLimit(3)
 
                 Divider()
 
                 ProductsGalleryView(items: viewModel.selectedPosts)
+                    .loadingView(isLoading: viewModel.isLoadingUser)
             }
-            .padding(.horizontal, 24)
             .background(Constants.Colors.white)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
