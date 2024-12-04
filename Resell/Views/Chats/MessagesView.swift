@@ -51,7 +51,7 @@ struct MessagesView: View {
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Button {
-                    navigateToProductDetails(postID: post.id)
+                    navigateToProductDetails(post: post)
                 } label: {
                     VStack(spacing: 0) {
                         Text(post.title)
@@ -246,17 +246,17 @@ struct MessagesView: View {
 
     // MARK: - Functions
 
-    private func navigateToProductDetails(postID: String) {
+    private func navigateToProductDetails(post: Post) {
         if let existingIndex = router.path.firstIndex(where: {
             if case .productDetails = $0 {
                 return true
             }
             return false
         }) {
-            router.path[existingIndex] = .productDetails(postID)
+            router.path[existingIndex] = .productDetails(post)
             router.popTo(router.path[existingIndex])
         } else {
-            router.push(.productDetails(postID))
+            router.push(.productDetails(post))
         }
     }
 

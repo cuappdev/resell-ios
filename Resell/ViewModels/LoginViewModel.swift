@@ -39,9 +39,14 @@ class LoginViewModel: ObservableObject {
             Task {
                 do {
                     let user = try await NetworkManager.shared.getUserByGoogleID(googleID: id).user
-                    let userSession = try await NetworkManager.shared.getUserSession(id: user.id).sessions.first
+                    var userSession = try await NetworkManager.shared.getUserSession(id: user.id).sessions.first
+
+                    if !(userSession?.active ?? false) {
+                        userSession = try await NetworkManager.shared.refreshToken()
+                    }
 
                     UserSessionManager.shared.accessToken = userSession?.accessToken
+                    UserSessionManager.shared.refreshToken = userSession?.refreshToken
                     UserSessionManager.shared.googleID = id
                     UserSessionManager.shared.userID = user.id
                     UserSessionManager.shared.email = user.email

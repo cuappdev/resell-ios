@@ -63,10 +63,12 @@ class HomeViewModel: ObservableObject {
             do {
                 let postsResponse = try await NetworkManager.shared.getSavedPosts()
                 savedItems = postsResponse.posts
-                withAnimation { isLoading = false }
+
+                isLoading = false
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.getSavedPosts: \(error)")
-                withAnimation { isLoading = false }
+                
+                isLoading = false
             }
         }
     }
