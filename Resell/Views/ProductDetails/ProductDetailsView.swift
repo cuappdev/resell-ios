@@ -17,7 +17,7 @@ struct ProductDetailsView: View {
 
     @StateObject private var viewModel = ProductDetailsViewModel()
 
-    var id: String
+    var post: Post
 
     // MARK: - UI
 
@@ -49,7 +49,7 @@ struct ProductDetailsView: View {
                 OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowDeleteView: $viewModel.didShowDeleteView, options: {
                     var options: [Option] = [
                         .share(url: URL(string: "https://www.google.com")!, itemName: viewModel.item?.title ?? ""),
-                        .report(type: "Post", id: id)
+                        .report(type: "Post", id: post.id)
                     ]
                     if viewModel.isUserPost() {
                         options.append(.delete)
@@ -92,10 +92,8 @@ struct ProductDetailsView: View {
             deletePostView
                 .background(Constants.Colors.white)
         }
-        .loadingView(isLoading: viewModel.isLoading)
         .onAppear {
-            viewModel.getPost(id: id)
-            viewModel.getSimilarPosts(id: id)
+            viewModel.setPost(post: post)
 
             withAnimation {
                 mainViewModel.hidesTabBar = true
@@ -257,7 +255,7 @@ struct ProductDetailsView: View {
                             .frame(width: imageSize, height: imageSize)
                             .clipShape(.rect(cornerRadius: 10))
                             .onTapGesture {
-                                changeItem(postID: item.id)
+                                changeItem(post: item)
                             }
                     }
                 }
@@ -265,10 +263,9 @@ struct ProductDetailsView: View {
         }
     }
 
-    private func changeItem(postID: String) {
+    private func changeItem(post: Post) {
         viewModel.clear()
-        viewModel.getPost(id: postID)
-        viewModel.getSimilarPosts(id: postID)
+        viewModel.setPost(post: post)
 
         withAnimation {
             mainViewModel.hidesTabBar = true
@@ -282,9 +279,9 @@ struct ProductDetailsView: View {
             }
             return false
         }) {
-            router.path[existingIndex] = .productDetails(postID)
+            router.path[existingIndex] = .productDetails(post)
         } else {
-            router.push(.productDetails(postID))
+            router.push(.productDetails(post))
         }
     }
 

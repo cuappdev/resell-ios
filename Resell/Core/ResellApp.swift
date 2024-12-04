@@ -20,48 +20,12 @@ struct ResellApp: App {
     var body: some Scene {
         WindowGroup {
             MainView()
-                .onAppear {
-                    requestNotificationPermission()
-                }
-        }
-    }
-
-    /// Request user permission for notifications
-    private func requestNotificationPermission() {
-        UNUserNotificationCenter.current().getNotificationSettings { settings in
-            switch settings.authorizationStatus {
-            case .notDetermined:
-                // Request notification permissions
-                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
-                    if let error = error {
-                        FirestoreManager.shared.logger.error("Error requesting notifications permission: \(error.localizedDescription)")
-                    } else if granted {
-                        DispatchQueue.main.async {
-                            UIApplication.shared.registerForRemoteNotifications()
-                        }
-                    } else {
-                        FirestoreManager.shared.logger.log("Notifications permission denied.")
-                    }
-                }
-            case .authorized, .provisional:
-                DispatchQueue.main.async {
-                    UIApplication.shared.registerForRemoteNotifications()
-                }
-            case .denied:
-                FirestoreManager.shared.logger.log("Notifications permission denied. Cannot register for remote notifications.")
-            case .ephemeral:
-                DispatchQueue.main.async {
-                    UIApplication.shared.registerForRemoteNotifications()
-                }
-                FirestoreManager.shared.logger.log("App has ephemeral authorization for notifications.")
-            @unknown default:
-                break
-            }
         }
     }
 }
 
-/// AppDelegate for Firebase and notification handling
+// MARK: - AppDelegate
+
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 
     func application(
@@ -69,7 +33,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
         FirebaseApp.configure()
-        UNUserNotificationCenter.current().delegate = self // Set delegate for notifications
+        FirebaseNotificationService.shared.configure()
         return true
     }
 
@@ -77,8 +41,8 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
-        // Set APNs token for Firebase Messaging
         Messaging.messaging().apnsToken = deviceToken
+        FirebaseNotificationService.shared.getFCMRegToken()
     }
 
     func application(
@@ -86,22 +50,48 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         didReceiveRemoteNotification userInfo: [AnyHashable: Any],
         fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
     ) {
+        guard let email = UserSessionManager.shared.email else { return }
+
         Messaging.messaging().appDidReceiveMessage(userInfo)
-        // Handle custom data from notification if needed
-        if let customData = userInfo["customKey"] as? String {
-            FirestoreManager.shared.logger.log("Received custom data: \(customData)")
+        print("Received remote notification: \(userInfo)")
+
+        if let aps = userInfo["aps"] as? [String: Any],
+           let alert = aps["alert"] as? [String: String],
+           let title = alert["title"],
+           let body = alert["body"],
+           let navigationId = userInfo["navigationId"] as? String {
+
+            Task {
+                do {
+                    guard let token = try await FirestoreManager.shared.getUserFCMToken(email: email) else { return }
+                    let authToken = try await GoogleAuthManager.shared.getOAuthToken()
+
+                    try await FirebaseNotificationService.shared.sendNotification(
+                        title: title,
+                        body: body,
+                        recipientToken: token,
+                        navigationId: navigationId,
+                        authToken: "Bearer \(authToken ?? "")"
+                    )
+
+                    print("Notification sent successfully.")
+                } catch {
+                    print("Error sending notification: \(error.localizedDescription)")
+                }
+            }
+        } else {
+            print("Invalid notification payload.")
         }
 
         completionHandler(.newData)
     }
 
-    
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        // Handle foreground notifications
         completionHandler([.sound, .badge])
     }
+
 }
