@@ -59,10 +59,10 @@ class EditProfileViewModel: ObservableObject {
             do {
                 let edit = EditUserBody(username: username, bio: bio, venmoHandle: venmoLink, photoUrlBase64: selectedImage.toBase64() ?? "")
                 let _ = try await NetworkManager.shared.updateUserProfile(edit: edit)
-                isLoading = false
+                withAnimation { isLoading = false }
             } catch {
                 NetworkManager.shared.logger.error("Error in EditProfileViewModel.updateProfile: \(error)")
-                isLoading = false
+                withAnimation { isLoading = false }
             }
         }
     }

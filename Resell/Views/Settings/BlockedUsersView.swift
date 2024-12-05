@@ -151,10 +151,10 @@ struct BlockedUsersView: View {
                     UserSessionManager.shared.logger.error("Error in BlockedUsersView: userID not found.")
                 }
 
-                isLoading = false
+                withAnimation { isLoading = false }
             } catch {
                 NetworkManager.shared.logger.error("Error in BlockedUsersView: \(error.localizedDescription)")
-                isLoading = false
+                withAnimation { isLoading = false }
             }
         }
     }
