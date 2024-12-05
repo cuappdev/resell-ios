@@ -14,55 +14,49 @@ class LoginViewModel: ObservableObject {
     // MARK: - Properties
 
     @Published var didPresentError: Bool = false
-    @Published var errorText: String = ""
+    var errorText: String = "Please sign in with a Cornell email"
 
     // MARK: - Functions
 
     func googleSignIn(success: @escaping () -> Void, failure: @escaping (_ netid: String, _ givenName: String, _ familyName: String, _ email: String, _ googleId: String) -> Void) {
-        guard let presentingViewController = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.windows.first?.rootViewController else { return }
 
-        GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { [weak self] result, error  in
-            guard error == nil else { return }
-            guard let self else { return }
+        Task {
+            guard let user = await GoogleAuthManager.shared.signIn(),
+                  let id = user.userID else { return }
 
-            guard let email = result?.user.profile?.email else { return }
+            guard let email = user.profile?.email else { return }
 
             guard email.contains("@cornell.edu") else {
                 GIDSignIn.sharedInstance.signOut()
-                self.didPresentError = true
-                self.errorText = "Please sign in with a Cornell email"
+                didPresentError = true
                 return
             }
 
-            guard let id = result?.user.userID else { return }
+            do {
+                let user = try await NetworkManager.shared.getUserByGoogleID(googleID: id).user
+                var userSession = try await NetworkManager.shared.getUserSession(id: user.id).sessions.first
 
-            Task {
-                do {
-                    let user = try await NetworkManager.shared.getUserByGoogleID(googleID: id).user
-                    var userSession = try await NetworkManager.shared.getUserSession(id: user.id).sessions.first
-
-                    if !(userSession?.active ?? false) {
-                        userSession = try await NetworkManager.shared.refreshToken()
-                    }
-
-                    UserSessionManager.shared.accessToken = userSession?.accessToken
-                    UserSessionManager.shared.refreshToken = userSession?.refreshToken
-                    UserSessionManager.shared.googleID = id
-                    UserSessionManager.shared.userID = user.id
-                    UserSessionManager.shared.email = user.email
-                    UserSessionManager.shared.profileURL = user.photoUrl
-                    UserSessionManager.shared.name = "\(user.givenName) \(user.familyName)"
-
-                    success()
-                } catch {
-                    NetworkManager.shared.logger.error("Error in LoginViewModel.getUserSession: \(error)")
-
-                    guard let givenName = result?.user.profile?.givenName,
-                          let familyName = result?.user.profile?.familyName else { return }
-
-                    // User id does not exist, take to onboarding
-                    failure(self.getNetID(email: email), givenName, familyName, email, id)
+                if !(userSession?.active ?? false) {
+                    userSession = try await NetworkManager.shared.refreshToken()
                 }
+
+                UserSessionManager.shared.accessToken = userSession?.accessToken
+                UserSessionManager.shared.refreshToken = userSession?.refreshToken
+                UserSessionManager.shared.googleID = id
+                UserSessionManager.shared.userID = user.id
+                UserSessionManager.shared.email = user.email
+                UserSessionManager.shared.profileURL = user.photoUrl
+                UserSessionManager.shared.name = "\(user.givenName) \(user.familyName)"
+
+                success()
+            } catch {
+                NetworkManager.shared.logger.error("Error in LoginViewModel.getUserSession: \(error)")
+
+                guard let givenName = user.profile?.givenName,
+                      let familyName = user.profile?.familyName else { return }
+
+                // User id does not exist, take to onboarding
+                failure(self.getNetID(email: email), givenName, familyName, email, id)
             }
         }
     }
