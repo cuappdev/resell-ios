@@ -73,8 +73,6 @@ class FirebaseNotificationService: NSObject, MessagingDelegate, UNUserNotificati
             } else if let token = token {
                 self.fcmRegToken = (token)
             }
-
-            print("TOKEN: \(token)")
         }
     }
 
