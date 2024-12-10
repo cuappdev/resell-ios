@@ -8,8 +8,9 @@
 import Foundation
 
 struct UserDocument: Codable, Identifiable {
-    let id: String
-    let avatar: URL
+    var id: String { _id }
+    var _id: String
+    let avatar: URL?
     let name: String
 }
 

@@ -89,6 +89,16 @@ class UserSessionManager: ObservableObject {
         }
     }
 
+    @Published var oAuthToken: String? {
+        didSet {
+            if let token = oAuthToken {
+                KeychainManager.shared.save(token, forKey: "oAuthToken")
+            } else {
+                KeychainManager.shared.delete(forKey: "oAuthToken")
+            }
+        }
+    }
+
     // MARK: - Init
 
     private init() {
@@ -99,6 +109,7 @@ class UserSessionManager: ObservableObject {
         self.email = KeychainManager.shared.get(forKey: "email")
         self.profileURL = URL(string: KeychainManager.shared.get(forKey: "profileURL") ?? "")
         self.name = KeychainManager.shared.get(forKey: "name")
+        self.oAuthToken = KeychainManager.shared.get(forKey: "oAuthToken")
     }
 
     // MARK: - Functions
@@ -111,5 +122,6 @@ class UserSessionManager: ObservableObject {
         email = nil
         profileURL = nil
         name = nil
+        oAuthToken = nil
     }
 }

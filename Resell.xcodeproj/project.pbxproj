@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -121,6 +121,10 @@
 		2CF3CC7C2D017897001B90B5 /* OAuth2 in Frameworks */ = {isa = PBXBuildFile; productRef = 2CF3CC7B2D017897001B90B5 /* OAuth2 */; };
 		2CF3CC7E2D017897001B90B5 /* SwiftyBase64 in Frameworks */ = {isa = PBXBuildFile; productRef = 2CF3CC7D2D017897001B90B5 /* SwiftyBase64 */; };
 		2CF3CC802D017897001B90B5 /* TinyHTTPServer in Frameworks */ = {isa = PBXBuildFile; productRef = 2CF3CC7F2D017897001B90B5 /* TinyHTTPServer */; };
+		2CF3CC832D017D93001B90B5 /* OAuth1 in Frameworks */ = {isa = PBXBuildFile; productRef = 2CF3CC822D017D93001B90B5 /* OAuth1 */; };
+		2CF3CC852D017D93001B90B5 /* OAuth2 in Frameworks */ = {isa = PBXBuildFile; productRef = 2CF3CC842D017D93001B90B5 /* OAuth2 */; };
+		2CF3CC872D017D93001B90B5 /* SwiftyBase64 in Frameworks */ = {isa = PBXBuildFile; productRef = 2CF3CC862D017D93001B90B5 /* SwiftyBase64 */; };
+		2CF3CC892D017D93001B90B5 /* TinyHTTPServer in Frameworks */ = {isa = PBXBuildFile; productRef = 2CF3CC882D017D93001B90B5 /* TinyHTTPServer */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -257,11 +261,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2CF3CC852D017D93001B90B5 /* OAuth2 in Frameworks */,
+				2CF3CC872D017D93001B90B5 /* SwiftyBase64 in Frameworks */,
 				2CF3CC7C2D017897001B90B5 /* OAuth2 in Frameworks */,
 				2CF3CC7A2D017897001B90B5 /* OAuth1 in Frameworks */,
 				2CF3CC802D017897001B90B5 /* TinyHTTPServer in Frameworks */,
 				2C6FB1822CFAEADC00B35FF8 /* FirebaseMessaging in Frameworks */,
+				2CF3CC832D017D93001B90B5 /* OAuth1 in Frameworks */,
 				2C30246F2C90FFB40057D3D9 /* GoogleSignIn in Frameworks */,
+				2CF3CC892D017D93001B90B5 /* TinyHTTPServer in Frameworks */,
 				2C3859E32CCD9FEA00DA20EA /* FirebaseFirestore in Frameworks */,
 				2C3859E12CCD9FDE00DA20EA /* FirebaseCore in Frameworks */,
 				2C3024712C90FFB40057D3D9 /* GoogleSignInSwift in Frameworks */,
@@ -639,6 +647,10 @@
 				2CF3CC7B2D017897001B90B5 /* OAuth2 */,
 				2CF3CC7D2D017897001B90B5 /* SwiftyBase64 */,
 				2CF3CC7F2D017897001B90B5 /* TinyHTTPServer */,
+				2CF3CC822D017D93001B90B5 /* OAuth1 */,
+				2CF3CC842D017D93001B90B5 /* OAuth2 */,
+				2CF3CC862D017D93001B90B5 /* SwiftyBase64 */,
+				2CF3CC882D017D93001B90B5 /* TinyHTTPServer */,
 			);
 			productName = Resell;
 			productReference = 2C9B4CC72C8FB7B70029DF61 /* Resell.app */;
@@ -717,7 +729,7 @@
 				2CDDF3112CCD9B530061A564 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				2C41BB862CD90D7300EFF69E /* XCRemoteSwiftPackageReference "Kingfisher" */,
 				2CF3CC752D0168AA001B90B5 /* XCRemoteSwiftPackageReference "Swift-JWT" */,
-				2CF3CC782D017897001B90B5 /* XCLocalSwiftPackageReference "../../Downloads/google-auth-library-swift-0.5.2" */,
+				2CF3CC812D017D93001B90B5 /* XCRemoteSwiftPackageReference "google-auth-library-swift" */,
 			);
 			productRefGroup = 2C9B4CC82C8FB7B70029DF61 /* Products */;
 			projectDirPath = "";
@@ -1201,13 +1213,6 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		2CF3CC782D017897001B90B5 /* XCLocalSwiftPackageReference "../../Downloads/google-auth-library-swift-0.5.2" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = "../../Downloads/google-auth-library-swift-0.5.2";
-		};
-/* End XCLocalSwiftPackageReference section */
-
 /* Begin XCRemoteSwiftPackageReference section */
 		2C41BB862CD90D7300EFF69E /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -1239,6 +1244,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 4.0.2;
+			};
+		};
+		2CF3CC812D017D93001B90B5 /* XCRemoteSwiftPackageReference "google-auth-library-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "git@github.com:googleapis/google-auth-library-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.5.3;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -1293,6 +1306,26 @@
 		};
 		2CF3CC7F2D017897001B90B5 /* TinyHTTPServer */ = {
 			isa = XCSwiftPackageProductDependency;
+			productName = TinyHTTPServer;
+		};
+		2CF3CC822D017D93001B90B5 /* OAuth1 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2CF3CC812D017D93001B90B5 /* XCRemoteSwiftPackageReference "google-auth-library-swift" */;
+			productName = OAuth1;
+		};
+		2CF3CC842D017D93001B90B5 /* OAuth2 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2CF3CC812D017D93001B90B5 /* XCRemoteSwiftPackageReference "google-auth-library-swift" */;
+			productName = OAuth2;
+		};
+		2CF3CC862D017D93001B90B5 /* SwiftyBase64 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2CF3CC812D017D93001B90B5 /* XCRemoteSwiftPackageReference "google-auth-library-swift" */;
+			productName = SwiftyBase64;
+		};
+		2CF3CC882D017D93001B90B5 /* TinyHTTPServer */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2CF3CC812D017D93001B90B5 /* XCRemoteSwiftPackageReference "google-auth-library-swift" */;
 			productName = TinyHTTPServer;
 		};
 /* End XCSwiftPackageProductDependency section */
