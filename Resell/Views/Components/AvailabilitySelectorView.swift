@@ -5,6 +5,7 @@
 //  Created by Richie Sun on 11/30/24.
 //
 
+import FirebaseFirestore
 import SwiftUI
 
 struct AvailabilitySelectorView: View {
@@ -18,6 +19,7 @@ struct AvailabilitySelectorView: View {
     @State private var isMovingForward: Bool = true
 
     @Binding var isPresented: Bool
+    @Binding var selectedDates: [Date]
 
     let dates: [String] = generateDates()
     let times: [String] = generateTimes()
@@ -44,12 +46,13 @@ struct AvailabilitySelectorView: View {
 
                 VStack {
                     Text("When are you free to meet?")
-                        .font(.headline)
+                        .font(Constants.Fonts.title2)
+                        .foregroundColor(Constants.Colors.black)
                         .padding(.top)
 
                     Text("Click and drag cells to select meeting times")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
+                        .font(Constants.Fonts.body2)
+                        .foregroundColor(Constants.Colors.secondaryGray)
                 }
 
                 Spacer()
@@ -86,8 +89,9 @@ struct AvailabilitySelectorView: View {
                         HStack(spacing: 0) {
                             ForEach(Array(paginatedDates[index]), id: \.self) { date in
                                 VStack(spacing: 0) {
-                                    Text(date)
+                                    Text(date.partBeforeComma)
                                         .font(Constants.Fonts.title4)
+                                        .foregroundStyle(Constants.Colors.black)
                                         .multilineTextAlignment(.center)
                                         .frame(height: 35)
                                         .padding(.bottom, 8)
@@ -152,6 +156,7 @@ struct AvailabilitySelectorView: View {
         }
         .padding(.horizontal)
         .padding(.top)
+        .background(Constants.Colors.white)
     }
 
     // MARK: - Functions
@@ -182,9 +187,33 @@ struct AvailabilitySelectorView: View {
     }
 
     private func saveAvailability() {
-        // TODO: Format them into Firestore format
-        print("Selected Availability: \(selectedCells)")
+        selectedDates = selectedCells.map { createDate(from: $0.date, timeString: $0.time) ?? Date() }
+
         isPresented = false
+    }
+
+    private func createDate(from dateString: String, timeString: String) -> Date? {
+        let cleanDateString = dateString.replacingOccurrences(of: "\n", with: " ")
+        let cleanTimeString = timeString.replacingOccurrences(of: " Top", with: "").replacingOccurrences(of: " Bottom", with: "")
+
+        let combinedString = "\(cleanDateString) \(cleanTimeString)"
+        print("Combined String: '\(combinedString)'")
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E MMM d, yyyy h:mm a"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
+
+        if var parsedDate = formatter.date(from: combinedString) {
+            if timeString.contains("Bottom") {
+                parsedDate = parsedDate.adding(minutes: 30)
+            }
+            print("Parsed Date in Local Time: \(formatter.string(from: parsedDate))")
+            return parsedDate
+        } else {
+            print("Failed to parse date from: '\(combinedString)'")
+            return nil
+        }
     }
 }
 
@@ -229,7 +258,7 @@ struct CellIdentifier: Hashable {
 // MARK: - Helper Functions
 func generateDates() -> [String] {
     let formatter = DateFormatter()
-    formatter.dateFormat = "E \nMMM d"
+    formatter.dateFormat = "E \nMMM d, yyyy"
 
     return (0..<30).compactMap {
         Calendar.current.date(byAdding: .day, value: $0, to: Date())

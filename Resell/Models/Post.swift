@@ -35,16 +35,16 @@ struct Post: Codable, Equatable, Identifiable, Hashable {
         hasher.combine(id)
     }
 
-    static func sortPostsByDate(_ posts: [Post], ascending: Bool = true) -> [Post] {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+    static func sortPostsByDate(_ posts: [Post], ascending: Bool = false) -> [Post] {
+        let isoDateFormatter = ISO8601DateFormatter()
+        isoDateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
 
         return posts.sorted {
-            guard let date1 = dateFormatter.date(from: $0.created),
-                  let date2 = dateFormatter.date(from: $1.created) else {
+            guard let date1 = isoDateFormatter.date(from: $0.created),
+                  let date2 = isoDateFormatter.date(from: $1.created) else {
                 return ascending
             }
+            
             return ascending ? date1 < date2 : date1 > date2
         }
     }

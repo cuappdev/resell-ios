@@ -20,20 +20,26 @@ struct ChatDocument: Codable, Identifiable {
     var meetingInfo: MeetingInfo?
 }
 
+struct ChatDocumentSendable: Codable, Identifiable {
+    var id: String { _id }
+    var _id: String
+    var createdAt: Timestamp
+    var user: UserDocument
+    var availability: [String : String]?
+    var product: [String : String]
+    var image: String
+    var text: String
+    var meetingInfo: MeetingInfo?
+}
+
 struct AvailabilityDocument: Codable {
     let availabilities: [AvailabilityBlock]
-
-    func toFirebaseArray() -> [String: Any] {
-        let sortedAvailabilities = availabilities.sorted { $0.startDate.dateValue() < $1.startDate.dateValue() }
-        let availabilityArray = sortedAvailabilities.map { $0.toDictionary() }
-        return ["availabilities": availabilityArray]
-    }
 }
 
 struct AvailabilityBlock: Codable, Identifiable {
     let startDate: Timestamp
     let color: String
-    let id: Int
+    var id: Int
 
     var endDate: Timestamp {
         let startDateTime = startDate.dateValue()
@@ -41,16 +47,17 @@ struct AvailabilityBlock: Codable, Identifiable {
         return Timestamp(date: endDateTime)
     }
 
-    init(startDate: Timestamp, color: String = AvailabilityBlock.defaultColor, id: Int) {
+    init(startDate: Timestamp, color: String = AvailabilityBlock.defaultColor, id: Int? = nil) {
         self.startDate = startDate
         self.color = color
-        self.id = id
+        self.id = id ?? Int.random(in: 0...9999)
     }
 
     static var defaultColor: String {
         let color = UIColor.systemPurple
-        let hexString = String(format: "#%06X", (Int(color.cgColor.components?[0] ?? 0) << 16) | (Int(color.cgColor.components?[1] ?? 0) << 8) | Int(color.cgColor.components?[2] ?? 0))
-        return hexString
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        return String(format: "#%02X%02X%02X", Int(red * 255), Int(green * 255), Int(blue * 255))
     }
 
     func toDictionary() -> [String: Any] {
@@ -80,7 +87,3 @@ struct MeetingInfo: Codable {
         ]
     }
 }
-
-
-
-

@@ -171,7 +171,6 @@ class FirebaseNotificationService: NSObject, MessagingDelegate, UNUserNotificati
         let (data, response) = try await URLSession.shared.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            print(response)
             throw URLError(.badServerResponse)
         }
 
