@@ -277,7 +277,7 @@ struct ProductDetailsView: View {
             if let error = error {
                 print("Error sending notification: \(error.localizedDescription)")
             } else {
-                print("Notification sent successfully!")
+                print("Push notification sent successfully!")
             }
         }
     }
