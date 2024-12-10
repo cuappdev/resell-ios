@@ -48,6 +48,10 @@ class LoginViewModel: ObservableObject {
                 UserSessionManager.shared.profileURL = user.photoUrl
                 UserSessionManager.shared.name = "\(user.givenName) \(user.familyName)"
 
+                try? GoogleAuthManager.shared.getOAuthToken { token in
+                    UserSessionManager.shared.oAuthToken = token
+                }
+                
                 success()
             } catch {
                 NetworkManager.shared.logger.error("Error in LoginViewModel.getUserSession: \(error)")

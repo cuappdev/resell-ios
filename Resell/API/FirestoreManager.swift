@@ -300,6 +300,14 @@ class FirestoreManager {
         }
     }
 
+    func getSpecificChat(buyer: String, seller: String, completion: @escaping ([ChatPreview]) -> Void) {
+        guard let userEmail = UserSessionManager.shared.email else {
+            UserSessionManager.shared.logger.error("Error in ChatsViewModel: User email not available.")
+            completion([])
+            return
+        }
+    }
+
     func updateChatViewedStatus(chatType: String, userEmail: String, chatId: String, isViewed: Bool) {
         let collectionType = chatType == "Purchases" ? "sellers" : "buyers"
         let chatDocument = historyCollection.document(userEmail).collection(collectionType).document(chatId)
@@ -347,35 +355,103 @@ class FirestoreManager {
         sellerEmail: String,
         onSnapshotUpdate: @escaping ([ChatDocument]) -> Void
     ) {
+        // Remove any existing listener
         listener?.remove()
-
+        
+        // Reference Firestore collection
         let chatDocRef = firestore.collection("chats")
             .document(buyerEmail)
             .collection(sellerEmail)
             .order(by: "createdAt", descending: false)
 
+        // Add snapshot listener
         listener = chatDocRef.addSnapshotListener { snapshot, error in
             if let error = error {
+                // Log Firestore error
                 self.logger.error("Firestore subscription error: \(error.localizedDescription)")
                 return
             }
 
+            // Ensure snapshot exists
             guard let snapshot = snapshot else {
                 self.logger.error("Firestore subscription returned no data.")
                 return
             }
 
-            let messages: [ChatDocument] = snapshot.documents.compactMap { document in
-                do {
-                    // Map Firestore document to ChatDocument
-                    let chatDoc = try document.data(as: ChatDocument.self)
-                    return chatDoc
-                } catch {
-                    self.logger.error("Error decoding ChatDocument: \(error.localizedDescription)")
-                    return nil
+            // Parse snapshot documents manually
+            var messages: [ChatDocument] = snapshot.documents.compactMap { document in
+                let data = document.data()
+
+                // Parse user
+                let userMap = data["user"] as? [String: Any]
+                let user = userMap.flatMap {
+                    UserDocument(
+                        _id: $0["_id"] as? String ?? "",
+                        avatar: $0["avatar"] as? URL,
+                        name: $0["name"] as? String ?? ""
+                    )
                 }
+
+                // Parse product
+                let productMap = data["product"] as? [String: Any]
+                let product = productMap.flatMap {
+                    Post(
+                        id: $0["id"] as? String ?? "",
+                        title: $0["title"] as? String ?? "",
+                        description: $0["description"] as? String ?? "",
+                        categories: $0["categories"] as? [String] ?? [],
+                        originalPrice: $0["price"] as? String ?? "",
+
+                        alteredPrice: $0["altered_price"] as? String ?? "",
+                        images: $0["images"] as? [URL] ?? [],
+                        created: $0["created"] as? String ?? "",
+                        location: $0["location"] as? String ?? "",
+                        archive: ($0["archive"] as? Bool) ?? false,
+                        user: nil
+                    )
+                }
+
+                // Parse availability
+                let availabilityArray = data["availability"] as? [[String: Any]]
+                let availability = availabilityArray.flatMap { array in
+                    AvailabilityDocument(availabilities: array.compactMap { availabilityItem in
+                        guard let startDate = availabilityItem["startDate"] as? Timestamp,
+                              let id = availabilityItem["id"] as? Int,
+                              let color = availabilityItem["color"] as? String else {
+                            return nil
+                        }
+                        return AvailabilityBlock(startDate: startDate, color: color, id: id)
+                    })
+                }
+
+                // Parse meeting info
+                let meetingInfoMap = data["meetingInfo"] as? [String: Any]
+                let meetingInfo = meetingInfoMap.flatMap {
+                    MeetingInfo(
+                        state: $0["state"] as? String ?? "",
+                        proposeTime: $0["proposeTime"] as? String ?? "",
+                        proposer: $0["proposer"] as? String,
+                        canceler: $0["canceler"] as? String,
+                        mostRecent: $0["mostRecent"] as? Bool ?? false
+                    )
+                }
+
+                // Create ChatDocument manually
+                return ChatDocument(
+                    _id: data["_id"] as? String ?? "",
+                    createdAt: data["createdAt"] as? Timestamp ?? Timestamp(seconds: 0, nanoseconds: 0),
+                    user: user ?? UserDocument(_id: "", avatar: nil, name: ""),
+                    availability: availability,
+                    product: product,
+                    image: data["image"] as? String ?? "",
+                    text: data["text"] as? String ?? "",
+                    meetingInfo: meetingInfo
+                )
             }
 
+            messages = messages.sorted { $0.createdAt.dateValue() < $1.createdAt.dateValue() }
+
+            // Pass messages to the callback
             onSnapshotUpdate(messages)
         }
     }
@@ -384,16 +460,15 @@ class FirestoreManager {
     func sendChatMessage(
         buyerEmail: String,
         sellerEmail: String,
-        chatDocument: ChatDocument
+        chatDocument: ChatDocumentSendable
     ) async throws {
         let chatRef = firestore.collection("chats")
             .document(buyerEmail)
             .collection(sellerEmail)
+        var data = try chatDocument.toFirebaseDictionary()
 
-        let data = chatDocument.availability?.toFirebaseArray()
-        if let data {
-            try await chatRef.addDocument(data: data)
-        }
+        data["createdAt"] = Timestamp()
+        try await chatRef.addDocument(data: data)
     }
 
     // Send Product Message
@@ -410,15 +485,13 @@ class FirestoreManager {
         chatDocument.text = ""
         chatDocument.availability = nil
         chatDocument.product = post
-
+        
         let chatRef = firestore.collection("chats")
             .document(buyerEmail)
             .collection(sellerEmail)
 
-        let data = chatDocument.availability?.toFirebaseArray()
-        if let data {
-            try await chatRef.addDocument(data: data)
-        }
+        let data = try chatDocument.toFirebaseDictionary()
+        try await chatRef.addDocument(data: data)
     }
 
     // Update Buyer History
@@ -448,7 +521,6 @@ class FirestoreManager {
 
         try docRef.setData(from: data)
     }
-
 
     // Update Items
     func updateItems(
@@ -490,6 +562,38 @@ extension Date {
     var iso8601String: String {
         let formatter = ISO8601DateFormatter()
         return formatter.string(from: self)
+    }
+
+    func adding(minutes: Int) -> Date {
+        return Calendar.current.date(byAdding: .minute, value: minutes, to: self)!
+    }
+}
+
+extension Encodable {
+    /// Converts an Encodable object to a [String: Any] dictionary,
+    /// preserving `Timestamp` objects as-is.
+    func toFirebaseDictionary() throws -> [String: Any] {
+        // Create a custom encoder
+        let encoder = JSONEncoder()
+
+        // Use `JSONSerialization` with Foundation objects to preserve `Timestamp`
+        let data = try encoder.encode(self)
+        let jsonObject = try JSONSerialization.jsonObject(with: data, options: [])
+
+        // Ensure the result is a dictionary
+        guard var dictionary = jsonObject as? [String: Any] else {
+            throw NSError(domain: "toFirebaseDictionary", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to convert object to dictionary"])
+        }
+
+        // Manually check for and preserve any `Timestamp` properties
+        for (key, value) in dictionary {
+            if let timestampValue = value as? Timestamp {
+                dictionary[key] = timestampValue // Preserve as `Timestamp`
+                print(timestampValue)
+            }
+        }
+
+        return dictionary
     }
 }
 
