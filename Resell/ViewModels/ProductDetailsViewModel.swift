@@ -39,13 +39,23 @@ class ProductDetailsViewModel: ObservableObject {
 
                 await calculateMaxImgRatio()
                 getIsSaved()
-
-                isLoading = false
             } catch {
                 NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getPost: \(error.localizedDescription)")
-                isLoading = false
+                withAnimation { isLoading = false }
             }
         }
+    }
+
+    func setPost(post: Post) {
+        item = post
+        images = post.images
+
+        Task {
+            await calculateMaxImgRatio()
+        }
+
+        getIsSaved()
+        getSimilarPosts(id: post.id)
     }
 
     func getSimilarPosts(id: String) {
@@ -89,9 +99,12 @@ class ProductDetailsViewModel: ObservableObject {
             do {
                 if let id = item?.id {
                     isSaved = try await NetworkManager.shared.postIsSaved(id: id).isSaved
+                    
+                    withAnimation { isLoading = false }
                 }
             } catch {
                 NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getIsSaved: \(error.localizedDescription)")
+                withAnimation { isLoading = false }
             }
         }
     }
