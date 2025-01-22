@@ -5,7 +5,6 @@
 //  Created by Richie Sun on 10/26/24.
 //
 
-//import Firebase
 import FirebaseFirestore
 import SwiftUI
 
@@ -31,7 +30,9 @@ class ChatsViewModel: ObservableObject {
     @Published var selectedTab: String = "Purchases"
 
     @Published var draftMessageText: String = ""
-    @Published var availabilityDates: [Date] = []
+    @Published var availabilityDates: [AvailabilityBlock] = []
+
+    @Published var otherUserProfileImage: UIImage = UIImage(named: "emptyProfile")!
 
     private let firestoreManager = FirestoreManager.shared
     private var blockedUsers: [String] = []
@@ -135,6 +136,15 @@ class ChatsViewModel: ObservableObject {
             do {
                 let userResponse = try await NetworkManager.shared.getUserByEmail(email: email)
                 otherUser = userResponse.user
+
+                guard let url = otherUser?.photoUrl else { return }
+                let task = URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+                    guard let data, let uiImage = UIImage(data: data) else { return }
+                    DispatchQueue.main.async {
+                        self?.otherUserProfileImage = uiImage
+                    }
+                }
+                task.resume()
             } catch {
                 NetworkManager.shared.logger.error("Error in ChatsViewModel.getOtherUser: \(error)")
             }
@@ -255,6 +265,33 @@ class ChatsViewModel: ObservableObject {
         )
     }
 
+    /// Send an image message
+    func sendImageMessage(
+        senderEmail: String,
+        recipientEmail: String,
+        senderName: String,
+        recipientName: String,
+        senderImageUrl: URL,
+        recipientImageUrl: URL,
+        imageBase64: String,
+        isBuyer: Bool,
+        postId: String
+    ) async throws {
+        let url = try await uploadImage(imageBase64: imageBase64)
+
+        // Send the generic message with the uploaded image URL
+        try await sendGenericMessage(
+            senderEmail: senderEmail,
+            recipientEmail: recipientEmail,
+            senderName: senderName,
+            recipientName: recipientName,
+            senderImageUrl: senderImageUrl,
+            recipientImageUrl: recipientImageUrl,
+            isBuyer: isBuyer,
+            postId: postId,
+            imageUrl: url
+        )
+    }
 
     // MARK: - Helper Functions
 
@@ -335,6 +372,14 @@ class ChatsViewModel: ObservableObject {
                 messages: newMessages
             )
         }
+    }
+
+    /// Upload the image and return the URL
+    private func uploadImage(imageBase64: String) async throws -> String {
+        let requestBody = ImageBody(imageBase64: imageBase64)
+        let response = try await NetworkManager.shared.uploadImage(image: requestBody)
+
+        return response.image
     }
 }
 

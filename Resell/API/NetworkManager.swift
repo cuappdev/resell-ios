@@ -354,4 +354,12 @@ class NetworkManager: APIClient {
 
         try await post(url: url, body: reportBody)
     }
+
+    // MARK: - Other Networking Functions
+
+    func uploadImage(image: ImageBody) async throws -> ImageResponse {
+        let url = try constructURL(endpoint: "/image/")
+
+        return try await post(url: url, body: image)
+    }
 }
