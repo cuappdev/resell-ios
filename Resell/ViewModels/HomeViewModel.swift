@@ -44,7 +44,6 @@ class HomeViewModel: ObservableObject {
             do {
                 let postsResponse = try await NetworkManager.shared.getAllPosts()
                 allItems = Post.sortPostsByDate(postsResponse.posts)
-
                 if selectedFilter == "Recent" {
                     filteredItems = allItems
                 } else {
