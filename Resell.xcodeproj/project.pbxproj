@@ -125,6 +125,7 @@
 		2CF3CC852D017D93001B90B5 /* OAuth2 in Frameworks */ = {isa = PBXBuildFile; productRef = 2CF3CC842D017D93001B90B5 /* OAuth2 */; };
 		2CF3CC872D017D93001B90B5 /* SwiftyBase64 in Frameworks */ = {isa = PBXBuildFile; productRef = 2CF3CC862D017D93001B90B5 /* SwiftyBase64 */; };
 		2CF3CC892D017D93001B90B5 /* TinyHTTPServer in Frameworks */ = {isa = PBXBuildFile; productRef = 2CF3CC882D017D93001B90B5 /* TinyHTTPServer */; };
+		2CFE42722D4097CF007D503F /* Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CFE42712D4097CF007D503F /* Image.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -254,6 +255,7 @@
 		2CF3561C2CDE91170045A173 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
 		2CF3561E2CDE93E00045A173 /* EditProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileViewModel.swift; sourceTree = "<group>"; };
 		2CF3CC612D012611001B90B5 /* resell-service.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "resell-service.json"; sourceTree = "<group>"; };
+		2CFE42712D4097CF007D503F /* Image.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Image.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -352,6 +354,7 @@
 				2C6FB17D2CFADD5200B35FF8 /* ChatDocument.swift */,
 				2C6FB1892CFFBC9E00B35FF8 /* FCMNotification.swift */,
 				2C6FB1782CFAD93D00B35FF8 /* FirebaseDocument.swift */,
+				2CFE42712D4097CF007D503F /* Image.swift */,
 				2C6FB17B2CFADCE000B35FF8 /* TransactionSummary.swift */,
 				2C6FB17F2CFADD9100B35FF8 /* UserDocument.swift */,
 			);
@@ -843,6 +846,7 @@
 				2C02B3A52CC097AB0020DF90 /* OptionsMenuView.swift in Sources */,
 				2CE473A02CC4576B00BD7E2C /* ReportDetailsView.swift in Sources */,
 				2CBC6B5B2CB72ED200C842A4 /* ExpandableAddButton.swift in Sources */,
+				2CFE42722D4097CF007D503F /* Image.swift in Sources */,
 				2C41BB882CD90DF800EFF69E /* CachedImageView.swift in Sources */,
 				2CDDF30C2CCD871A0061A564 /* ChatsViewModel.swift in Sources */,
 				2CBC6B5F2CB75ACD00C842A4 /* MainTabView.swift in Sources */,

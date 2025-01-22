@@ -101,7 +101,8 @@ struct ProductGalleryCell: View {
         .frame(width: cellWidth)
         .clipped()
         .clipShape(.rect(cornerRadius: 8))
-        .scaleEffect(isImageLoaded ? CGSize(width: 1, height: 1) : CGSize(width: 1, height: 0.9), anchor: .center)
+        .opacity(isImageLoaded ? 1 : 0)
+//        .scaleEffect(isImageLoaded ? CGSize(width: 1, height: 1) : CGSize(width: 1, height: 0.9), anchor: .center)
         .onTapGesture {
             selectedItem = post
         }
