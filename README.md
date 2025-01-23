@@ -14,6 +14,7 @@ For Firestore, the `(default)` database corresponds to our development environme
 
 ## Importing Environment Variables and Secrets
 Download `Keys.xcconfig` and place it in the main repo directory
+
 Download `GoogleService-Info.plist` and `resell-service.json` and place both files in a `Supporting` folder in the `Resell` directory.
 
 For AppDev members, you can find these pinned in the `#resell-frontend` Slack channel.
