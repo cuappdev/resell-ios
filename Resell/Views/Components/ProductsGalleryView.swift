@@ -48,23 +48,23 @@ struct ProductsGalleryView: View {
         }
         .onChange(of: selectedItem) { item in
             if let selectedItem {
-                navigateToProductDetails(postID: selectedItem.id)
+                navigateToProductDetails(post: selectedItem)
                 self.selectedItem = nil
             }
         }
     }
 
-    private func navigateToProductDetails(postID: String) {
+    private func navigateToProductDetails(post: Post) {
         if let existingIndex = router.path.firstIndex(where: {
             if case .productDetails = $0 {
                 return true
             }
             return false
         }) {
-            router.path[existingIndex] = .productDetails(postID)
+            router.path[existingIndex] = .productDetails(post)
             router.popTo(router.path[existingIndex])
         } else {
-            router.push(.productDetails(postID))
+            router.push(.productDetails(post))
         }
     }
 
@@ -101,7 +101,8 @@ struct ProductGalleryCell: View {
         .frame(width: cellWidth)
         .clipped()
         .clipShape(.rect(cornerRadius: 8))
-        .scaleEffect(isImageLoaded ? CGSize(width: 1, height: 1) : CGSize(width: 1, height: 0.9), anchor: .center)
+        .opacity(isImageLoaded ? 1 : 0)
+//        .scaleEffect(isImageLoaded ? CGSize(width: 1, height: 1) : CGSize(width: 1, height: 0.9), anchor: .center)
         .onTapGesture {
             selectedItem = post
         }

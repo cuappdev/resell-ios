@@ -14,5 +14,12 @@ extension String {
 
         return cleanedString
     }
-    
+
+    var partBeforeComma: String {
+        if let commaIndex = self.firstIndex(of: ",") {
+            return String(self[..<commaIndex])
+        }
+        return self
+    }
+
 }

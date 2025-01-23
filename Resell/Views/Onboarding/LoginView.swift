@@ -10,6 +10,7 @@ import SwiftUI
 struct LoginView: View {
 
     @EnvironmentObject var router: Router
+    @EnvironmentObject private var mainViewModel: MainViewModel
 
     @StateObject private var viewModel = LoginViewModel()
     @StateObject private var onboardingViewModel = SetupProfileViewModel()
@@ -28,19 +29,25 @@ struct LoginView: View {
 
                 Spacer()
 
-                PurpleButton(text: "Login with NetID", horizontalPadding: 28) {
-                    viewModel.googleSignIn {
-                        userDidLogin = true
-                    } failure: { netid, givenName, familyName, email, googleId in
-                        userDidLogin = false
-                        router.push(.setupProfile(netid: netid, givenName: givenName, familyName: familyName, email: email, googleId: googleId))
-                    }
+                if !mainViewModel.hidesSignInButton {
+                    PurpleButton(text: "Login with NetID", horizontalPadding: 28) {
+                        viewModel.googleSignIn {
+                            userDidLogin = true
+                        } failure: { netid, givenName, familyName, email, googleId in
+                            userDidLogin = false
+                            router.push(.setupProfile(netid: netid, givenName: givenName, familyName: familyName, email: email, googleId: googleId))
+                        }
 
+                    }
+                } else {
+                    Image("appdev")
+                        .padding(.bottom, 24)
                 }
             }
             .background(LoginGradient())
             .onAppear {
                 onboardingViewModel.clear()
+                FirebaseNotificationService.shared.setupFCMToken()
             }
             .navigationDestination(for: Router.Route.self) { route in
                 switch route {
@@ -57,16 +64,6 @@ struct LoginView: View {
         }
         .sheet(isPresented: $viewModel.didPresentError) {
             loginSheetView
-        }
-        .navigationDestination(for: Router.Route.self) { route in
-            switch route {
-            case .setupProfile:
-                SetupProfileView(userDidLogin: $userDidLogin)
-            case .venmo:
-                VenmoView(userDidLogin: $userDidLogin)
-            default:
-                EmptyView()
-            }
         }
     }
 
