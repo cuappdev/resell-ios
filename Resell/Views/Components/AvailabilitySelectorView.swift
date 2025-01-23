@@ -20,6 +20,7 @@ struct AvailabilitySelectorView: View {
 
     @Binding var isPresented: Bool
     @Binding var selectedDates: [AvailabilityBlock]
+    @Binding var didSubmit: Bool
 
     let dates: [String] = generateDates()
     let times: [String] = generateTimes()
@@ -159,10 +160,7 @@ struct AvailabilitySelectorView: View {
 
     // MARK: - Functions
 
-
-    // TODO: FIX THIS
     private func initializeSelectedCells() {
-        print(selectedDates)
         for block in selectedDates {
             let startDate = block.startDate.dateValue()
 
@@ -172,13 +170,17 @@ struct AvailabilitySelectorView: View {
 
             let timeFormatter = DateFormatter()
             timeFormatter.dateFormat = "h:mm a"
-            let timeString = timeFormatter.string(from: startDate)
 
             let calendar = Calendar.current
             let minute = calendar.component(.minute, from: startDate)
             let isTopHalf = (minute != 30)
 
-            toggleCellSelection(date: dateString, time: timeString, isTopHalf: isTopHalf)
+            let adjustedTime = isTopHalf ? startDate : startDate.adding(minutes: -30)
+            let timeString = timeFormatter.string(from: adjustedTime)
+
+            let halfIdentifier = isTopHalf ? "\(timeString) Top" : "\(timeString) Bottom"
+            let identifier = CellIdentifier(date: dateString, time: halfIdentifier)
+            selectedCells.insert(identifier)
         }
     }
 
@@ -210,8 +212,7 @@ struct AvailabilitySelectorView: View {
     private func saveAvailability() {
         selectedDates = selectedCells.compactMap { createDate(from: $0.date, timeString: $0.time) }
 
-        print(selectedDates)
-
+        didSubmit = true
         isPresented = false
     }
 
@@ -233,12 +234,10 @@ struct AvailabilitySelectorView: View {
 
             return AvailabilityBlock(startDate: Timestamp(date: parsedDate))
         } else {
-            print("Failed to parse date from: '\(combinedString)'")
             return nil
         }
     }
 }
-
 
 // MARK: - CellView
 

@@ -21,6 +21,8 @@ struct MessagesView: View {
     @State private var didShowAvailabilityView: Bool = false
     @State private var didShowWebView: Bool = false
 
+    @State private var didSubmitAvailabilities: Bool = false
+
     @State private var priceText: String = ""
 
     var post: Post
@@ -130,7 +132,7 @@ struct MessagesView: View {
             .ignoresSafeArea()
         }
         .sheet(isPresented: $didShowAvailabilityView) {
-            AvailabilitySelectorView(isPresented: $didShowAvailabilityView, selectedDates: $viewModel.availabilityDates)
+            AvailabilitySelectorView(isPresented: $didShowAvailabilityView, selectedDates: $viewModel.availabilityDates, didSubmit: $didSubmitAvailabilities)
                 .presentationCornerRadius(25)
                 .presentationDragIndicator(.visible)
         }
@@ -153,6 +155,13 @@ struct MessagesView: View {
             )
 
             viewModel.getOtherUser(email: viewModel.selectedChat?.email ?? post.user?.email ?? "")
+        }
+        .onChange(of: didSubmitAvailabilities) { didSubmit in
+            if didSubmit {
+                Task {
+                    await sendAvailabilities(availabilities: viewModel.availabilityDates)
+                }
+            }
         }
         .endEditingOnTap()
 
@@ -338,6 +347,47 @@ struct MessagesView: View {
         }
     }
 
+    private func sendAvailabilities(availabilities: [AvailabilityBlock]) async {
+        guard let myEmail = UserSessionManager.shared.email,
+              let myID = UserSessionManager.shared.userID,
+              let recipientEmail = viewModel.selectedChat?.email,
+              let senderName = UserSessionManager.shared.name else {
+            UserSessionManager.shared.logger.error("Error: Missing user or chat information.")
+            return
+        }
+
+        do {
+            guard let senderImageUrl = UserSessionManager.shared.profileURL,
+                  let recipientImageUrl = viewModel.otherUser?.photoUrl,
+                  let recipientGivenName = viewModel.otherUser?.givenName,
+                  let recipientFamilyName = viewModel.otherUser?.familyName else {
+                return
+            }
+
+            var sortedAvailabilities = availabilities.sorted { $0.startDate.dateValue() < $1.startDate.dateValue() }
+            sortedAvailabilities.indices.forEach { index in
+                sortedAvailabilities[index].id = index
+            }
+
+            print(sortedAvailabilities)
+
+            let availabilityDocument = AvailabilityDocument(availabilities: sortedAvailabilities)
+
+            try await viewModel.sendAvailability(
+                senderEmail: myEmail,
+                recipientEmail: recipientEmail,
+                senderName: senderName,
+                recipientName: "\(recipientGivenName) \(recipientFamilyName)",
+                senderImageUrl: senderImageUrl,
+                recipientImageUrl: recipientImageUrl,
+                isBuyer: !(post.user?.id == myID),
+                postId: post.id,
+                availability: availabilityDocument
+            )
+        } catch {
+            print("Error sending availability: \(error)")
+        }
+    }
 
     private func setNegotiationText() {
         viewModel.draftMessageText = "Hi! I'm interested in buying your \(post.title), but would you be open to selling it for $\(priceText)?"

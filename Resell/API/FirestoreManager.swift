@@ -467,9 +467,35 @@ class FirestoreManager {
             .collection(sellerEmail)
         var data = try chatDocument.toFirebaseDictionary()
 
+        // Convert availabilities to a Firestore-friendly format
+        if var availabilities = data["availability"] as? [[String: Any]] {
+            availabilities = availabilities.map { availability in
+                var updatedAvailability = availability
+
+                // Convert startDate to Timestamp
+                if let startDate = availability["startDate"] as? [String: Any],
+                   let seconds = startDate["seconds"] as? Int64,
+                   let nanoseconds = startDate["nanoseconds"] as? Int32 {
+                    updatedAvailability["startDate"] = Timestamp(seconds: seconds, nanoseconds: nanoseconds)
+                }
+
+                // Convert endDate to Timestamp
+                if let endDate = availability["endDate"] as? [String: Any],
+                   let seconds = endDate["seconds"] as? Int64,
+                   let nanoseconds = endDate["nanoseconds"] as? Int32 {
+                    updatedAvailability["endDate"] = Timestamp(seconds: seconds, nanoseconds: nanoseconds)
+                }
+
+                return updatedAvailability
+            }
+            data["availability"] = availabilities
+        }
+
         data["createdAt"] = Timestamp()
+        print(data["availability"])
         try await chatRef.addDocument(data: data)
     }
+
 
     // Send Product Message
     func sendProductMessage(
