@@ -25,7 +25,7 @@ struct ChatDocumentSendable: Codable, Identifiable {
     var _id: String
     var createdAt: Timestamp
     var user: UserDocument
-    var availability: [String : String]?
+    var availability: [AvailabilityBlock]?
     var product: [String : String]
     var image: String
     var text: String
@@ -40,17 +40,16 @@ struct AvailabilityBlock: Codable, Identifiable {
     let startDate: Timestamp
     let color: String
     var id: Int
-
-    var endDate: Timestamp {
-        let startDateTime = startDate.dateValue()
-        let endDateTime = Calendar.current.date(byAdding: .minute, value: 30, to: startDateTime) ?? startDateTime
-        return Timestamp(date: endDateTime)
-    }
+    var endDate: Timestamp
 
     init(startDate: Timestamp, color: String = AvailabilityBlock.defaultColor, id: Int? = nil) {
         self.startDate = startDate
         self.color = color
         self.id = id ?? Int.random(in: 0...9999)
+        
+        let startDateTime = startDate.dateValue()
+        let endDateTime = Calendar.current.date(byAdding: .minute, value: 30, to: startDateTime) ?? startDateTime
+        self.endDate = Timestamp(date: endDateTime)
     }
 
     static var defaultColor: String {
@@ -64,16 +63,6 @@ struct AvailabilityBlock: Codable, Identifiable {
         let blue = components[2]
 
         return String(format: "#%02X%02X%02X", Int(red * 255), Int(green * 255), Int(blue * 255))
-    }
-
-
-    func toDictionary() -> [String: Any] {
-        return [
-            "startDate": startDate,
-            "color": color,
-            "id": id,
-            "endDate": endDate
-        ]
     }
 }
 
