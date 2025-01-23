@@ -13,5 +13,10 @@ Resell uses two databases per environment. We have a PostgreSQL database that is
 For Firestore, the `(default)` database corresponds to our development environment and `resell-prod` corresponds to production. **Please be aware of which database to use since frontend is responsible for managing data in Firestore.**
 
 ## Importing Environment Variables and Secrets
+Download `Keys.xcconfig` and place it in the main repo directory
+Download `GoogleService-Info.plist` and `resell-service.json` and place both files in a `Supporting` folder in the `Resell` directory.
 
-Download `GoogleService-Info.plist` and place both files in the `/Supporting` folder.
+For AppDev members, you can find these pinned in the `#resell-frontend` Slack channel.
+- GoogleService-Info.plist
+- resell-service.json
+- Keys.xcconfig
