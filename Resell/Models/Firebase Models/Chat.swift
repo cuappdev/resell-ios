@@ -45,6 +45,7 @@ struct ChatMessageData: Identifiable {
         formatter.dateFormat = "h:mm a"
         return formatter.string(from: date)
     }
+    var availability: AvailabilityDocument? = nil
 }
 
 struct ChatMessageCluster: Identifiable {
