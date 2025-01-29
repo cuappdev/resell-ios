@@ -13,6 +13,7 @@ struct ShimmerView: View {
     // MARK: - Properties
 
     @State private var shimmerOffset: CGFloat = -UIScreen.main.bounds.width
+    private let animationDuration: Double = 1.5
 
     // MARK: - UI
 
@@ -32,16 +33,22 @@ struct ShimmerView: View {
                 .frame(width: gradientWidth)
                 .offset(x: shimmerOffset)
                 .onAppear {
-                    shimmerOffset = -gradientWidth
-                    withAnimation(
-                        Animation.linear(duration: 1)
-                            .repeatForever(autoreverses: false)
-                    ) {
-                        shimmerOffset = geometry.size.width + gradientWidth
-                    }
+                    startShimmerAnimation(geometry: geometry, gradientWidth: gradientWidth)
                 }
             }
             .clipShape(Rectangle())
+        }
+    }
+
+    // MARK: - Helper Functions
+
+    private func startShimmerAnimation(geometry: GeometryProxy, gradientWidth: CGFloat) {
+        shimmerOffset = -gradientWidth
+        withAnimation(
+            Animation.linear(duration: animationDuration)
+                .repeatForever(autoreverses: false)
+        ) {
+            shimmerOffset = geometry.size.width + gradientWidth
         }
     }
 }

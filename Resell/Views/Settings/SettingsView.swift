@@ -129,6 +129,7 @@ struct SettingsView: View {
                 viewModel.logout()
                 router.popToRoot()
                 mainViewModel.selection = 0
+                mainViewModel.hidesSignInButton = false
                 mainViewModel.userDidLogin = false
             }
 
