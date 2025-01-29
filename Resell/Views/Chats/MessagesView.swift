@@ -22,6 +22,7 @@ struct MessagesView: View {
     @State private var didShowWebView: Bool = false
 
     @State private var didSubmitAvailabilities: Bool = false
+    @State private var isEditing: Bool = true
 
     @State private var priceText: String = ""
 
@@ -132,7 +133,7 @@ struct MessagesView: View {
             .ignoresSafeArea()
         }
         .sheet(isPresented: $didShowAvailabilityView) {
-            AvailabilitySelectorView(isPresented: $didShowAvailabilityView, selectedDates: $viewModel.availabilityDates, didSubmit: $didSubmitAvailabilities)
+            AvailabilitySelectorView(isPresented: $didShowAvailabilityView, selectedDates: $viewModel.availabilityDates, didSubmit: $didSubmitAvailabilities, isEditing: isEditing, proposerName: viewModel.otherUser?.givenName)
                 .presentationCornerRadius(25)
                 .presentationDragIndicator(.visible)
         }
@@ -160,6 +161,7 @@ struct MessagesView: View {
             if didSubmit {
                 Task {
                     await sendAvailabilities(availabilities: viewModel.availabilityDates)
+                    viewModel.availabilityDates = []
                 }
             }
         }
@@ -174,7 +176,7 @@ struct MessagesView: View {
                     ForEach(viewModel.subscribedChat?.history ?? []) { cluster in
                         VStack(spacing: 12) {
                             ForEach(cluster.messages) { message in
-                                MessageBubbleView(otherUserPhoto: $viewModel.otherUserProfileImage, senderName: cluster.fromUser ? UserSessionManager.shared.name ?? "" : viewModel.otherUser?.givenName ?? "", message: message, fromUser: cluster.fromUser)
+                                MessageBubbleView(didShowAvailabilityView: $didShowAvailabilityView, isEditing: $isEditing, otherUserPhoto: $viewModel.otherUserProfileImage, selectedAvailabilities: $viewModel.availabilityDates, senderName: cluster.fromUser ? UserSessionManager.shared.name ?? "" : viewModel.otherUser?.givenName ?? "", message: message, fromUser: cluster.fromUser)
                             }
                         }
                     }
@@ -217,6 +219,7 @@ struct MessagesView: View {
                         }
                     case .sendAvailability:
                         chatOption(title: option.rawValue) {
+                            isEditing = true
                             withAnimation { didShowAvailabilityView = true }
                         }
                     case .venmo:
@@ -225,7 +228,10 @@ struct MessagesView: View {
                         }
                     case .viewAvailability:
                         chatOption(title: "View \(post.user?.givenName ?? "")'s Availability") {
+                            isEditing = false
                             withAnimation { didShowAvailabilityView = true }
+                            // TODO: Pull up other user Recent Avail
+
                         }
                     }
                 }
@@ -369,8 +375,6 @@ struct MessagesView: View {
                 sortedAvailabilities[index].id = index
             }
 
-            print(sortedAvailabilities)
-
             let availabilityDocument = AvailabilityDocument(availabilities: sortedAvailabilities)
 
             try await viewModel.sendAvailability(
@@ -399,7 +403,11 @@ struct MessagesView: View {
 
 struct MessageBubbleView: View {
 
+    @Binding var didShowAvailabilityView: Bool
+    @Binding var isEditing: Bool
+
     @Binding var otherUserPhoto: UIImage
+    @Binding var selectedAvailabilities: [AvailabilityBlock]
 
     let senderName: String
     let message: ChatMessageData
@@ -472,20 +480,26 @@ struct MessageBubbleView: View {
                 }
             }
         case .availability:
-            HStack {
-                Text("\(senderName)'s Availability")
-                    .font(Constants.Fonts.title2)
-                    .foregroundStyle(Constants.Colors.resellPurple)
+            Button {
+                selectedAvailabilities = message.availability?.availabilities ?? []
+                didShowAvailabilityView = true
+                isEditing = false
+            } label: {
+                HStack {
+                    Text("\(senderName)'s Availability")
+                        .font(Constants.Fonts.title2)
+                        .foregroundStyle(Constants.Colors.resellPurple)
 
-                Spacer()
+                    Spacer()
 
-                Image(systemName: "chevron.right")
-                    .foregroundStyle(Constants.Colors.resellPurple)
+                    Image(systemName: "chevron.right")
+                        .foregroundStyle(Constants.Colors.resellPurple)
+                }
+                .padding(12)
+                .background(Constants.Colors.resellPurple.opacity(0.1))
+                .clipShape(.rect(cornerRadius: 10))
+                .padding(.vertical, 6)
             }
-            .padding(12)
-            .background(Constants.Colors.resellPurple.opacity(0.1))
-            .clipShape(.rect(cornerRadius: 10))
-            .padding(.vertical, 6)
         case .state:
             Text(message.content)
                 .font(Constants.Fonts.subtitle1)
