@@ -492,7 +492,6 @@ class FirestoreManager {
         }
 
         data["createdAt"] = Timestamp()
-        print(data["availability"])
         try await chatRef.addDocument(data: data)
     }
 
@@ -615,7 +614,6 @@ extension Encodable {
         for (key, value) in dictionary {
             if let timestampValue = value as? Timestamp {
                 dictionary[key] = timestampValue // Preserve as `Timestamp`
-                print(timestampValue)
             }
         }
 

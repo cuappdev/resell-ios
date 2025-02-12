@@ -26,8 +26,10 @@ struct CachedImageView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
             .onSuccess { _ in
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    isImageLoaded = true
+                DispatchQueue.main.async {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        isImageLoaded = true
+                    }
                 }
             }
             .fade(duration: 0.3)

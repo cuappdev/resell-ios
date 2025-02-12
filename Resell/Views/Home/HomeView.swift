@@ -21,6 +21,7 @@ struct HomeView: View {
                 headerView
 
                 filtersView
+                    .padding(.bottom, 12)
 
                 ProductsGalleryView(items: viewModel.filteredItems)
             }

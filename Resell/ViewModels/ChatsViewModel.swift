@@ -140,7 +140,7 @@ class ChatsViewModel: ObservableObject {
                 guard let url = otherUser?.photoUrl else { return }
                 let task = URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
                     guard let data, let uiImage = UIImage(data: data) else { return }
-                    DispatchQueue.main.async {
+                    DispatchQueue.main.async { [weak self] in
                         self?.otherUserProfileImage = uiImage
                     }
                 }
@@ -515,8 +515,6 @@ extension ChatsViewModel {
             image: buyerImageUrl,
             viewed: !isBuyer
         )
-
-        print(isBuyer)
 
         try await firestoreManager.updateBuyerHistory(sellerEmail: sellerEmail, buyerEmail: buyerEmail, data: buyerData)
         try await firestoreManager.updateSellerHistory(buyerEmail: buyerEmail, sellerEmail: sellerEmail, data: sellerData)
