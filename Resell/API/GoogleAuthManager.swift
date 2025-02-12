@@ -7,27 +7,21 @@
 
 import GoogleSignIn
 import OAuth2
+import os
 import SwiftUI
 
 class GoogleAuthManager {
 
     static let shared = GoogleAuthManager()
 
-    private let credentials = "resell-service.json"
-    private let token = "resell-service.json"
-
-    private let scopes = [
-        "profile",
-        "https://www.googleapis.com/auth/firebase.messaging",
-        "https://www.googleapis.com/auth/cloud-platform"
-    ]
+    let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.cornellappdev.Resell", category: "GoogleAuthManager")
 
     private init() { }
 
     func getOAuthToken(completion: @escaping (String) -> Void) throws {
         // 1. Locate the service account JSON file
         guard let credentialsPath = Bundle.main.path(forResource: "resell-service", ofType: "json") else {
-            print("Service account file not found.")
+            logger.error("Error in GoogleAuthManager: Service account file not found.")
             return
         }
 
@@ -36,16 +30,16 @@ class GoogleAuthManager {
             "https://www.googleapis.com/auth/cloud-platform",
             "https://www.googleapis.com/auth/firebase.messaging"
         ]
-        
+
         guard let provider = ServiceAccountTokenProvider(credentialsURL: URL(fileURLWithPath: credentialsPath), scopes: scopes) else {
-            print("Failed to initialize ServiceAccountTokenProvider.")
+            logger.error("Error in GoogleAuthManager: Failed to initialize ServiceAccountTokenProvider.")
             return
         }
 
         // 3. Fetch the token synchronously
         try provider.withToken { token, error in
             if let error = error {
-                print("Error fetching token: \(error)")
+                self.logger.error("Error in GoogleAuthManager: Error fetching token: \(error)")
             }
             if let accessToken = token?.AccessToken  {
                 completion(accessToken)
@@ -80,11 +74,10 @@ class GoogleAuthManager {
             let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController)
 
             let accessToken = result.user.accessToken.tokenString
-                print("Access Token: \(accessToken)")
 
             return result.user
         } catch {
-            print("Error restoring Google Sign-In: \(error.localizedDescription)")
+            logger.error("Error in GoogleAuthManager: Error restoring Google Sign-In: \(error.localizedDescription)")
             return nil
         }
     }
@@ -97,10 +90,9 @@ class GoogleAuthManager {
                 let user = try await GIDSignIn.sharedInstance.restorePreviousSignIn()
 
                 let accessToken = user.accessToken.tokenString
-                    print("Access Token: \(accessToken)")
                 return user
             } catch {
-                print("Error restoring Google Sign-In: \(error.localizedDescription)")
+                logger.error("Error in GoogleAuthManager: Error restoring Google Sign-In: \(error.localizedDescription)")
                 return nil
             }
         }

@@ -53,35 +53,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         guard let email = UserSessionManager.shared.email else { return }
 
         Messaging.messaging().appDidReceiveMessage(userInfo)
-        print("Received remote notification: \(userInfo)")
-
-        if let aps = userInfo["aps"] as? [String: Any],
-           let alert = aps["alert"] as? [String: String],
-           let title = alert["title"],
-           let body = alert["body"],
-           let navigationId = userInfo["navigationId"] as? String {
-
-            Task {
-                do {
-                    guard let token = try await FirestoreManager.shared.getUserFCMToken(email: email) else { return }
-//                    let authToken = GoogleAuthManager.shared.getOAuthToken()
-//
-//                    try await FirebaseNotificationService.shared.sendNotification(
-//                        title: title,
-//                        body: body,
-//                        recipientToken: token,
-//                        navigationId: navigationId,
-//                        authToken: "Bearer \(authToken ?? "")"
-//                    )
-
-                    print("Notification sent successfully.")
-                } catch {
-                    print("Error sending notification: \(error.localizedDescription)")
-                }
-            }
-        } else {
-            print("Invalid notification payload.")
-        }
+        FirestoreManager.shared.logger.log("Received remote notification: \(userInfo)")
 
         completionHandler(.newData)
     }
