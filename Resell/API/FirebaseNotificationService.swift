@@ -133,7 +133,7 @@ class FirebaseNotificationService: NSObject, MessagingDelegate, UNUserNotificati
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        print("User interacted with notification: \(response.notification.request.content.userInfo)")
+        FirestoreManager.shared.logger.log("User interacted with notification: \(response.notification.request.content.userInfo)")
 
         if let navigationId = response.notification.request.content.userInfo["navigationId"] as? String {
             navigateToScreen(with: navigationId)
@@ -174,14 +174,14 @@ class FirebaseNotificationService: NSObject, MessagingDelegate, UNUserNotificati
             throw URLError(.badServerResponse)
         }
 
-        print("Notification sent successfully: \(String(data: data, encoding: .utf8) ?? "")")
+        FirestoreManager.shared.logger.log("Notification sent successfully: \(String(data: data, encoding: .utf8) ?? "")")
     }
 
     // MARK: - Helpers
 
     private func navigateToScreen(with navigationId: String) {
         // TODO: Deeplinking
-        print("Navigating to screen with ID: \(navigationId)")
+        FirestoreManager.shared.logger.error("Navigating to screen with ID: \(navigationId)")
     }
 }
 
