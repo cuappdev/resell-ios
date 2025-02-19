@@ -85,10 +85,6 @@ struct MainTabView: View {
                                 EmptyView()
                             }
                         }
-
-
-                    if !isHidden {
-                        tabBarView
                     }
                 }
                 .transition(.opacity)
