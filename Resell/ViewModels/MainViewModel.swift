@@ -99,11 +99,13 @@ class MainViewModel: ObservableObject {
                     let prefetcher = ImagePrefetcher(urls: urls)
                     prefetcher.start()
 
-                    try GoogleAuthManager.shared.getOAuthToken { token in
+                    try? GoogleAuthManager.shared.getOAuthToken { token in
                         UserSessionManager.shared.oAuthToken = token
                     }
 
-                    withAnimation { userDidLogin = true }
+                    await MainActor.run {
+                        withAnimation { userDidLogin = true }
+                    }
                 } else if let googleID = UserSessionManager.shared.googleID {
                     // Re-authenticate using Google ID
                     let user = try await NetworkManager.shared.getUserByGoogleID(googleID: googleID).user
@@ -127,8 +129,10 @@ class MainViewModel: ObservableObject {
                     let user = try await GoogleAuthManager.shared.restorePreviousSignIn()
                     guard let user,
                           let googleID = user.userID else {
-                        withAnimation { hidesSignInButton = false }
-                        withAnimation { userDidLogin = false }
+                        await MainActor.run {
+                            withAnimation { hidesSignInButton = false }
+                            withAnimation { userDidLogin = false }
+                        }
                         return
                     }
 

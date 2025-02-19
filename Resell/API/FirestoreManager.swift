@@ -300,14 +300,6 @@ class FirestoreManager {
         }
     }
 
-    func getSpecificChat(buyer: String, seller: String, completion: @escaping ([ChatPreview]) -> Void) {
-        guard let userEmail = UserSessionManager.shared.email else {
-            UserSessionManager.shared.logger.error("Error in ChatsViewModel: User email not available.")
-            completion([])
-            return
-        }
-    }
-
     func updateChatViewedStatus(chatType: String, userEmail: String, chatId: String, isViewed: Bool) {
         let collectionType = chatType == "Purchases" ? "sellers" : "buyers"
         let chatDocument = historyCollection.document(userEmail).collection(collectionType).document(chatId)

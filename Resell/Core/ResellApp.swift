@@ -50,7 +50,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         didReceiveRemoteNotification userInfo: [AnyHashable: Any],
         fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
     ) {
-        guard let email = UserSessionManager.shared.email else { return }
 
         Messaging.messaging().appDidReceiveMessage(userInfo)
         FirestoreManager.shared.logger.log("Received remote notification: \(userInfo)")

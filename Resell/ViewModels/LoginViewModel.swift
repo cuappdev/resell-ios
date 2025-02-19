@@ -14,13 +14,17 @@ class LoginViewModel: ObservableObject {
     // MARK: - Properties
 
     @Published var didPresentError: Bool = false
+    @Published var isLoading: Bool = false
     var errorText: String = "Please sign in with a Cornell email"
 
     // MARK: - Functions
 
     func googleSignIn(success: @escaping () -> Void, failure: @escaping (_ netid: String, _ givenName: String, _ familyName: String, _ email: String, _ googleId: String) -> Void) {
+        isLoading = true
 
         Task {
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+
             guard let user = await GoogleAuthManager.shared.signIn(),
                   let id = user.userID else { return }
 
@@ -51,7 +55,7 @@ class LoginViewModel: ObservableObject {
                 try? GoogleAuthManager.shared.getOAuthToken { token in
                     UserSessionManager.shared.oAuthToken = token
                 }
-                
+
                 success()
             } catch {
                 NetworkManager.shared.logger.error("Error in LoginViewModel.getUserSession: \(error)")
