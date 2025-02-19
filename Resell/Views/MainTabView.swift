@@ -28,73 +28,74 @@ struct MainTabView: View {
 
     var body: some View {
         NavigationStack(path: $router.path) {
-            if mainViewModel.userDidLogin {
-                ZStack(alignment: .bottom) {
-                    mainView
-                        .navigationDestination(for: Router.Route.self) { route in
-                            switch route {
-                            case .newListingDetails:
-                                NewListingDetailsView()
-                                    .environmentObject(newListingViewModel)
-                            case .newListingImages:
-                                NewListingImagesView()
-                                    .environmentObject(newListingViewModel)
-                            case .newRequest:
-                                NewRequestView()
-                            case .messages(let post):
-                                MessagesView(post: post)
-                                    .environmentObject(chatsViewModel)
-                            case .productDetails(let item):
-                                ProductDetailsView(post: item)
-                            case .reportConfirmation:
-                                ReportConfirmationView()
-                                    .environmentObject(reportViewModel)
-                            case .reportDetails:
-                                ReportDetailsView()
-                                    .environmentObject(reportViewModel)
-                            case .reportOptions(let type, let id):
-                                ReportOptionsView(type: type, id: id)
-                                    .environmentObject(reportViewModel)
-                            case .search(let id):
-                                SearchView(userID: id)
-                            case .settings(let isAccountSettings):
-                                SettingsView(isAccountSettings: isAccountSettings)
-                            case .blockedUsers:
-                                BlockedUsersView()
-                            case .editProfile:
-                                EditProfileView()
-                            case .feedback:
-                                SendFeedbackView()
-                            case .notifications:
-                                NotificationsSettingsView()
-                            case .login:
-                                LoginView(userDidLogin: $mainViewModel.userDidLogin)
-                                    .environmentObject(onboardingViewModel)
-                            case .profile(let id):
-                                ExternalProfileView(userID: id)
-                            case .setupProfile(let netid, let givenName, let familyName, let email, let googleId):
-                                SetupProfileView(userDidLogin: $mainViewModel.userDidLogin, netid: netid, givenName: givenName, familyName: familyName, email: email, googleID: googleId)
-                                    .environmentObject(onboardingViewModel)
-                            case .venmo:
-                                VenmoView(userDidLogin: $mainViewModel.userDidLogin)
-                                    .environmentObject(onboardingViewModel)
-                            default:
-                                EmptyView()
-                            }
+            VStack {
+                if mainViewModel.userDidLogin {
+                    ZStack(alignment: .bottom) {
+                        mainView
+
+                        if !isHidden {
+                            tabBarView
                         }
-
-
-                    if !isHidden {
-                        tabBarView
                     }
-                }
-                .transition(.opacity)
-                .environmentObject(router)
-            } else {
-                LoginView(userDidLogin: $mainViewModel.userDidLogin)
                     .transition(.opacity)
-                    .environmentObject(onboardingViewModel)
                     .environmentObject(router)
+                } else {
+                    LoginView(userDidLogin: $mainViewModel.userDidLogin)
+                        .transition(.opacity)
+                        .environmentObject(onboardingViewModel)
+                        .environmentObject(router)
+                }
+            }
+            .navigationDestination(for: Router.Route.self) { route in
+                switch route {
+                case .newListingDetails:
+                    NewListingDetailsView()
+                        .environmentObject(newListingViewModel)
+                case .newListingImages:
+                    NewListingImagesView()
+                        .environmentObject(newListingViewModel)
+                case .newRequest:
+                    NewRequestView()
+                case .messages(let post):
+                    MessagesView(post: post)
+                        .environmentObject(chatsViewModel)
+                case .productDetails(let item):
+                    ProductDetailsView(post: item)
+                case .reportConfirmation:
+                    ReportConfirmationView()
+                        .environmentObject(reportViewModel)
+                case .reportDetails:
+                    ReportDetailsView()
+                        .environmentObject(reportViewModel)
+                case .reportOptions(let type, let id):
+                    ReportOptionsView(type: type, id: id)
+                        .environmentObject(reportViewModel)
+                case .search(let id):
+                    SearchView(userID: id)
+                case .settings(let isAccountSettings):
+                    SettingsView(isAccountSettings: isAccountSettings)
+                case .blockedUsers:
+                    BlockedUsersView()
+                case .editProfile:
+                    EditProfileView()
+                case .feedback:
+                    SendFeedbackView()
+                case .notifications:
+                    NotificationsSettingsView()
+                case .login:
+                    LoginView(userDidLogin: $mainViewModel.userDidLogin)
+                        .environmentObject(onboardingViewModel)
+                case .profile(let id):
+                    ExternalProfileView(userID: id)
+                case .setupProfile(let netid, let givenName, let familyName, let email, let googleId):
+                    SetupProfileView(userDidLogin: $mainViewModel.userDidLogin, netid: netid, givenName: givenName, familyName: familyName, email: email, googleID: googleId)
+                        .environmentObject(onboardingViewModel)
+                case .venmo:
+                    VenmoView(userDidLogin: $mainViewModel.userDidLogin)
+                        .environmentObject(onboardingViewModel)
+                default:
+                    EmptyView()
+                }
             }
         }
     }
