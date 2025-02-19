@@ -29,8 +29,10 @@ class ProductDetailsViewModel: ObservableObject {
     // MARK: - Functions
 
     func getPost(id: String) {
+        isLoading = true
+
         Task {
-            isLoading = true
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
                 let postResponse = try await NetworkManager.shared.getPostByID(id: id)
@@ -41,7 +43,6 @@ class ProductDetailsViewModel: ObservableObject {
                 getIsSaved()
             } catch {
                 NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getPost: \(error.localizedDescription)")
-                withAnimation { isLoading = false }
             }
         }
     }
@@ -62,6 +63,7 @@ class ProductDetailsViewModel: ObservableObject {
     func getSimilarPosts(id: String) {
         Task {
             isLoadingImages = true
+            defer { isLoadingImages = false }
 
             do {
                 let postsResponse = try await NetworkManager.shared.getSimilarPostsByID(id: id)
@@ -70,11 +72,8 @@ class ProductDetailsViewModel: ObservableObject {
                 } else {
                     similarPosts = postsResponse.posts
                 }
-
-                isLoadingImages = false
             } catch {
                 NetworkManager.shared.logger.error("Errror in ProductDetailsViewModel.getSimilarPosts: \(error.localizedDescription)")
-                isLoadingImages = false
             }
         }
     }
@@ -123,12 +122,9 @@ class ProductDetailsViewModel: ObservableObject {
             do {
                 if let id = item?.id {
                     isSaved = try await NetworkManager.shared.postIsSaved(id: id).isSaved
-                    
-                    withAnimation { isLoading = false }
                 }
             } catch {
                 NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getIsSaved: \(error.localizedDescription)")
-                withAnimation { isLoading = false }
             }
         }
     }
