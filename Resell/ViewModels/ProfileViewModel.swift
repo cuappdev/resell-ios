@@ -47,8 +47,10 @@ class ProfileViewModel: ObservableObject {
     }
 
     func getUser() {
+        isLoading = true
+
         Task {
-            isLoading = true
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
                 if let id = UserSessionManager.shared.userID {
@@ -62,8 +64,6 @@ class ProfileViewModel: ObservableObject {
                     archivedPosts = Post.sortPostsByDate(archivedResponse.posts)
                     requests = requestsResponse.requests
                     selectedPosts = userPosts
-
-                    isLoading = false
                 } else if let googleId = UserSessionManager.shared.googleID {
                     user = try await NetworkManager.shared.getUserByGoogleID(googleID: googleId).user
 
@@ -75,16 +75,12 @@ class ProfileViewModel: ObservableObject {
                     archivedPosts = Post.sortPostsByDate(archivedResponse.posts)
                     requests = requestsResponse.requests
                     selectedPosts = userPosts
-
-                    isLoading = false
                 } else {
                     UserSessionManager.shared.logger.error("Error in ProfileViewModel.getUser: No userID or googleID found in UserSessionManager")
-                    isLoading = false
                 }
 
             } catch {
                 NetworkManager.shared.logger.error("Error in ProfileViewModel.getUser: \(error)")
-                withAnimation { isLoading = false }
             }
         }
     }
@@ -122,33 +118,31 @@ class ProfileViewModel: ObservableObject {
     }
 
     func blockUser(id: String) {
+        isLoading = true
+
         Task {
-            isLoading = true
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
                 let blocked = BlockUserBody(blocked: id)
                 try await NetworkManager.shared.blockUser(blocked: blocked)
-
-                withAnimation { isLoading = false }
             } catch {
                 NetworkManager.shared.logger.error("Error in ProfileViewModel.blockUser: \(error.localizedDescription)")
-                withAnimation { isLoading = false }
             }
         }
     }
 
     func unblockUser(id: String) {
+        isLoading = true
+
         Task {
-            isLoading = true
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
                 let unblocked = UnblockUserBody(unblocked: id)
                 try await NetworkManager.shared.unblockUser(unblocked: unblocked)
-
-                withAnimation { isLoading = false }
             } catch {
                 NetworkManager.shared.logger.error("Error in ProfileViewModel.unblockUser: \(error.localizedDescription)")
-                withAnimation { isLoading = false }
             }
         }
     }

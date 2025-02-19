@@ -11,61 +11,54 @@ struct LoginView: View {
 
     @EnvironmentObject var router: Router
     @EnvironmentObject private var mainViewModel: MainViewModel
+    @EnvironmentObject private var onboardingViewModel: SetupProfileViewModel
 
     @StateObject private var viewModel = LoginViewModel()
-    @StateObject private var onboardingViewModel = SetupProfileViewModel()
+
     @Binding var userDidLogin: Bool
 
     var body: some View {
-        NavigationStack(path: $router.path) {
-            VStack {
-                Image("resell")
-                    .padding(.top, 180)
+        VStack {
+            Image("resell")
+                .padding(.top, 180)
 
-                Text("resell")
-                    .font(Constants.Fonts.resellLogo)
-                    .foregroundStyle(Constants.Colors.resellGradient)
-                    .multilineTextAlignment(.center)
+            Text("resell")
+                .font(Constants.Fonts.resellLogo)
+                .foregroundStyle(Constants.Colors.resellGradient)
+                .multilineTextAlignment(.center)
 
-                Spacer()
+            Spacer()
 
-                if !mainViewModel.hidesSignInButton {
-                    PurpleButton(text: "Login with NetID", horizontalPadding: 28) {
-                        viewModel.googleSignIn {
-                            userDidLogin = true
-                        } failure: { netid, givenName, familyName, email, googleId in
-                            userDidLogin = false
-                            router.push(.setupProfile(netid: netid, givenName: givenName, familyName: familyName, email: email, googleId: googleId))
+            if !mainViewModel.hidesSignInButton {
+                PurpleButton(text: "Login with NetID", horizontalPadding: 28) {
+                    viewModel.googleSignIn {
+                        DispatchQueue.main.async {
+                            withAnimation { userDidLogin = true }
                         }
-
+                    } failure: { netid, givenName, familyName, email, googleId in
+                        DispatchQueue.main.async {
+                            withAnimation { userDidLogin = false }
+                        }
+                        router.push(.setupProfile(netid: netid, givenName: givenName, familyName: familyName, email: email, googleId: googleId))
                     }
-                } else {
-                    Image("appdev")
-                        .padding(.bottom, 24)
+
                 }
+            } else {
+                Image("appdev")
+                    .padding(.bottom, 24)
             }
-            .background(LoginGradient())
-            .onAppear {
-                onboardingViewModel.clear()
-                FirebaseNotificationService.shared.setupFCMToken()
-            }
-            .navigationDestination(for: Router.Route.self) { route in
-                switch route {
-                case .setupProfile(let netid, let givenName, let familyName, let email, let googleId):
-                    SetupProfileView(userDidLogin: $userDidLogin, netid: netid, givenName: givenName, familyName: familyName, email: email, googleID: googleId)
-                        .environmentObject(onboardingViewModel)
-                case .venmo:
-                    VenmoView(userDidLogin: $userDidLogin)
-                        .environmentObject(onboardingViewModel)
-                default:
-                    EmptyView()
-                }
-            }
+        }
+        .background(LoginGradient())
+        .onAppear {
+            onboardingViewModel.clear()
+            FirebaseNotificationService.shared.setupFCMToken()
         }
         .sheet(isPresented: $viewModel.didPresentError) {
             loginSheetView
         }
+        .loadingView(isLoading: viewModel.isLoading)
     }
+
 
     private var loginSheetView: some View {
         VStack {

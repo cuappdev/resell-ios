@@ -40,7 +40,11 @@ class HomeViewModel: ObservableObject {
     // MARK: - Functions
 
     func getAllPosts() {
+        isLoading = true
+
         Task {
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+            
             do {
                 let postsResponse = try await NetworkManager.shared.getAllPosts()
                 allItems = Post.sortPostsByDate(postsResponse.posts)
@@ -56,18 +60,16 @@ class HomeViewModel: ObservableObject {
     }
 
     func getSavedPosts() {
+        isLoading = true
+
         Task {
-            isLoading = true
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
                 let postsResponse = try await NetworkManager.shared.getSavedPosts()
                 savedItems = Post.sortPostsByDate(postsResponse.posts)
-
-                isLoading = false
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.getSavedPosts: \(error)")
-                
-                isLoading = false
             }
         }
     }

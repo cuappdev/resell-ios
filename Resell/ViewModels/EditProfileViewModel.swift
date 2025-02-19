@@ -53,16 +53,16 @@ class EditProfileViewModel: ObservableObject {
     }
 
     func updateProfile() {
+        isLoading = true
+
         Task {
-            isLoading = true
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
                 let edit = EditUserBody(username: username, bio: bio, venmoHandle: venmoLink, photoUrlBase64: selectedImage.toBase64() ?? "")
                 let _ = try await NetworkManager.shared.updateUserProfile(edit: edit)
-                withAnimation { isLoading = false }
             } catch {
                 NetworkManager.shared.logger.error("Error in EditProfileViewModel.updateProfile: \(error)")
-                withAnimation { isLoading = false }
             }
         }
     }
