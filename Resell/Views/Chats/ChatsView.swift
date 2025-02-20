@@ -14,29 +14,27 @@ struct ChatsView: View {
 
     @EnvironmentObject var router: Router
     @EnvironmentObject var viewModel: ChatsViewModel
-    
+
     // MARK: - UI
 
     var body: some View {
-        NavigationStack(path: $router.path) {
-            VStack(alignment: .leading) {
-                headerView
-                
-                filtersView
-                
-                chatsView
-                
-                Spacer()
-            }
-            .background(Constants.Colors.white)
-            .loadingView(isLoading: viewModel.isLoading)
-            .emptyState(isEmpty: viewModel.checkEmptyState(), title: viewModel.emptyStateTitle(), text: viewModel.emptyStateMessage())
-            .refreshable {
-                viewModel.getAllChats()
-            }
-            .onAppear {
-                viewModel.getAllChats()
-            }
+        VStack(alignment: .leading) {
+            headerView
+
+            filtersView
+
+            chatsView
+
+            Spacer()
+        }
+        .background(Constants.Colors.white)
+        .loadingView(isLoading: viewModel.isLoading)
+        .emptyState(isEmpty: viewModel.checkEmptyState(), title: viewModel.emptyStateTitle(), text: viewModel.emptyStateMessage())
+        .refreshable {
+            viewModel.getAllChats()
+        }
+        .onAppear {
+            viewModel.getAllChats()
         }
     }
 
