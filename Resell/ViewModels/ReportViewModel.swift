@@ -23,7 +23,6 @@ class ReportViewModel: ObservableObject {
         }
     }
 
-    // TODO: Add Logic to change this later
     @Published var reportType: String = "Post"
     @Published var selectedOption: String = ""
 
@@ -47,8 +46,10 @@ class ReportViewModel: ObservableObject {
     }
 
     func reportPost() {
+        isLoading = true
+
         Task {
-            isLoading = true
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
                 if let userID = user?.id,
@@ -56,47 +57,42 @@ class ReportViewModel: ObservableObject {
                     let reportBody = ReportPostBody(reported: userID, post: postID, reason: selectedOption)
                     try await NetworkManager.shared.reportPost(reportBody: reportBody)
                 }
-
-                withAnimation { isLoading = false }
             } catch {
                 NetworkManager.shared.logger.error("Error in ReportViewModel.reportPost: \(error.localizedDescription)")
-                withAnimation { isLoading = false }
             }
         }
     }
 
     func reportUser() {
+        isLoading = true
+
         Task {
-            isLoading = true
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
                 if let userID = user?.id {
                     let reportBody = ReportUserBody(reported: userID, reason: selectedOption)
                     try await NetworkManager.shared.reportUser(reportBody: reportBody)
                 }
-
-                withAnimation { isLoading = false }
             } catch {
                 NetworkManager.shared.logger.error("Error in ReportViewModel.reportUser: \(error.localizedDescription)")
-                withAnimation { isLoading = false }
             }
         }
     }
 
     func blockUser() {
+        isLoading = true
+
         Task {
-            isLoading = true
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
                 if let id = user?.id {
                     let blocked = BlockUserBody(blocked: id)
                     try await NetworkManager.shared.blockUser(blocked: blocked)
                 }
-
-                isLoading = false
             } catch {
                 NetworkManager.shared.logger.error("Error in ProfileViewModel.blockUser: \(error.localizedDescription)")
-                isLoading = false
             }
         }
     }

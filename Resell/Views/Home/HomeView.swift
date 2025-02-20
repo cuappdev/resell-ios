@@ -6,6 +6,7 @@
 //
 
 import Kingfisher
+import OAuth2
 import SwiftUI
 
 struct HomeView: View {
@@ -15,32 +16,32 @@ struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel.shared
 
     var body: some View {
-        NavigationStack(path: $router.path) {
-            VStack(spacing: 0) {
-                headerView
+        VStack(spacing: 0) {
+            headerView
 
-                filtersView
+            filtersView
+                .padding(.bottom, 12)
 
-                ProductsGalleryView(items: viewModel.filteredItems)
-            }
-            .background(Constants.Colors.white)
-            .overlay(alignment: .bottomTrailing) {
-                ExpandableAddButton()
-                    .padding(.bottom, 40)
-            }
-            .onAppear {
-                viewModel.getAllPosts()
-                viewModel.getBlockedUsers()
-
-                withAnimation {
-                    mainViewModel.hidesTabBar = false
-                }
-            }
-            .refreshable {
-                viewModel.getAllPosts()
-            }
-            .navigationBarBackButtonHidden()
+            ProductsGalleryView(items: viewModel.filteredItems)
         }
+        .background(Constants.Colors.white)
+        .overlay(alignment: .bottomTrailing) {
+            ExpandableAddButton()
+                .padding(.bottom, 40)
+        }
+        .onAppear {
+            viewModel.getAllPosts()
+            viewModel.getBlockedUsers()
+
+            withAnimation {
+                mainViewModel.hidesTabBar = false
+            }
+        }
+        .refreshable {
+            viewModel.getAllPosts()
+        }
+        .loadingView(isLoading: viewModel.isLoading)
+        .navigationBarBackButtonHidden()
     }
 
     private var headerView: some View {

@@ -16,12 +16,12 @@ class Router: ObservableObject {
         case saved
         case chats
         case editProfile
-        case messages
+        case messages(post: Post)
         case newListingDetails
         case newListingImages
         case newRequest
         case profile(String)
-        case productDetails(String)
+        case productDetails(Post)
         case reportOptions(type: String, id: String)
         case reportDetails
         case reportConfirmation

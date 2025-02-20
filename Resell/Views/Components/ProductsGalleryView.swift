@@ -44,27 +44,26 @@ struct ProductsGalleryView: View {
                 }
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
-            .padding(.top, Constants.Spacing.horizontalPadding)
         }
         .onChange(of: selectedItem) { item in
             if let selectedItem {
-                navigateToProductDetails(postID: selectedItem.id)
+                navigateToProductDetails(post: selectedItem)
                 self.selectedItem = nil
             }
         }
     }
 
-    private func navigateToProductDetails(postID: String) {
+    private func navigateToProductDetails(post: Post) {
         if let existingIndex = router.path.firstIndex(where: {
             if case .productDetails = $0 {
                 return true
             }
             return false
         }) {
-            router.path[existingIndex] = .productDetails(postID)
+            router.path[existingIndex] = .productDetails(post)
             router.popTo(router.path[existingIndex])
         } else {
-            router.push(.productDetails(postID))
+            router.push(.productDetails(post))
         }
     }
 
@@ -85,8 +84,11 @@ struct ProductGalleryCell: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            CachedImageView(isImageLoaded: $isImageLoaded, imageURL: post.images.first)
-                .frame(width: cellWidth, height: cellWidth / 0.75)
+            ZStack {
+                CachedImageView(isImageLoaded: $isImageLoaded, imageURL: post.images.first)
+                    .frame(width: cellWidth, height: cellWidth / 0.75)
+            }
+
             HStack {
                 Text(post.title)
                     .font(Constants.Fonts.title3)
@@ -101,14 +103,13 @@ struct ProductGalleryCell: View {
         .frame(width: cellWidth)
         .clipped()
         .clipShape(.rect(cornerRadius: 8))
-        .scaleEffect(isImageLoaded ? CGSize(width: 1, height: 1) : CGSize(width: 1, height: 0.9), anchor: .center)
+        .opacity(isImageLoaded ? 1 : 1)
         .onTapGesture {
             selectedItem = post
         }
         .overlay {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(Constants.Colors.stroke, lineWidth: 1)
-                .scaleEffect(isImageLoaded ? CGSize(width: 1, height: 1) : CGSize(width: 1, height: 0.9), anchor: .center)
         }
     }
 }

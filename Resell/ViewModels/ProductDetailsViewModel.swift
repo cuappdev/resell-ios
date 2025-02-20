@@ -29,8 +29,10 @@ class ProductDetailsViewModel: ObservableObject {
     // MARK: - Functions
 
     func getPost(id: String) {
+        isLoading = true
+
         Task {
-            isLoading = true
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
                 let postResponse = try await NetworkManager.shared.getPostByID(id: id)
@@ -39,18 +41,29 @@ class ProductDetailsViewModel: ObservableObject {
 
                 await calculateMaxImgRatio()
                 getIsSaved()
-
-                isLoading = false
             } catch {
                 NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getPost: \(error.localizedDescription)")
-                isLoading = false
             }
         }
     }
 
+    func setPost(post: Post) {
+        item = post
+        images = post.images
+
+        Task {
+            await calculateMaxImgRatio()
+        }
+
+        getIsSaved()
+        getSimilarPostsNaive(post: post)
+    }
+
+    // Replace once backend endpoint is fix. Currently, making this call blocks all other incoming requests to our backend :(
     func getSimilarPosts(id: String) {
         Task {
             isLoadingImages = true
+            defer { isLoadingImages = false }
 
             do {
                 let postsResponse = try await NetworkManager.shared.getSimilarPostsByID(id: id)
@@ -59,15 +72,35 @@ class ProductDetailsViewModel: ObservableObject {
                 } else {
                     similarPosts = postsResponse.posts
                 }
+            } catch {
+                NetworkManager.shared.logger.error("Errror in ProductDetailsViewModel.getSimilarPosts: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func getSimilarPostsNaive(post: Post) {
+        Task {
+            do {
+                guard let category = post.categories.first else { return }
+
+                let postsResponse = try await NetworkManager.shared.getFilteredPosts(by: category)
+                var otherPosts = postsResponse.posts
+                otherPosts.removeAll { $0.id == post.id }
+
+                if otherPosts.count >= 4 {
+                    similarPosts = Array(otherPosts.prefix(4))
+                } else {
+                    similarPosts = otherPosts
+                }
 
                 isLoadingImages = false
             } catch {
-                NetworkManager.shared.logger.error("Errror in ProductDetailsViewModel.getSimilarPosts: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Errror in ProductDetailsViewModel.getSimilarPostsNaive: \(error.localizedDescription)")
                 isLoadingImages = false
             }
         }
     }
-    
+
     func updateItemSaved() {
         Task {
             do {

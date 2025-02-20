@@ -16,6 +16,8 @@ class HomeViewModel: ObservableObject {
 
     // MARK: - Properties
 
+    @Published var isLoading: Bool = false
+
     @Published var filteredItems: [Post] = []
     @Published var selectedFilter: String = "Recent" {
         didSet {
@@ -38,11 +40,14 @@ class HomeViewModel: ObservableObject {
     // MARK: - Functions
 
     func getAllPosts() {
+        isLoading = true
+
         Task {
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+            
             do {
                 let postsResponse = try await NetworkManager.shared.getAllPosts()
                 allItems = Post.sortPostsByDate(postsResponse.posts)
-
                 if selectedFilter == "Recent" {
                     filteredItems = allItems
                 } else {
@@ -55,10 +60,14 @@ class HomeViewModel: ObservableObject {
     }
 
     func getSavedPosts() {
+        isLoading = true
+
         Task {
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+
             do {
                 let postsResponse = try await NetworkManager.shared.getSavedPosts()
-                savedItems = postsResponse.posts
+                savedItems = Post.sortPostsByDate(postsResponse.posts)
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.getSavedPosts: \(error)")
             }

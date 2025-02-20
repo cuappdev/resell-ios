@@ -141,8 +141,10 @@ struct BlockedUsersView: View {
     // MARK: - Functions
 
     private func getBlockedUsers() {
+        isLoading = true
+
         Task {
-            isLoading = true
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
                 if let userID = UserSessionManager.shared.userID {
@@ -150,11 +152,8 @@ struct BlockedUsersView: View {
                 } else {
                     UserSessionManager.shared.logger.error("Error in BlockedUsersView: userID not found.")
                 }
-
-                isLoading = false
             } catch {
                 NetworkManager.shared.logger.error("Error in BlockedUsersView: \(error.localizedDescription)")
-                isLoading = false
             }
         }
     }

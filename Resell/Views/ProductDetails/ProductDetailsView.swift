@@ -16,7 +16,8 @@ struct ProductDetailsView: View {
     @EnvironmentObject var router: Router
 
     @StateObject private var viewModel = ProductDetailsViewModel()
-    @State var id: String
+
+    var post: Post
 
     // MARK: - UI
 
@@ -48,7 +49,7 @@ struct ProductDetailsView: View {
                 OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowDeleteView: $viewModel.didShowDeleteView, options: {
                     var options: [Option] = [
                         .share(url: URL(string: "https://www.google.com")!, itemName: viewModel.item?.title ?? ""),
-                        .report(type: "Post", id: id)
+                        .report(type: "Post", id: post.id)
                     ]
                     if viewModel.isUserPost() {
                         options.append(.delete)
@@ -91,10 +92,8 @@ struct ProductDetailsView: View {
             deletePostView
                 .background(Constants.Colors.white)
         }
-        .loadingView(isLoading: viewModel.isLoading)
         .onAppear {
-            viewModel.getPost(id: id)
-            viewModel.getSimilarPosts(id: id)
+            viewModel.setPost(post: post)
 
             withAnimation {
                 mainViewModel.hidesTabBar = true
@@ -256,7 +255,7 @@ struct ProductDetailsView: View {
                             .frame(width: imageSize, height: imageSize)
                             .clipShape(.rect(cornerRadius: 10))
                             .onTapGesture {
-                                changeItem(postID: item.id)
+                                changeItem(post: item)
                             }
                     }
                 }
@@ -264,11 +263,9 @@ struct ProductDetailsView: View {
         }
     }
 
-    private func changeItem(postID: String) {
-        id = postID
+    private func changeItem(post: Post) {
         viewModel.clear()
-        viewModel.getPost(id: postID)
-        viewModel.getSimilarPosts(id: postID)
+        viewModel.setPost(post: post)
 
         withAnimation {
             mainViewModel.hidesTabBar = true
@@ -282,16 +279,18 @@ struct ProductDetailsView: View {
             }
             return false
         }) {
-            router.path[existingIndex] = .productDetails(postID)
+            router.path[existingIndex] = .productDetails(post)
         } else {
-            router.push(.productDetails(postID))
+            router.push(.productDetails(post))
         }
     }
 
     private var buttonGradientView: some View {
         VStack {
             PurpleButton(text: "Contact Seller") {
-                // TODO: Chat with Seller
+                if let item = viewModel.item {
+                    navigateToChats(post: item)
+                }
             }
         }
         .frame(width: UIScreen.width, height: 50)
@@ -353,5 +352,21 @@ struct ProductDetailsView: View {
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(25)
         .presentationBackground(Constants.Colors.white)
+    }
+
+    // MARK: - Functions
+
+    private func navigateToChats(post: Post) {
+        if let existingIndex = router.path.firstIndex(where: {
+            if case .messages = $0 {
+                return true
+            }
+            return false
+        }) {
+            router.path[existingIndex] = .messages(post: post)
+            router.popTo(router.path[existingIndex])
+        } else {
+            router.push(.messages(post: post))
+        }
     }
 }

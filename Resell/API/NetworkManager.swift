@@ -29,18 +29,16 @@ class NetworkManager: APIClient {
 
     // MARK: - Template Helper Functions
 
-    /// Template function to FETCH data from URL and decodes it into a specified type `T`, with caching support.
+    /// Template function to FETCH data from URL and decodes it into a specified type `T`,
     ///
-    /// This function first checks if a cached response for the given URL is available in `URLCache`.
-    /// If cached data exists, it decodes and returns it immediately, bypassing the network request.
-    /// If there is no cached response, the function fetches data from the network, verifies the
+    /// The function fetches data from the network, verifies the
     /// HTTP status code, caches the response, decodes the data, and then returns it as a decoded model.
     ///
     /// - Parameter url: The URL from which data should be fetched.
     /// - Returns: A publisher that emits a decoded instance of type `T` or an error if the decoding or network request fails.
     ///
-    func get<T: Decodable>(url: URL) async throws -> T {
-        let request = try createRequest(url: url, method: "GET")
+    func get<T: Decodable>(url: URL, isRefresh: Bool = false) async throws -> T {
+        let request = try createRequest(url: url, method: "GET", isRefresh: isRefresh)
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
@@ -102,13 +100,15 @@ class NetworkManager: APIClient {
         try handleResponse(data: data, response: response)
     }
 
-    private func createRequest(url: URL, method: String, body: Data? = nil) throws -> URLRequest {
+    private func createRequest(url: URL, method: String, body: Data? = nil, isRefresh: Bool = false) throws -> URLRequest {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        if let accessToken = UserSessionManager.shared.accessToken {
+        if let accessToken = UserSessionManager.shared.accessToken, !isRefresh {
             request.setValue("\(accessToken)", forHTTPHeaderField: "Authorization")
+        } else if let refreshToken = UserSessionManager.shared.refreshToken, isRefresh {
+            request.setValue("\(refreshToken)", forHTTPHeaderField: "Authorization")
         }
 
         request.httpBody = body
@@ -144,6 +144,12 @@ class NetworkManager: APIClient {
         let url = try constructURL(endpoint: "/auth/")
 
         return try await get(url: url)
+    }
+
+    func refreshToken() async throws -> UserSession {
+        let url = try constructURL(endpoint: "/auth/refresh/")
+
+        return try await get(url: url, isRefresh: true)
     }
 
     func getUserSession(id: String) async throws -> UserSessionData {
@@ -182,6 +188,13 @@ class NetworkManager: APIClient {
         let url = try constructURL(endpoint: "/user/id/\(id)/")
 
         return try await get(url: url)
+    }
+
+    func getUserByEmail(email: String) async throws -> UserResponse {
+        let url = try constructURL(endpoint: "/user/email/")
+        let emailBody = UserEmailBody(email: email)
+
+        return try await post(url: url, body: emailBody)
     }
 
     func updateUserProfile(edit: EditUserBody) async throws -> UserResponse {
@@ -340,5 +353,13 @@ class NetworkManager: APIClient {
         let url = try constructURL(endpoint: "/report/message/")
 
         try await post(url: url, body: reportBody)
+    }
+
+    // MARK: - Other Networking Functions
+
+    func uploadImage(image: ImageBody) async throws -> ImageResponse {
+        let url = try constructURL(endpoint: "/image/")
+
+        return try await post(url: url, body: image)
     }
 }
