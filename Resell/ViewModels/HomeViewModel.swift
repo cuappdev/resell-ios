@@ -73,7 +73,7 @@ class HomeViewModel: ObservableObject {
             }
         }
     }
-
+    // TODO: We need support for multiple filters
     func filterPosts(by filter: String) {
         Task {
             do {
