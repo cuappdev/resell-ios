@@ -10,6 +10,8 @@ import SwiftUI
 struct FilterView: View {
     
     @State var presentPopup = false
+    @State private var lowValue: Double = 0
+    @State private var highValue: Double = 1000
 
     var body: some View {
         ZStack{
@@ -25,6 +27,7 @@ struct FilterView: View {
                         presentPopup.toggle()
                     } label: {
                         
+                        
                         Text("Any")
                             .font(.custom("Rubik-Regular", size: 20))
                             .foregroundStyle(.gray)
@@ -39,12 +42,39 @@ struct FilterView: View {
                     .frame(width: 344, height: 1)
                     .padding(.top, 12)
                 VStack(alignment: .leading){
+                    VStack{
                     Text("Price Range")
                         .font(.custom("Rubik-Medium", size: 20))
-                    
-                    Text("Any")
-                        .font(.custom("Rubik-Regular", size: 17))
                         
+                    
+                    // instead of any this should read the value of the slider
+                    
+                    if lowValue == 0 && highValue == 1000 {
+                        Text("Any")
+                            .font(.custom("Rubik-Regular", size: 20))
+                            .foregroundStyle(.gray)
+                    } else if lowValue == 0 {
+                        Text("Up to $\(Int(highValue))")
+                            .font(.custom("Rubik-Regular", size: 20))
+                            .foregroundStyle(.gray)
+                        
+                    } else if highValue == 1000 {
+                        Text("\(Int(lowValue)) +")
+                            .font(.custom("Rubik-Regular", size: 20))
+                            .foregroundStyle(.gray)
+                        
+                    } else {
+                        Text("$\(Int(lowValue)) to $\(Int(highValue))")
+                            .font(.custom("Rubik-Regular", size: 20))
+                            .foregroundStyle(.gray)
+                        }
+                    }
+                    .padding(.leading, 40)
+                    
+                    // SLIDER
+                    RangeSlider(lowValue: $lowValue, highValue: $highValue, range: 0...1000)
+                            .padding()
+
                 }
             }
             
@@ -86,6 +116,58 @@ var sortByView: some View {
         )
         .shadow(color: Color.gray.opacity(0.3), radius: 5, x: 0, y: 2)
 
+}
+
+
+
+struct RangeSlider: View {
+    @Binding var lowValue: Double
+    @Binding var highValue: Double
+    let range: ClosedRange<Double>
+    let step: Double = 5 // Define the step value
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                Rectangle()
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(width: 360, height: 8)
+                    .cornerRadius(4)
+                
+                
+                HStack(spacing: 0) {
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 28, height: 28)
+                        .shadow(radius: 4)
+                        .offset(x: CGFloat(self.lowValue - self.range.lowerBound) / CGFloat(self.range.upperBound - self.range.lowerBound) * geometry.size.width)
+                        .gesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    let newValue = Double(value.location.x / geometry.size.width) * (self.range.upperBound - self.range.lowerBound) + self.range.lowerBound
+                                    let steppedValue = round(newValue / self.step) * self.step
+                                    self.lowValue = min(max(steppedValue, self.range.lowerBound), self.highValue - self.step)
+                                }
+                        )
+                    
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 28, height: 28)
+                        .shadow(radius: 4)
+                        .offset(x: CGFloat(self.highValue - self.range.lowerBound) / CGFloat(self.range.upperBound - self.range.lowerBound) * geometry.size.width - 48)
+                        .gesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    let newValue = Double(value.location.x / geometry.size.width) * (self.range.upperBound - self.range.lowerBound) + self.range.lowerBound
+                                    let steppedValue = round(newValue / self.step) * self.step
+                                    self.highValue = max(min(steppedValue, self.range.upperBound), self.lowValue + self.step)
+                                }
+                        )
+                }
+            }
+        }
+        .frame(height: 44)
+    }
 }
 
 #Preview {
