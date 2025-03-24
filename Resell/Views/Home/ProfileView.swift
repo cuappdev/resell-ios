@@ -62,7 +62,7 @@ struct ProfileView: View {
 
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    router.push(.search(viewModel.user?.id))
+                    router.push(.search(viewModel.user?.firebaseUid))
                 } label: {
                     Icon(image: "search")
                 }

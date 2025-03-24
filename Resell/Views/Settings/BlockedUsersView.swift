@@ -26,7 +26,7 @@ struct BlockedUsersView: View {
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: 12) {
-                ForEach(blockedUsers, id: \.self.id) { user in
+                ForEach(blockedUsers, id: \.self.firebaseUid) { user in
                     blockedUserInfoView(user: user)
                 }
                 .padding(.horizontal, Constants.Spacing.horizontalPadding)
@@ -90,7 +90,7 @@ struct BlockedUsersView: View {
             }
         }
         .onTapGesture {
-            router.push(.profile(user.id))
+            router.push(.profile(user.firebaseUid))
         }
     }
 
@@ -147,13 +147,13 @@ struct BlockedUsersView: View {
             defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
-                if let userID = UserSessionManager.shared.userID {
-                    blockedUsers = try await NetworkManager.shared.getBlockedUsers(id: userID).users
+                if let user = GoogleAuthManager.shared.user {
+                    blockedUsers = try await NetworkManager.shared.getBlockedUsers(id: user.firebaseUid).users
                 } else {
-                    UserSessionManager.shared.logger.error("Error in BlockedUsersView: userID not found.")
+                    GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User not available.")
                 }
             } catch {
-                NetworkManager.shared.logger.error("Error in BlockedUsersView: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error.localizedDescription)")
             }
         }
     }
@@ -161,7 +161,7 @@ struct BlockedUsersView: View {
     private func unblockUser() {
         Task {
             do {
-                if let id = selectedUser?.id {
+                if let id = selectedUser?.firebaseUid {
                     let unblocked = UnblockUserBody(unblocked: id)
                     let _ = try await NetworkManager.shared.unblockUser(unblocked: unblocked)
                     

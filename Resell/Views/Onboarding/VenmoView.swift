@@ -32,7 +32,7 @@ struct VenmoView: View {
             Spacer()
 
             PurpleButton(isLoading: viewModel.isLoading, isActive: !viewModel.venmoHandle.cleaned().isEmpty,text: "Continue") {
-                viewModel.createNewUser()
+                // viewModel.createNewUser()
             }
 
             Button(action: {

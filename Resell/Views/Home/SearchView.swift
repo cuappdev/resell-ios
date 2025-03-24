@@ -139,7 +139,7 @@ struct SearchView: View {
                 let postsResponse = try await NetworkManager.shared.getSearchedPosts(with: searchText)
 
                 if let userID {
-                    searchedItems = postsResponse.posts.filter { $0.user?.id == userID }
+                    searchedItems = postsResponse.posts.filter { $0.user?.firebaseUid == userID }
                 } else {
                     searchedItems = postsResponse.posts
                 }
