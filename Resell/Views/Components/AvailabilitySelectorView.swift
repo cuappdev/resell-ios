@@ -19,7 +19,7 @@ struct AvailabilitySelectorView: View {
     @State private var isMovingForward: Bool = true
 
     @Binding var isPresented: Bool
-    @Binding var selectedDates: [AvailabilityBlock]
+    @Binding var selectedDates: [Availability]
     @Binding var didSubmit: Bool
 
     var isEditing: Bool = true
@@ -176,7 +176,7 @@ struct AvailabilitySelectorView: View {
 
     private func initializeSelectedCells() {
         for block in selectedDates {
-            let startDate = block.startDate.dateValue()
+            let startDate = block.startDate
 
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "E \nMMM d, yyyy"
@@ -230,7 +230,7 @@ struct AvailabilitySelectorView: View {
         isPresented = false
     }
 
-    private func createDate(from dateString: String, timeString: String) -> AvailabilityBlock? {
+    private func createDate(from dateString: String, timeString: String) -> Availability? {
         let cleanDateString = dateString.replacingOccurrences(of: "\n", with: " ")
         let cleanTimeString = timeString.replacingOccurrences(of: " Top", with: "").replacingOccurrences(of: " Bottom", with: "")
 
@@ -246,7 +246,7 @@ struct AvailabilitySelectorView: View {
                 parsedDate = parsedDate.adding(minutes: 30)
             }
 
-            return AvailabilityBlock(startDate: Timestamp(date: parsedDate))
+            return Availability(startDate: parsedDate, endDate: parsedDate.adding(minutes: 30))
         } else {
             return nil
         }

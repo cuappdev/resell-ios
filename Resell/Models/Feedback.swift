@@ -7,10 +7,6 @@
 
 import Foundation
 
-struct FeedbackResponse: Codable {
-    let feedbacks: [Feedback]
-}
-
 struct Feedback: Codable {
     let id: String
     let description: String
@@ -23,3 +19,8 @@ struct FeedbackBody: Codable {
     let images: [String]
     let userId: String
 }
+
+struct FeedbackResponse: Codable {
+    let feedbacks: [Feedback]
+}
+

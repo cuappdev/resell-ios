@@ -10,6 +10,7 @@ import FirebaseMessaging
 import GoogleSignIn
 import SwiftUI
 import UserNotifications
+import DeviceCheck
 
 
 @main
@@ -38,6 +39,23 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     ) -> Bool {
         FirebaseApp.configure()
         FirebaseNotificationService.shared.configure()
+
+        // print device purchasingID
+        if let deviceID = UIDevice.current.identifierForVendor?.uuidString {
+            print("DEVICE ID \(deviceID)")
+        }
+
+        // print ephemeral id
+        DCDevice.current.generateToken {
+            (data, error) in
+            guard let data = data else {
+                return
+            }
+
+            let ephemeralID = data
+        }
+
+
         return true
     }
 
@@ -46,7 +64,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
         Messaging.messaging().apnsToken = deviceToken
-        FirebaseNotificationService.shared.getFCMRegToken()
+        Task {
+            await FirebaseNotificationService.shared.getFCMRegToken()
+        }
     }
 
     func application(
