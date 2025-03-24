@@ -158,8 +158,8 @@ class ProductDetailsViewModel: ObservableObject {
     }
 
     func isUserPost() -> Bool {
-        if let userId = UserSessionManager.shared.userID,
-           let itemUserId = item?.user?.id {
+        if let userId = GoogleAuthManager.shared.user?.firebaseUid,
+           let itemUserId = item?.user?.firebaseUid {
             return userId == itemUserId
         }
 

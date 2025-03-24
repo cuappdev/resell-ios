@@ -52,7 +52,7 @@ class ReportViewModel: ObservableObject {
             defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
-                if let userID = user?.id,
+                if let userID = user?.firebaseUid,
                    let postID = post?.id {
                     let reportBody = ReportPostBody(reported: userID, post: postID, reason: selectedOption)
                     try await NetworkManager.shared.reportPost(reportBody: reportBody)
@@ -70,7 +70,7 @@ class ReportViewModel: ObservableObject {
             defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
-                if let userID = user?.id {
+                if let userID = user?.firebaseUid {
                     let reportBody = ReportUserBody(reported: userID, reason: selectedOption)
                     try await NetworkManager.shared.reportUser(reportBody: reportBody)
                 }
@@ -87,7 +87,7 @@ class ReportViewModel: ObservableObject {
             defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
-                if let id = user?.id {
+                if let id = user?.firebaseUid {
                     let blocked = BlockUserBody(blocked: id)
                     try await NetworkManager.shared.blockUser(blocked: blocked)
                 }

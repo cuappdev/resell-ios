@@ -17,11 +17,11 @@ class NetworkManager: APIClient {
 
     // MARK: - Error Logger for Networking
 
-    let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.cornellappdev.Resell", category: "Network")
+    let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.cornellappdev.Resell", category: #file)
 
     // MARK: - Properties
 
-    private let hostURL: String = Keys.prodServerURL
+    private let hostURL: String = Keys.devServerURL
 
     // MARK: - Init
 
@@ -37,8 +37,8 @@ class NetworkManager: APIClient {
     /// - Parameter url: The URL from which data should be fetched.
     /// - Returns: A publisher that emits a decoded instance of type `T` or an error if the decoding or network request fails.
     ///
-    func get<T: Decodable>(url: URL, isRefresh: Bool = false) async throws -> T {
-        let request = try createRequest(url: url, method: "GET", isRefresh: isRefresh)
+    func get<T: Decodable>(url: URL) async throws -> T {
+        let request = try createRequest(url: url, method: "GET")
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
@@ -100,15 +100,13 @@ class NetworkManager: APIClient {
         try handleResponse(data: data, response: response)
     }
 
-    private func createRequest(url: URL, method: String, body: Data? = nil, isRefresh: Bool = false) throws -> URLRequest {
+    private func createRequest(url: URL, method: String, body: Data? = nil) throws -> URLRequest {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        if let accessToken = UserSessionManager.shared.accessToken, !isRefresh {
-            request.setValue("\(accessToken)", forHTTPHeaderField: "Authorization")
-        } else if let refreshToken = UserSessionManager.shared.refreshToken, isRefresh {
-            request.setValue("\(refreshToken)", forHTTPHeaderField: "Authorization")
+        if let accessToken = GoogleAuthManager.shared.accessToken {
+            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         }
 
         request.httpBody = body
@@ -140,26 +138,20 @@ class NetworkManager: APIClient {
 
     // MARK: - Auth Networking Functions
 
+    func authorize(authorizeBody: AuthorizeBody) async throws -> User? {
+        let url = try constructURL(endpoint: "/auth/")
+
+        return try await post(url: url, body: authorizeBody)
+    }
+
     func getUser() async throws -> UserResponse {
         let url = try constructURL(endpoint: "/auth/")
 
         return try await get(url: url)
     }
 
-    func refreshToken() async throws -> UserSession {
-        let url = try constructURL(endpoint: "/auth/refresh/")
-
-        return try await get(url: url, isRefresh: true)
-    }
-
-    func getUserSession(id: String) async throws -> UserSessionData {
-        let url = try constructURL(endpoint: "/auth/sessions/\(id)/")
-
-        return try await get(url: url)
-    }
-
     func createUser(user: CreateUserBody) async throws {
-        let url = try constructURL(endpoint: "/auth/")
+        let url = try constructURL(endpoint: "/user/create")
 
         try await post(url: url, body: user)
     }
@@ -190,12 +182,12 @@ class NetworkManager: APIClient {
         return try await get(url: url)
     }
 
-    func getUserByEmail(email: String) async throws -> UserResponse {
-        let url = try constructURL(endpoint: "/user/email/")
-        let emailBody = UserEmailBody(email: email)
-
-        return try await post(url: url, body: emailBody)
-    }
+//    func getUserByEmail(email: String) async throws -> UserResponse {
+//        let url = try constructURL(endpoint: "/user/email/")
+//        let emailBody = UserEmailBody(email: email)
+//
+//        return try await post(url: url, body: emailBody)
+//    }
 
     func updateUserProfile(edit: EditUserBody) async throws -> UserResponse {
         let url = try constructURL(endpoint: "/user/")
@@ -353,6 +345,20 @@ class NetworkManager: APIClient {
         let url = try constructURL(endpoint: "/report/message/")
 
         try await post(url: url, body: reportBody)
+    }
+
+    // MARK: - Chat Networking Functions
+
+    func sendMessage(chatId: String, messageBody: MessageBody) async throws {
+        let url = try constructURL(endpoint: "/chat/\(chatId)/")
+
+        return try await post(url: url, body: messageBody)
+    }
+
+    func updateMessage(chatId: String, messageId: String, messageBody: UpdateMessageBody) async throws {
+        let url = try constructURL(endpoint: "/chat/\(chatId)/message/\(messageId)/")
+
+        return try await post(url: url, body: messageBody)
     }
 
     // MARK: - Other Networking Functions

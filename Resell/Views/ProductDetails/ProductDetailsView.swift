@@ -199,7 +199,7 @@ struct ProductDetailsView: View {
 
     private var sellerProfileView: some View {
         Button {
-            router.push(.profile(viewModel.item?.user?.id ?? ""))
+            router.push(.profile(viewModel.item?.user?.firebaseUid ?? ""))
         } label: {
             HStack {
                 KFImage(viewModel.item?.user?.photoUrl)
@@ -288,8 +288,14 @@ struct ProductDetailsView: View {
     private var buttonGradientView: some View {
         VStack {
             PurpleButton(text: "Contact Seller") {
-                if let item = viewModel.item {
-                    navigateToChats(post: item)
+                if let item = viewModel.item, let user = item.user, let me = GoogleAuthManager.shared.user {
+                    let chatInfo = SimpleChatInfo(
+                        listingId: item.id,
+                        buyerId: me.firebaseUid,
+                        sellerId: user.firebaseUid
+                    )
+
+                    navigateToChats(simpleChatInfo: chatInfo)
                 }
             }
         }
@@ -356,17 +362,17 @@ struct ProductDetailsView: View {
 
     // MARK: - Functions
 
-    private func navigateToChats(post: Post) {
+    private func navigateToChats(simpleChatInfo: SimpleChatInfo) {
         if let existingIndex = router.path.firstIndex(where: {
             if case .messages = $0 {
                 return true
             }
             return false
         }) {
-            router.path[existingIndex] = .messages(post: post)
+            router.path[existingIndex] = .messages(chatInfo: simpleChatInfo)
             router.popTo(router.path[existingIndex])
         } else {
-            router.push(.messages(post: post))
+            router.push(.messages(chatInfo: simpleChatInfo))
         }
     }
 }

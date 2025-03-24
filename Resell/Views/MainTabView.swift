@@ -40,7 +40,7 @@ struct MainTabView: View {
                     .transition(.opacity)
                     .environmentObject(router)
                 } else {
-                    LoginView(userDidLogin: $mainViewModel.userDidLogin)
+                    LoginView()
                         .transition(.opacity)
                         .environmentObject(onboardingViewModel)
                         .environmentObject(router)
@@ -56,9 +56,8 @@ struct MainTabView: View {
                         .environmentObject(newListingViewModel)
                 case .newRequest:
                     NewRequestView()
-                case .messages(let post):
-                    MessagesView(post: post)
-                        .environmentObject(chatsViewModel)
+                case .messages(let chatInfo):
+                    MessagesView(chatInfo: chatInfo)
                 case .productDetails(let item):
                     ProductDetailsView(post: item)
                 case .reportConfirmation:
@@ -83,12 +82,12 @@ struct MainTabView: View {
                 case .notifications:
                     NotificationsSettingsView()
                 case .login:
-                    LoginView(userDidLogin: $mainViewModel.userDidLogin)
+                    LoginView()
                         .environmentObject(onboardingViewModel)
                 case .profile(let id):
                     ExternalProfileView(userID: id)
-                case .setupProfile(let netid, let givenName, let familyName, let email, let googleId):
-                    SetupProfileView(userDidLogin: $mainViewModel.userDidLogin, netid: netid, givenName: givenName, familyName: familyName, email: email, googleID: googleId)
+                case .setupProfile:
+                    SetupProfileView(userDidLogin: $mainViewModel.userDidLogin, user: GoogleAuthManager.shared.user)
                         .environmentObject(onboardingViewModel)
                 case .venmo:
                     VenmoView(userDidLogin: $mainViewModel.userDidLogin)

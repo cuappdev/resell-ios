@@ -36,6 +36,9 @@ struct ChatsView: View {
         .onAppear {
             viewModel.getAllChats()
         }
+        .onDisappear {
+            FirestoreManager.shared.stopListening()
+        }
     }
 
     private var headerView: some View {
@@ -52,9 +55,13 @@ struct ChatsView: View {
     private var filtersView: some View {
         HStack {
             ForEach(Constants.chats, id: \.id) { filter in
-                let unreadCount = filter.title == "Purchases" ? viewModel.purchaseUnread : viewModel.offerUnread
-                FilterButton(filter: filter, unreadChats: unreadCount, isSelected: viewModel.selectedTab == filter.title) {
-                    viewModel.selectedTab = filter.title
+                let unreadCount = filter.title == ChatTab.purchases.rawValue ? viewModel.purchaseUnread : viewModel.offerUnread
+                FilterButton(filter: filter, unreadChats: unreadCount, isSelected: viewModel.selectedTab.rawValue == filter.title) {
+                    if filter.title == ChatTab.purchases.rawValue {
+                        viewModel.selectedTab = .purchases
+                    } else {
+                        viewModel.selectedTab = .offers
+                    }
                 }
             }
         }
@@ -65,21 +72,20 @@ struct ChatsView: View {
     private var chatsView: some View {
         ScrollView(.vertical) {
             VStack(alignment: .center, spacing: 24) {
-                ForEach(viewModel.selectedTab == "Purchases" ? viewModel.purchaseChats : viewModel.offerChats) { chatPreview in
-                    chatPreviewRow(chatPreview: chatPreview)
+                ForEach(viewModel.selectedTab.rawValue == ChatTab.purchases.rawValue ? viewModel.purchaseChats : viewModel.offerChats) { chat in
+                    chatPreviewRow(chat: chat)
                 }
             }
             .padding(.top, 12)
 
             Spacer()
-
         }
         .frame(width: UIScreen.width)
     }
 
-    private func chatPreviewRow(chatPreview: ChatPreview) -> some View {
+    private func chatPreviewRow(chat: Chat) -> some View {
         HStack(spacing: 12) {
-            KFImage(chatPreview.image)
+            KFImage(chat.other.photoUrl)
                 .placeholder {
                     ShimmerView()
                         .frame(width: 52, height: 52)
@@ -92,13 +98,13 @@ struct ChatsView: View {
 
             VStack(alignment: .leading) {
                 HStack {
-                    Text(chatPreview.sellerName)
+                    Text("\(chat.other.givenName) \(chat.other.familyName)")
                         .font(Constants.Fonts.title1)
                         .foregroundStyle(Constants.Colors.black)
                         .lineLimit(1)
                         .truncationMode(.tail)
 
-                    Text(chatPreview.recentItem["title"] as? String ?? "")
+                    Text(chat.post.title)
                         .font(Constants.Fonts.title4)
                         .foregroundStyle(Constants.Colors.secondaryGray)
                         .lineLimit(1)
@@ -112,7 +118,7 @@ struct ChatsView: View {
                 }
 
                 HStack(spacing: 0) {
-                    Text(chatPreview.recentMessage)
+                    Text(chat.lastMessage)
                         .font(Constants.Fonts.title4)
                         .foregroundStyle(Constants.Colors.secondaryGray)
                         .lineLimit(1)
@@ -120,7 +126,7 @@ struct ChatsView: View {
 
                     Text(" • ")
 
-                    Text(Date.timeAgo(from: chatPreview.recentMessageTime))
+                    Text(Date.timeAgo(from: chat.updatedAt))
                         .font(Constants.Fonts.title4)
                         .foregroundStyle(Constants.Colors.secondaryGray)
                 }
@@ -136,7 +142,7 @@ struct ChatsView: View {
         .padding(.leading, 15)
         .background(Constants.Colors.white)
         .overlay(alignment: .leading) {
-            if !chatPreview.viewed {
+            if !chat.messages.filter({ $0.read }).isEmpty {
                 Circle()
                     .frame(width: 10, height: 10)
                     .foregroundStyle(Constants.Colors.resellPurple)
@@ -144,10 +150,25 @@ struct ChatsView: View {
             }
         }
         .onTapGesture {
-            viewModel.selectedChat = chatPreview
-            viewModel.updateChatViewed()
+            guard let me = GoogleAuthManager.shared.user else {
+                GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User not available.")
+                return
+            }
+
+            viewModel.selectedChat = chat
+            // TODO: update chat
+//            viewModel.updateChatViewed()
             viewModel.getSelectedChatPost { post in
-                router.push(.messages(post: post))
+                guard let other = post.user else { return }
+
+                // TODO: FIX
+                let chatInfo = SimpleChatInfo(
+                    listingId: post.id,
+                    buyerId: me.firebaseUid,
+                    sellerId: other.firebaseUid
+                )
+
+                router.push(.messages(chatInfo: chatInfo))
             }
         }
     }
