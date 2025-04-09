@@ -126,7 +126,7 @@
 		D0961AF82D6E28D600DCC293 /* MessageDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0961AF72D6E28D300DCC293 /* MessageDocument.swift */; };
 		D0961AFC2D6E42D500DCC293 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0961AFB2D6E42D100DCC293 /* Message.swift */; };
 		D0961AFE2D6E47F500DCC293 /* Chat.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0961AFD2D6E47F200DCC293 /* Chat.swift */; };
-		D0A595242D91AE2D002C9E26 /* resell-service.json in Resources */ = {isa = PBXBuildFile; fileRef = D0A595232D91AE2D002C9E26 /* resell-service.json */; };
+		D0B4A2602DA7184C00A1722C /* resell-service.json in Resources */ = {isa = PBXBuildFile; fileRef = D0B4A25F2DA7184C00A1722C /* resell-service.json */; };
 		D0DAEF292D6F607300641151 /* MessageCluster.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0DAEF282D6F606C00641151 /* MessageCluster.swift */; };
 		D0DAEF2B2D6FF48800641151 /* MessagesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0DAEF2A2D6FF47E00641151 /* MessagesViewModel.swift */; };
 /* End PBXBuildFile section */
@@ -255,7 +255,7 @@
 		D0961AF72D6E28D300DCC293 /* MessageDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageDocument.swift; sourceTree = "<group>"; };
 		D0961AFB2D6E42D100DCC293 /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
 		D0961AFD2D6E47F200DCC293 /* Chat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chat.swift; sourceTree = "<group>"; };
-		D0A595232D91AE2D002C9E26 /* resell-service.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "resell-service.json"; sourceTree = "<group>"; };
+		D0B4A25F2DA7184C00A1722C /* resell-service.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "resell-service.json"; sourceTree = "<group>"; };
 		D0DAEF282D6F606C00641151 /* MessageCluster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageCluster.swift; sourceTree = "<group>"; };
 		D0DAEF2A2D6FF47E00641151 /* MessagesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -341,7 +341,7 @@
 			isa = PBXGroup;
 			children = (
 				D051D8162D7E2E0500C089AF /* GoogleService-Info.plist */,
-				D0A595232D91AE2D002C9E26 /* resell-service.json */,
+				D0B4A25F2DA7184C00A1722C /* resell-service.json */,
 			);
 			path = Supporting;
 			sourceTree = "<group>";
@@ -758,7 +758,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D0A595242D91AE2D002C9E26 /* resell-service.json in Resources */,
+				D0B4A2602DA7184C00A1722C /* resell-service.json in Resources */,
 				D051D8172D7E2E0500C089AF /* GoogleService-Info.plist in Resources */,
 				2C9EAF702CF26DA00010A44C /* Rubik-Regular.ttf in Resources */,
 				2C9B4D0C2C90EF1D0029DF61 /* Launch Screen.storyboard in Resources */,
