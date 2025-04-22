@@ -20,14 +20,14 @@ struct User: Codable {
     let stars: String
     let numReviews: Int
     let photoUrl: URL
-    let venmoHandle: String
+    let venmoHandle: String?
     let email: String
     let googleId: String
     let bio: String
-    let posts: [Post]
-    let saved: [String]
-    let feedbacks: [Feedback]
-    let requests: [String]
+    let posts: [Post]?
+    let saved: [String]?
+    let feedbacks: [Feedback]?
+    let requests: [String]?
     let blocking: [String]?
     let blockers: [String]?
     let reports: [String]?

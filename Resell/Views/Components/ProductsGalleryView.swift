@@ -84,10 +84,9 @@ struct ProductGalleryCell: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ZStack {
-                CachedImageView(isImageLoaded: $isImageLoaded, imageURL: post.images.first)
-                    .frame(width: cellWidth, height: cellWidth / 0.75)
-            }
+            let url = URL(string: post.images.first ?? "")
+            CachedImageView(isImageLoaded: $isImageLoaded, imageURL: url)
+                .frame(width: cellWidth, height: cellWidth / 0.75)
 
             HStack {
                 Text(post.title)
@@ -99,6 +98,7 @@ struct ProductGalleryCell: View {
                     .foregroundStyle(Constants.Colors.black)
             }
             .padding(8)
+            .background(Constants.Colors.white)
         }
         .frame(width: cellWidth)
         .clipped()
