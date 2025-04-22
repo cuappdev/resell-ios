@@ -27,7 +27,6 @@ class GoogleAuthManager {
         didSet {
             if let token = accessToken {
                 KeychainManager.shared.save(token, forKey: "accessToken")
-                print("SET TOKEN")
             } else {
                 KeychainManager.shared.delete(forKey: "accessToken")
             }
@@ -85,7 +84,6 @@ class GoogleAuthManager {
 
         // Update accessToken and authorize the user with backend
         self.accessToken = try await Auth.auth().currentUser?.getIDToken(forcingRefresh: true)
-//        print(try await Auth.auth().currentUser?.getIDToken())
         print("accessToken:", self.accessToken ?? "")
     }
 

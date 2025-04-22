@@ -25,22 +25,22 @@ extension MessagesView {
 
         init(simpleChatInfo: SimpleChatInfo) {
             self.simpleChatInfo = simpleChatInfo
-
-            Task { [weak self] in
-                guard let self else { return }
-
-                chatInfo = try await simpleChatInfo.toChatInfo()
-            }
         }
 
         /// Subscribe to chat updates for this chat, needs a chatId before it can be subscribed to
         func subscribeToChat() {
-            guard let chatId = self.chatId else { return }
+            guard let chatId else { return }
 
             FirestoreManager.shared.subscribeToChat(chatId) { [weak self] chats in
                 guard !chats.isEmpty, let chat = chats.first, let self else { return }
 
-                messageClusters = clusterMessages(chat.messages)
+                Task {
+                    await MainActor.run { [weak self] in
+                        guard let self else { return }
+
+                        messageClusters = clusterMessages(chat.messages)
+                    }
+                }
             }
         }
 
@@ -52,7 +52,7 @@ extension MessagesView {
             startDate: Date? = nil,
             endDate: Date? = nil
         ) async throws {
-            guard let user = GoogleAuthManager.shared.user else { return }
+            guard let user = GoogleAuthManager.shared.user, let chatId = self.chatId else { return }
 
             var imageURLs: [String] = []
 
@@ -60,8 +60,6 @@ extension MessagesView {
                 let url = try await uploadImage(imageBase64: image)
                 imageURLs.append(url)
             }
-
-            let chatId = getOrCreateChatId()
 
             let messageBody = MessageBody(
                 type: .chat,
@@ -77,14 +75,40 @@ extension MessagesView {
             )
 
             try await NetworkManager.shared.sendMessage(chatId: chatId, messageBody: messageBody)
+
+            if FirestoreManager.shared.listener == nil {
+                subscribeToChat()
+            }
         }
 
         /// Send a chat message contain text, images, or both
         func sendMessage(text: String? = nil, imagesBase64: [String]? = nil) async throws {
-            // At least one cant be empty
-            guard let text = text, let imagesBase64 = imagesBase64, !text.isEmpty || !imagesBase64.isEmpty else { return }
+            guard let user = GoogleAuthManager.shared.user else { return }
+            let otherUser = simpleChatInfo.buyerId == user.firebaseUid ? simpleChatInfo.sellerId : simpleChatInfo.buyerId
 
-            try await self.sendGenericMessage(text: text, imagesBase64: imagesBase64)
+            // At least one cant be empty
+            let unwrappedText = text ?? ""
+            let unwrappedImages = imagesBase64 ?? []
+            guard !unwrappedText.isEmpty || !unwrappedImages.isEmpty else { return }
+
+            Task {
+                await MainActor.run {
+                    var addedToACluster = false
+                    if var lastCluster = messageClusters.last, let lastMessage = lastCluster.messages.last {
+                        if lastMessage.timestamp.addingTimeInterval(3600) >= Date() {
+                            lastCluster.messages.append(ChatMessage(timestamp: Date(), read: false, fromUser: true, confirmed: false, text: unwrappedText, images: unwrappedImages))
+                            messageClusters[messageClusters.count - 1] = lastCluster // Replace the last cluster
+                            addedToACluster = true
+                        }
+                    }
+
+                    if !addedToACluster {
+                        messageClusters.append(MessageCluster(id: UUID().uuidString, location: .right, messages: [ChatMessage(timestamp: Date(), read: false, fromUser: true, confirmed: false, text: unwrappedText, images: unwrappedImages)]))
+                    }
+                }
+            }
+
+            try await self.sendGenericMessage(text: unwrappedText, imagesBase64: unwrappedImages)
         }
 
         /// Send an availability message
@@ -104,40 +128,47 @@ extension MessagesView {
 
         /// Cluster messages by sender
         private func clusterMessages(_ messages: [Message]) -> [MessageCluster] {
-            guard let currentUserId = GoogleAuthManager.shared.user?.firebaseUid else { return [] }
+            // Sort messages by timestamp
+            let sortedMessages = messages.sorted(by: { $0.timestamp < $1.timestamp })
 
             var clusters: [MessageCluster] = []
             var currentBatch: [Message] = []
-            var lastSenderId: String? = nil
+            var lastSenderIsUser: Bool? = nil
+            var lastMessageTimestamp: Date? = nil
 
-            for message in messages {
-                // If sender changed, create a new cluster with accumulated messages
-                if let lastId = lastSenderId, lastId != message.from.firebaseUid, let first = currentBatch.first {
-                    let isFromCurrentUser = lastId == currentUserId
+            for message in sortedMessages {
+                // Check if we should create a new cluster:
+                // 1. If sender changed (isUser changed)
+                // 2. If time difference > 60 minutes (3600 seconds)
+                let shouldCreateNewCluster =
+                (lastSenderIsUser != nil && lastSenderIsUser != message.fromUser) ||
+                    (lastMessageTimestamp != nil &&
+                     message.timestamp.timeIntervalSince(lastMessageTimestamp!) > 3600)
+
+                if shouldCreateNewCluster, !currentBatch.isEmpty, let first = currentBatch.first {
                     clusters.append(
                         MessageCluster(
                             id: UUID().uuidString,
-                            sender: .user(user: first.from),
-                            location: isFromCurrentUser ? .right : .left,
+                            location: first.fromUser ? .right : .left,
                             messages: currentBatch
                         )
                     )
+
                     currentBatch = []
                 }
 
                 // Add message to current batch
                 currentBatch.append(message)
-                lastSenderId = message.from.firebaseUid
+                lastSenderIsUser = message.fromUser
+                lastMessageTimestamp = message.timestamp
             }
 
             // Don't forget the last batch
-            if let lastId = lastSenderId, let first = currentBatch.first {
-                let isFromCurrentUser = lastId == currentUserId
+            if !currentBatch.isEmpty, let first = currentBatch.first {
                 clusters.append(
                     MessageCluster(
                         id: UUID().uuidString,
-                        sender: .user(user: first.from),
-                        location: isFromCurrentUser ? .right : .left,
+                        location: first.fromUser ? .right : .left,
                         messages: currentBatch
                     )
                 )
@@ -155,10 +186,11 @@ extension MessagesView {
         }
 
         /// Get the post id from the chat if it exists
-        private func getOrCreateChatId() -> String {
-            let chatId = self.chatId ?? UUID().uuidString
-            self.chatId = chatId
-            return chatId
+        func getOrCreateChatId() async throws {
+            let chatId = try await FirestoreManager.shared.findChatId(listingId: simpleChatInfo.listingId, buyerId: simpleChatInfo.buyerId, sellerId: simpleChatInfo.sellerId)
+
+
+            self.chatId = chatId ?? UUID().uuidString
         }
 
         /// Parse the Venmo URL

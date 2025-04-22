@@ -13,6 +13,7 @@ struct ErrorResponse: Codable, Error, Equatable, LocalizedError {
 
     static let accountCreationNeeded = ErrorResponse(error: "User not found. Please create an account first.", httpCode: 403)
     static let noCornellEmail = ErrorResponse(error: "User not found. Please create an account first.", httpCode: 403)
+    static let usernameAlreadyExists = ErrorResponse(error: "UserModel with same username already exists!", httpCode: 409)
 
     var errorDescription: String? {
         return error

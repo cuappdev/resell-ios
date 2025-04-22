@@ -228,7 +228,7 @@ class NetworkManager: APIClient {
     }
 
     func getFilteredPosts(by filter: String) async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/filter/")
+        let url = try constructURL(endpoint: "/post/filterNewlyListed/")
 
         return try await post(url: url, body: FilterRequest(category: filter))
     }
@@ -350,7 +350,7 @@ class NetworkManager: APIClient {
     // MARK: - Chat Networking Functions
 
     func sendMessage(chatId: String, messageBody: MessageBody) async throws {
-        let url = try constructURL(endpoint: "/chat/\(chatId)/")
+        let url = try constructURL(endpoint: "/chat/message/\(chatId)/")
 
         return try await post(url: url, body: messageBody)
     }
