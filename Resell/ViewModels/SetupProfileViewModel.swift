@@ -74,10 +74,11 @@ class SetupProfileViewModel: ObservableObject {
 
                     let userBody = user.toCreateUserBody(username: username, bio: bio, venmoHandle: venmoHandle, imageUrl: imageUrl, fcmToken: fcmToken)
                     try await NetworkManager.shared.createUser(user: userBody)
-                } else {
-                    print("AHHH?AHAHAHAHAHHHx2")
                 }
             } catch {
+                if error as? ErrorResponse == ErrorResponse.usernameAlreadyExists {
+                    presentError("That username is already taken.")
+                }
                 NetworkManager.shared.logger.error("Error in SetupProfileViewModel.createNewUser: \(error)")
             }
         }
