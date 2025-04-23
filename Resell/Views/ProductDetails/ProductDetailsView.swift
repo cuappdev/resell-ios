@@ -352,7 +352,7 @@ struct ProductDetailsView: View {
                 viewModel.isSaved.toggle()
                 viewModel.updateItemSaved()
                 sendNotification()
-                viewModel.createNewNotif()
+                //viewModel.createNewNotif()
             } label: {
                 ZStack {
                     Circle()
