@@ -23,6 +23,8 @@ struct Constants {
         static let tint = Color(red: 0/255, green: 0/255, blue: 0/255, opacity: 20/100)
         static let wash = Color(red: 244/255, green: 244/255, blue: 244/255)
         static let white = Color(red: 255/255, green: 255/255, blue: 255/255)
+        // Change name ?
+        static let filterGray = Color(red: 214/255, green: 214/255, blue: 214/255)
 
         // Gradients
         static let resellGradient = LinearGradient(stops: [
