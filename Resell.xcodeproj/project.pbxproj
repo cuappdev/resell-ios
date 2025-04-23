@@ -108,8 +108,6 @@
 		2CE473A22CC4577500BD7E2C /* ReportConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE473A12CC4577500BD7E2C /* ReportConfirmationView.swift */; };
 		2CE473A42CC4595C00BD7E2C /* ReportViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE473A32CC4595C00BD7E2C /* ReportViewModel.swift */; };
 		2CE473AC2CC5FF8A00BD7E2C /* Router.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE473AB2CC5FF8A00BD7E2C /* Router.swift */; };
-		2CF1A26A2CF13C44009F9AC5 /* Rubik-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2CF1A2692CF13C44009F9AC5 /* Rubik-Regular.ttf */; };
-		2CF1A26B2CF13C44009F9AC5 /* Rubik-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2CF1A2682CF13C44009F9AC5 /* Rubik-Medium.ttf */; };
 		2CF356152CDD8C020045A173 /* EmptyState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF356142CDD8C020045A173 /* EmptyState.swift */; };
 		2CF356172CDDC2110045A173 /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF356162CDDC2110045A173 /* Request.swift */; };
 		2CF356192CDDD4A30045A173 /* HapticFeedbackGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF356182CDDD4A30045A173 /* HapticFeedbackGenerator.swift */; };
@@ -255,8 +253,6 @@
 		2CE473A12CC4577500BD7E2C /* ReportConfirmationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportConfirmationView.swift; sourceTree = "<group>"; };
 		2CE473A32CC4595C00BD7E2C /* ReportViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportViewModel.swift; sourceTree = "<group>"; };
 		2CE473AB2CC5FF8A00BD7E2C /* Router.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router.swift; sourceTree = "<group>"; };
-		2CF1A2682CF13C44009F9AC5 /* Rubik-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Rubik-Medium.ttf"; sourceTree = "<group>"; };
-		2CF1A2692CF13C44009F9AC5 /* Rubik-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Rubik-Regular.ttf"; sourceTree = "<group>"; };
 		2CF356142CDD8C020045A173 /* EmptyState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyState.swift; sourceTree = "<group>"; };
 		2CF356162CDDC2110045A173 /* Request.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
 		2CF356182CDDD4A30045A173 /* HapticFeedbackGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticFeedbackGenerator.swift; sourceTree = "<group>"; };
@@ -313,7 +309,6 @@
 			children = (
 				2E3034B62D6D4E4400C1FDA9 /* FilterView.swift */,
 				2C1CE75D2CF6D04F00D38C25 /* NotificationsView.swift */,
-				2C9337532C935C9500818C8E /* ChatsView.swift */,
 				2C52E4F02C926C4B0042312C /* HomeView.swift */,
 				2C9337552C935CB600818C8E /* ProfileView.swift */,
 				2C9337512C935C8100818C8E /* SavedView.swift */,
@@ -377,8 +372,8 @@
 		2C6FB1842CFBC0D600B35FF8 /* Chats */ = {
 			isa = PBXGroup;
 			children = (
-				2C9337532C935C9500818C8E /* ChatsView.swift */,
 				2CDDF30D2CCD915E0061A564 /* MessagesView.swift */,
+				2C9337532C935C9500818C8E /* ChatsView.swift */,
 			);
 			path = Chats;
 			sourceTree = "<group>";
@@ -803,7 +798,6 @@
 				2C6FB1792CFAD93D00B35FF8 /* FirebaseDocument.swift in Sources */,
 				2C02B3972CC0336B0020DF90 /* NewListingViewModel.swift in Sources */,
 				2CDCEE642CD6D146008DF5E8 /* User.swift in Sources */,
-				2C191D1A2CFBE8AA0001D2E0 /* ResellAppDelegate.swift in Sources */,
 				2C9B4D0E2C90F54D0029DF61 /* LoginGradient.swift in Sources */,
 				2C3024732C90FFE60057D3D9 /* Keys.swift in Sources */,
 				2C52E4F32C926CFE0042312C /* MainView.swift in Sources */,
@@ -875,7 +869,6 @@
 				2CE473A22CC4577500BD7E2C /* ReportConfirmationView.swift in Sources */,
 				2C18FFEA2CA1E4C900564577 /* SettingsViewModel.swift in Sources */,
 				2C41BB8C2CD9276E00EFF69E /* ShimmerView.swift in Sources */,
-				2C1CE7602CF6DA4C00D38C25 /* NotificationsViewModel.swift in Sources */,
 				2C1692912CE4361C009D2291 /* LoadingView.swift in Sources */,
 				2C525B7F2CB1E884007D5B8E /* SendFeedbackView.swift in Sources */,
 				2CBC6B692CBDDC8100C842A4 /* CustomPageControlIndicatorView.swift in Sources */,
@@ -893,10 +886,8 @@
 				2CD7CABC2CE94ECB0056209E /* ExternalProfileView.swift in Sources */,
 				2C4DD9852C98EF5E0055D0AB /* WebView.swift in Sources */,
 				2C4DD9792C98CC410055D0AB /* SetupProfileView.swift in Sources */,
-				2C191D1C2CFD19700001D2E0 /* Notification.swift in Sources */,
 				2CBC6B6C2CBDF7CF00C842A4 /* NewListingDetailsView.swift in Sources */,
 				2C52E4F52C926FDA0042312C /* MainViewModel.swift in Sources */,
-				2C1CE75E2CF6D05100D38C25 /* NotificationsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

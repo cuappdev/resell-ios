@@ -54,11 +54,11 @@ struct HomeView: View {
 
             Spacer()
             
-            Button(action: {
-                router.push(.notifications)
-            }, label: {
-                Icon(image: "bell")
-            })
+//            Button(action: {
+//                router.push(.notifications)
+//            }, label: {
+//                Icon(image: "bell")
+//            })
 //            Button(action: {
 //                router.push(.search(nil))
 //            }, label: {
