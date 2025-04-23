@@ -20,6 +20,7 @@ class Router: ObservableObject {
         case newListingDetails
         case newListingImages
         case newRequest
+        case notifications
         case profile(String)
         case productDetails(Post)
         case reportOptions(type: String, id: String)
