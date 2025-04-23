@@ -125,6 +125,8 @@
 		2E3034B12D6D4C0500C1FDA9 /* SwiftyBase64 in Frameworks */ = {isa = PBXBuildFile; productRef = 2E3034B02D6D4C0500C1FDA9 /* SwiftyBase64 */; };
 		2E3034B32D6D4C0500C1FDA9 /* TinyHTTPServer in Frameworks */ = {isa = PBXBuildFile; productRef = 2E3034B22D6D4C0500C1FDA9 /* TinyHTTPServer */; };
 		2E3034B72D6D4E4900C1FDA9 /* FilterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E3034B62D6D4E4400C1FDA9 /* FilterView.swift */; };
+		2E3620E42D79086C00FCC5E0 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 2E3620E32D79086C00FCC5E0 /* Flow */; };
+		2EBB64182D8B783800CCAC48 /* Filter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EBB64172D8B783600CCAC48 /* Filter.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -256,6 +258,7 @@
 		2CF3CC612D012611001B90B5 /* resell-service.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "resell-service.json"; sourceTree = "<group>"; };
 		2CFE42712D4097CF007D503F /* Image.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Image.swift; sourceTree = "<group>"; };
 		2E3034B62D6D4E4400C1FDA9 /* FilterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterView.swift; sourceTree = "<group>"; };
+		2EBB64172D8B783600CCAC48 /* Filter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Filter.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -267,6 +270,7 @@
 				2E3034AD2D6D4C0500C1FDA9 /* OAuth1 in Frameworks */,
 				2C798A902D5CF91500266CA7 /* GoogleSignInSwift in Frameworks */,
 				2C0104E92D5D169A00742D04 /* Kingfisher in Frameworks */,
+				2E3620E42D79086C00FCC5E0 /* Flow in Frameworks */,
 				2CF3CC7C2D017897001B90B5 /* OAuth2 in Frameworks */,
 				2C0104EC2D5D17B200742D04 /* FirebaseFirestore in Frameworks */,
 				2CF3CC7A2D017897001B90B5 /* OAuth1 in Frameworks */,
@@ -372,6 +376,7 @@
 		2C9337442C929B0600818C8E /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				2EBB64172D8B783600CCAC48 /* Filter.swift */,
 				2C16928C2CE41727009D2291 /* ErrorResponse.swift */,
 				2C6FB17A2CFADCB700B35FF8 /* Firebase Models */,
 				2C16928E2CE43409009D2291 /* Feedback.swift */,
@@ -651,6 +656,7 @@
 				2E3034AE2D6D4C0500C1FDA9 /* OAuth2 */,
 				2E3034B02D6D4C0500C1FDA9 /* SwiftyBase64 */,
 				2E3034B22D6D4C0500C1FDA9 /* TinyHTTPServer */,
+				2E3620E32D79086C00FCC5E0 /* Flow */,
 			);
 			productName = Resell;
 			productReference = 2C9B4CC72C8FB7B70029DF61 /* Resell.app */;
@@ -729,6 +735,7 @@
 				2C0104E72D5D169A00742D04 /* XCRemoteSwiftPackageReference "Kingfisher" */,
 				2C0104EA2D5D17B200742D04 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				2E3034AB2D6D4C0500C1FDA9 /* XCRemoteSwiftPackageReference "google-auth-library-swift" */,
+				2E3620E22D79086C00FCC5E0 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
 			);
 			productRefGroup = 2C9B4CC82C8FB7B70029DF61 /* Products */;
 			projectDirPath = "";
@@ -829,6 +836,7 @@
 				2C16928D2CE41727009D2291 /* ErrorResponse.swift in Sources */,
 				2C6FB1772CFACB2500B35FF8 /* FirestoreManager.swift in Sources */,
 				2CE4739E2CC4575F00BD7E2C /* ReportOptionsView.swift in Sources */,
+				2EBB64182D8B783800CCAC48 /* Filter.swift in Sources */,
 				2C9337482C92AAEE00818C8E /* HomeViewModel.swift in Sources */,
 				2C4DD9832C98E3110055D0AB /* View + Extensions.swift in Sources */,
 				2C6FB1752CFAC91900B35FF8 /* Chat.swift in Sources */,
@@ -1247,6 +1255,14 @@
 				minimumVersion = 0.5.3;
 			};
 		};
+		2E3620E22D79086C00FCC5E0 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/tevelee/SwiftUI-Flow.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1310,6 +1326,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 2E3034AB2D6D4C0500C1FDA9 /* XCRemoteSwiftPackageReference "google-auth-library-swift" */;
 			productName = TinyHTTPServer;
+		};
+		2E3620E32D79086C00FCC5E0 /* Flow */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2E3620E22D79086C00FCC5E0 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */;
+			productName = Flow;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
