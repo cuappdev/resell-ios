@@ -28,9 +28,9 @@ struct MainTabView: View {
 
     var body: some View {
         NavigationStack(path: $router.path) {
-            if mainViewModel.userDidLogin {
+            if !mainViewModel.userDidLogin {
                 ZStack(alignment: .bottom) {
-                    mainView
+                    HomeView()
                         .navigationDestination(for: Router.Route.self) { route in
                             switch route {
                             case .newListingDetails:
@@ -39,6 +39,8 @@ struct MainTabView: View {
                             case .newListingImages:
                                 NewListingImagesView()
                                     .environmentObject(newListingViewModel)
+                            case .filters:
+                                FilterView()
                             case .newRequest:
                                 NewRequestView()
                             case .messages(let post):
@@ -79,6 +81,7 @@ struct MainTabView: View {
                                 VenmoView(userDidLogin: $mainViewModel.userDidLogin)
                                     .environmentObject(onboardingViewModel)
                             default:
+                               // EmptyView()
                                 EmptyView()
                             }
                         }
@@ -90,11 +93,14 @@ struct MainTabView: View {
                 }
                 .transition(.opacity)
                 .environmentObject(router)
-            } else {
-                LoginView(userDidLogin: $mainViewModel.userDidLogin)
-                    .transition(.opacity)
-                    .environmentObject(onboardingViewModel)
-                    .environmentObject(router)
+            }
+            else {
+//                LoginView(userDidLogin: $mainViewModel.userDidLogin)
+//                    .transition(.opacity)
+//                    .environmentObject(onboardingViewModel)
+//                    .environmentObject(router)
+
+                EmptyView()
             }
         }
     }
