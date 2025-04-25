@@ -14,6 +14,7 @@ struct HomeView: View {
     @EnvironmentObject private var mainViewModel: MainViewModel
     @EnvironmentObject var router: Router
     @StateObject private var viewModel = HomeViewModel.shared
+    @State var presentPopup = false
 
     var body: some View {
         NavigationStack(path: $router.path) {
@@ -44,28 +45,63 @@ struct HomeView: View {
             .loadingView(isLoading: viewModel.isLoading)
             .navigationBarBackButtonHidden()
         }
+        .sheet(isPresented: $presentPopup) {
+            FilterView()
+        }
     }
 
     private var headerView: some View {
-        HStack {
-            Text("resell")
-                .font(Constants.Fonts.resellHeader)
-                .foregroundStyle(Constants.Colors.resellGradient)
+        VStack(alignment: .leading) {
+            HStack {
+                Text("resell")
+                    .font(Constants.Fonts.resellHeader)
+                    .foregroundStyle(Constants.Colors.resellGradient)
+                
+                Spacer()
+                
+                Button(action: {
+                    router.push(.notifications)
+                }, label: {
+                    Icon(image: "bell")
+                })
+                
+            }
+            .padding(.horizontal, Constants.Spacing.horizontalPadding)
+            HStack{
+                Button(action: {
+                    router.push(.search(nil))
+                }, label: {
+                    RoundedRectangle(cornerRadius: 40)
+                        .frame(width: 309, height: 43)
+                        .overlay {
+                            HStack {
+                                Spacer()
+                                Image(systemName: "magnifyingglass")
+                                    .foregroundStyle(.black)
+                                Text("Search")
+                                    .font(Constants.Fonts.body1)
+                                    .foregroundColor(Constants.Colors.black)
+                                Spacer()
+                            }
+                        }
+                        .foregroundColor(Constants.Colors.wash)
+                        .padding(.horizontal, Constants.Spacing.horizontalPadding)
+                })
+                
+                Button(action: {
+                    presentPopup = true
+                }, label: {
+                    Image("filters")
+                        .resizable()
+                        .frame(width: 40, height: 40)
+                })
+            }
+            .padding(.bottom,12)
 
-            Spacer()
             
-//            Button(action: {
-//                router.push(.notifications)
-//            }, label: {
-//                Icon(image: "bell")
-//            })
-//            Button(action: {
-//                router.push(.search(nil))
-//            }, label: {
-//                Icon(image: "search")
-//            })
+            
         }
-        .padding(.horizontal, Constants.Spacing.horizontalPadding)
+
     }
 
     private var filtersView: some View {
@@ -82,3 +118,6 @@ struct HomeView: View {
         }
     }
 }
+
+
+
