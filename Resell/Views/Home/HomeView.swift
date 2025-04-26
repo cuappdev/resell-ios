@@ -30,9 +30,9 @@ struct HomeView: View {
                     }
                 }
             }
-//        .sheet(isPresented: $presentPopup) {
-//                FilterView()
-//            }
+        .sheet(isPresented: $presentPopup) {
+                FilterView()
+            }
             .background(Constants.Colors.white)
             .overlay(alignment: .bottomTrailing) {
                 ExpandableAddButton()
