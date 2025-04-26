@@ -19,39 +19,31 @@ struct HomeView: View {
     var body: some View {
         VStack(spacing: 0) {
             headerView
-
             filtersView
                 .padding(.bottom, 12)
-
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack{
-                        savedByYou
-                        ProductsGalleryView(items: viewModel.filteredItems)
-                    }
+            ScrollView(.vertical, showsIndicators: true) {
+                VStack {
+                    savedByYou
+                    ProductsGalleryView(items: viewModel.filteredItems)
                 }
             }
-        .sheet(isPresented: $presentPopup) {
-                FilterView()
-            }
-            .background(Constants.Colors.white)
-            .overlay(alignment: .bottomTrailing) {
-                ExpandableAddButton()
-                    .padding(.bottom, 40)
-            }
-            .onAppear {
-                viewModel.getAllPosts()
-                viewModel.getBlockedUsers()
-
-                withAnimation {
-                    mainViewModel.hidesTabBar = false
-                }
-            }
-            .refreshable {
-                viewModel.getAllPosts()
-            }
-            .loadingView(isLoading: viewModel.isLoading)
-            .navigationBarBackButtonHidden()
         }
+        .onAppear {
+            viewModel.getAllPosts()
+            viewModel.getBlockedUsers()
+            withAnimation { mainViewModel.hidesTabBar = false }
+        }
+        .background(Constants.Colors.white)
+        .overlay(alignment: .bottomTrailing) {
+            ExpandableAddButton().padding(.bottom, 40)
+        }
+        .refreshable { viewModel.getAllPosts() }
+        .loadingView(isLoading: viewModel.isLoading)
+        .navigationBarBackButtonHidden()
+        .sheet(isPresented: $presentPopup) {
+            FilterView()
+        }
+    }
     
     private var savedByYou: some View {
             VStack{
