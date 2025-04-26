@@ -65,7 +65,7 @@ struct HomeView: View {
                     }
                     
                 }
-                
+                // if there are no saved posts
                 ZStack{
                     RoundedRectangle(cornerRadius: 8)
                         .fill(Color.white)
@@ -79,6 +79,10 @@ struct HomeView: View {
                         Text("Browse below to get started.")
                     }
                 }
+                // if there are saved posts
+                // load the first X posts, then have a view more button that navigates to the saved view
+                
+                
         }
     }
 
