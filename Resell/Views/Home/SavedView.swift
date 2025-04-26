@@ -13,20 +13,22 @@ struct SavedView: View {
     @StateObject private var viewModel = HomeViewModel.shared
 
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                headerView
-                ProductsGalleryView(items: viewModel.savedItems)
+        NavigationStack(path: $router.path) {
+            ZStack {
+                VStack(spacing: 0) {
+                    headerView
+                    ProductsGalleryView(items: viewModel.savedItems)
+                }
             }
-        }
-        .background(Constants.Colors.white)
-        .loadingView(isLoading: viewModel.isLoading)
-        .emptyState(isEmpty: $viewModel.savedItems.isEmpty, title: "No saved posts", text: "Posts you have bookmarked will be displayed here.")
-        .refreshable {
-            viewModel.getSavedPosts()
-        }
-        .onAppear {
-            viewModel.getSavedPosts()
+            .background(Constants.Colors.white)
+            .loadingView(isLoading: viewModel.isLoading)
+            .emptyState(isEmpty: $viewModel.savedItems.isEmpty, title: "No saved posts", text: "Posts you have bookmarked will be displayed here.")
+            .refreshable {
+                viewModel.getSavedPosts()
+            }
+            .onAppear {
+                viewModel.getSavedPosts()
+            }
         }
     }
 
@@ -37,7 +39,7 @@ struct SavedView: View {
                 .foregroundStyle(Constants.Colors.black)
 
             Spacer()
-
+            
             Button(action: {
                 //TODO: Search Endpoint
             }, label: {

@@ -15,6 +15,8 @@ struct LoginView: View {
 
     @StateObject private var viewModel = LoginViewModel()
 
+    @Binding var userDidLogin: Bool
+
     var body: some View {
         VStack {
             
@@ -30,20 +32,17 @@ struct LoginView: View {
 
             if !mainViewModel.hidesSignInButton {
                 PurpleButton(text: "Login with NetID", horizontalPadding: 28) {
-                    Task {
-                        let signInResult = await viewModel.googleSignIn()
-                        switch signInResult {
-                        case .success:
-                            mainViewModel.userDidLogin = true
-                        case .accountCreationNeeded:
-                            router.push(.setupProfile)
-                            break
-                        default:
-                            break
+                    viewModel.googleSignIn {
+                        DispatchQueue.main.async {
+                            withAnimation { userDidLogin = true }
                         }
-
-                        mainViewModel.userDidLogin = false
+                    } failure: { netid, givenName, familyName, email, googleId in
+                        DispatchQueue.main.async {
+                            withAnimation { userDidLogin = false }
+                        }
+                        router.push(.setupProfile(netid: netid, givenName: givenName, familyName: familyName, email: email, googleId: googleId))
                     }
+
                 }
             } else {
                 Image("appdev")
@@ -53,6 +52,7 @@ struct LoginView: View {
         .background(LoginGradient())
         .onAppear {
             onboardingViewModel.clear()
+            FirebaseNotificationService.shared.setupFCMToken()
         }
         .sheet(isPresented: $viewModel.didPresentError) {
             loginSheetView
@@ -72,10 +72,13 @@ struct LoginView: View {
             Spacer()
 
             PurpleButton(text: "Try Again", horizontalPadding: 60) {
-                Task {
-                    viewModel.didPresentError = false
-                    await viewModel.googleSignIn()
+                viewModel.googleSignIn {
+                    userDidLogin = true
+                } failure: { netid, givenName, familyName, email, googleId in
+                    userDidLogin = false
+                    router.push(.setupProfile(netid: netid, givenName: givenName, familyName: familyName, email: email, googleId: googleId))
                 }
+                viewModel.didPresentError = false
             }
         }
         .presentationDetents([.height(200)])

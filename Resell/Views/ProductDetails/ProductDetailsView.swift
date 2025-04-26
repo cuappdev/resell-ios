@@ -192,7 +192,7 @@ struct ProductDetailsView: View {
 
             Spacer()
 
-            Text("$\(viewModel.item?.originalPrice ?? "0")")
+            Text("$\(viewModel.item?.originalPrice ?? "")")
                 .font(Constants.Fonts.h2)
                 .foregroundStyle(Constants.Colors.black)
         }
@@ -200,7 +200,7 @@ struct ProductDetailsView: View {
 
     private var sellerProfileView: some View {
         Button {
-            router.push(.profile(viewModel.item?.user?.firebaseUid ?? ""))
+            router.push(.profile(viewModel.item?.user?.id ?? ""))
         } label: {
             HStack {
                 KFImage(viewModel.item?.user?.photoUrl)
@@ -245,22 +245,19 @@ struct ProductDetailsView: View {
                     }
                 } else {
                     ForEach(viewModel.similarPosts, id: \.self.id) { item in
-                        let url = URL(string: item.images.first ?? "")
-                        if let url = url {
-                            KFImage(url)
-                                .placeholder {
-                                    ShimmerView()
-                                        .frame(width: imageSize, height: imageSize)
-                                        .clipShape(.rect(cornerRadius: 10))
-                                }
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: imageSize, height: imageSize)
-                                .clipShape(.rect(cornerRadius: 10))
-                                .onTapGesture {
-                                    changeItem(post: item)
-                                }
-                        }
+                        KFImage(item.images.first)
+                            .placeholder {
+                                ShimmerView()
+                                    .frame(width: imageSize, height: imageSize)
+                                    .clipShape(.rect(cornerRadius: 10))
+                            }
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: imageSize, height: imageSize)
+                            .clipShape(.rect(cornerRadius: 10))
+                            .onTapGesture {
+                                changeItem(post: item)
+                            }
                     }
                 }
             }
@@ -292,14 +289,8 @@ struct ProductDetailsView: View {
     private var buttonGradientView: some View {
         VStack {
             PurpleButton(text: "Contact Seller") {
-                if let item = viewModel.item, let user = item.user, let me = GoogleAuthManager.shared.user {
-                    let chatInfo = SimpleChatInfo(
-                        listingId: item.id,
-                        buyerId: me.firebaseUid,
-                        sellerId: user.firebaseUid
-                    )
-
-                    navigateToChats(simpleChatInfo: chatInfo)
+                if let item = viewModel.item {
+                    navigateToChats(post: item)
                 }
             }
         }
@@ -431,17 +422,17 @@ struct ProductDetailsView: View {
 
     // MARK: - Functions
 
-    private func navigateToChats(simpleChatInfo: SimpleChatInfo) {
+    private func navigateToChats(post: Post) {
         if let existingIndex = router.path.firstIndex(where: {
             if case .messages = $0 {
                 return true
             }
             return false
         }) {
-            router.path[existingIndex] = .messages(chatInfo: simpleChatInfo)
+            router.path[existingIndex] = .messages(post: post)
             router.popTo(router.path[existingIndex])
         } else {
-            router.push(.messages(chatInfo: simpleChatInfo))
+            router.push(.messages(post: post))
         }
     }
 }

@@ -66,13 +66,13 @@ class SettingsViewModel: ObservableObject {
     func deleteAccount() {
         Task {
             do {
-                if let userID = GoogleAuthManager.shared.user?.firebaseUid {
+                if let userID = UserSessionManager.shared.userID {
                     try await NetworkManager.shared.deleteAccount(userID: userID)
                 } else {
-                    GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User not available.")
+                    UserSessionManager.shared.logger.error("Error in SettingsViewModel.deleteAccount: userID not found")
                 }
             } catch {
-                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in SettingsViewModel.deleteAccount: \(error)")
             }
         }
     }

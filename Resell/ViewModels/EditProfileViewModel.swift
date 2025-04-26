@@ -29,20 +29,25 @@ class EditProfileViewModel: ObservableObject {
     func getUser() {
         Task {
             do {
-                try await GoogleAuthManager.shared.refreshSignInIfNeeded()
-                guard let user = GoogleAuthManager.shared.user else {
-                    GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User not available.")
-                    return
+                if let id = UserSessionManager.shared.userID {
+                    user = try await NetworkManager.shared.getUserByID(id: id).user
+                    username = user?.username ?? ""
+                    venmoLink = user?.venmoHandle ?? ""
+                    bio = user?.bio ?? ""
+
+                    await decodeProfileImage(url: user?.photoUrl)
+                } else if let googleID = UserSessionManager.shared.googleID {
+                    user = try await NetworkManager.shared.getUserByGoogleID(googleID: googleID).user
+                    username = user?.username ?? ""
+                    venmoLink = user?.venmoHandle ?? ""
+                    bio = user?.bio ?? ""
+
+                    await decodeProfileImage(url: user?.photoUrl)
+                } else {
+                    UserSessionManager.shared.logger.error("Error in EditProfileViewModel.getUser: No userID or googleID found in UserSessionManager")
                 }
-
-                username = user.username
-                venmoLink = user.venmoHandle ?? ""
-                bio = user.bio
-
-                await decodeProfileImage(url: user.photoUrl)
             } catch {
-                GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): \(error.localizedDescription)")
-                return
+                NetworkManager.shared.logger.error("Error in EditProfileViewModel.getUser: \(error.localizedDescription)")
             }
         }
     }

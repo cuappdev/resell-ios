@@ -35,15 +35,15 @@ class NewRequestViewModel: ObservableObject {
             defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
-                guard let userID = GoogleAuthManager.shared.user?.firebaseUid else {
-                    GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User not available.")
+                guard let userID = UserSessionManager.shared.userID else {
+                    UserSessionManager.shared.logger.error("Error in NewRequestViewModel.createNewRequest: userID not found")
                     return
                 }
 
                 let requestBody = RequestBody(title: titleText, description: descriptionText, userId: userID)
                 let _ = try await NetworkManager.shared.postRequest(request: requestBody)
             } catch {
-                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in NewRequestViewModel.createNewRequest: \(error.localizedDescription)")
             }
         }
     }

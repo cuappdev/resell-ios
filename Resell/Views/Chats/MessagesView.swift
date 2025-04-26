@@ -14,122 +14,197 @@ struct MessagesView: View {
     // MARK: - Properties
 
     @EnvironmentObject var router: Router
+    @EnvironmentObject var viewModel: ChatsViewModel
+
     @State private var didShowOptionsMenu: Bool = false
     @State private var didShowNegotiationView: Bool = false
     @State private var didShowAvailabilityView: Bool = false
     @State private var didShowWebView: Bool = false
+
     @State private var didSubmitAvailabilities: Bool = false
     @State private var isEditing: Bool = true
+
     @State private var priceText: String = ""
-    @StateObject private var viewModel: ViewModel
 
-    // MARK: - Init
-
-    init(chatInfo: SimpleChatInfo) {
-        _viewModel = StateObject(wrappedValue: ViewModel(simpleChatInfo: chatInfo))
-    }
+    var post: Post
+    let maxCharacters: Int = 1000
 
     // MARK: - UI
 
     var body: some View {
         ZStack {
-            mainContentView
+            VStack {
+                messageListView
+
+                Spacer()
+
+                Divider()
+
+                messageInputView
+            }
 
             if didShowOptionsMenu {
-                optionsMenuOverlay
+                OptionsMenuView(showMenu: $didShowOptionsMenu, options: [.report(type: "User", id: viewModel.otherUser?.id ?? "")])
+                    .zIndex(100)
             }
         }
         .background(Constants.Colors.white)
         .toolbarBackground(Constants.Colors.white, for: .automatic)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                headerButton
+                Button {
+                    navigateToProductDetails(post: post)
+                } label: {
+                    VStack(spacing: 0) {
+                        Text(post.title)
+                            .font(Constants.Fonts.title1)
+                            .foregroundStyle(Constants.Colors.black)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+
+                        Text("\(post.user?.givenName ?? "") \(post.user?.familyName ?? "")")
+                            .font(Constants.Fonts.title3)
+                            .foregroundStyle(Constants.Colors.secondaryGray)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                    }
+                }
             }
 
             ToolbarItem(placement: .topBarTrailing) {
-                optionsButton
+                Button {
+                    withAnimation {
+                        didShowOptionsMenu.toggle()
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .resizable()
+                        .frame(width: 24, height: 6)
+                        .foregroundStyle(Constants.Colors.black)
+                }
+                .padding()
             }
         }
         .sheet(isPresented: $didShowNegotiationView, onDismiss: setNegotiationText) {
-            negotiationView
+            VStack(spacing: 24) {
+                HStack(spacing: 16) {
+                    KFImage(post.images.first)
+                        .placeholder {
+                            ShimmerView()
+                                .frame(width: 128, height: 100)
+                        }
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 128, height: 100)
+                        .clipShape(.rect(cornerRadius: 18))
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(post.title)
+                            .font(Constants.Fonts.h2)
+                            .foregroundStyle(Constants.Colors.black)
+
+                        Text("$\(post.alteredPrice)")
+                            .font(Constants.Fonts.body1)
+                            .foregroundStyle(Constants.Colors.black)
+                    }
+
+                    Spacer()
+                }
+                .padding(16)
+                .frame(width: UIScreen.width - 40, height: 125)
+                .background(Constants.Colors.white)
+                .clipShape(.rect(cornerRadius: 18))
+
+                PriceInputView(price: $priceText, isPresented: $didShowNegotiationView, titleText: "What price do you want to propose?")
+                    .padding(.bottom, 24)
+                    .background(Constants.Colors.white)
+                    .clipShape(.rect(cornerRadii: .init(topLeading: 25, topTrailing: 25)))
+                    .overlay(alignment: .top) {
+                        Rectangle()
+                            .foregroundStyle(Constants.Colors.stroke)
+                            .frame(width: 66, height: 6)
+                            .clipShape(.capsule)
+                            .padding(.top, 12)
+                    }
+            }
+            .presentationDetents([.height(UIScreen.height * 3/4)])
+            .presentationBackground(.clear)
+            .ignoresSafeArea()
         }
         .sheet(isPresented: $didShowAvailabilityView) {
-            availabilityView
+            AvailabilitySelectorView(isPresented: $didShowAvailabilityView, selectedDates: $viewModel.availabilityDates, didSubmit: $didSubmitAvailabilities, isEditing: isEditing, proposerName: viewModel.otherUser?.givenName)
+                .presentationCornerRadius(25)
+                .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $didShowWebView) {
-            webView
+            WebView(url: viewModel.venmoURL!)
+                .edgesIgnoringSafeArea(.all)
         }
-        .onAppear(perform: setupOnAppear)
-        .onDisappear {
-            FirestoreManager.shared.stopListening()
+        .onAppear {
+            guard let myEmail = UserSessionManager.shared.email,
+                  let myID = UserSessionManager.shared.userID else {
+                UserSessionManager.shared.logger.error("Error in MessagesView: User Email Not Found")
+                return
+            }
+            viewModel.parsePayWithVenmoURL(email: viewModel.selectedChat?.email ?? post.user?.email ?? "")
+
+            viewModel.subscribeToChat(
+                myEmail: myEmail,
+                otherEmail: viewModel.selectedChat?.email ?? post.user?.email ?? "",
+                selfIsBuyer: !(post.user?.id == myID)
+            )
+
+            viewModel.getOtherUser(email: viewModel.selectedChat?.email ?? post.user?.email ?? "")
         }
-        .onChange(of: didSubmitAvailabilities, perform: handleAvailabilitySubmit)
+        .onChange(of: router.path) { newPath in
+            if !newPath.contains(where: { $0 == .messages(post: post) }) {
+                viewModel.selectedChat = nil
+            }
+        }
+        .onChange(of: didSubmitAvailabilities) { didSubmit in
+            if didSubmit {
+                Task {
+                    await sendAvailabilities(availabilities: viewModel.availabilityDates)
+                    viewModel.availabilityDates = []
+                    didSubmitAvailabilities = false
+                }
+            }
+        }
         .endEditingOnTap()
+
     }
 
-    // MARK: - Extracted Subviews
-
-    private var mainContentView: some View {
-        VStack {
-            messageListView
-            Spacer()
-            Divider()
-            messageInputView
-        }
-    }
-
-    private var optionsMenuOverlay: some View {
-        OptionsMenuView(showMenu: $didShowOptionsMenu, options: [.report(type: "User", id: viewModel.chatInfo?.buyer.firebaseUid ?? "")])
-            .zIndex(100)
-    }
-    
-    private var headerButton: some View {
-        Button {
-            navigateToProductDetails()
-        } label: {
-            VStack(spacing: 0) {
-                Text(viewModel.chatInfo?.listing.title ?? "Listing")
-                    .font(Constants.Fonts.title1)
-                    .foregroundStyle(Constants.Colors.black)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-
-                Text("\(viewModel.chatInfo?.listing.user?.givenName ?? "") \(viewModel.chatInfo?.listing.user?.familyName ?? "")")
-                    .font(Constants.Fonts.title3)
-                    .foregroundStyle(Constants.Colors.secondaryGray)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-            }
-        }
-    }
-    
-    private var optionsButton: some View {
-        Button {
-            withAnimation {
-                didShowOptionsMenu.toggle()
-            }
-        } label: {
-            Image(systemName: "ellipsis")
-                .resizable()
-                .frame(width: 24, height: 6)
-                .foregroundStyle(Constants.Colors.black)
-        }
-        .padding()
-    }
-    
     private var messageListView: some View {
         VStack {
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(spacing: 12) {
-                        ForEach(viewModel.messageClusters) { cluster in
-                            messageCluster(cluster: cluster)
+                    LazyVStack {
+                        ForEach(viewModel.subscribedChat?.history ?? []) { cluster in
+                            VStack(spacing: 12) {
+                                ForEach(cluster.messages) { message in
+                                    MessageBubbleView(
+                                        didShowAvailabilityView: $didShowAvailabilityView,
+                                        isEditing: $isEditing,
+                                        otherUserPhoto: $viewModel.otherUserProfileImage,
+                                        selectedAvailabilities: $viewModel.availabilityDates,
+                                        senderName: cluster.fromUser ? UserSessionManager.shared.name ?? "" : viewModel.otherUser?.givenName ?? "",
+                                        message: message,
+                                        fromUser: cluster.fromUser
+                                    )
+                                }
+                            }
                         }
                         Color.clear.frame(height: 1).id("BOTTOM")
                     }
                 }
+                .padding(.horizontal, 12)
                 .background(Constants.Colors.white)
-                .onChange(of: viewModel.messageClusters) { _ in
+                .onChange(of: viewModel.subscribedChat?.history.count) { _ in
+                    withAnimation {
+                        proxy.scrollTo("BOTTOM", anchor: .bottom)
+                    }
+                }
+                .onChange(of: viewModel.subscribedChat?.history.last?.messages.count) { _ in
                     withAnimation {
                         proxy.scrollTo("BOTTOM", anchor: .bottom)
                     }
@@ -146,140 +221,12 @@ struct MessagesView: View {
     private var messageInputView: some View {
         VStack(spacing: 12) {
             filtersView
+
             textInputView
         }
     }
 
     private var filtersView: some View {
-        FilterOptionsView(
-            didShowNegotiationView: $didShowNegotiationView,
-            didShowAvailabilityView: $didShowAvailabilityView, 
-            didShowWebView: $didShowWebView,
-            isEditing: $isEditing,
-            viewModel: viewModel
-        )
-    }
-
-    private func messageCluster(cluster: MessageCluster) -> some View {
-        VStack(spacing: 2) {
-            if let first = cluster.messages.first {
-                // format date like "Mon, Apr 21, 2025", no time
-                Text("\(first.timestamp.formatted(date: .abbreviated, time: .omitted))")
-                    .font(.caption)
-                    .padding(10)
-            }
-
-            ForEach(cluster.messages, id: \.messageId) { message in
-                MessageBubbleView(
-                    didShowAvailabilityView: $didShowAvailabilityView, 
-                    isEditing: $isEditing, 
-                    selectedAvailabilities: $viewModel.availability, 
-                    message: message
-                )
-            }
-        }
-    }
-
-    private var textInputView: some View {
-        TextInputView(draftMessageText: $viewModel.draftMessageText) { text, images in
-            let b46Images = images?.compactMap { $0.toBase64() } ?? []
-            Task {
-                do {
-                    try await viewModel.sendMessage(text: text, imagesBase64: b46Images)
-                } catch {
-                    NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error)")
-                }
-            }
-        }
-    }
-
-    private var negotiationView: some View {
-        NegotiationSheetView(
-            chatInfo: viewModel.chatInfo,
-            priceText: $priceText,
-            isPresented: $didShowNegotiationView
-        )
-    }
-    
-    private var availabilityView: some View {
-        AvailabilitySelectorView(
-            isPresented: $didShowAvailabilityView,
-            selectedDates: $viewModel.availability,
-            didSubmit: $didSubmitAvailabilities
-        )
-        .presentationCornerRadius(25)
-        .presentationDragIndicator(.hidden)
-    }
-
-    private var webView: some View {
-        Group {
-            if let url = viewModel.venmoURL {
-                WebView(url: url)
-                    .edgesIgnoringSafeArea(.all)
-            } else {
-                EmptyView()
-            }
-        }
-    }
-    
-    // MARK: - Helper Methods
-    
-    private func setupOnAppear() {
-        guard GoogleAuthManager.shared.user != nil else {
-            GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User not available.")
-            return
-        }
-
-        viewModel.parsePayWithVenmoURL()
-
-        Task {
-            try await viewModel.getOrCreateChatId()
-            viewModel.subscribeToChat()
-        }
-    }
-    
-    private func handleAvailabilitySubmit(_ didSubmit: Bool) {
-        if didSubmit {
-            Task {
-                // TODO: fix
-                // await sendAvailabilities(availabilities: viewModel.availabilityDates)
-                viewModel.availability = []
-                didSubmitAvailabilities = false
-            }
-        }
-    }
-
-    private func navigateToProductDetails() {
-        guard let post = viewModel.chatInfo?.listing else { return }
-
-        if let existingIndex = router.path.firstIndex(where: {
-            if case let .productDetails(existingPost) = $0, existingPost.id == post.id {
-                return true
-            }
-            return false
-        }) {
-            router.popTo(router.path[existingIndex])
-        } else {
-            router.push(.productDetails(post))
-        }
-    }
-
-    private func setNegotiationText() {
-        viewModel.draftMessageText = "Hi! I'm interested in buying your \(viewModel.chatInfo?.listing.title ?? "item"), but would you be open to selling it for $\(priceText)?"
-        priceText = ""
-    }
-}
-
-// MARK: - Filter Options View
-
-struct FilterOptionsView: View {
-    @Binding var didShowNegotiationView: Bool
-    @Binding var didShowAvailabilityView: Bool
-    @Binding var didShowWebView: Bool
-    @Binding var isEditing: Bool
-    let viewModel: MessagesView.ViewModel
-
-    var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack {
                 ForEach(Constants.chatMessageOptions, id: \.self) { option in
@@ -298,9 +245,10 @@ struct FilterOptionsView: View {
                             withAnimation { didShowWebView = true }
                         }
                     case .viewAvailability:
-                        chatOption(title: "View \(viewModel.chatInfo?.listing.user?.givenName ?? "")'s Availability") {
+                        chatOption(title: "View \(post.user?.givenName ?? "")'s Availability") {
                             isEditing = false
                             withAnimation { didShowAvailabilityView = true }
+                            // TODO: Pull up other user Recent Avail
                         }
                     }
                 }
@@ -325,68 +273,148 @@ struct FilterOptionsView: View {
                 .stroke(Constants.Colors.resellGradient, lineWidth: 2)
         }
     }
-}
 
-// MARK: - Negotiation Sheet View
-
-struct NegotiationSheetView: View {
-    let chatInfo: ChatInfo?
-    @Binding var priceText: String
-    @Binding var isPresented: Bool
-
-    var body: some View {
-        VStack(spacing: 24) {
-            HStack(spacing: 16) {
-                KFImage(URL(string: chatInfo?.listing.images[0] ?? ""))
-                    .placeholder {
-                        ShimmerView()
-                            .frame(width: 128, height: 100)
-                    }
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 128, height: 100)
-                    .clipShape(.rect(cornerRadius: 18))
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(chatInfo?.listing.title ?? "")
-                        .font(Constants.Fonts.h2)
-                        .foregroundStyle(Constants.Colors.black)
-
-                    Text("$\(chatInfo?.listing.originalPrice ?? "0")")
-                        .font(Constants.Fonts.body1)
-                        .foregroundStyle(Constants.Colors.black)
+    private var textInputView: some View {
+        TextInputView(draftMessageText: $viewModel.draftMessageText) { text, image in
+            if let text {
+                Task {
+                    await sendMessage(text: text)
                 }
-
-                Spacer()
             }
-            .padding(16)
-            .frame(width: UIScreen.width - 40, height: 125)
-            .background(Constants.Colors.white)
-            .clipShape(.rect(cornerRadius: 18))
-
-            PriceInputView(
-                price: $priceText,
-                isPresented: $isPresented,
-                titleText: "What price do you want to propose?"
-            )
-            .padding(.bottom, 24)
-            .background(Constants.Colors.white)
-            .clipShape(.rect(cornerRadii: .init(topLeading: 25, topTrailing: 25)))
-            .overlay(alignment: .top) {
-                Rectangle()
-                    .foregroundStyle(Constants.Colors.stroke)
-                    .frame(width: 66, height: 6)
-                    .clipShape(.capsule)
-                    .padding(.top, 12)
+            if let image = image {
+                Task {
+                    await sendImage(image: image)
+                }
             }
         }
-        .presentationDetents([.height(UIScreen.height * 3/4)])
-        .presentationBackground(.clear)
-        .ignoresSafeArea()
+    }
+
+    // MARK: - Functions
+
+    private func navigateToProductDetails(post: Post) {
+        if let existingIndex = router.path.firstIndex(where: {
+            if case .productDetails = $0 {
+                return true
+            }
+            return false
+        }) {
+            router.path[existingIndex] = .productDetails(post)
+            router.popTo(router.path[existingIndex])
+        } else {
+            router.push(.productDetails(post))
+        }
+    }
+
+    private func sendMessage(text: String) async {
+        guard let myEmail = UserSessionManager.shared.email,
+              let myID = UserSessionManager.shared.userID,
+              let recipientEmail = viewModel.selectedChat?.email,
+              let senderName = UserSessionManager.shared.name else {
+            UserSessionManager.shared.logger.error("Error: Missing user or chat information.")
+            return
+        }
+
+        do {
+            guard let senderImageUrl = UserSessionManager.shared.profileURL,
+                  let recipientImageUrl = viewModel.otherUser?.photoUrl,
+            let recipientGivenName = viewModel.otherUser?.givenName,
+            let recipientFamilyName = viewModel.otherUser?.familyName else { return }
+
+            try await viewModel.sendTextMessage(
+                senderEmail: myEmail,
+                recipientEmail: recipientEmail,
+                senderName: senderName,
+                recipientName: "\(recipientGivenName) \(recipientFamilyName)",
+                senderImageUrl: senderImageUrl,
+                recipientImageUrl: recipientImageUrl,
+                messageText: text,
+                isBuyer: !(post.user?.id == myID),
+                postId: post.id
+            )
+
+        } catch {
+            NetworkManager.shared.logger.error("Error in MessagesView.sendMessage: Error sending message: \(error)")
+        }
+    }
+
+    private func sendImage(image: UIImage) async {
+        guard let myEmail = UserSessionManager.shared.email,
+              let myID = UserSessionManager.shared.userID,
+              let recipientEmail = viewModel.selectedChat?.email,
+              let senderName = UserSessionManager.shared.name else {
+            UserSessionManager.shared.logger.error("Error: Missing user or chat information.")
+            return
+        }
+
+        do {
+            guard let senderImageUrl = UserSessionManager.shared.profileURL,
+                  let recipientImageUrl = viewModel.otherUser?.photoUrl,
+                  let recipientGivenName = viewModel.otherUser?.givenName,
+                  let recipientFamilyName = viewModel.otherUser?.familyName else { return }
+
+            let imageBase64 = image.toBase64() ?? ""
+
+            try await viewModel.sendImageMessage(
+                senderEmail: myEmail,
+                recipientEmail: recipientEmail,
+                senderName: senderName,
+                recipientName: "\(recipientGivenName) \(recipientFamilyName)",
+                senderImageUrl: senderImageUrl,
+                recipientImageUrl: recipientImageUrl,
+                imageBase64: imageBase64,
+                isBuyer: !(post.user?.id == myID),
+                postId: post.id
+            )
+        } catch {
+            NetworkManager.shared.logger.error("Error in MessagesView.sendImage: Error sending image message: \(error)")
+        }
+    }
+
+    private func sendAvailabilities(availabilities: [AvailabilityBlock]) async {
+        guard let myEmail = UserSessionManager.shared.email,
+              let myID = UserSessionManager.shared.userID,
+              let recipientEmail = viewModel.selectedChat?.email,
+              let senderName = UserSessionManager.shared.name else {
+            UserSessionManager.shared.logger.error("Error in MessagesView.sendAvailabilities: Missing user or chat information.")
+            return
+        }
+
+        do {
+            guard let senderImageUrl = UserSessionManager.shared.profileURL,
+                  let recipientImageUrl = viewModel.otherUser?.photoUrl,
+                  let recipientGivenName = viewModel.otherUser?.givenName,
+                  let recipientFamilyName = viewModel.otherUser?.familyName else {
+                return
+            }
+
+            var sortedAvailabilities = availabilities.sorted { $0.startDate.dateValue() < $1.startDate.dateValue() }
+            sortedAvailabilities.indices.forEach { index in
+                sortedAvailabilities[index].id = index
+            }
+
+            let availabilityDocument = AvailabilityDocument(availabilities: sortedAvailabilities)
+
+            try await viewModel.sendAvailability(
+                senderEmail: myEmail,
+                recipientEmail: recipientEmail,
+                senderName: senderName,
+                recipientName: "\(recipientGivenName) \(recipientFamilyName)",
+                senderImageUrl: senderImageUrl,
+                recipientImageUrl: recipientImageUrl,
+                isBuyer: !(post.user?.id == myID),
+                postId: post.id,
+                availability: availabilityDocument
+            )
+        } catch {
+            NetworkManager.shared.logger.error("Error in MessagesView.sendAvailability: Error sending availability: \(error)")
+        }
+    }
+
+    private func setNegotiationText() {
+        viewModel.draftMessageText = "Hi! I'm interested in buying your \(post.title), but would you be open to selling it for $\(priceText)?"
+        priceText = ""
     }
 }
-
-
 
 // MARK: - MessageBubbleView
 
@@ -394,111 +422,88 @@ struct MessageBubbleView: View {
 
     @Binding var didShowAvailabilityView: Bool
     @Binding var isEditing: Bool
-    @Binding var selectedAvailabilities: [Availability]
 
-    let message: Message
+    @Binding var otherUserPhoto: UIImage
+    @Binding var selectedAvailabilities: [AvailabilityBlock]
+
+    let senderName: String
+    let message: ChatMessageData
+    let fromUser: Bool
 
     var body: some View {
-        HStack {
-            if message.fromUser {
-                Spacer()
+        HStack(spacing: 12) {
+            if !fromUser && message.messageType != .state {
+                profileImageView
             }
 
-            messageContentView
+            VStack(alignment: fromUser ? .trailing : .leading) {
+                messageContentView
+            }
 
-            if !message.fromUser {
+            if fromUser && message.messageType != .state {
                 Spacer()
             }
         }
-//        .frame(maxWidth: .infinity)
-        .padding(.horizontal, 12)
+        .padding(fromUser ? .leading : .trailing, message.messageType == .state ? 0 : UIScreen.width / 4)
     }
 
     @ViewBuilder
     private var messageContentView: some View {
         switch message.messageType {
-        case .chat:
-            chatMessageView
+        case .image:
+            HStack {
+                if fromUser {
+                    Spacer()
+                }
+
+                if let url = URL(string: message.imageUrl) {
+                    AsyncImage(url: url) { image in
+                        image.resizable()
+                            .scaledToFill()
+                            .frame(width: 200, height: 200)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                    } placeholder: {
+                        ProgressView()
+                    }
+                }
+
+                if !fromUser {
+                    Spacer()
+                }
+            }
+            .padding(.vertical, 6)
+        case .message:
+            HStack {
+                if fromUser {
+                    Spacer()
+                }
+
+                VStack(alignment: fromUser ? .trailing : .leading, spacing: 8) {
+                    Text(message.content)
+                        .font(Constants.Fonts.body2)
+                        .foregroundStyle(fromUser ? Constants.Colors.white : Constants.Colors.black)
+
+                    Text(message.timestampString)
+                        .font(.caption2)
+                        .foregroundStyle(fromUser ? Constants.Colors.white : Constants.Colors.secondaryGray)
+                }
+                .padding(12)
+                .background(fromUser ? Constants.Colors.resellPurple : Constants.Colors.wash)
+                .foregroundColor(fromUser ? Constants.Colors.white : Constants.Colors.black)
+                .cornerRadius(10)
+
+                if !fromUser {
+                    Spacer()
+                }
+            }
         case .availability:
-            availabilityMessageView
-        case .proposal:
-            proposalMessageView
-        }
-    }
-
-    @ViewBuilder
-    private var chatMessageView: some View {
-        if let message = message as? ChatMessage {
-            VStack {
-                if !message.text.isEmpty {
-                    textBubbleView(message: message)
-                }
-
-                ForEach(message.images, id: \.self) { image in
-                    imageView(imageUrl: image)
-                }
-            }
-        } else {
-            EmptyView()
-        }
-    }
-
-    @ViewBuilder
-    private func textBubbleView(message: ChatMessage) -> some View {
-        HStack {
-            VStack(alignment: message.fromUser ? .trailing : .leading, spacing: 8) {
-                Text(message.text)
-                    .font(Constants.Fonts.body2)
-                    .foregroundStyle(message.fromUser ? Constants.Colors.white : Constants.Colors.black)
-
-                Text(message.timestamp.formatted(date: .omitted, time: .shortened))
-                    .font(.caption2)
-                    .foregroundStyle(message.fromUser ? Constants.Colors.white : Constants.Colors.secondaryGray)
-            }
-            .padding(12)
-            .background(message.fromUser ? (message.confirmed ? Constants.Colors.resellPurple : Constants.Colors.resellPurple.opacity(0.5)) : Constants.Colors.wash)
-            .foregroundColor(message.fromUser ? Constants.Colors.white : Constants.Colors.black)
-            .cornerRadius(10)
-        }
-    }
-
-    @ViewBuilder
-    private func imageView(imageUrl: String) -> some View {
-        HStack {
-            if message.fromUser {
-                Spacer()
-            }
-
-            if let url = URL(string: imageUrl) {
-                AsyncImage(url: url) { image in
-                    image.resizable()
-                        .scaledToFill()
-                        .frame(width: 200, height: 200)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                } placeholder: {
-                    ProgressView()
-                }
-            }
-
-            if !message.fromUser {
-                Spacer()
-            }
-        }
-        .padding(.vertical, 6)
-    }
-
-    @ViewBuilder
-    private var availabilityMessageView: some View {
-        if let message = message as? AvailabilityMessage {
             Button {
-                selectedAvailabilities = message.availabilities
+                selectedAvailabilities = message.availability?.availabilities ?? []
                 didShowAvailabilityView = true
                 isEditing = false
             } label: {
                 HStack {
-//                    Text("\(message.from.givenName)'s Availability")
-                    // TODO: FIX
-                    Text("deez's Availability")
+                    Text("\(senderName)'s Availability")
                         .font(Constants.Fonts.title2)
                         .foregroundStyle(Constants.Colors.resellPurple)
 
@@ -512,22 +517,23 @@ struct MessageBubbleView: View {
                 .clipShape(.rect(cornerRadius: 10))
                 .padding(.vertical, 6)
             }
-        } else {
-            EmptyView()
-        }
-    }
-
-    @ViewBuilder
-    private var proposalMessageView: some View {
-        if let message = message as? ProposalMessage {
-            Text("Proposal!")
+        case .state:
+            Text(message.content)
                 .font(Constants.Fonts.subtitle1)
                 .foregroundColor(Constants.Colors.secondaryGray)
-        } else {
-            EmptyView()
+        default:
+            Text("Unsupported message type.")
         }
     }
 
+    private var profileImageView: some View {
+        Image(uiImage: otherUserPhoto)
+            .resizable()
+            .scaledToFill()
+            .background(Constants.Colors.secondaryGray)
+            .frame(width: 40, height: 40)
+            .clipShape(.circle)
+    }
 }
 
 
@@ -538,84 +544,80 @@ struct TextInputView: View {
 
     // MARK: - Properties
 
-    @State private var selectedImages: [UIImage] = []
+    @State private var selectedImage: UIImage? = nil
     @State private var showingPhotoPicker = false
     @Binding var draftMessageText: String
 
-    let onSend: (String?, [UIImage]?) -> Void
+    let onSend: (String?, UIImage?) -> Void
     let maxCharacters: Int = 1000
 
     // MARK: - UI
 
     var body: some View {
-        VStack(spacing: 8) {
-            // Image preview section
-            if !selectedImages.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(0..<selectedImages.count, id: \.self) { index in
-                            ZStack(alignment: .topTrailing) {
-                                Image(uiImage: selectedImages[index])
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 80, height: 80)
-                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+        HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 8) {
+                if let selectedImage = selectedImage {
+                    ZStack(alignment: .topTrailing) {
+                        Image(uiImage: selectedImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 80)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
 
-                                Button(action: {
-                                    selectedImages.remove(at: index)
-                                }) {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(.white)
-                                        .shadow(radius: 2)
-                                        .padding(4)
-                                }
-                            }
+                        Button(action: {
+                            self.selectedImage = nil
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.white)
+                                .shadow(radius: 2)
+                                .padding(4)
                         }
                     }
                     .padding(.leading, 32)
                 }
+
+                HStack {
+                    Button {
+                        showingPhotoPicker = true
+                    } label: {
+                        Image(systemName: "photo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 24, height: 24)
+                            .foregroundStyle(Constants.Colors.secondaryGray)
+                    }
+                    .sheet(isPresented: $showingPhotoPicker) {
+                        SingleImagePicker(selectedImage: $selectedImage)
+                    }
+
+                    TextEditor(text: $draftMessageText)
+                        .font(Constants.Fonts.body2)
+                        .foregroundColor(Constants.Colors.black)
+                        .padding(12)
+                        .scrollContentBackground(.hidden)
+                        .background(Constants.Colors.wash)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .frame(height: 48)
+                        .onChange(of: draftMessageText) { newText in
+                            if newText.count > maxCharacters {
+                                draftMessageText = String(newText.prefix(maxCharacters))
+                            }
+                        }
+                }
+
             }
 
-            HStack {
-                Button {
-                    showingPhotoPicker = true
-                } label: {
-                    Image(systemName: "photo")
+            if !draftMessageText.isEmpty || selectedImage != nil {
+                Button(action: {
+                    onSend(draftMessageText.isEmpty ? nil : draftMessageText, selectedImage)
+                    draftMessageText = ""
+                    selectedImage = nil
+                }) {
+                    Image("sendButton")
                         .resizable()
-                        .scaledToFit()
                         .frame(width: 24, height: 24)
-                        .foregroundStyle(Constants.Colors.secondaryGray)
                 }
-                .sheet(isPresented: $showingPhotoPicker) {
-                    ImagePicker(selectedImages: $selectedImages)
-                }
-
-                TextEditor(text: $draftMessageText)
-                    .font(Constants.Fonts.body2)
-                    .foregroundColor(Constants.Colors.black)
-                    .padding(12)
-                    .scrollContentBackground(.hidden)
-                    .background(Constants.Colors.wash)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .frame(height: 48)
-                    .onChange(of: draftMessageText) { newText in
-                        if newText.count > maxCharacters {
-                            draftMessageText = String(newText.prefix(maxCharacters))
-                        }
-                    }
-
-                if !draftMessageText.isEmpty || !selectedImages.isEmpty {
-                    Button(action: {
-                        onSend(draftMessageText.isEmpty ? nil : draftMessageText, selectedImages.isEmpty ? nil : selectedImages)
-                        draftMessageText = ""
-                        selectedImages = []
-                    }) {
-                        Image("sendButton")
-                            .resizable()
-                            .frame(width: 24, height: 24)
-                    }
-                    .padding(.trailing, 8)
-                }
+                .padding(.trailing, 8)
             }
         }
         .padding(.trailing, 24)
