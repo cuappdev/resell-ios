@@ -18,70 +18,68 @@ struct ProfileView: View {
     // MARK: - UI
 
     var body: some View {
-        NavigationStack(path: $router.path) {
-            VStack(spacing: 0) {
-                profileImageView
-                    .padding(.bottom, 12)
+        VStack(spacing: 0) {
+            profileImageView
+                .padding(.bottom, 12)
 
-                Text(viewModel.user?.username ?? "")
-                    .font(Constants.Fonts.h3)
-                    .foregroundStyle(Constants.Colors.black)
-                    .padding(.bottom, 4)
+            Text(viewModel.user?.username ?? "")
+                .font(Constants.Fonts.h3)
+                .foregroundStyle(Constants.Colors.black)
+                .padding(.bottom, 4)
 
-                Text(viewModel.user?.givenName ?? "")
-                    .font(Constants.Fonts.body2)
-                    .foregroundStyle(Constants.Colors.secondaryGray)
-                    .padding(.bottom, 16)
+            Text(viewModel.user?.givenName ?? "")
+                .font(Constants.Fonts.body2)
+                .foregroundStyle(Constants.Colors.secondaryGray)
+                .padding(.bottom, 16)
 
-                Text(viewModel.user?.bio ?? "")
-                    .font(Constants.Fonts.body2)
-                    .foregroundStyle(Constants.Colors.black)
-                    .padding(.bottom, 28)
-                    .lineLimit(3)
+            Text(viewModel.user?.bio ?? "")
+                .font(Constants.Fonts.body2)
+                .foregroundStyle(Constants.Colors.black)
+                .padding(.bottom, 28)
+                .lineLimit(3)
 
-                profileTabsView
+            profileTabsView
 
-                if viewModel.selectedTab == .wishlist {
-                    requestsView
-                        .emptyState(isEmpty: viewModel.requests.isEmpty, title: "No active requests", text: "Submit a request and get notified when someone lists something similar")
-                } else {
-                    ProductsGalleryView(items: viewModel.selectedPosts)
-                        .emptyState(isEmpty: viewModel.selectedPosts.isEmpty && !viewModel.isLoading, title: viewModel.selectedTab == .listing ? "No listings posted" : "No items archived", text: viewModel.selectedTab == .listing ? "When you post a listing, it will be displayed here" : "When a listing is sold or archived, it will be displayed here")
-                        .padding(.top, 24)
-                        .loadingView(isLoading: viewModel.isLoading)
+            if viewModel.selectedTab == .wishlist {
+                requestsView
+                    .emptyState(isEmpty: viewModel.requests.isEmpty, title: "No active requests", text: "Submit a request and get notified when someone lists something similar")
+            } else {
+                ProductsGalleryView(items: viewModel.selectedPosts)
+                    .emptyState(isEmpty: viewModel.selectedPosts.isEmpty && !viewModel.isLoading, title: viewModel.selectedTab == .listing ? "No listings posted" : "No items archived", text: viewModel.selectedTab == .listing ? "When you post a listing, it will be displayed here" : "When a listing is sold or archived, it will be displayed here")
+                    .padding(.top, 24)
+                    .loadingView(isLoading: viewModel.isLoading)
+            }
+        }
+        .background(Constants.Colors.white)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    router.push(.settings(false))
+                } label: {
+                    Icon(image: "settings")
                 }
             }
-            .background(Constants.Colors.white)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        router.push(.settings(false))
-                    } label: {
-                        Icon(image: "settings")
-                    }
-                }
 
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        router.push(.search(viewModel.user?.id))
-                    } label: {
-                        Icon(image: "search")
-                    }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    router.push(.search(viewModel.user?.firebaseUid))
+                } label: {
+                    Icon(image: "search")
                 }
             }
-            .overlay(alignment: .bottomTrailing) {
-                ExpandableAddButton()
-                    .padding(.bottom, 40)
-            }
-            .onChange(of: viewModel.selectedTab) { _ in
-                viewModel.updateItemsGallery()
-            }
-            .onAppear {
-                viewModel.getUser()
-            }
-            .refreshable {
-                viewModel.getUser()
-            }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            ExpandableAddButton()
+                .padding(.bottom, 40)
+        }
+        .onChange(of: viewModel.selectedTab) { _ in
+            viewModel.updateItemsGallery()
+        }
+        .onAppear {
+            viewModel.getUser()
+        }
+        .refreshable {
+            viewModel.getUser()
         }
     }
 

@@ -16,7 +16,7 @@ class Router: ObservableObject {
         case saved
         case chats
         case editProfile
-        case messages(post: Post)
+        case messages(chatInfo: SimpleChatInfo)
         case newListingDetails
         case newListingImages
         case newRequest
@@ -31,7 +31,8 @@ class Router: ObservableObject {
         case settings(Bool)
         case blockedUsers
         case feedback
-        case setupProfile(netid: String, givenName: String, familyName: String, email: String, googleId: String)
+        case notifications
+        case setupProfile
         case venmo
     }
 

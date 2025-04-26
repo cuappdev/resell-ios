@@ -53,34 +53,21 @@ class ProfileViewModel: ObservableObject {
             defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
-                if let id = UserSessionManager.shared.userID {
-                    user = try await NetworkManager.shared.getUserByID(id: id).user
-
-                    let postsResponse = try await NetworkManager.shared.getPostsByUserID(id: id)
-                    let archivedResponse = try await NetworkManager.shared.getArchivedPostsByUserID(id: id)
-                    let requestsResponse = try await NetworkManager.shared.getRequestsByUserID(id: id)
-
-                    userPosts = Post.sortPostsByDate(postsResponse.posts)
-                    archivedPosts = Post.sortPostsByDate(archivedResponse.posts)
-                    requests = requestsResponse.requests
-                    selectedPosts = userPosts
-                } else if let googleId = UserSessionManager.shared.googleID {
-                    user = try await NetworkManager.shared.getUserByGoogleID(googleID: googleId).user
-
-                    let postsResponse = try await NetworkManager.shared.getPostsByUserID(id: user?.id ?? "")
-                    let archivedResponse = try await NetworkManager.shared.getArchivedPostsByUserID(id: user?.id ?? "")
-                    let requestsResponse = try await NetworkManager.shared.getRequestsByUserID(id: user?.id ?? "")
+                if let userId = GoogleAuthManager.shared.user?.firebaseUid {
+                    let postsResponse = try await NetworkManager.shared.getPostsByUserID(id: userId)
+                    let archivedResponse = try await NetworkManager.shared.getArchivedPostsByUserID(id: userId)
+                    let requestsResponse = try await NetworkManager.shared.getRequestsByUserID(id: userId)
 
                     userPosts = Post.sortPostsByDate(postsResponse.posts)
                     archivedPosts = Post.sortPostsByDate(archivedResponse.posts)
                     requests = requestsResponse.requests
                     selectedPosts = userPosts
                 } else {
-                    UserSessionManager.shared.logger.error("Error in ProfileViewModel.getUser: No userID or googleID found in UserSessionManager")
+                    GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User id not available.")
                 }
 
             } catch {
-                NetworkManager.shared.logger.error("Error in ProfileViewModel.getUser: \(error)")
+                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error.localizedDescription)")
             }
         }
     }
@@ -92,7 +79,7 @@ class ProfileViewModel: ObservableObject {
             do {
                 user = try await NetworkManager.shared.getUserByID(id: id).user
                 checkUserIsBlocked()
-                selectedPosts = try await NetworkManager.shared.getPostsByUserID(id: user?.id ?? "").posts
+                selectedPosts = try await NetworkManager.shared.getPostsByUserID(id: user?.firebaseUid ?? "").posts
 
                 isLoadingUser = false
             } catch {
@@ -105,14 +92,14 @@ class ProfileViewModel: ObservableObject {
     func checkUserIsBlocked() {
         Task {
             do {
-                if let userID = UserSessionManager.shared.userID {
-                    let blockedUsers = try await NetworkManager.shared.getBlockedUsers(id: userID).users.map { $0.id }
-                    sellerIsBlocked = blockedUsers.contains(user?.id ?? "")
+                if let userId = GoogleAuthManager.shared.user?.firebaseUid {
+                    let blockedUsers = try await NetworkManager.shared.getBlockedUsers(id: userId).users.map { $0.firebaseUid }
+                    sellerIsBlocked = blockedUsers.contains(userId)
                 } else {
-                    UserSessionManager.shared.logger.error("Error in BlockedUsersView: userID not found.")
+                    GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User id not available.")
                 }
             } catch {
-                NetworkManager.shared.logger.error("Error in BlockedUsersView: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error.localizedDescription)")
             }
         }
     }
@@ -127,7 +114,7 @@ class ProfileViewModel: ObservableObject {
                 let blocked = BlockUserBody(blocked: id)
                 try await NetworkManager.shared.blockUser(blocked: blocked)
             } catch {
-                NetworkManager.shared.logger.error("Error in ProfileViewModel.blockUser: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error.localizedDescription)")
             }
         }
     }

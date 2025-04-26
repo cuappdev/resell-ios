@@ -17,11 +17,7 @@ struct SetupProfileView: View {
 
     @Binding var userDidLogin: Bool
 
-    let netid: String
-    let givenName: String
-    let familyName: String
-    let email: String
-    let googleID: String
+    let user: User?
 
     // MARK: - UI
 
@@ -41,7 +37,8 @@ struct SetupProfileView: View {
             Spacer()
 
             PurpleButton(isActive: viewModel.checkInputIsValid(), text: "Next", horizontalPadding: 80) {
-                router.push(.venmo)
+                viewModel.createNewUser()
+                //router.push(.venmo)
             }
         }
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
@@ -49,6 +46,9 @@ struct SetupProfileView: View {
         .sheet(isPresented: $viewModel.didShowWebView) {
             WebView(url: URL(string: "https://www.cornellappdev.com/license/resell")!)
                 .edgesIgnoringSafeArea(.all)
+        }
+        .sheet(isPresented: $viewModel.didPresentError) {
+            errorSheetView
         }
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -58,18 +58,17 @@ struct SetupProfileView: View {
             }
         }
         .onAppear {
-            viewModel.netid = netid
-            viewModel.givenName = givenName
-            viewModel.familyName = familyName
-            viewModel.email = email
-            viewModel.googleID = googleID
+            viewModel.netid = user?.netid ?? ""
+            viewModel.givenName = user?.givenName ?? ""
+            viewModel.familyName = user?.familyName ?? ""
+            viewModel.email = user?.email ?? ""
         }
         .endEditingOnTap()
     }
 
     private var profileImageView: some View {
         ZStack(alignment: .bottomTrailing) {
-            Image(uiImage: viewModel.selectedImage)
+            Image(uiImage: viewModel.selectedImage ?? UIImage(named: "emptyProfile")!)
                 .resizable()
                 .frame(width: 132, height: 132)
                 .background(Constants.Colors.stroke)
@@ -124,5 +123,26 @@ struct SetupProfileView: View {
                     .underline()
             }
         }
+    }
+
+    private var errorSheetView: some View {
+        VStack {
+            Text(viewModel.errorText)
+                .font(Constants.Fonts.h3)
+                .multilineTextAlignment(.center)
+                .frame(width: 190)
+                .padding(.top, 48)
+
+            Spacer()
+
+            PurpleButton(text: "OK", horizontalPadding: 60) {
+                Task {
+                    viewModel.didPresentError = false
+                }
+            }
+        }
+        .presentationDetents([.height(200)])
+        .presentationDragIndicator(.visible)
+        .presentationCornerRadius(25)
     }
 }

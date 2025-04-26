@@ -6,26 +6,104 @@
 //
 
 import Foundation
+import FirebaseAuth
+import GoogleSignIn
 
 struct User: Codable {
-    let id: String
+    let firebaseUid: String
     let username: String
     let netid: String
     let givenName: String
     let familyName: String
     let admin: Bool
+    let isActive: Bool
+    let stars: String
+    let numReviews: Int
     let photoUrl: URL
-    let venmoHandle: String
+    let venmoHandle: String?
     let email: String
     let googleId: String
     let bio: String
-    let isActive: Bool
+    let posts: [Post]?
+    let saved: [String]?
+    let feedbacks: [Feedback]?
+    let requests: [String]?
     let blocking: [String]?
     let blockers: [String]?
     let reports: [String]?
     let reportedBy: [String]?
-    let posts: [Post]?
-    let feedbacks: [Feedback]?
+
+    enum CodingKeys: String, CodingKey {
+        case firebaseUid
+        case username
+        case netid
+        case givenName
+        case familyName
+        case admin
+        case isActive
+        case stars
+        case numReviews
+        case photoUrl
+        case venmoHandle
+        case email
+        case googleId
+        case bio
+        case posts
+        case saved
+        case feedbacks
+        case requests
+        case blocking
+        case blockers
+        case reports
+        case reportedBy
+    }
+
+    func toCreateUserBody(username: String, bio: String, venmoHandle: String, imageUrl: String, fcmToken: String) -> CreateUserBody {
+        return CreateUserBody(
+            username: username,
+            netid: self.netid,
+            givenName: self.givenName,
+            familyName: self.familyName,
+            photoUrl: imageUrl,
+            venmoHandle: venmoHandle,
+            email: self.email,
+            googleId: self.googleId,
+            bio: bio,
+            fcmToken: fcmToken
+        )
+    }
+
+    static func fromGUser(_ user: GIDGoogleUser, firebaseUserId: String) throws -> User {
+        guard let defaultImageUrl = URL(string: "http://www.gravatar.com/avatar/?d=mp") else {
+            // TODO: Throw better error
+            throw URLError(.badServerResponse)
+        }
+
+        return User(
+            firebaseUid: firebaseUserId,
+            username: user.profile?.email ?? "",
+            netid: String(user.profile?.email.split(separator: "@")[0] ?? ""),
+            givenName: user.profile?.givenName ?? "",
+            familyName: user.profile?.familyName ?? "",
+            admin: false,
+            isActive: true,
+            stars: "0",
+            numReviews: 0,
+            photoUrl: user.profile?.imageURL(withDimension: 512) ?? defaultImageUrl,
+            venmoHandle: "",
+            email: user.profile?.email ?? "",
+            googleId: user.userID ?? "",
+            bio: "",
+            posts: [],
+            saved: [],
+            feedbacks: [],
+            requests: [],
+            blocking: [],
+            blockers: [],
+            reports: [],
+            reportedBy: []
+        )
+    }
 }
 
 struct UsersResponse: Codable {
@@ -36,35 +114,17 @@ struct UserResponse: Codable {
     let user: User
 }
 
-struct UserSessionData: Codable {
-    let sessions: [UserSession]
-}
-
-struct UserSessionResponse: Codable {
-    let session: UserSession
-}
-
-struct UserSession: Codable {
-    let userId: String
-    let accessToken: String
-    let active: Bool
-    let expiresAt: Int
-    let refreshToken: String
-}
-
-struct UserEmailBody: Codable {
-    let email: String
-}
-
 struct CreateUserBody: Codable {
     let username: String
     let netid: String
     let givenName: String
     let familyName: String
     let photoUrl: String
+    let venmoHandle: String
     let email: String
-    let googleID: String
+    let googleId: String
     let bio: String
+    let fcmToken: String
 }
 
 struct EditUserBody: Codable {
@@ -84,4 +144,8 @@ struct UnblockUserBody: Codable {
 
 struct LogoutResponse: Codable {
     let logoutSuccess: Bool
+}
+
+struct AuthorizeBody: Codable {
+    let token: String?
 }
