@@ -56,14 +56,14 @@ class NewListingViewModel: ObservableObject {
             defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
-                if let userID = UserSessionManager.shared.userID {
-                    let imagesBase64 = selectedImages.map { $0.toBase64() ?? "" }
-                    let postBody = PostBody(title: titleText, description: descriptionText, categories: [selectedFilter], originalPrice: Double(priceText) ?? 0, imagesBase64: imagesBase64, userId: userID)
+                if let user = GoogleAuthManager.shared.user {
+                    let imagesBase64 = selectedImages.map { $0.resizedToMaxDimension(512).toBase64() ?? "" }
+                    let postBody = PostBody(title: titleText, description: descriptionText, category: selectedFilter, originalPrice: Double(priceText) ?? 0, imagesBase64: imagesBase64, userId: user.firebaseUid)
                     let _ = try await NetworkManager.shared.createPost(postBody: postBody)
 
                     clear()
                 } else {
-                    UserSessionManager.shared.logger.error("Error in NewListingViewModel.createNewListing: userID not found")
+                    GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User not available.")
                     clear()
                 }
             } catch {

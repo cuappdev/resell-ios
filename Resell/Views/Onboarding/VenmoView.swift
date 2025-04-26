@@ -32,7 +32,7 @@ struct VenmoView: View {
             Spacer()
 
             PurpleButton(isLoading: viewModel.isLoading, isActive: !viewModel.venmoHandle.cleaned().isEmpty,text: "Continue") {
-                viewModel.createNewUser()
+                // viewModel.createNewUser()
             }
 
             Button(action: {
@@ -62,7 +62,6 @@ struct VenmoView: View {
         .onChange(of: viewModel.isLoading) { newValue in
             if !newValue {
                 withAnimation {
-                    FirebaseNotificationService.shared.setupFCMToken()
                     router.popToRoot()
                     userDidLogin = true
                 }

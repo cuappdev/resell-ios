@@ -39,7 +39,7 @@ class ProductDetailsViewModel: ObservableObject {
             do {
                 let postResponse = try await NetworkManager.shared.getPostByID(id: id)
                 item = postResponse.post
-                images = postResponse.post.images
+                images = postResponse.post.images.compactMap { URL(string: $0) }
 
                 await calculateMaxImgRatio()
                 getIsSaved()
@@ -51,7 +51,7 @@ class ProductDetailsViewModel: ObservableObject {
 
     func setPost(post: Post) {
         item = post
-        images = post.images
+        images = post.images.compactMap { URL(string: $0) }
 
         Task {
             await calculateMaxImgRatio()
@@ -83,9 +83,7 @@ class ProductDetailsViewModel: ObservableObject {
     func getSimilarPostsNaive(post: Post) {
         Task {
             do {
-                guard let category = post.categories.first else { return }
-
-                let postsResponse = try await NetworkManager.shared.getFilteredPosts(by: category)
+                let postsResponse = try await NetworkManager.shared.getFilteredPosts(by: post.category ?? "")
                 var otherPosts = postsResponse.posts
                 otherPosts.removeAll { $0.id == post.id }
 
@@ -160,8 +158,8 @@ class ProductDetailsViewModel: ObservableObject {
     }
 
     func isUserPost() -> Bool {
-        if let userId = UserSessionManager.shared.userID,
-           let itemUserId = item?.user?.id {
+        if let userId = GoogleAuthManager.shared.user?.firebaseUid,
+           let itemUserId = item?.user?.firebaseUid {
             return userId == itemUserId
         }
 

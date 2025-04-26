@@ -47,6 +47,7 @@ class HomeViewModel: ObservableObject {
             
             do {
                 let postsResponse = try await NetworkManager.shared.getAllPosts()
+                print("AFTER GETTING ALL POSTS")
                 allItems = Post.sortPostsByDate(postsResponse.posts)
                 if selectedFilter == "Recent" {
                     filteredItems = allItems
@@ -88,18 +89,18 @@ class HomeViewModel: ObservableObject {
     func getBlockedUsers() {
         Task {
             do {
-                if let userID = UserSessionManager.shared.userID {
-                    let blockedUsers = try await NetworkManager.shared.getBlockedUsers(id: userID).users.map { $0.id }
+                if let userID = GoogleAuthManager.shared.user?.firebaseUid {
+                    let blockedUsers = try await NetworkManager.shared.getBlockedUsers(id: userID).users.map { $0.firebaseUid }
                     if let jsonData = try? JSONEncoder().encode(blockedUsers),
                        let jsonString = String(data: jsonData, encoding: .utf8) {
                         blockedUsersStorage = jsonString
                     }
                 } else {
-                    UserSessionManager.shared.logger.error("Error in BlockedUsersView: userID not found.")
+                    GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User id not available.")
                 }
 
             } catch {
-                NetworkManager.shared.logger.error("Error in BlockedUsersView: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error.localizedDescription)")
             }
         }
     }
