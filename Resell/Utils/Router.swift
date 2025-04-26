@@ -31,7 +31,6 @@ class Router: ObservableObject {
         case settings(Bool)
         case blockedUsers
         case feedback
-        case notifications
         case setupProfile
         case venmo
     }

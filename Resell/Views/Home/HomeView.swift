@@ -30,6 +30,9 @@ struct HomeView: View {
                     }
                 }
             }
+//        .sheet(isPresented: $presentPopup) {
+//                FilterView()
+//            }
             .background(Constants.Colors.white)
             .overlay(alignment: .bottomTrailing) {
                 ExpandableAddButton()
@@ -49,9 +52,7 @@ struct HomeView: View {
             .loadingView(isLoading: viewModel.isLoading)
             .navigationBarBackButtonHidden()
         }
-        .sheet(isPresented: $presentPopup) {
-            FilterView()
-        }
+       
     }
     
     private var savedByYou: some View {
@@ -159,7 +160,7 @@ struct HomeView: View {
             .padding(.vertical, 1)
         }
     }
-}
+
 
 
 

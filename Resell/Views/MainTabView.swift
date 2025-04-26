@@ -79,8 +79,8 @@ struct MainTabView: View {
                     EditProfileView()
                 case .feedback:
                     SendFeedbackView()
-                case .notifications:
-                    NotificationsSettingsView()
+                //case .notifications:
+                        //   NotificationsSettingsView()
                 case .login:
                     LoginView()
                         .environmentObject(onboardingViewModel)
