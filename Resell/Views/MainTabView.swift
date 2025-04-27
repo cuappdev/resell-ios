@@ -82,7 +82,7 @@ struct MainTabView: View {
                 case .feedback:
                     SendFeedbackView()
                 case .notifications:
-                           NotificationsSettingsView()
+                    NotificationsView()
                 case .login:
                     LoginView()
                         .environmentObject(onboardingViewModel)
