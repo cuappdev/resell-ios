@@ -45,7 +45,7 @@ struct HomeView: View {
         .loadingView(isLoading: viewModel.isLoading)
         .navigationBarBackButtonHidden()
         .sheet(isPresented: $presentPopup) {
-            FilterView()
+            FilterView(home: true)
         }
     }
     
@@ -115,20 +115,7 @@ struct HomeView: View {
                 Button(action: {
                     router.push(.search(nil))
                 }, label: {
-                    RoundedRectangle(cornerRadius: 40)
-                        .frame(width: 309, height: 43)
-                        .overlay {
-                            HStack {
-                                Image(systemName: "magnifyingglass")
-                                    .foregroundStyle(.black)
-                                    .padding(.leading, 16)
-                                Text("Search")
-                                    .font(Constants.Fonts.body1)
-                                    .foregroundColor(Constants.Colors.black)
-                                Spacer()
-                            }
-                        }
-                        .foregroundColor(Constants.Colors.wash)
+                    SearchBar()
                 })
                 
                 Button(action: {
@@ -166,9 +153,12 @@ struct HomeView: View {
                     HStack {
                         ForEach(Constants.filters.filter { $0.color != nil }, id: \.id) { filter in
                             VStack{
-                                CircularFilterButton(filter: filter, isSelected: viewModel.selectedFilter == filter.title) {
-                                    viewModel.selectedFilter = filter.title
-                                }
+                                 
+                                    CircularFilterButton(filter: filter, isSelected: viewModel.selectedFilter == filter.title) {
+                                        router.push(.detailedFilter(filter))
+                                        viewModel.selectedFilter = filter.title
+                                    }
+                                
                                 Text(filter.title)
                                     .font(Constants.Fonts.title4)
                                 
