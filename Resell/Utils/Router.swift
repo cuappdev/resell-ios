@@ -27,6 +27,7 @@ class Router: ObservableObject {
         case reportOptions(type: String, id: String)
         case reportDetails
         case reportConfirmation
+        case detailedFilter(FilterCategory)
         case search(String?)
         case settings(Bool)
         case blockedUsers

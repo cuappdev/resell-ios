@@ -64,6 +64,7 @@ struct NewRequestView: View {
                         mainViewModel.hidesTabBar = false
                     }
                 } label: {
+                    //TODO: Place this in constants
                     Image(systemName: "xmark")
                         .resizable()
                         .frame(width: 20, height: 20)
