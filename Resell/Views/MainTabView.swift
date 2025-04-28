@@ -51,6 +51,8 @@ struct MainTabView: View {
                 case .newListingDetails:
                     NewListingDetailsView()
                         .environmentObject(newListingViewModel)
+                case .detailedFilter(let filter):
+                    DetailedFilterView(filter: filter)
                 case .newListingImages:
                     NewListingImagesView()
                         .environmentObject(newListingViewModel)

@@ -35,9 +35,20 @@ struct FilterView: View {
     
     let gridItem = GridItem(.adaptive(minimum: 100), spacing: 10)
 
+    let home : Bool
+    
+    init(home: Bool) {
+        self.home = home
+    }
+    
     var body: some View {
         ZStack{
             VStack{
+                RoundedRectangle(cornerRadius: 10)
+                    .frame(width: 66, height: 6)
+                    .foregroundStyle(Constants.Colors.filterGray)
+                    .padding(.bottom, 16)
+                
                 Text("Filters")
                     .font(.custom("Rubik-Medium", size: 22))
                     .foregroundStyle(.black)
@@ -123,74 +134,77 @@ struct FilterView: View {
                     }
                     .offset(y: -28)
                 }
-                
-                Divider()
-                    .frame(width: 344, height: 1)
-                    .offset(y: -16)
-                
-                VStack{
-                    Text("Product Category")
-                        .font(.custom("Rubik-Medium", size: 20))
-                        .padding(.bottom, 8)
-                        .padding(.trailing, 72)
-                        .foregroundStyle(.black)
-
+                if home{
+                    Divider()
+                        .frame(width: 344, height: 1)
+                        .offset(y: -16)
                     
-                    HFlow {
-                        ForEach(categories, id: \.self) { category in
-                            HStack {
-                                Button {
-                                    if categoryFilters.contains(category){
-                                        categoryFilters.remove(category)
-                                    } else {
-                                        categoryFilters.insert(category)
-                                    }
-                                } label: {
-                                    if categoryFilters.contains(category) {
-                                        HStack{
+                    
+                    VStack{
+                        Text("Product Category")
+                            .font(.custom("Rubik-Medium", size: 20))
+                            .padding(.bottom, 8)
+                            .padding(.trailing, 72)
+                            .foregroundStyle(.black)
+                        
+                        
+                        HFlow {
+                            ForEach(categories, id: \.self) { category in
+                                HStack {
+                                    Button {
+                                        if categoryFilters.contains(category){
+                                            categoryFilters.remove(category)
+                                        } else {
+                                            categoryFilters.insert(category)
+                                        }
+                                    } label: {
+                                        if categoryFilters.contains(category) {
+                                            HStack{
+                                                Text(category)
+                                                    .font(.custom("Rubik-Medium", size: 14))
+                                                    .foregroundStyle(Constants.Colors.resellPurple)
+                                                
+                                                Image(systemName: "xmark")
+                                                    .font(.custom("Rubik-Medium", size: 14))
+                                                    .foregroundStyle(Constants.Colors.resellPurple)
+                                            }
+                                        } else {
                                             Text(category)
                                                 .font(.custom("Rubik-Medium", size: 14))
-                                                .foregroundStyle(Constants.Colors.resellPurple)
-                                            
-                                            Image(systemName: "xmark")
-                                                .font(.custom("Rubik-Medium", size: 14))
-                                                .foregroundStyle(Constants.Colors.resellPurple)
+                                                .foregroundStyle(Color.black)
                                         }
-                                    } else {
-                                        Text(category)
-                                            .font(.custom("Rubik-Medium", size: 14))
-                                            .foregroundStyle(Color.black)
                                     }
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 20)
+                                            .stroke(categoryFilters.contains(category) ? Constants.Colors.resellPurple : Constants.Colors.filterGray, lineWidth: 1)
+                                        
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 20)
+                                                    .fill(categoryFilters.contains(category) ? Constants.Colors.purpleWash : Color.white)
+                                            )
+                                    )
                                 }
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 8)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 20)
-                                        .stroke(categoryFilters.contains(category) ? Constants.Colors.resellPurple : Constants.Colors.filterGray, lineWidth: 1)
-                                    
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 20)
-                                                .fill(categoryFilters.contains(category) ? Constants.Colors.purpleWash : Color.white)
-                                        )
-                                )
                             }
                         }
+                        .frame(width: 320, alignment: .leading)
+                        .offset(x: 36)
                     }
-                    .frame(width: 320, alignment: .leading)
-                    .offset(x: 36)
+                    .padding(.trailing, 96)
+                    
+                    Divider()
+                        .frame(width: 344, height: 1)
+                        .offset(y: 16)
+                    
                 }
-                .padding(.trailing, 96)
-
-                Divider()
-                    .frame(width: 344, height: 1)
-                    .offset(y: 16)
                 
                 VStack{
                     Text("Condition")
                         .font(.custom("Rubik-Medium", size: 20))
-                        .padding(.trailing, 218)
+                        .padding(.trailing, 232)
                         .padding(.bottom, 8)
-                        .padding(.top, 28)
+                        .padding(.top, home ? 28 : 0)
                         .foregroundStyle(.black)
 
 
@@ -236,6 +250,7 @@ struct FilterView: View {
                        
                     }
                     .frame(width: 320, alignment: .leading)
+                    .padding(.leading, -8)
                 }
                 .padding(.trailing, 32)
                 
@@ -254,9 +269,9 @@ struct FilterView: View {
                     
                     Button{
                         for categoryFilter in categoryFilters {
-                                Task {
-                                   try await NetworkManager.shared.filterByCategory(category: CategoryBody(category: categoryFilter))
-                                }
+                            Task {
+                                try await NetworkManager.shared.filterByCategory(category: CategoryBody(category: categoryFilter))
+                            }
                         }
                         for conditionFilter in conditionFilters {
                             Task {
@@ -273,8 +288,7 @@ struct FilterView: View {
                                 Task { try await NetworkManager.shared.filterPriceLowtoHigh() }
                             }
                         }
-                        
-                        
+
                         Task
                         {
                             try await NetworkManager.shared.filterByPrice(prices: PriceBody(lowPrice: Int(lowValue), maxPrice: Int(highValue)))
@@ -288,9 +302,6 @@ struct FilterView: View {
                                 .padding(.vertical, 8)
                                 .background(categoryFilters.isEmpty && conditionFilters.isEmpty ? Constants.Colors.resellPurple.opacity(0.4) : Constants.Colors.resellPurple)
                                 .cornerRadius(20)
-                        
-                        
-                       
                     }
                     .padding(.trailing, 40)
                 }
@@ -299,7 +310,7 @@ struct FilterView: View {
             
             if presentPopup {
                 SortByView(selectedSort: $selectedSort)
-                    .offset(x: 88, y: -142)
+                    .offset(x: 88, y: home ? -142 : 0)
                     .onTapGesture {
                         presentPopup.toggle()
                     }
@@ -438,5 +449,5 @@ struct RangeSlider: View {
 }
 
 #Preview {
-    FilterView()
+    FilterView(home: false)
 }
