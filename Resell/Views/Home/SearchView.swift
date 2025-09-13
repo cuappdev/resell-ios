@@ -12,13 +12,10 @@ struct SearchView: View {
     // MARK: - Properties
 
     @EnvironmentObject private var mainViewModel: MainViewModel
+    @EnvironmentObject private var searchViewModel: SearchViewModel
     @EnvironmentObject var router: Router
     @FocusState private var isFocused: Bool
 
-    @State private var isLoading: Bool = false
-    @State private var isSearching: Bool = true
-
-    @State private var searchedItems: [Post] = []
     @State private var searchText: String = ""
 
     var userID: String? = nil
@@ -37,7 +34,7 @@ struct SearchView: View {
                     .clipShape(.capsule)
                     .focused($isFocused)
                     .onSubmit {
-                        searchItems()
+                        searchViewModel.searchItems(with: searchText, userID: userID, saveQuery: true, mainViewModel: mainViewModel) {}
                     }
 
                 Button {
@@ -51,33 +48,31 @@ struct SearchView: View {
             }
             .padding(Constants.Spacing.horizontalPadding)
 
-            if isSearching {
+            if searchViewModel.isSearching {
                 searchHistoryView
 
                 Spacer()
-            } else if isLoading {
+            } else if searchViewModel.isLoading {
                 Spacer()
 
                 ProgressView()
 
                 Spacer()
             } else {
-                if searchedItems.isEmpty {
+                if searchViewModel.searchedItems.isEmpty {
                     Spacer()
-
                     emptyState
-
                     Spacer()
                 } else {
-                    ProductsGalleryView(items: searchedItems)
+                    ProductsGalleryView(items: searchViewModel.searchedItems)
                 }
             }
         }
         .navigationBarBackButtonHidden()
         .background(Constants.Colors.white)
-        .loadingView(isLoading: isLoading)
+        .loadingView(isLoading: searchViewModel.isLoading)
         .onChange(of: isFocused) { newValue in
-            isSearching = newValue
+            searchViewModel.isSearching = newValue
         }
     }
 
@@ -112,7 +107,7 @@ struct SearchView: View {
                 ForEach(mainViewModel.searchHistory, id: \.self) { query in
                     Button {
                         searchText = query
-                        searchItems()
+                        searchViewModel.searchItems(with: searchText, userID: userID, saveQuery: true, mainViewModel: mainViewModel) {}
                     } label: {
                         Text(query)
                             .font(Constants.Fonts.body1)
@@ -127,27 +122,31 @@ struct SearchView: View {
     }
 
     // MARK: - Functions
+    
+    // TODO: move this (network manager) and call it multiple times for the forYou card
 
-    private func searchItems() {
-        isSearching = false
-        isLoading = true
-
-        Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
-            
-            do {
-                let postsResponse = try await NetworkManager.shared.getSearchedPosts(with: searchText)
-
-                if let userID {
-                    searchedItems = postsResponse.posts.filter { $0.user?.firebaseUid == userID }
-                } else {
-                    searchedItems = postsResponse.posts
-                }
-                
-                mainViewModel.saveSearchQuery(searchText)
-            } catch {
-                NetworkManager.shared.logger.error("Error in SearchView.searchItems: \(error.localizedDescription)")
-            }
-        }
-    }
+//    private func searchItems(isSearchView: Bool) {
+//        isSearching = false
+//        isLoading = true
+//
+//        Task {
+//            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+//            
+//            do {
+//                let postsResponse = try await NetworkManager.shared.getSearchedPosts(with: searchText)
+//
+//                if let userID {
+//                    searchedItems = postsResponse.posts.filter { $0.user?.firebaseUid == userID }
+//                } else {
+//                    searchedItems = postsResponse.posts
+//                }
+//                
+//                if isSearchView {
+//                    mainViewModel.saveSearchQuery(searchText)
+//                }
+//            } catch {
+//                NetworkManager.shared.logger.error("Error in SearchView.searchItems: \(error.localizedDescription)")
+//            }
+//        }
+//    }
 }
