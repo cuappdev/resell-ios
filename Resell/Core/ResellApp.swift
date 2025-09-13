@@ -12,15 +12,20 @@ import SwiftUI
 import UserNotifications
 import DeviceCheck
 
-
 @main
 struct ResellApp: App {
 
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-
+    @StateObject var mainViewModel = MainViewModel()
+    //TODO: Refactor...
+      init() {
+          HomeViewModel.shared.configure(mainViewModel: mainViewModel)
+      }
     var body: some Scene {
         WindowGroup {
             MainView()
+                .environmentObject(mainViewModel)
+                .environmentObject(HomeViewModel.shared)
 //                .onAppear(perform: {
 //                    // this makes sure that we are setting the app to the app delegate as soon as the main view appears
 //                    appDelegate.app = self

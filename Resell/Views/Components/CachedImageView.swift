@@ -15,6 +15,7 @@ struct CachedImageView: View {
 
     @Binding var isImageLoaded: Bool
 
+    var isForYou: Bool? = nil
     let imageURL: URL?
 
     // MARK: - UI

@@ -23,12 +23,11 @@ struct DetailedFilterView: View {
         }
         .background(Constants.Colors.white)
         .loadingView(isLoading: viewModel.isLoading)
-        .emptyState(isEmpty: $viewModel.savedItems.isEmpty, title: "No \(filter.title) posts", text: "Posts in the \(filter.title) category will be displayed here.")
-        .refreshable {
-            viewModel.getAllPosts()
-        }
+        .emptyState(isEmpty: $viewModel.filteredItems.isEmpty, title: "No \(filter.title) posts", text: "Posts in the \(filter.title) category will be displayed here.")
+//        .refreshable {
+//            viewModel.getAllPosts()
+//        }
         .onAppear {
-            viewModel.getAllPosts()
             viewModel.getBlockedUsers()
         }
         .sheet(isPresented: $presentPopup) {
