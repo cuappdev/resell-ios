@@ -23,10 +23,10 @@ struct SavedView: View {
         .loadingView(isLoading: viewModel.isLoading)
         .emptyState(isEmpty: $viewModel.savedItems.isEmpty, title: "No saved posts", text: "Posts you have bookmarked will be displayed here.")
         .refreshable {
-            viewModel.getSavedPosts()
+            viewModel.getSavedPosts() {}
         }
         .onAppear {
-            viewModel.getSavedPosts()
+            viewModel.getSavedPosts() {}
         }
     }
 

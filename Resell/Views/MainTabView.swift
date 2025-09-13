@@ -29,7 +29,7 @@ struct MainTabView: View {
     var body: some View {
         NavigationStack(path: $router.path) {
             VStack {
-                if !mainViewModel.userDidLogin {
+                if mainViewModel.userDidLogin {
                     ZStack(alignment: .bottom) {
                         mainView
 
