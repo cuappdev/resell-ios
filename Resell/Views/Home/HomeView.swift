@@ -116,6 +116,17 @@ struct HomeView: View {
                 Spacer()
                 
                 Button(action: {
+                    router.push(.search(nil))
+                }, label: {
+                    Image(systemName: "magnifyingglass")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 20, height: 20)
+                        .foregroundStyle(Color.black)
+                })
+                .padding(.trailing, 20)
+                
+                Button(action: {
                     router.push(.notifications)
                 }, label: {
                     Icon(image: "bell")
@@ -124,23 +135,24 @@ struct HomeView: View {
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
             .padding(.vertical, -4)
-            HStack{
-                Button(action: {
-                    router.push(.search(nil))
-                }, label: {
-                    SearchBar()
-                })
-                
-                Button(action: {
-                    presentPopup = true
-                }, label: {
-                    Image("filters")
-                        .resizable()
-                        .frame(width: 40, height: 40)
-                })
-            }
-            .padding(.bottom,12)
-            .padding(.horizontal, Constants.Spacing.horizontalPadding)
+            
+//            HStack{
+//                Button(action: {
+//                    router.push(.search(nil))
+//                }, label: {
+//                    SearchBar()
+//                })
+//                
+//                Button(action: {
+//                    presentPopup = true
+//                }, label: {
+//                    Image("filters")
+//                        .resizable()
+//                        .frame(width: 40, height: 40)
+//                })
+//            }
+//            .padding(.bottom,12)
+//            .padding(.horizontal, Constants.Spacing.horizontalPadding)
         }
     }
 
