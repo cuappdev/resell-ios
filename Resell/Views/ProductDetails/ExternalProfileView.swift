@@ -49,6 +49,7 @@ struct ExternalProfileView: View {
 
                 ProductsGalleryView(items: viewModel.selectedPosts)
                     .loadingView(isLoading: viewModel.isLoadingUser)
+                    .padding(.top, 16)
             }
             .background(Constants.Colors.white)
             .toolbar {

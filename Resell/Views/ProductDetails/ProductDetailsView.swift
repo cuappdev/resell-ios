@@ -44,7 +44,10 @@ struct ProductDetailsView: View {
             }
             .ignoresSafeArea()
 
-            buttonGradientView
+
+            if !viewModel.isMyPost() {
+                buttonGradientView
+            }
 
             if viewModel.didShowOptionsMenu {
                 OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowDeleteView: $viewModel.didShowDeleteView, options: {
@@ -293,13 +296,13 @@ struct ProductDetailsView: View {
         VStack {
             PurpleButton(text: "Contact Seller") {
                 if let item = viewModel.item, let user = item.user, let me = GoogleAuthManager.shared.user {
-                    let chatInfo = SimpleChatInfo(
-                        listingId: item.id,
-                        buyerId: me.firebaseUid,
-                        sellerId: user.firebaseUid
+                    let chatInfo = ChatInfo(
+                        listing: item,
+                        buyer: me,
+                        seller: user
                     )
 
-                    navigateToChats(simpleChatInfo: chatInfo)
+                    navigateToChats(chatInfo: chatInfo)
                 }
             }
         }
@@ -431,17 +434,17 @@ struct ProductDetailsView: View {
 
     // MARK: - Functions
 
-    private func navigateToChats(simpleChatInfo: SimpleChatInfo) {
+    private func navigateToChats(chatInfo: ChatInfo) {
         if let existingIndex = router.path.firstIndex(where: {
             if case .messages = $0 {
                 return true
             }
             return false
         }) {
-            router.path[existingIndex] = .messages(chatInfo: simpleChatInfo)
+            router.path[existingIndex] = .messages(chatInfo: chatInfo)
             router.popTo(router.path[existingIndex])
         } else {
-            router.push(.messages(chatInfo: simpleChatInfo))
+            router.push(.messages(chatInfo: chatInfo))
         }
     }
 }

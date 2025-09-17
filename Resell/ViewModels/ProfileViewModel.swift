@@ -67,7 +67,7 @@ class ProfileViewModel: ObservableObject {
                 }
 
             } catch {
-                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error)")
             }
         }
     }
@@ -83,7 +83,7 @@ class ProfileViewModel: ObservableObject {
 
                 isLoadingUser = false
             } catch {
-                NetworkManager.shared.logger.error("Error in ProfileViewModel: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in ProfileViewModel: \(error)")
                 isLoadingUser = false
             }
         }
@@ -99,7 +99,7 @@ class ProfileViewModel: ObservableObject {
                     GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User id not available.")
                 }
             } catch {
-                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error)")
             }
         }
     }
@@ -114,7 +114,7 @@ class ProfileViewModel: ObservableObject {
                 let blocked = BlockUserBody(blocked: id)
                 try await NetworkManager.shared.blockUser(blocked: blocked)
             } catch {
-                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error)")
             }
         }
     }
@@ -129,7 +129,7 @@ class ProfileViewModel: ObservableObject {
                 let unblocked = UnblockUserBody(unblocked: id)
                 try await NetworkManager.shared.unblockUser(unblocked: unblocked)
             } catch {
-                NetworkManager.shared.logger.error("Error in ProfileViewModel.unblockUser: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in ProfileViewModel.unblockUser: \(error)")
             }
         }
     }

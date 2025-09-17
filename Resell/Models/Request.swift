@@ -11,7 +11,7 @@ struct Request: Codable {
     let id: String
     let title: String
     let description: String
-    let user: User
+    let user: User?
 }
 
 struct RequestsResponse: Codable {

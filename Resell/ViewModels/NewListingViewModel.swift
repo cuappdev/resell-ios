@@ -58,7 +58,7 @@ class NewListingViewModel: ObservableObject {
             do {
                 if let user = GoogleAuthManager.shared.user {
                     let imagesBase64 = selectedImages.map { $0.resizedToMaxDimension(512).toBase64() ?? "" }
-                    let postBody = PostBody(title: titleText, description: descriptionText, category: selectedFilter, originalPrice: Double(priceText) ?? 0, imagesBase64: imagesBase64, userId: user.firebaseUid)
+                    let postBody = PostBody(title: titleText, description: descriptionText, categories: [selectedFilter], originalPrice: Double(priceText) ?? 0, imagesBase64: imagesBase64, firebaseUid: user.firebaseUid)
                     let _ = try await NetworkManager.shared.createPost(postBody: postBody)
 
                     clear()

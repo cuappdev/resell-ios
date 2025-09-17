@@ -14,7 +14,9 @@ class ChatsViewModel: ObservableObject {
 
     // MARK: - Properties
 
-    @Published var isLoading: Bool = false
+    @EnvironmentObject private var mainViewModel: MainViewModel
+
+    @Published var isLoading = false
 
     @Published var purchaseChats: [Chat] = []
     @Published var offerChats: [Chat] = []
@@ -68,47 +70,34 @@ class ChatsViewModel: ObservableObject {
     }
 
     func getAllChats() {
-        isLoading = true
-
-        Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
-
-            do {
-                if let user = GoogleAuthManager.shared.user {
-                    blockedUsers = try await NetworkManager.shared.getBlockedUsers(id: user.firebaseUid).users.map { $0.email }
-
-                    getPurchaceChats()
-                    getOfferChats()
-                } else {
-                    GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User not available.")
-                }
-            } catch {
-                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error)")
-            }
-        }
+        getPurchaceChats()
+        getOfferChats()
     }
 
     func getPurchaceChats() {
+        isLoading = true
         FirestoreManager.shared.subscribeToBuyerChats { [weak self] purchaseChats in
             guard let self else { return }
 
             self.purchaseChats = purchaseChats.filter { !self.blockedUsers.contains($0.other.email) }
-
             purchaseUnread = countUnviewedChats(chats: self.purchaseChats)
+            isLoading = false
         }
     }
 
     func getOfferChats() {
+        isLoading = true
         FirestoreManager.shared.subscribeToSellerChats { [weak self] offerChats in
             guard let self else { return }
 
             self.offerChats = offerChats.filter { !self.blockedUsers.contains($0.other.email) }
             offerUnread = countUnviewedChats(chats: self.offerChats)
+            isLoading = false
         }
     }
 
     func countUnviewedChats(chats: [Chat]) -> Int {
-        return chats.reduce(into: 0) { $0 += ($1.messages.filter { !$0.read }.count) }
+        return chats.reduce(into: 0) { $0 += ($1.messages.filter { !$0.read && !$0.mine }.count) }
     }
 
     func getSelectedChatPost(completion: @escaping (Post) -> Void) {
@@ -122,9 +111,17 @@ class ChatsViewModel: ObservableObject {
                     let postResponse = try await NetworkManager.shared.getPostByID(id: postId)
                     selectedPost = postResponse.post
 
-                    completion(postResponse.post)
+                    guard let post = postResponse.post else {
+                        // TODO: Better error handling
+                        NetworkManager.shared.logger.error("Error in \(#file) \(#function): Post not available.")
+                        return
+                    }
+
+                    completion(post)
+                    isLoading = false
                 } catch {
-                    NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error.localizedDescription)")
+                    NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error)")
+                    // TODO: Better error handling
                 }
             }
         }
