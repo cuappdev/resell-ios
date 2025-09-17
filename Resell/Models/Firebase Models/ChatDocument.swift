@@ -23,6 +23,8 @@ struct ChatDocument: Codable {
         let buyer = try await NetworkManager.shared.getUserByID(id: buyerID).user
         let seller = try await NetworkManager.shared.getUserByID(id: sellerID).user
 
+        guard let post else { throw ErrorResponse.userNotFound }
+
         return Chat(
             id: id,
             post: post,

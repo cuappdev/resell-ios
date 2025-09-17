@@ -10,10 +10,6 @@ import SwiftUI
 @MainActor
 class HomeViewModel: ObservableObject {
 
-    // MARK: - Shared Instance
-
-    static let shared = HomeViewModel()
-
     // MARK: - Properties
     private var mainViewModel: MainViewModel?
     
@@ -26,7 +22,6 @@ class HomeViewModel: ObservableObject {
     }
 
     @Published var isLoading: Bool = false
-
     @Published var filteredItems: [Post] = []
     @Published var selectedFilter: String = "Recent" {
         didSet {
@@ -42,6 +37,7 @@ class HomeViewModel: ObservableObject {
     @Published var savedItems: [Post] = []
 
     private var allItems: [Post] = []
+    private var page = 1
 
     // MARK: - Persistent Storage
 
@@ -51,17 +47,30 @@ class HomeViewModel: ObservableObject {
 
     func getAllPosts() {
         isLoading = true
-
         Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
-            
             do {
                 let postsResponse = try await NetworkManager.shared.getAllPosts()
                 
                 allItems = Post.sortPostsByDate(postsResponse.posts)
                 filteredItems = allItems
             } catch {
+                // TODO: Add proper error handling
                 NetworkManager.shared.logger.error("Error in HomeViewModel.getAllPosts: \(error)")
+                isLoading = false
+            }
+        }
+    }
+
+    func fetchMoreItems() {
+        page += 1
+        Task {
+            do {
+                let postsResponse = try await NetworkManager.shared.getAllPosts(page: page)
+                allItems.append(contentsOf: Post.sortPostsByDate(postsResponse.posts))
+                filteredItems.append(contentsOf: Post.sortPostsByDate(postsResponse.posts))
+
+            } catch {
+                NetworkManager.shared.logger.error("Error in HomeViewModel.fetchMoreItems: \(error)")
             }
         }
     }
@@ -95,6 +104,9 @@ class HomeViewModel: ObservableObject {
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.filterPosts: \(error)")
             }
+            await MainActor.run {
+                isLoading = false
+            }
         }
     }
 
@@ -112,7 +124,7 @@ class HomeViewModel: ObservableObject {
                 }
 
             } catch {
-                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error)")
             }
         }
     }

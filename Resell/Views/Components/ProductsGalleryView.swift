@@ -18,12 +18,15 @@ struct ProductsGalleryView: View {
     let column1: [Post]
     let column2: [Post]
 
+    let onScrollToBottom: (() -> Void)?
+
     // MARK: Init
 
-    init(items: [Post]) {
+    init(items: [Post], onScrollToBottom: (() -> Void)? = nil) {
         let (items1, items2): ([Post], [Post]) = items.splitIntoTwo()
         self.column1 = items1
         self.column2 = items2
+        self.onScrollToBottom = onScrollToBottom
     }
 
     // MARK: UI
@@ -44,6 +47,7 @@ struct ProductsGalleryView: View {
                 }
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
+            .padding(.bottom, Constants.Spacing.horizontalPadding)
         }
         .onChange(of: selectedItem) { item in
             if let selectedItem {

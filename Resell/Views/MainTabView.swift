@@ -130,12 +130,11 @@ struct MainTabView: View {
         .ignoresSafeArea(edges: .bottom)
         .padding(.horizontal, 40)
         .padding(.top, 16)
-        .padding(.bottom, 36)
+        .padding(.bottom, 46)
         .frame(width: UIScreen.width)
         .background(Constants.Colors.white)
         .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
         .shadow(radius: 4)
-        .offset(y: 34)
         .transition(.move(edge: .bottom))
         .animation(.easeInOut, value: isHidden)
     }

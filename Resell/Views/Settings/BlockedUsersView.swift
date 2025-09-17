@@ -153,7 +153,7 @@ struct BlockedUsersView: View {
                     GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User not available.")
                 }
             } catch {
-                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error)")
             }
         }
     }
@@ -168,7 +168,7 @@ struct BlockedUsersView: View {
                     getBlockedUsers()
                 }
             } catch {
-                NetworkManager.shared.logger.error("Error in BlockedUsersView: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in BlockedUsersView: \(error)")
             }
         }
     }

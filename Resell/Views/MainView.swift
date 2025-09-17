@@ -12,7 +12,7 @@ struct MainView: View {
 
     // MARK: - Properties
 
-    @StateObject private var mainViewModel = MainViewModel()
+    @EnvironmentObject private var mainViewModel: MainViewModel
     @StateObject private var router = Router()
     @StateObject private var chatsViewModel = ChatsViewModel()
     @StateObject private var newListingViewModel = NewListingViewModel()
@@ -31,6 +31,7 @@ struct MainView: View {
             .environmentObject(newListingViewModel)
             .environmentObject(onboardingViewModel)
             .environmentObject(reportViewModel)
+            .environmentObject(homeViewModel)
             .background(Constants.Colors.white)
             .onAppear {
                 let signInConfig = GIDConfiguration.init(clientID: Keys.googleClientID)

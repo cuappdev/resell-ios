@@ -59,7 +59,7 @@ class NetworkManager: APIClient {
     ///   - body: The data to be sent in the request body, which must conform to `Encodable`.
     /// - Returns: A publisher that emits a decoded instance of type `T` or an error if the decoding or network request fails.
     ///
-    func post<T: Decodable, U: Encodable>(url: URL, body: U) async throws -> T {
+    func post<T: Decodable, U: Encodable>(url: URL, body: U, attempt: Int = 1) async throws -> T {
         let requestData = try JSONEncoder().encode(body)
         let request = try createRequest(url: url, method: "POST", body: requestData)
         
@@ -71,7 +71,7 @@ class NetworkManager: APIClient {
     }
     
     /// Overloaded post function for requests without a return
-    func post<U: Encodable>(url: URL, body: U) async throws{
+    func post<U: Encodable>(url: URL, body: U, attempt: Int = 1) async throws {
         let requestData = try JSONEncoder().encode(body)
         let request = try createRequest(url: url, method: "POST", body: requestData)
         
@@ -81,7 +81,7 @@ class NetworkManager: APIClient {
     }
     
     /// Overloaded post function for requests without a body
-    func post<T: Decodable>(url: URL) async throws -> T {
+    func post<T: Decodable>(url: URL, attempt: Int = 1) async throws -> T {
         let request = try createRequest(url: url, method: "POST")
         
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -92,7 +92,7 @@ class NetworkManager: APIClient {
     }
     
     /// Template function to DELETE data to a specified URL with an encodable body and decodes the response into a specified type `T`.
-    func delete(url: URL) async throws {
+    func delete(url: URL, attempt: Int = 1) async throws {
         let request = try createRequest(url: url, method: "DELETE")
         
         let (data, response) = try await URLSession.shared.data(for: request)
