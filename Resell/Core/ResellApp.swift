@@ -17,10 +17,12 @@ import DeviceCheck
 struct ResellApp: App {
 
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @StateObject private var mainViewModel = MainViewModel()
 
     var body: some Scene {
         WindowGroup {
             MainView()
+                .environmentObject(mainViewModel)
         }
     }
 }
@@ -35,23 +37,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     ) -> Bool {
         FirebaseApp.configure()
         FirebaseNotificationService.shared.configure()
-
-        // print device purchasingID
-        if let deviceID = UIDevice.current.identifierForVendor?.uuidString {
-            print("DEVICE ID \(deviceID)")
-        }
-
-        // print ephemeral id
-        DCDevice.current.generateToken {
-            (data, error) in
-            guard let data = data else {
-                return
-            }
-
-            let ephemeralID = data
-        }
-
-
         return true
     }
 

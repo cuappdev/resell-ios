@@ -13,7 +13,7 @@ struct HomeView: View {
 
     @EnvironmentObject private var mainViewModel: MainViewModel
     @EnvironmentObject var router: Router
-    @StateObject private var viewModel = HomeViewModel.shared
+    @EnvironmentObject private var viewModel: HomeViewModel
 
     var body: some View {
         VStack(spacing: 0) {
@@ -22,12 +22,16 @@ struct HomeView: View {
             filtersView
                 .padding(.bottom, 12)
 
-            ProductsGalleryView(items: viewModel.filteredItems)
+            ProductsGalleryView(items: viewModel.filteredItems) {
+                if viewModel.selectedFilter == "Recent" {
+                    viewModel.fetchMoreItems()
+                }
+            }
+            .emptyState(isEmpty: viewModel.filteredItems.isEmpty, title: "No posts found", text: "Check back later.")
         }
         .background(Constants.Colors.white)
         .overlay(alignment: .bottomTrailing) {
             ExpandableAddButton()
-                .padding(.bottom, 40)
         }
         .onAppear {
             viewModel.getAllPosts()
@@ -40,7 +44,6 @@ struct HomeView: View {
         .refreshable {
             viewModel.getAllPosts()
         }
-        .loadingView(isLoading: viewModel.isLoading)
         .navigationBarBackButtonHidden()
     }
 

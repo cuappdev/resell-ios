@@ -7,53 +7,89 @@
 
 import Foundation
 
-protocol Message {
-    var messageId: String? { get set }
+protocol Message: Codable, Hashable {
+    var messageId: String { get set }
     var messageType: MessageType { get }
     var timestamp: Date { get set }
     var read: Bool { get set }
-    var fromUser: Bool { get set }
+    var mine: Bool { get set }
+    var from: User { get set }
     /// Has this message been confirmed to have been sent?
-    var confirmed: Bool { get set }
+    var sent: Bool { get set }
+
+    func isEqual(to other: any Message) -> Bool
 }
 
 struct ChatMessage: Message {
-    var messageId: String?
+
+    var messageId: String
     var messageType: MessageType = .chat
     var timestamp: Date
-    var read: Bool
-    var fromUser: Bool
-    var confirmed: Bool
+    var read: Bool = true
+    var mine: Bool
+    var from: User
+    var sent: Bool = true
     var text: String
     var images: [String]
+
+    func isEqual(to other: any Message) -> Bool {
+        guard let otherMessage = other as? ChatMessage else {
+            return false
+        }
+
+        return self.sent == otherMessage.sent && self.messageId == otherMessage.messageId
+    }
+
 }
 
 struct AvailabilityMessage: Message {
-    var messageId: String?
+
+    var messageId: String
     var messageType: MessageType = .availability
     var timestamp: Date
-    var read: Bool
-    var fromUser: Bool
-    var confirmed: Bool
+    var read: Bool = true
+    var mine: Bool
+    var from: User
+    var sent: Bool = true
     var availabilities: [Availability]
+
+    func isEqual(to other: any Message) -> Bool {
+        guard let otherMessage = other as? AvailabilityMessage else {
+            return false
+        }
+
+        return self.sent == otherMessage.sent && self.messageId == otherMessage.messageId
+    }
+
 }
 
 struct ProposalMessage: Message {
-    var messageId: String?
+    var messageId: String
     var messageType: MessageType = .proposal
     var timestamp: Date
-    var read: Bool
-    var fromUser: Bool
-    var confirmed: Bool
+    var read: Bool = true
+    var mine: Bool
+    var sent: Bool = true
+    var from: User
     var startDate: Date
     var endDate: Date
     /// Has this proposal been accepted? `nil` if no action has been taken
     var accepted: Bool?
+
+    func isEqual(to other: any Message) -> Bool {
+        guard let otherMessage = other as? ProposalMessage else {
+            return false
+        }
+
+        return self.sent == otherMessage.sent && self.messageId == otherMessage.messageId
+    }
 }
 
 struct Availability: Codable, Hashable {
+
     let startDate: Date
     let endDate: Date
+
 }
 
 enum MessageType: String, Codable {
@@ -75,6 +111,6 @@ struct MessageBody: Codable {
     let endDate: Date?
 }
 
-struct UpdateMessageBody: Codable {
+struct ReadMessageRepsonse: Codable {
     let read: Bool
 }

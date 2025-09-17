@@ -18,12 +18,15 @@ struct ProductsGalleryView: View {
     let column1: [Post]
     let column2: [Post]
 
+    let onScrollToBottom: (() -> Void)?
+
     // MARK: Init
 
-    init(items: [Post]) {
+    init(items: [Post], onScrollToBottom: (() -> Void)? = nil) {
         let (items1, items2): ([Post], [Post]) = items.splitIntoTwo()
         self.column1 = items1
         self.column2 = items2
+        self.onScrollToBottom = onScrollToBottom
     }
 
     // MARK: UI
@@ -34,6 +37,11 @@ struct ProductsGalleryView: View {
                 LazyVStack(spacing: 20) {
                     ForEach(column1) { post in
                         ProductGalleryCell(selectedItem: $selectedItem, post: post)
+                            .onAppear {
+                                if post == column1.last {
+                                    onScrollToBottom?()
+                                }
+                            }
                     }
                 }
 
@@ -44,6 +52,7 @@ struct ProductsGalleryView: View {
                 }
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
+            .padding(.bottom, Constants.Spacing.horizontalPadding)
         }
         .onChange(of: selectedItem) { item in
             if let selectedItem {

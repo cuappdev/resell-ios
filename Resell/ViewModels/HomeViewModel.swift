@@ -10,14 +10,9 @@ import SwiftUI
 @MainActor
 class HomeViewModel: ObservableObject {
 
-    // MARK: - Shared Instance
-
-    static let shared = HomeViewModel()
-
     // MARK: - Properties
 
     @Published var isLoading: Bool = false
-
     @Published var filteredItems: [Post] = []
     @Published var selectedFilter: String = "Recent" {
         didSet {
@@ -32,6 +27,7 @@ class HomeViewModel: ObservableObject {
     @Published var savedItems: [Post] = []
 
     private var allItems: [Post] = []
+    private var page = 1
 
     // MARK: - Persistent Storage
 
@@ -41,27 +37,40 @@ class HomeViewModel: ObservableObject {
 
     func getAllPosts() {
         isLoading = true
-
         Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
-            
             do {
                 let postsResponse = try await NetworkManager.shared.getAllPosts()
-                print("AFTER GETTING ALL POSTS")
                 allItems = Post.sortPostsByDate(postsResponse.posts)
                 if selectedFilter == "Recent" {
                     filteredItems = allItems
                 } else {
                     filterPosts(by: selectedFilter)
                 }
+                isLoading = false
             } catch {
+                // TODO: Add proper error handling
                 NetworkManager.shared.logger.error("Error in HomeViewModel.getAllPosts: \(error)")
+                isLoading = false
+            }
+        }
+    }
+
+    func fetchMoreItems() {
+        page += 1
+        Task {
+            do {
+                let postsResponse = try await NetworkManager.shared.getAllPosts(page: page)
+                allItems.append(contentsOf: Post.sortPostsByDate(postsResponse.posts))
+                filteredItems.append(contentsOf: Post.sortPostsByDate(postsResponse.posts))
+
+            } catch {
+                NetworkManager.shared.logger.error("Error in HomeViewModel.fetchMoreItems: \(error)")
             }
         }
     }
 
     func getSavedPosts() {
-        isLoading = true
+
 
         Task {
             defer { Task { @MainActor in withAnimation { isLoading = false } } }
@@ -76,12 +85,17 @@ class HomeViewModel: ObservableObject {
     }
 
     func filterPosts(by filter: String) {
+        isLoading = true
         Task {
             do {
-                let postsResponse = try await NetworkManager.shared.getFilteredPosts(by: selectedFilter)
+                let postsResponse = try await NetworkManager.shared.getFilteredPostsByCategory(for: [selectedFilter])
                 filteredItems = postsResponse.posts
+
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.filterPosts: \(error)")
+            }
+            await MainActor.run {
+                isLoading = false
             }
         }
     }
@@ -100,7 +114,7 @@ class HomeViewModel: ObservableObject {
                 }
 
             } catch {
-                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error)")
             }
         }
     }

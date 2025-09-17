@@ -146,7 +146,7 @@ struct SearchView: View {
                 
                 mainViewModel.saveSearchQuery(searchText)
             } catch {
-                NetworkManager.shared.logger.error("Error in SearchView.searchItems: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in SearchView.searchItems: \(error)")
             }
         }
     }

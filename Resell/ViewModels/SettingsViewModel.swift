@@ -72,7 +72,7 @@ class SettingsViewModel: ObservableObject {
                     GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User not available.")
                 }
             } catch {
-                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error)")
             }
         }
     }

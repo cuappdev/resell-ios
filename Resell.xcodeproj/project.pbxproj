@@ -101,7 +101,6 @@
 		2CE473A22CC4577500BD7E2C /* ReportConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE473A12CC4577500BD7E2C /* ReportConfirmationView.swift */; };
 		2CE473A42CC4595C00BD7E2C /* ReportViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE473A32CC4595C00BD7E2C /* ReportViewModel.swift */; };
 		2CE473AC2CC5FF8A00BD7E2C /* Router.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE473AB2CC5FF8A00BD7E2C /* Router.swift */; };
-		2CF356152CDD8C020045A173 /* EmptyState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF356142CDD8C020045A173 /* EmptyState.swift */; };
 		2CF356172CDDC2110045A173 /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF356162CDDC2110045A173 /* Request.swift */; };
 		2CF356192CDDD4A30045A173 /* HapticFeedbackGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF356182CDDD4A30045A173 /* HapticFeedbackGenerator.swift */; };
 		2CF3561B2CDDD65F0045A173 /* SwipeableRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF3561A2CDDD65F0045A173 /* SwipeableRow.swift */; };
@@ -126,7 +125,7 @@
 		D0961AF82D6E28D600DCC293 /* MessageDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0961AF72D6E28D300DCC293 /* MessageDocument.swift */; };
 		D0961AFC2D6E42D500DCC293 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0961AFB2D6E42D100DCC293 /* Message.swift */; };
 		D0961AFE2D6E47F500DCC293 /* Chat.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0961AFD2D6E47F200DCC293 /* Chat.swift */; };
-		D0B4A2602DA7184C00A1722C /* resell-service.json in Resources */ = {isa = PBXBuildFile; fileRef = D0B4A25F2DA7184C00A1722C /* resell-service.json */; };
+		D0A25DEE2E5804A900607E1F /* EmptyStateModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A25DED2E5804A900607E1F /* EmptyStateModifier.swift */; };
 		D0DAEF292D6F607300641151 /* MessageCluster.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0DAEF282D6F606C00641151 /* MessageCluster.swift */; };
 		D0DAEF2B2D6FF48800641151 /* MessagesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0DAEF2A2D6FF47E00641151 /* MessagesViewModel.swift */; };
 /* End PBXBuildFile section */
@@ -244,7 +243,6 @@
 		2CE473A12CC4577500BD7E2C /* ReportConfirmationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportConfirmationView.swift; sourceTree = "<group>"; };
 		2CE473A32CC4595C00BD7E2C /* ReportViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportViewModel.swift; sourceTree = "<group>"; };
 		2CE473AB2CC5FF8A00BD7E2C /* Router.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router.swift; sourceTree = "<group>"; };
-		2CF356142CDD8C020045A173 /* EmptyState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyState.swift; sourceTree = "<group>"; };
 		2CF356162CDDC2110045A173 /* Request.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
 		2CF356182CDDD4A30045A173 /* HapticFeedbackGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticFeedbackGenerator.swift; sourceTree = "<group>"; };
 		2CF3561A2CDDD65F0045A173 /* SwipeableRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipeableRow.swift; sourceTree = "<group>"; };
@@ -252,10 +250,11 @@
 		2CF3561E2CDE93E00045A173 /* EditProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileViewModel.swift; sourceTree = "<group>"; };
 		2CFE42712D4097CF007D503F /* Image.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Image.swift; sourceTree = "<group>"; };
 		D051D8162D7E2E0500C089AF /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		D063A0182DBC268700F17A9C /* Untitled.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Untitled.swift; sourceTree = "<group>"; };
 		D0961AF72D6E28D300DCC293 /* MessageDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageDocument.swift; sourceTree = "<group>"; };
 		D0961AFB2D6E42D100DCC293 /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
 		D0961AFD2D6E47F200DCC293 /* Chat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chat.swift; sourceTree = "<group>"; };
-		D0B4A25F2DA7184C00A1722C /* resell-service.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "resell-service.json"; sourceTree = "<group>"; };
+		D0A25DED2E5804A900607E1F /* EmptyStateModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateModifier.swift; sourceTree = "<group>"; };
 		D0DAEF282D6F606C00641151 /* MessageCluster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageCluster.swift; sourceTree = "<group>"; };
 		D0DAEF2A2D6FF47E00641151 /* MessagesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -341,7 +340,6 @@
 			isa = PBXGroup;
 			children = (
 				D051D8162D7E2E0500C089AF /* GoogleService-Info.plist */,
-				D0B4A25F2DA7184C00A1722C /* resell-service.json */,
 			);
 			path = Supporting;
 			sourceTree = "<group>";
@@ -375,6 +373,7 @@
 		2C9337442C929B0600818C8E /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				D063A0182DBC268700F17A9C /* Untitled.swift */,
 				D0961AFD2D6E47F200DCC293 /* Chat.swift */,
 				2C16928C2CE41727009D2291 /* ErrorResponse.swift */,
 				2C16928E2CE43409009D2291 /* Feedback.swift */,
@@ -620,7 +619,7 @@
 		2CF356132CDD8BD60045A173 /* ViewModifiers */ = {
 			isa = PBXGroup;
 			children = (
-				2CF356142CDD8C020045A173 /* EmptyState.swift */,
+				D0A25DED2E5804A900607E1F /* EmptyStateModifier.swift */,
 				2C1692902CE4361C009D2291 /* LoadingView.swift */,
 				2CD6CA8B2CB48286005A4F78 /* PopupModal.swift */,
 			);
@@ -758,7 +757,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D0B4A2602DA7184C00A1722C /* resell-service.json in Resources */,
 				D051D8172D7E2E0500C089AF /* GoogleService-Info.plist in Resources */,
 				2C9EAF702CF26DA00010A44C /* Rubik-Regular.ttf in Resources */,
 				2C9B4D0C2C90EF1D0029DF61 /* Launch Screen.storyboard in Resources */,
@@ -827,6 +825,7 @@
 				2CDDF30E2CCD915E0061A564 /* MessagesView.swift in Sources */,
 				2C9B4CCB2C8FB7B70029DF61 /* ResellApp.swift in Sources */,
 				2C4DD97D2C98D45B0055D0AB /* SetupProfileViewModel.swift in Sources */,
+				D0A25DEE2E5804A900607E1F /* EmptyStateModifier.swift in Sources */,
 				2CE473A42CC4595C00BD7E2C /* ReportViewModel.swift in Sources */,
 				2CF3561B2CDDD65F0045A173 /* SwipeableRow.swift in Sources */,
 				2CE473AC2CC5FF8A00BD7E2C /* Router.swift in Sources */,
@@ -872,7 +871,6 @@
 				2C9B4CF82C8FB84F0029DF61 /* Constants.swift in Sources */,
 				2C93375A2C93667600818C8E /* TabViewIcon.swift in Sources */,
 				2C02B3A32CC074150020DF90 /* ProductDetailsView.swift in Sources */,
-				2CF356152CDD8C020045A173 /* EmptyState.swift in Sources */,
 				2C93374A2C92AD2D00818C8E /* ProductsGalleryView.swift in Sources */,
 				2C02B39F2CC06D760020DF90 /* NewRequestViewModel.swift in Sources */,
 				2C1692932CE43737009D2291 /* CustomProgressView.swift in Sources */,

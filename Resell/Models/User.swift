@@ -9,7 +9,7 @@ import Foundation
 import FirebaseAuth
 import GoogleSignIn
 
-struct User: Codable {
+struct User: Codable, Equatable, Hashable {
     let firebaseUid: String
     let username: String
     let netid: String
@@ -78,6 +78,14 @@ struct User: Codable {
             reports: [],
             reportedBy: []
         )
+    }
+
+    static func == (lhs: User, rhs: User) -> Bool {
+        return lhs.firebaseUid == rhs.firebaseUid
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(firebaseUid)
     }
 }
 

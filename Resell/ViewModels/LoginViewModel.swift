@@ -13,8 +13,8 @@ class LoginViewModel: ObservableObject {
 
     // MARK: - Properties
 
-    @Published var didPresentError: Bool = false
-    @Published var isLoading: Bool = false
+    @Published var isLoading = false
+    @Published var didPresentError = false
     var errorText: String = ""
 
     // MARK: - Functions
@@ -32,7 +32,7 @@ class LoginViewModel: ObservableObject {
                     errorText = "\(errorResponse.error)"
                 }
             default:
-                errorText = "Error: \(error)"
+                errorText = "Any unknown error occured."
             }
 
             GoogleAuthManager.shared.logger.log("Error in \(#file) \(#function): \(error)")
@@ -43,16 +43,6 @@ class LoginViewModel: ObservableObject {
 
             return .failed
         }
-
-        if GoogleAuthManager.shared.user == nil {
-            await MainActor.run {
-                isLoading = false
-                didPresentError = true
-                return LoginResponse.failed
-            }
-        }
-
-        return .success
     }
 
     enum LoginResponse {

@@ -29,8 +29,10 @@ struct LoginView: View {
 
             if !mainViewModel.hidesSignInButton {
                 PurpleButton(text: "Login with NetID", horizontalPadding: 28) {
+                    viewModel.isLoading = true
                     Task {
                         let signInResult = await viewModel.googleSignIn()
+                        viewModel.isLoading = false
                         switch signInResult {
                         case .success:
                             mainViewModel.userDidLogin = true
@@ -40,8 +42,6 @@ struct LoginView: View {
                         default:
                             break
                         }
-
-                        mainViewModel.userDidLogin = false
                     }
                 }
             } else {
@@ -56,7 +56,6 @@ struct LoginView: View {
         .sheet(isPresented: $viewModel.didPresentError) {
             loginSheetView
         }
-        .loadingView(isLoading: viewModel.isLoading)
     }
 
 
@@ -73,7 +72,20 @@ struct LoginView: View {
             PurpleButton(text: "Try Again", horizontalPadding: 60) {
                 Task {
                     viewModel.didPresentError = false
-                    await viewModel.googleSignIn()
+                    viewModel.isLoading = true
+                    Task {
+                        let signInResult = await viewModel.googleSignIn()
+                        viewModel.isLoading = false
+                        switch signInResult {
+                        case .success:
+                            mainViewModel.userDidLogin = true
+                        case .accountCreationNeeded:
+                            router.push(.setupProfile)
+                            break
+                        default:
+                            break
+                        }
+                    }
                 }
             }
         }

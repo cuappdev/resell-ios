@@ -167,7 +167,7 @@ struct AvailabilitySelectorView: View {
             Spacer()
         }
         .padding(.horizontal)
-        .padding(.top)
+        .padding(.top, 32)
         .background(Constants.Colors.white)
         .onAppear(perform: initializeSelectedCells)
     }
