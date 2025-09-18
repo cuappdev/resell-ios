@@ -228,10 +228,10 @@ class NetworkManager: APIClient {
         return try await get(url: url)
     }
     
-    func getFilteredPosts(by filter: String) async throws -> PostsResponse {
+    func getFilteredPosts(by filter: [String]) async throws -> PostsResponse {
         let url = try constructURL(endpoint: "/post/filterByCategories/")
 
-        return try await post(url: url, body: FilterRequest(category: filter))
+        return try await post(url: url, body: FilterRequest(categories: filter))
     }
     
     func getSearchedPosts(with keywords: String) async throws -> PostsResponse {
