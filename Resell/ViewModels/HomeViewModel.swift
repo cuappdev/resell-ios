@@ -88,8 +88,10 @@ class HomeViewModel: ObservableObject {
         Task {
             do {
                 print("Filtering by \(selectedFilter)")
-                let postsResponse = try await NetworkManager.shared.getFilteredPosts(by: selectedFilter)
+                let postsResponse = try await NetworkManager.shared.getFilteredPosts(by: [selectedFilter])
                 filteredItems = postsResponse.posts
+                print(filteredItems.count)
+                
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.filterPosts: \(error)")
             }

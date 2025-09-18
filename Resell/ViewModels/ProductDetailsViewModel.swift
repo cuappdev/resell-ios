@@ -83,7 +83,7 @@ class ProductDetailsViewModel: ObservableObject {
     func getSimilarPostsNaive(post: Post) {
         Task {
             do {
-                let postsResponse = try await NetworkManager.shared.getFilteredPosts(by: post.category ?? "")
+                let postsResponse = try await NetworkManager.shared.getFilteredPosts(by: post.category != nil ? [post.category!] : [])
                 var otherPosts = postsResponse.posts
                 otherPosts.removeAll { $0.id == post.id }
 

@@ -61,7 +61,7 @@ struct PostResponse: Codable {
 }
 
 struct FilterRequest: Codable {
-    let category: String
+    let categories: [String]
 }
 
 struct SearchRequest: Codable {
