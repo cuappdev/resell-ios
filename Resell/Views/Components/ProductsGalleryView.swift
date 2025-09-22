@@ -36,12 +36,7 @@ struct ProductsGalleryView: View {
             HStack(alignment: .top, spacing: 20) {
                 LazyVStack(spacing: 20) {
                     ForEach(column1) { post in
-                        ProductGalleryCell(selectedItem: $selectedItem, post: post)
-                            .onAppear {
-                                if post == column1.last {
-                                    onScrollToBottom?()
-                                }
-                            }
+                        ProductGalleryCell(selectedItem: $selectedItem, post: post, savedCell: false)
                     }
                 }
 

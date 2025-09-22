@@ -16,14 +16,14 @@ class NetworkManager: APIClient {
     static let shared = NetworkManager()
     
     // MARK: - Error Logger for Networking
-
+    
     let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.cornellappdev.Resell", category: #file)
-
+    
     // MARK: - Properties
-
+    
     private let hostURL: String = Keys.devServerURL
     private let maxAttempts = 2
-
+    
     // MARK: - Init
     
     private init() { }
@@ -60,7 +60,7 @@ class NetworkManager: APIClient {
         // For non-401 errors, don't retry and just throw the original error
         throw error
     }
-
+    
     /// Template function to FETCH data from URL and decodes it into a specified type `T`,
     ///
     /// The function fetches data from the network, verifies the
@@ -71,9 +71,9 @@ class NetworkManager: APIClient {
     ///
     func get<T: Decodable>(url: URL, attempt: Int = 1) async throws -> T {
         let request = try createRequest(url: url, method: "GET")
-
+        
         let (data, response) = try await URLSession.shared.data(for: request)
-
+        
         do {
             try handleResponse(data: data, response: response)
         } catch {
@@ -81,7 +81,7 @@ class NetworkManager: APIClient {
                 try await get(url: url, attempt: attempt + 1)
             }
         }
-
+        
         return try JSONDecoder().decode(T.self, from: data)
     }
     
@@ -102,7 +102,7 @@ class NetworkManager: APIClient {
         let request = try createRequest(url: url, method: "POST", body: requestData)
         
         let (data, response) = try await URLSession.shared.data(for: request)
-
+        
         do {
             try handleResponse(data: data, response: response)
         } catch {
@@ -110,7 +110,7 @@ class NetworkManager: APIClient {
                 try await post(url: url, body: body, attempt: attempt + 1)
             }
         }
-
+        
         return try JSONDecoder().decode(T.self, from: data)
     }
     
@@ -120,7 +120,7 @@ class NetworkManager: APIClient {
         let request = try createRequest(url: url, method: "POST", body: requestData)
         
         let (data, response) = try await URLSession.shared.data(for: request)
-
+        
         do {
             try handleResponse(data: data, response: response)
         } catch {
@@ -135,7 +135,7 @@ class NetworkManager: APIClient {
         let request = try createRequest(url: url, method: "POST")
         
         let (data, response) = try await URLSession.shared.data(for: request)
-
+        
         do {
             try handleResponse(data: data, response: response)
         } catch {
@@ -143,7 +143,7 @@ class NetworkManager: APIClient {
                 try await post(url: url, attempt: attempt + 1)
             }
         }
-
+        
         return try JSONDecoder().decode(T.self, from: data)
     }
     
@@ -152,7 +152,7 @@ class NetworkManager: APIClient {
         let request = try createRequest(url: url, method: "DELETE")
         
         let (data, response) = try await URLSession.shared.data(for: request)
-
+        
         do {
             try handleResponse(data: data, response: response)
         } catch {
@@ -161,12 +161,12 @@ class NetworkManager: APIClient {
             }
         }
     }
-
+    
     private func createRequest(url: URL, method: String, body: Data? = nil) throws -> URLRequest {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
+        
         if let accessToken = GoogleAuthManager.shared.accessToken {
             request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         }
@@ -199,22 +199,22 @@ class NetworkManager: APIClient {
     }
     
     // MARK: - Auth Networking Functions
-
+    
     func authorize(authorizeBody: AuthorizeBody) async throws -> User? {
         let url = try constructURL(endpoint: "/auth/")
-
+        
         return try await post(url: url, body: authorizeBody)
     }
-
+    
     func getUser() async throws -> UserResponse {
         let url = try constructURL(endpoint: "/auth/")
         
         return try await get(url: url)
     }
-
+    
     func createUser(user: CreateUserBody) async throws {
         let url = try constructURL(endpoint: "/user/create")
-
+        
         try await post(url: url, body: user)
     }
     
@@ -243,14 +243,14 @@ class NetworkManager: APIClient {
         
         return try await get(url: url)
     }
-
-//    func getUserByEmail(email: String) async throws -> UserResponse {
-//        let url = try constructURL(endpoint: "/user/email/")
-//        let emailBody = UserEmailBody(email: email)
-//
-//        return try await post(url: url, body: emailBody)
-//    }
-
+    
+    //    func getUserByEmail(email: String) async throws -> UserResponse {
+    //        let url = try constructURL(endpoint: "/user/email/")
+    //        let emailBody = UserEmailBody(email: email)
+    //
+    //        return try await post(url: url, body: emailBody)
+    //    }
+    
     func updateUserProfile(edit: EditUserBody) async throws -> UserResponse {
         let url = try constructURL(endpoint: "/user/")
         
@@ -276,12 +276,12 @@ class NetworkManager: APIClient {
     }
     
     // MARK: - Post Networking Functions
-
+    
     func getAllPosts(page: Int = 1) async throws -> PostsResponse {
         let url = try constructURL(endpoint: "/post?page=\(page)")
-
+        
         return try await get(url: url)
-    
+        
     }
     
     func getSavedPosts() async throws -> PostsResponse {
@@ -292,13 +292,13 @@ class NetworkManager: APIClient {
     
     func getFilteredPosts(by filter: [String]) async throws -> PostsResponse {
         let url = try constructURL(endpoint: "/post/filterByCategories/")
-
+        
         return try await post(url: url, body: FilterRequest(categories: filter))
     }
     
     func getFilteredPostsByCategory(for filters: [String]) async throws -> PostsResponse {
         let url = try constructURL(endpoint: "/post/filterByCategories")
-
+        
         return try await post(url: url, body: FilterRequest(categories: filters))
     }
     
@@ -386,9 +386,7 @@ class NetworkManager: APIClient {
         
         return try await get(url: url)
     }
-    
-    func createPost(postBody: PostBody) async throws -> ListingResponse {
-
+            
     func createPost(postBody: PostBody) async throws -> PostResponse {
         let url = try constructURL(endpoint: "/post/")
         
@@ -454,27 +452,27 @@ class NetworkManager: APIClient {
         
         try await post(url: url, body: reportBody)
     }
-
+    
     // MARK: - Chat Networking Functions
-
+    
     func sendChatMessage(chatId: String, messageBody: MessageBody) async throws {
         let url = try constructURL(endpoint: "/chat/message/\(chatId)/")
-
+        
         return try await post(url: url, body: messageBody)
     }
-
+    
     func sendChatAvailability(chatId: String, messageBody: MessageBody) async throws {
         let url = try constructURL(endpoint: "/chat/availability/\(chatId)/")
-
+        
         return try await post(url: url, body: messageBody)
     }
-
+    
     func markMessageRead(chatId: String, messageId: String) async throws -> ReadMessageRepsonse {
         let url = try constructURL(endpoint: "/chat/\(chatId)/message/\(messageId)/")
-
+        
         return try await post(url: url)
     }
-
+    
     // MARK: - Other Networking Functions
     
     func uploadImage(image: ImageBody) async throws -> ImageResponse {
@@ -482,12 +480,13 @@ class NetworkManager: APIClient {
         
         return try await post(url: url, body: image)
     }
-        // MARK: - Notifications Networking Functions
-        
-//    func createNotif(notifBody: Notification) async throws -> ListingResponse {
-//        let url = try constructURL(endpoint: "/notif/")
-//            
-//        return try await post(url: url, body: notifBody)
-//        }
+    // MARK: - Notifications Networking Functions
+    
+    //    func createNotif(notifBody: Notification) async throws -> ListingResponse {
+    //        let url = try constructURL(endpoint: "/notif/")
+    //
+    //        return try await post(url: url, body: notifBody)
+    //        }
     }
+    
 

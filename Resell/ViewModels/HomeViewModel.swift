@@ -13,6 +13,8 @@ class HomeViewModel: ObservableObject {
     // MARK: - Properties
     private var mainViewModel: MainViewModel?
     
+    static let shared = HomeViewModel()
+    
     private var searchViewModel = SearchViewModel.shared
 
     private init() { }
@@ -54,7 +56,7 @@ class HomeViewModel: ObservableObject {
                 if selectedFilter == "Recent" {
                     filteredItems = allItems
                 } else {
-                    filterPosts(by: selectedFilter)
+                    filterPosts()
                 }
                 isLoading = false
             } catch {

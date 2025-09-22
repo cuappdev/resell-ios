@@ -31,7 +31,6 @@ struct MainView: View {
             .environmentObject(newListingViewModel)
             .environmentObject(onboardingViewModel)
             .environmentObject(reportViewModel)
-            .environmentObject(homeViewModel)
             .background(Constants.Colors.white)
             .onAppear {
                 let signInConfig = GIDConfiguration.init(clientID: Keys.googleClientID)
