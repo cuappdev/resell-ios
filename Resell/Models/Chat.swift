@@ -13,33 +13,23 @@ struct Chat: Identifiable {
     let other: User
     let lastMessage: String
     let updatedAt: Date
-    let messages: [Message]
+    let messages: [any Message]
 }
 
-struct SimpleChatInfo: Equatable, Hashable {
-    let listingId: String
-    let buyerId: String
-    let sellerId: String
-
-    func toChatInfo() async throws -> ChatInfo {
-        let post = try await NetworkManager.shared.getPostByID(id: listingId).post
-        let buyer = try await NetworkManager.shared.getUserByID(id: buyerId).user
-        let seller = try await NetworkManager.shared.getUserByID(id: sellerId).user
-
-        return ChatInfo(listing: post, buyer: buyer, seller: seller)
-    }
-
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(listingId + buyerId + sellerId)
-    }
-
-    static func == (lhs: SimpleChatInfo, rhs: SimpleChatInfo) -> Bool {
-        return lhs.listingId == rhs.listingId && lhs.buyerId == rhs.buyerId && lhs.sellerId == rhs.sellerId
-    }
-}
-
-struct ChatInfo {
+struct ChatInfo: Equatable, Hashable {
     let listing: Post
     let buyer: User
     let seller: User
+
+    static func == (lhs: ChatInfo, rhs: ChatInfo) -> Bool {
+        return lhs.listing.id == rhs.listing.id
+        && lhs.buyer.firebaseUid == rhs.buyer.firebaseUid
+        && lhs.seller.firebaseUid == rhs.seller.firebaseUid
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(listing.id)
+        hasher.combine(buyer.firebaseUid)
+        hasher.combine(seller.firebaseUid)
+    }
 }

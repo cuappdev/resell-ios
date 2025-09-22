@@ -8,3 +8,4 @@ build/
 Resell/Supporting/GoogleService-Info.plist
 Resell/Supporting/resell-service.json
 Keys.xcconfig
+.DS_Store

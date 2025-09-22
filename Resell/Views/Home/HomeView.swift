@@ -33,7 +33,12 @@ struct HomeView: View {
                         .foregroundStyle(.black)
                         .frame(maxWidth: .infinity, alignment: .leading) // <-- Align text left
                         .padding(.leading, 24)
-                    ProductsGalleryView(items: viewModel.filteredItems)
+                    ProductsGalleryView(items: viewModel.filteredItems) {
+                        if viewModel.selectedFilter == "Recent" {
+                            viewModel.fetchMoreItems()
+                        }
+                    }       
+                        .emptyState(isEmpty: viewModel.filteredItems.isEmpty, title: "No posts found", text: "Check back later.")
                 }
             }
                 .padding(.top, 12)

@@ -11,6 +11,7 @@ struct Post: Codable, Equatable, Identifiable, Hashable {
     let id: String
     let title: String
     let description: String
+    let categories: [PostCategory]?
     let category: String?
     let condition: String?
     let originalPrice: String
@@ -23,7 +24,7 @@ struct Post: Codable, Equatable, Identifiable, Hashable {
     let sold: Bool?
 
     enum CodingKeys: String, CodingKey {
-        case id, title, description, category, condition
+        case id, title, description, categories, category, condition
         case originalPrice = "original_price"
         case alteredPrice = "altered_price"
         case images, created, location, archive, user, sold
@@ -52,12 +53,17 @@ struct Post: Codable, Equatable, Identifiable, Hashable {
     }
 }
 
+struct PostCategory: Codable {
+    let id: String
+    let name: String
+}
+
 struct PostsResponse: Codable {
     let posts: [Post]
 }
 
 struct PostResponse: Codable {
-    let post: Post
+    let post: Post?
 }
 
 struct FilterRequest: Codable {
@@ -75,19 +81,19 @@ struct SavedResponse: Codable {
 struct PostBody: Codable {
     let title: String
     let description: String
-    let category: String
+    let categories: [String]
     let originalPrice: Double
     let imagesBase64: [String]
-    let userId: String
-    let condition: String = "idk"
+    let firebaseUid: String
+    let condition: String = "NEW"
 
     enum CodingKeys: String, CodingKey {
         case title
         case description
-        case category
+        case categories
         case originalPrice = "original_price"
         case imagesBase64
-        case userId
+        case firebaseUid
         case condition
     }
 }

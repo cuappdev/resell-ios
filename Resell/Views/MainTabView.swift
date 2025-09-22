@@ -28,23 +28,25 @@ struct MainTabView: View {
 
     var body: some View {
         NavigationStack(path: $router.path) {
-            VStack {
-                if mainViewModel.userDidLogin {
-                    ZStack(alignment: .bottom) {
-                        mainView
-
-                        if !isHidden {
-                            tabBarView
+                Group {
+                    if mainViewModel.userDidLogin {
+                        VStack(spacing: 0) {
+                            mainView
+                            
+                            if !isHidden {
+                                tabBarView
+                            }
                         }
-                    }
-                    .transition(.opacity)
-                    .environmentObject(router)
-                } else {
-                    LoginView()
+                        .ignoresSafeArea(edges: .bottom)
                         .transition(.opacity)
-                        .environmentObject(onboardingViewModel)
+                        .background(.white)
                         .environmentObject(router)
-                }
+                    } else {
+                        LoginView()
+                            .transition(.opacity)
+                            .environmentObject(onboardingViewModel)
+                            .environmentObject(router)
+                    }
             }
             .navigationDestination(for: Router.Route.self) { route in
                 switch route {
@@ -132,12 +134,11 @@ struct MainTabView: View {
         .ignoresSafeArea(edges: .bottom)
         .padding(.horizontal, 40)
         .padding(.top, 16)
-        .padding(.bottom, 36)
+        .padding(.bottom, 46)
         .frame(width: UIScreen.width)
         .background(Constants.Colors.white)
         .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
         .shadow(radius: 4)
-        .offset(y: 34)
         .transition(.move(edge: .bottom))
         .animation(.easeInOut, value: isHidden)
     }

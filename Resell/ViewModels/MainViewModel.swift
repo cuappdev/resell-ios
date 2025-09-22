@@ -16,7 +16,6 @@ class MainViewModel: ObservableObject {
 
     @Published var hidesTabBar: Bool = false
     @Published var userDidLogin: Bool = false
-
     @Published var selection = 0
 
     var hidesSignInButton = true
@@ -36,6 +35,17 @@ class MainViewModel: ObservableObject {
         set {
             storedHistoryData = encodeHistory(newValue)
         }
+    }
+
+    // MARK: - Init
+
+    init() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(logout),
+            name: Constants.Notifications.LogoutUser,
+            object: nil
+        )
     }
 
     // MARK: - Functions
@@ -87,6 +97,31 @@ class MainViewModel: ObservableObject {
         UINavigationBar.appearance().standardAppearance = appearance
     }
 
+    @objc func logout() {
+        // Clear any cached data
+        clearUserData()
+        
+        // Sign out from auth manager
+        GoogleAuthManager.shared.signOut()
+        
+        // Update UI state
+        withAnimation { userDidLogin = false }
+        
+        // Reset to home tab
+        selection = 0
+    }
+    
+    /// Clear user-specific cached data when logging out
+    private func clearUserData() {
+        clearImageCaches()
+    }
+    
+    private func clearImageCaches() {
+        // Clear Kingfisher cache if using it
+        ImageCache.default.clearMemoryCache()
+        ImageCache.default.clearDiskCache()
+    }
+
     func restoreSignIn() {
         Task {
             hidesSignInButton = true
@@ -99,10 +134,13 @@ class MainViewModel: ObservableObject {
                 }
             } catch {
                 // Session token has expired and Google Sign-In retrieval has failed
-                GoogleAuthManager.shared.signOut()
-                withAnimation { hidesSignInButton = false }
-                withAnimation { userDidLogin = false }
-                GoogleAuthManager.shared.logger.log("User Session Has Expired or Google Sign-In Failed: \(error.localizedDescription)")
+                await MainActor.run {
+                    clearUserData()
+                    GoogleAuthManager.shared.signOut()
+                    withAnimation { hidesSignInButton = false }
+                    withAnimation { userDidLogin = false }
+                }
+                GoogleAuthManager.shared.logger.log("User Session Has Expired or Google Sign-In Failed: \(error)")
             }
         }
     }

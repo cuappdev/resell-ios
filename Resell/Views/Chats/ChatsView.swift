@@ -14,6 +14,7 @@ struct ChatsView: View {
 
     @EnvironmentObject var router: Router
     @EnvironmentObject var viewModel: ChatsViewModel
+    @EnvironmentObject var mainViewModel: MainViewModel
 
     // MARK: - UI
 
@@ -28,7 +29,6 @@ struct ChatsView: View {
             Spacer()
         }
         .background(Constants.Colors.white)
-        .loadingView(isLoading: viewModel.isLoading)
         .emptyState(isEmpty: viewModel.checkEmptyState(), title: viewModel.emptyStateTitle(), text: viewModel.emptyStateMessage())
         .refreshable {
             viewModel.getAllChats()
@@ -37,8 +37,9 @@ struct ChatsView: View {
             viewModel.getAllChats()
         }
         .onDisappear {
-            FirestoreManager.shared.stopListening()
+            FirestoreManager.shared.stopListeningAll()
         }
+        .loadingView(isLoading: viewModel.isLoading)
     }
 
     private var headerView: some View {
@@ -72,7 +73,7 @@ struct ChatsView: View {
     private var chatsView: some View {
         ScrollView(.vertical) {
             VStack(alignment: .center, spacing: 24) {
-                ForEach(viewModel.selectedTab.rawValue == ChatTab.purchases.rawValue ? viewModel.purchaseChats : viewModel.offerChats) { chat in
+                ForEach(viewModel.selectedTab == ChatTab.purchases ? viewModel.purchaseChats : viewModel.offerChats) { chat in
                     chatPreviewRow(chat: chat)
                 }
             }
@@ -142,7 +143,7 @@ struct ChatsView: View {
         .padding(.leading, 15)
         .background(Constants.Colors.white)
         .overlay(alignment: .leading) {
-            if !chat.messages.filter({ $0.read }).isEmpty {
+            if !chat.messages.filter({ !$0.read && !$0.mine }).isEmpty {
                 Circle()
                     .frame(width: 10, height: 10)
                     .foregroundStyle(Constants.Colors.resellPurple)
@@ -156,16 +157,18 @@ struct ChatsView: View {
             }
 
             viewModel.selectedChat = chat
-            // TODO: update chat
-//            viewModel.updateChatViewed()
-            viewModel.getSelectedChatPost { post in
-                guard let other = post.user else { return }
+            viewModel.getSelectedChatPost { listing in
+                guard let seller = listing.user else {
+                    NetworkManager.shared.logger.error("Error in \(#file) \(#function): User not found in post. Can't push messages view.")
+                    return
+                }
 
-                // TODO: FIX
-                let chatInfo = SimpleChatInfo(
-                    listingId: post.id,
-                    buyerId: me.firebaseUid,
-                    sellerId: other.firebaseUid
+                let buyer = seller.firebaseUid == me.firebaseUid ? chat.other : me
+
+                let chatInfo = ChatInfo(
+                    listing : listing,
+                    buyer: buyer,
+                    seller: seller
                 )
 
                 router.push(.messages(chatInfo: chatInfo))

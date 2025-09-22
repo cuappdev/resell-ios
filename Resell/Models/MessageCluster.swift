@@ -7,27 +7,26 @@
 
 import SwiftUICore
 
-struct MessageCluster: Identifiable, Equatable {
-    let id: String
+struct MessageCluster: Equatable {
+
+    let id: String = UUID().uuidString
     let location: MessageLocation
-    var messages: [Message]
+    var messages: [any Message]
 
     static func == (lhs: MessageCluster, rhs: MessageCluster) -> Bool {
         if lhs.messages.count != rhs.messages.count { return false }
 
-        for lhsMessage in lhs.messages {
-            for rhsMessage in rhs.messages {
-                if lhsMessage.messageId != rhsMessage.messageId {
-                    return false
-                }
-            }
+        for i in 0..<lhs.messages.count {
+            if !lhs.messages[i].isEqual(to: rhs.messages[i]) { return false }
         }
 
         return true
     }
+
 }
 
 enum MessageLocation {
+
     case left
     case right
 
@@ -39,4 +38,5 @@ enum MessageLocation {
             return .trailing
         }
     }
+    
 }

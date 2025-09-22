@@ -44,7 +44,7 @@ class FirebaseNotificationService: NSObject, MessagingDelegate, UNUserNotificati
             case .notDetermined:
                 UNUserNotificationCenter.current().requestAuthorization(options: options) { granted, error in
                     if let error = error {
-                        self.logger.error("Error requesting notifications permission: \(error.localizedDescription)")
+                        self.logger.error("Error requesting notifications permission: \(error)")
                     } else if granted {
                         DispatchQueue.main.async {
                             UIApplication.shared.registerForRemoteNotifications()

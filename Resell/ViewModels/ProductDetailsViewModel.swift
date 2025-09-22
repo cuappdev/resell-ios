@@ -39,14 +39,26 @@ class ProductDetailsViewModel: ObservableObject {
             do {
                 let postResponse = try await NetworkManager.shared.getPostByID(id: id)
                 item = postResponse.post
-                images = postResponse.post.images.compactMap { URL(string: $0) }
+                if let post = postResponse.post {
+                    images = post.images.compactMap { URL(string: $0) }
+                }
 
                 await calculateMaxImgRatio()
                 getIsSaved()
             } catch {
-                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getPost: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getPost: \(error)")
             }
         }
+    }
+
+    func isMyPost() -> Bool {
+        if let userID = GoogleAuthManager.shared.user?.firebaseUid {
+            if userID == item?.user?.firebaseUid {
+                return true
+            }
+        }
+
+        return false
     }
 
     func setPost(post: Post) {
@@ -75,7 +87,7 @@ class ProductDetailsViewModel: ObservableObject {
                     similarPosts = postsResponse.posts
                 }
             } catch {
-                NetworkManager.shared.logger.error("Errror in ProductDetailsViewModel.getSimilarPosts: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Errror in ProductDetailsViewModel.getSimilarPosts: \(error)")
             }
         }
     }
@@ -83,7 +95,8 @@ class ProductDetailsViewModel: ObservableObject {
     func getSimilarPostsNaive(post: Post) {
         Task {
             do {
-                let postsResponse = try await NetworkManager.shared.getFilteredPosts(by: post.category != nil ? [post.category!] : [])
+                // TODO: make this call the real endpoint
+                let postsResponse = try await NetworkManager.shared.getFilteredPostsByCategory(for: [post.categories?[0].name ?? post.category ?? ""])
                 var otherPosts = postsResponse.posts
                 otherPosts.removeAll { $0.id == post.id }
 
@@ -95,7 +108,7 @@ class ProductDetailsViewModel: ObservableObject {
 
                 isLoadingImages = false
             } catch {
-                NetworkManager.shared.logger.error("Errror in ProductDetailsViewModel.getSimilarPostsNaive: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Errror in ProductDetailsViewModel.getSimilarPostsNaive: \(error)")
                 isLoadingImages = false
             }
         }
@@ -112,7 +125,7 @@ class ProductDetailsViewModel: ObservableObject {
                     }
                 }
             } catch {
-                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel:.updateItemSaved \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel:.updateItemSaved \(error)")
             }
         }
     }
@@ -124,7 +137,7 @@ class ProductDetailsViewModel: ObservableObject {
                     isSaved = try await NetworkManager.shared.postIsSaved(id: id).isSaved
                 }
             } catch {
-                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getIsSaved: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getIsSaved: \(error)")
             }
         }
     }
@@ -138,7 +151,7 @@ class ProductDetailsViewModel: ObservableObject {
 
                 didShowDeleteView = false
             } catch {
-                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.archivePost: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.archivePost: \(error)")
             }
         }
     }
@@ -152,7 +165,7 @@ class ProductDetailsViewModel: ObservableObject {
 
                 didShowDeleteView = false
             } catch {
-                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.deletePost: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.deletePost: \(error)")
             }
         }
     }

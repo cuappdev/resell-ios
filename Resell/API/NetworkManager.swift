@@ -22,6 +22,7 @@ class NetworkManager: APIClient {
     // MARK: - Properties
 
     private let hostURL: String = Keys.devServerURL
+    private let maxAttempts = 2
 
     // MARK: - Init
     
@@ -29,6 +30,37 @@ class NetworkManager: APIClient {
     
     // MARK: - Template Helper Functions
     
+    /// Centralized network error handling that determines whether to retry or force logout
+    private func handleNetworkError<T>(_ error: Error, attempt: Int, retryOperation: () async throws -> T) async throws -> T {
+        // If we've hit max attempts, force logout and throw max retries error
+        if attempt >= maxAttempts {
+            logger.error("Max retry attempts (\(self.maxAttempts)) reached. Forcing user logout.")
+            GoogleAuthManager.shared.forceLogout(reason: "Max authentication retry attempts exceeded")
+            throw ErrorResponse.maxRetriesHit
+        }
+        
+        // Check if this is a 401 unauthorized error that we can potentially recover from
+        if let errorResponse = error as? ErrorResponse, errorResponse.httpCode == 401 {
+            logger.info("Received 401 error on attempt \(attempt). Attempting to refresh auth token.")
+            
+            do {
+                // Try to refresh the authentication
+                try await GoogleAuthManager.shared.refreshSignInIfNeeded()
+                logger.info("Auth token refreshed successfully. Retrying network request.")
+                
+                // Retry the operation
+                return try await retryOperation()
+            } catch {
+                logger.error("Failed to refresh auth token: \(error.localizedDescription)")
+                GoogleAuthManager.shared.forceLogout(reason: "Failed to refresh authentication token")
+                throw error
+            }
+        }
+        
+        // For non-401 errors, don't retry and just throw the original error
+        throw error
+    }
+
     /// Template function to FETCH data from URL and decodes it into a specified type `T`,
     ///
     /// The function fetches data from the network, verifies the
@@ -37,13 +69,19 @@ class NetworkManager: APIClient {
     /// - Parameter url: The URL from which data should be fetched.
     /// - Returns: A publisher that emits a decoded instance of type `T` or an error if the decoding or network request fails.
     ///
-    func get<T: Decodable>(url: URL) async throws -> T {
+    func get<T: Decodable>(url: URL, attempt: Int = 1) async throws -> T {
         let request = try createRequest(url: url, method: "GET")
 
         let (data, response) = try await URLSession.shared.data(for: request)
-        
-        try handleResponse(data: data, response: response)
-        
+
+        do {
+            try handleResponse(data: data, response: response)
+        } catch {
+            return try await handleNetworkError(error, attempt: attempt) {
+                try await get(url: url, attempt: attempt + 1)
+            }
+        }
+
         return try JSONDecoder().decode(T.self, from: data)
     }
     
@@ -59,45 +97,69 @@ class NetworkManager: APIClient {
     ///   - body: The data to be sent in the request body, which must conform to `Encodable`.
     /// - Returns: A publisher that emits a decoded instance of type `T` or an error if the decoding or network request fails.
     ///
-    func post<T: Decodable, U: Encodable>(url: URL, body: U) async throws -> T {
+    func post<T: Decodable, U: Encodable>(url: URL, body: U, attempt: Int = 1) async throws -> T {
         let requestData = try JSONEncoder().encode(body)
         let request = try createRequest(url: url, method: "POST", body: requestData)
         
         let (data, response) = try await URLSession.shared.data(for: request)
-        
-        try handleResponse(data: data, response: response)
-        
+
+        do {
+            try handleResponse(data: data, response: response)
+        } catch {
+            return try await handleNetworkError(error, attempt: attempt) {
+                try await post(url: url, body: body, attempt: attempt + 1)
+            }
+        }
+
         return try JSONDecoder().decode(T.self, from: data)
     }
     
     /// Overloaded post function for requests without a return
-    func post<U: Encodable>(url: URL, body: U) async throws{
+    func post<U: Encodable>(url: URL, body: U, attempt: Int = 1) async throws {
         let requestData = try JSONEncoder().encode(body)
         let request = try createRequest(url: url, method: "POST", body: requestData)
         
         let (data, response) = try await URLSession.shared.data(for: request)
-        
-        try handleResponse(data: data, response: response)
+
+        do {
+            try handleResponse(data: data, response: response)
+        } catch {
+            try await handleNetworkError(error, attempt: attempt) {
+                try await post(url: url, body: body, attempt: attempt + 1)
+            }
+        }
     }
     
     /// Overloaded post function for requests without a body
-    func post<T: Decodable>(url: URL) async throws -> T {
+    func post<T: Decodable>(url: URL, attempt: Int = 1) async throws -> T {
         let request = try createRequest(url: url, method: "POST")
         
         let (data, response) = try await URLSession.shared.data(for: request)
-        
-        try handleResponse(data: data, response: response)
-        
+
+        do {
+            try handleResponse(data: data, response: response)
+        } catch {
+            return try await handleNetworkError(error, attempt: attempt) {
+                try await post(url: url, attempt: attempt + 1)
+            }
+        }
+
         return try JSONDecoder().decode(T.self, from: data)
     }
     
     /// Template function to DELETE data to a specified URL with an encodable body and decodes the response into a specified type `T`.
-    func delete(url: URL) async throws {
+    func delete(url: URL, attempt: Int = 1) async throws {
         let request = try createRequest(url: url, method: "DELETE")
         
         let (data, response) = try await URLSession.shared.data(for: request)
-        
-        try handleResponse(data: data, response: response)
+
+        do {
+            try handleResponse(data: data, response: response)
+        } catch {
+            try await handleNetworkError(error, attempt: attempt) {
+                try await delete(url: url, attempt: attempt + 1)
+            }
+        }
     }
 
     private func createRequest(url: URL, method: String, body: Data? = nil) throws -> URLRequest {
@@ -214,10 +276,10 @@ class NetworkManager: APIClient {
     }
     
     // MARK: - Post Networking Functions
-    
-    func getAllPosts() async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/")
-        print("trying to get all posts")
+
+    func getAllPosts(page: Int = 1) async throws -> PostsResponse {
+        let url = try constructURL(endpoint: "/post?page=\(page)")
+
         return try await get(url: url)
     
     }
@@ -232,6 +294,12 @@ class NetworkManager: APIClient {
         let url = try constructURL(endpoint: "/post/filterByCategories/")
 
         return try await post(url: url, body: FilterRequest(categories: filter))
+    }
+    
+    func getFilteredPostsByCategory(for filters: [String]) async throws -> PostsResponse {
+        let url = try constructURL(endpoint: "/post/filterByCategories")
+
+        return try await post(url: url, body: FilterRequest(categories: filters))
     }
     
     func getSearchedPosts(with keywords: String) async throws -> PostsResponse {
@@ -320,6 +388,8 @@ class NetworkManager: APIClient {
     }
     
     func createPost(postBody: PostBody) async throws -> ListingResponse {
+
+    func createPost(postBody: PostBody) async throws -> PostResponse {
         let url = try constructURL(endpoint: "/post/")
         
         return try await post(url: url, body: postBody)
@@ -387,16 +457,22 @@ class NetworkManager: APIClient {
 
     // MARK: - Chat Networking Functions
 
-    func sendMessage(chatId: String, messageBody: MessageBody) async throws {
+    func sendChatMessage(chatId: String, messageBody: MessageBody) async throws {
         let url = try constructURL(endpoint: "/chat/message/\(chatId)/")
 
         return try await post(url: url, body: messageBody)
     }
 
-    func updateMessage(chatId: String, messageId: String, messageBody: UpdateMessageBody) async throws {
-        let url = try constructURL(endpoint: "/chat/\(chatId)/message/\(messageId)/")
+    func sendChatAvailability(chatId: String, messageBody: MessageBody) async throws {
+        let url = try constructURL(endpoint: "/chat/availability/\(chatId)/")
 
         return try await post(url: url, body: messageBody)
+    }
+
+    func markMessageRead(chatId: String, messageId: String) async throws -> ReadMessageRepsonse {
+        let url = try constructURL(endpoint: "/chat/\(chatId)/message/\(messageId)/")
+
+        return try await post(url: url)
     }
 
     // MARK: - Other Networking Functions
