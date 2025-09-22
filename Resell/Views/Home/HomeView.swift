@@ -21,12 +21,13 @@ struct HomeView: View {
     var body: some View {
         VStack(spacing: 0) {
             headerView
-            
             ScrollView(.vertical, showsIndicators: true) {
                 VStack {
                     filtersView
                         .padding(.top, 12)
+                        .padding(.bottom, 32)
                     ForYouView()
+                        .padding(.bottom, 32)
                     Text("Recent Listings")
                         .font(.custom("Rubik-Medium", size: 22))
                         .foregroundStyle(.black)
@@ -35,8 +36,6 @@ struct HomeView: View {
                     ProductsGalleryView(items: viewModel.filteredItems)
                 }
             }
-            
-            
                 .padding(.top, 12)
         }
         .onAppear {
