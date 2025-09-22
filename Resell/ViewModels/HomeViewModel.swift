@@ -13,6 +13,8 @@ class HomeViewModel: ObservableObject {
     // MARK: - Properties
     private var mainViewModel: MainViewModel?
     
+    static let shared = HomeViewModel()
+    
     private var searchViewModel = SearchViewModel.shared
 
     private init() { }

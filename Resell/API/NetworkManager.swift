@@ -227,7 +227,7 @@ class NetworkManager: APIClient {
         let url = try constructURL(endpoint: "/post/")
         print("trying to get all posts")
         return try await get(url: url)
-    
+        
     }
     
     func getSavedPosts() async throws -> PostsResponse {
@@ -400,12 +400,13 @@ class NetworkManager: APIClient {
         
         return try await post(url: url, body: image)
     }
-        // MARK: - Notifications Networking Functions
-        
-//    func createNotif(notifBody: Notification) async throws -> ListingResponse {
-//        let url = try constructURL(endpoint: "/notif/")
-//            
-//        return try await post(url: url, body: notifBody)
-//        }
+    // MARK: - Notifications Networking Functions
+    
+    //    func createNotif(notifBody: Notification) async throws -> ListingResponse {
+    //        let url = try constructURL(endpoint: "/notif/")
+    //
+    //        return try await post(url: url, body: notifBody)
+    //        }
     }
+    
 
