@@ -21,8 +21,9 @@ struct AvailabilitySelectorView: View {
     @Binding var isPresented: Bool
     @Binding var selectedDates: [Availability]
     @Binding var didSubmit: Bool
-
-    var isEditing: Bool = true
+    @Binding var isEditing: Bool
+    // isEditing should be a binding var thats set by the prior view
+//    var isEditing: Bool = true
     var proposerName: String? = nil
     let dates: [String] = generateDates()
     let times: [String] = generateTimes()
