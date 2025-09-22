@@ -54,7 +54,8 @@ struct MessagesView: View {
             negotiationView
         }
         .sheet(isPresented: $didShowAvailabilityView) {
-            availabilityView
+            // func that takes in isEditing
+            availabilityView(isEditing: $isEditing)
         }
         .sheet(isPresented: $didShowWebView) {
             webView
@@ -205,11 +206,13 @@ struct MessagesView: View {
         )
     }
     
-    private var availabilityView: some View {
+    private func availabilityView(isEditing: Binding<Bool>) -> some View {
         AvailabilitySelectorView(
             isPresented: $didShowAvailabilityView,
             selectedDates: $viewModel.availability,
-            didSubmit: $didSubmitAvailabilities
+            didSubmit: $didSubmitAvailabilities,
+            isEditing: $isEditing
+            // set isEditing
         )
         .presentationCornerRadius(25)
         .presentationDragIndicator(.hidden)
@@ -304,6 +307,7 @@ struct FilterOptionsView: View {
                             withAnimation { didShowWebView = true }
                         }
                     case .viewAvailability:
+                        // TODO: Fix this logic. There should be two cases, one for the current user and another for the user we're viewing
                         chatOption(title: "View \(viewModel.chatInfo.listing.user?.givenName ?? "")'s Availability") {
                             isEditing = false
                             withAnimation { didShowAvailabilityView = true }
