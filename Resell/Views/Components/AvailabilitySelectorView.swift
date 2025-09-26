@@ -114,6 +114,7 @@ struct AvailabilitySelectorView: View {
                                 }
                             }
                         }
+                        // TODO: Slow down scroll speed and fix functionality for removing cells from availability
                         .background(
                             GeometryReader { geo in
                                 Color.clear
