@@ -40,7 +40,6 @@ class SearchViewModel: ObservableObject {
                 } else {
                     if !saveQuery {
                         recentlySearched.append(contentsOf: postsResponse.posts)
-                        print("Recently Searched: \(recentlySearched)")
                     } else {
                         searchedItems = postsResponse.posts
                     }
