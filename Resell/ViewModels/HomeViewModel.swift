@@ -87,7 +87,6 @@ class HomeViewModel: ObservableObject {
                 let postsResponse = try await NetworkManager.shared.getSavedPosts()
                 savedItems = Post.sortPostsByDate(postsResponse.posts)
                 completion()
-                print("SAVED ITEMS: \(savedItems)")
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.getSavedPosts: \(error)")
             }
@@ -98,11 +97,8 @@ class HomeViewModel: ObservableObject {
     func filterPosts() {
         Task {
             do {
-                print("Filtering by \(selectedFilter)")
                 let postsResponse = try await NetworkManager.shared.getFilteredPosts(by: [selectedFilter])
                 filteredItems = postsResponse.posts
-                print(filteredItems.count)
-                
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.filterPosts: \(error)")
             }
@@ -148,7 +144,6 @@ class HomeViewModel: ObservableObject {
             }
             
             group.notify(queue: .main) {
-                print("Does this ever get callled ??")
                 completion()
             }
     }
