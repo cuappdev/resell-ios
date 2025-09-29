@@ -13,10 +13,13 @@ struct HomeView: View {
 
     @EnvironmentObject private var mainViewModel: MainViewModel
     @EnvironmentObject private var searchViewModel: SearchViewModel
+    @EnvironmentObject private var filtersViewModel: FiltersViewModel
     @EnvironmentObject var router: Router
+    
     @StateObject private var viewModel = HomeViewModel.shared
+    
     @State var forYouPosts: [[Post]] = []
-    @State var presentPopup = false
+//    @State var presentPopup = false
     
     
 
@@ -52,7 +55,7 @@ struct HomeView: View {
         .refreshable { viewModel.getAllPosts() }
         .loadingView(isLoading: viewModel.isLoading)
         .navigationBarBackButtonHidden()
-        .sheet(isPresented: $presentPopup) {
+        .sheet(isPresented: $filtersViewModel.presentPopup) {
             FilterView(home: true)
         }
     }
