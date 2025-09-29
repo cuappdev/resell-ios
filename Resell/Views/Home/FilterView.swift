@@ -9,16 +9,12 @@ import SwiftUI
 import Flow
 
 // TODO: Implement Apply Filters button.
-    // use a set to store some encoding of the filters being currently applied
-    // why? quick removal + add operations
-    // add/remove when a filter button is toggled
-    // when apply filter button is clicked, iterate through the set and apply each filter
-    // Applied filters don't persist...
 struct FilterView: View {
     
     @State var presentPopup = false
     
     @EnvironmentObject var filtersVM: FiltersViewModel
+    
     @StateObject private var homeViewModel = HomeViewModel.shared
 
     private var categories : [String] = ["Clothing", "Books", "School", "Electronics", "Handmade", "Sports & Outdoors", "Other"]
@@ -254,8 +250,7 @@ struct FilterView: View {
                 
                 HStack{
                     Button {
-                        filtersVM.categoryFilters.removeAll()
-                        filtersVM.conditionFilters.removeAll()
+                        filtersVM.resetFilters(homeViewModel: homeViewModel)
                     } label: {
                         Text("Reset")
                             .font(.custom("Rubik-Medium", size: 20))
@@ -304,14 +299,11 @@ struct FilterView: View {
             SortOption(title: "Price: Low to High")
         ]
         
-        
         var body: some View {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(sortOptions) { option in
                     Button(action: {
                         selectedSort = option
-
-                        
                     }) {
                         VStack(alignment: .leading, spacing: 0) {
                             Text(option.title)
@@ -324,7 +316,6 @@ struct FilterView: View {
                                 Divider()
                             }
                         }
-                        
                     }
                 }
             }
