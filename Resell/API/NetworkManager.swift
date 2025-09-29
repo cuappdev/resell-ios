@@ -291,6 +291,7 @@ class NetworkManager: APIClient {
     }
     
     func getFilteredPosts(by filter: [String]) async throws -> PostsResponse {
+        //TODO: Change to other filter endpoint?
         let url = try constructURL(endpoint: "/post/filterByCategories/")
         
         return try await post(url: url, body: FilterRequest(categories: filter))
@@ -356,17 +357,10 @@ class NetworkManager: APIClient {
         return try await post(url: url, body: prices)
     }
     
-    // MARK: This endpoint doesn't exist currently...
-    func filterByCategory(category: CategoryBody) async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/filterByCategory/")
-        
-        return try await post(url: url, body: category)
-    }
-    
-    func filterByCondition(condition: ConditionBody) async throws -> PostsResponse {
+    func filterByCondition(conditions: [String]) async throws -> PostsResponse {
         let url = try constructURL(endpoint: "/post/filterByCondition/")
         
-        return try await post(url: url, body: condition)
+        return try await post(url: url, body: ConditionBody(conditions: conditions))
     }
     
     func filterPriceLowtoHigh() async throws -> PostsResponse {

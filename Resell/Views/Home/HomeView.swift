@@ -17,6 +17,8 @@ struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel.shared
     @State var forYouPosts: [[Post]] = []
     @State var presentPopup = false
+    
+    
 
     var body: some View {
         VStack(spacing: 0) {
@@ -28,13 +30,26 @@ struct HomeView: View {
                         .padding(.bottom, 32)
                     ForYouView()
                         .padding(.bottom, 32)
-                    Text("Recent Listings")
-                        .font(.custom("Rubik-Medium", size: 22))
-                        .foregroundStyle(.black)
-                        .frame(maxWidth: .infinity, alignment: .leading) // <-- Align text left
-                        .padding(.leading, 24)
+                    HStack{
+                        Text("Recent Listings")
+                            .font(.custom("Rubik-Medium", size: 22))
+                            .foregroundStyle(.black)
+                            .frame(maxWidth: .infinity, alignment: .leading) // <-- Align text left
+                            .padding(.leading, 24)
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            presentPopup = true
+                        }, label: {
+                            Image("filters")
+                                .resizable()
+                                .frame(width: 40, height: 40)
+                        })
+                        .padding(.trailing, 20)
+                    }
                     ProductsGalleryView(items: viewModel.filteredItems) {
-                        if viewModel.selectedFilter == "Recent" {
+                        if viewModel.selectedFilter == ["Recent"] {
                             viewModel.fetchMoreItems()
                         }
                     }       
@@ -79,7 +94,6 @@ struct HomeView: View {
                             .foregroundStyle(Constants.Colors.secondaryGray)
                     }
                 }
-                // if there are no saved posts
                 if viewModel.savedItems.isEmpty {
                     ZStack{
                         RoundedRectangle(cornerRadius: 8)
@@ -101,9 +115,6 @@ struct HomeView: View {
                             }
                         }
                     }
-                    // if there are saved posts
-                    // load the first X posts, then have a view more button that navigates to the saved view
-                    
                 } else {
                     SavedRow(row: viewModel.savedItems)
                 }
@@ -135,28 +146,9 @@ struct HomeView: View {
                 }, label: {
                     Icon(image: "bell")
                 })
-                
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
             .padding(.vertical, -4)
-            
-//            HStack{
-//                Button(action: {
-//                    router.push(.search(nil))
-//                }, label: {
-//                    SearchBar()
-//                })
-//                
-//                Button(action: {
-//                    presentPopup = true
-//                }, label: {
-//                    Image("filters")
-//                        .resizable()
-//                        .frame(width: 40, height: 40)
-//                })
-//            }
-//            .padding(.bottom,12)
-//            .padding(.horizontal, Constants.Spacing.horizontalPadding)
         }
     }
 
@@ -169,20 +161,19 @@ struct HomeView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack {
                         ForEach(Constants.filters.filter { $0.color != nil }, id: \.id) { filter in
-                            VStack{
-                                 
-                                    CircularFilterButton(filter: filter, isSelected: viewModel.selectedFilter == filter.title) {
+                            VStack {
+                                    CircularFilterButton(filter: filter, isSelected: viewModel.selectedFilter == [filter.title]) {
                                         router.push(.detailedFilter(filter))
-                                        viewModel.selectedFilter = filter.title.uppercased()
+                                        viewModel.selectedFilter = [filter.title.uppercased()]
                                     }
                                 
                                 Text(filter.title)
                                     .font(Constants.Fonts.title4)
-                                
                                     .multilineTextAlignment(.center)
                                     .foregroundStyle(Constants.Colors.black)
                             }
-                        }.padding(.trailing, 30)
+                        }
+                        .padding(.trailing, 30)
                     }
                     .padding(.leading, Constants.Spacing.horizontalPadding)
                     .padding(.vertical, 1)
@@ -190,7 +181,3 @@ struct HomeView: View {
             }
         }
     }
-    
-
-
-

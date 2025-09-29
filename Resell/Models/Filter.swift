@@ -11,10 +11,8 @@ struct PriceBody: Codable {
     let maxPrice: Int
 }
 
+// we can prob refactor this...
 struct ConditionBody: Codable {
-    let condition: String
+    let conditions: [String]
 }
 
-struct CategoryBody: Codable {
-    let category: String
-}
