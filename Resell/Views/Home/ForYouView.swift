@@ -27,6 +27,8 @@ struct ForYouView: View {
             Text("For You")
                 .font(.custom("Rubik-Medium", size: 22))
                 .foregroundStyle(.black)
+                .padding(.leading, 24)
+
             ScrollView(.horizontal) {
                 LazyHStack(spacing: 20) {
                     if dataLoaded {
@@ -35,6 +37,8 @@ struct ForYouView: View {
                         forYouCard(title: titles[1], posts: searchViewModel.recentlySearched, loaded: $imageLoadedStates[1])
                         }
                     }
+                .padding(.leading, 24)
+
                 }
             }
             .onAppear() {
@@ -47,8 +51,7 @@ struct ForYouView: View {
                     }
                 }
             }
-            .padding(.leading, 24)
-        }
+         }
     }
 
     func forYouCard(title: String, posts: [Post], loaded: Binding<Bool>) -> some View {
