@@ -24,9 +24,6 @@ struct DetailedFilterView: View {
         .background(Constants.Colors.white)
         .loadingView(isLoading: viewModel.isLoading)
         .emptyState(isEmpty: $viewModel.filteredItems.isEmpty, title: "No \(filter.title) posts", text: "Posts in the \(filter.title) category will be displayed here.")
-//        .refreshable {
-//            viewModel.getAllPosts()
-//        }
         .onAppear {
             viewModel.getBlockedUsers()
         }
