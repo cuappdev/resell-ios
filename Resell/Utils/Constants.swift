@@ -118,9 +118,9 @@ struct Constants {
 
     static let chatMessageOptions: [ChatMessageOption] = [
         .negotiate,
-        .sendAvailability,
-        .venmo,
-        .viewAvailability
+//        .sendAvailability,
+        .venmo
+//        .viewAvailability
     ]
 
     static let dummyItemsData: [Item] = [
@@ -154,7 +154,7 @@ struct FilterCategory: Hashable {
 
 enum ChatMessageOption: String {
     case negotiate = "Negotiate"
-    case sendAvailability = "Send Availability"
+//    case sendAvailability = "Send Availability"
     case venmo = "Pay with Venmo"
-    case viewAvailability = "View Availability"
+//    case viewAvailability = "View Availability"
 }
