@@ -6,6 +6,13 @@
 //
 import Foundation
 
+struct FilterPostsUnifiedRequest: Codable {
+    var sortField: String?
+    var price: PriceBody?
+    var categories: [String]?
+    var condition: [String]?
+}
+
 struct PriceBody: Codable {
     let lowPrice: Int
     let maxPrice: Int

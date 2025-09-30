@@ -22,14 +22,13 @@ class FiltersViewModel: ObservableObject {
     func applyFilters(homeViewModel: HomeViewModel) async throws {
         let categoryFiltersList = Array(categoryFilters)
         Task {
-            print("Category Filters")
-            print(categoryFiltersList)
-             homeViewModel.selectedFilter = categoryFiltersList.isEmpty ? homeViewModel.selectedFilter : categoryFiltersList
+            homeViewModel.selectedFilter = categoryFiltersList.isEmpty ? homeViewModel.selectedFilter : categoryFiltersList
         }
         let conditionFiltersList = Array(conditionFilters)
         Task {
             try await NetworkManager.shared.filterByCondition(conditions: conditionFiltersList)
         }
+        
         
         if let sort = selectedSort {
             if selectedSort?.title == "Newly Listed" {
@@ -42,6 +41,17 @@ class FiltersViewModel: ObservableObject {
         }
 
         Task { try await NetworkManager.shared.filterByPrice(prices: PriceBody(lowPrice: Int(lowValue), maxPrice: Int(highValue))) }
+        
+        // TODO: Add stuff for new filter...
+        // pass categoryFiltersList and conditionFilterList and selectedSort and Price
+        let priceBody = PriceBody(lowPrice: Int(lowValue), maxPrice: Int(highValue))
+        let unifiedFilter = FilterPostsUnifiedRequest(
+                                sortField: selectedSort?.title,
+                                price: priceBody,
+                                categories: categoryFiltersList,
+                                condition: conditionFiltersList
+                                )
+        
         
         presentPopup = false
     }
