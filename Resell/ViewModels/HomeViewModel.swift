@@ -102,6 +102,8 @@ class HomeViewModel: ObservableObject {
     func filterPosts() {
         Task {
             do {
+            
+                
                 let postsResponse = try await NetworkManager.shared.getFilteredPostsByCategory(for: selectedFilter)
                 filteredItems = postsResponse.posts
             } catch {

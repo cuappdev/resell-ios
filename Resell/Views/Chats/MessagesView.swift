@@ -297,21 +297,22 @@ struct FilterOptionsView: View {
                         chatOption(title: option.rawValue) {
                             withAnimation { didShowNegotiationView = true }
                         }
-                    case .sendAvailability:
-                        chatOption(title: option.rawValue) {
-                            isEditing = true
-                            withAnimation { didShowAvailabilityView = true }
-                        }
+//                    case .sendAvailability:
+//                        chatOption(title: option.rawValue) {
+//                            isEditing = true
+//                            withAnimation { didShowAvailabilityView = true }
+//                        }
                     case .venmo:
                         chatOption(title: option.rawValue) {
                             withAnimation { didShowWebView = true }
                         }
-                    case .viewAvailability:
-                        // TODO: Fix this logic. There should be two cases, one for the current user and another for the user we're viewing
-                        chatOption(title: "View \(viewModel.chatInfo.listing.user?.givenName ?? "")'s Availability") {
-                            isEditing = false
-                            withAnimation { didShowAvailabilityView = true }
-                        }
+//                    case .viewAvailability:
+//                        // TODO: Fix this logic. There should be two cases, one for the current user and another for the user we're viewing
+//                        chatOption(title: "View \(viewModel.chatInfo.listing.user?.givenName ?? "")'s Availability") {
+//                            isEditing = false
+//                            withAnimation { didShowAvailabilityView = true }
+//                        }
+            
                     }
                 }
             }
