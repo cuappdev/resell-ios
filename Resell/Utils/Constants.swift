@@ -94,6 +94,13 @@ struct Constants {
         FilterCategory(id: 0, title: ChatTab.purchases.rawValue),
         FilterCategory(id: 1, title: ChatTab.offers.rawValue)
     ]
+    
+    // TODO: Use this whenever working with conditions
+    static let conditions = [
+        FilterCategory(id: 0, title: "Never Used"),
+        FilterCategory(id: 1, title: "Gently Used"),
+        FilterCategory(id: 2, title: "Worn")
+    ]
 
     /// Product filter categories used in Resell's design system
     static let filters = [

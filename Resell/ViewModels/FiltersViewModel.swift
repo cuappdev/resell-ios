@@ -18,6 +18,7 @@ class FiltersViewModel: ObservableObject {
     @Published var selectedSort: SortOption? = nil
     @Published var presentPopup: Bool = false
     
+    //
     
     func applyFilters(homeViewModel: HomeViewModel) async throws {
         let categoryFiltersList = Array(categoryFilters)

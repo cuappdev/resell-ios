@@ -23,6 +23,13 @@ class ProfileViewModel: ObservableObject {
     @Published var selectedPosts: [Post] = []
     @Published var selectedTab: Tab = .listing
     @Published var user: User? = nil
+    
+    @Published var profilePic: UIImage = UIImage(named: "emptyProfile")!
+
+    // REFACTOR I HATE THIS
+    @Published var username: String = ""
+    @Published var bio: String = ""
+    
 
     private var archivedPosts: [Post] = []
     private var userPosts: [Post] = []
@@ -53,15 +60,27 @@ class ProfileViewModel: ObservableObject {
             defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
+                // why tf was this not here chat
+                guard let user = GoogleAuthManager.shared.user else {
+                    GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User not available.")
+                    return
+                }
+                
                 if let userId = GoogleAuthManager.shared.user?.firebaseUid {
                     let postsResponse = try await NetworkManager.shared.getPostsByUserID(id: userId)
                     let archivedResponse = try await NetworkManager.shared.getArchivedPostsByUserID(id: userId)
                     let requestsResponse = try await NetworkManager.shared.getRequestsByUserID(id: userId)
-
+                    
                     userPosts = Post.sortPostsByDate(postsResponse.posts)
+                    print("# User Posts: \(userPosts.count)")
                     archivedPosts = Post.sortPostsByDate(archivedResponse.posts)
                     requests = requestsResponse.requests
                     selectedPosts = userPosts
+                    
+                    username = user.username
+                    bio = user.bio
+                
+                    await decodeProfileImage(url: user.photoUrl)
                 } else {
                     GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User id not available.")
                 }
@@ -142,5 +161,13 @@ class ProfileViewModel: ObservableObject {
                 NetworkManager.shared.logger.error("Error in ProfileViewModel.deleteRequest: \(error)")
             }
         }
+    }
+    
+    private func decodeProfileImage(url: URL?) async {
+        guard let url,
+              let data = try? await URLSession.shared.data(from: url).0,
+              let image = UIImage(data: data) else { return }
+
+        profilePic = image
     }
 }

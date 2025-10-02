@@ -27,6 +27,9 @@ class NewListingViewModel: ObservableObject {
     @Published var descriptionText: String = ""
     @Published var priceText: String = ""
     @Published var selectedFilter: String = "Clothing"
+    @Published var selectedCondition: String = "Never Used"
+
+    
     @Published var titleText: String = ""
 
     // MARK: - Functions
@@ -57,10 +60,21 @@ class NewListingViewModel: ObservableObject {
 
             do {
                 if let user = GoogleAuthManager.shared.user {
-                    let imagesBase64 = selectedImages.map { $0.resizedToMaxDimension(512).toBase64() ?? "" }
-                    let postBody = PostBody(title: titleText, description: descriptionText, categories: [selectedFilter], originalPrice: Double(priceText) ?? 0, imagesBase64: imagesBase64, firebaseUid: user.firebaseUid)
+                    
+                    let imagesBase64: [String] = selectedImages.map { $0.resizedToMaxDimension(512).toBase64() ?? "" }
+                    let postBody = PostBody(title: titleText, description: descriptionText, categories: [selectedFilter], condition: selectedCondition, original_price: Double(priceText) ?? 0, imagesBase64: imagesBase64, userId: user.firebaseUid)
+                    
+                    // IMPLEMENT CONDITIONS AND ADD TO POSTBODY FUCK THIS APP
+                    print(titleText)
+                    print(descriptionText)
+                    print([selectedFilter])
+                    print(Double(priceText) ?? 0)
+                    print(imagesBase64)
+                    print(selectedCondition)
+                    print(user.firebaseUid)
+                    
                     let _ = try await NetworkManager.shared.createPost(postBody: postBody)
-
+                    
                     clear()
                 } else {
                     GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User not available.")
@@ -83,6 +97,7 @@ class NewListingViewModel: ObservableObject {
         descriptionText = ""
         priceText = ""
         selectedFilter = "Clothing"
+        selectedCondition = "Never Worn"
         isLoading = false
     }
 }
