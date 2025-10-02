@@ -82,18 +82,18 @@ struct PostBody: Codable {
     let title: String
     let description: String
     let categories: [String]
-    let originalPrice: Double
+    let condition: String
+    let original_price: Double
     let imagesBase64: [String]
-    let firebaseUid: String
-    let condition: String = "NEW"
+    let userId: String
 
     enum CodingKeys: String, CodingKey {
         case title
         case description
         case categories
-        case originalPrice = "original_price"
-        case imagesBase64
-        case firebaseUid
         case condition
+        case original_price = "original_price"
+        case imagesBase64
+        case userId
     }
 }
