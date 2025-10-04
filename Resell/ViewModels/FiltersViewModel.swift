@@ -16,19 +16,20 @@ class FiltersViewModel: ObservableObject {
     @Published var highValue: Double = 1000
     @Published var showSale: Bool = false
     @Published var selectedSort: SortOption? = nil
-    @Published var presentPopup: Bool = false
+    @Published var presentPopup: Bool = false    
     
-    //
-    
+    // TODO: Use Unified endpoint
     func applyFilters(homeViewModel: HomeViewModel) async throws {
         let categoryFiltersList = Array(categoryFilters)
-        Task {
-            homeViewModel.selectedFilter = categoryFiltersList.isEmpty ? homeViewModel.selectedFilter : categoryFiltersList
-        }
+//        Task {
+//            homeViewModel.selectedFilter = categoryFiltersList.isEmpty ? homeViewModel.selectedFilter : categoryFiltersList
+//        }
         let conditionFiltersList = Array(conditionFilters)
-        Task {
-            try await NetworkManager.shared.filterByCondition(conditions: conditionFiltersList)
-        }
+//        Task {
+//            try await NetworkManager.shared.filterByCondition(conditions: conditionFiltersList)
+//        }
+        
+        
         
         
         if let sort = selectedSort {
@@ -44,7 +45,7 @@ class FiltersViewModel: ObservableObject {
         Task { try await NetworkManager.shared.filterByPrice(prices: PriceBody(lowPrice: Int(lowValue), maxPrice: Int(highValue))) }
         
         // TODO: Add stuff for new filter...
-        // pass categoryFiltersList and conditionFilterList and selectedSort and Price
+        // Not sure if its extra work for the filter if it has default high and low vals
         let priceBody = PriceBody(lowPrice: Int(lowValue), maxPrice: Int(highValue))
         let unifiedFilter = FilterPostsUnifiedRequest(
                                 sortField: selectedSort?.title,
@@ -52,6 +53,16 @@ class FiltersViewModel: ObservableObject {
                                 categories: categoryFiltersList,
                                 condition: conditionFiltersList
                                 )
+        
+        Task {
+            do {
+                let postsResponse = try await NetworkManager.shared.getUnifiedFilteredPosts(filters: unifiedFilter)
+                homeViewModel.filteredItems = postsResponse.posts
+            } catch {
+                NetworkManager.shared.logger.error("Error in FiltersViewModel.applyFilters: \(error)")
+            }
+        }
+        
         
         
         presentPopup = false
