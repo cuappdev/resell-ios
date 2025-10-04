@@ -55,7 +55,6 @@ struct CircularFilterButton: View {
     
     // MARK: - Properties
     let filter: FilterCategory
-    let isSelected: Bool
     let action : () -> Void
     
     var body: some View {

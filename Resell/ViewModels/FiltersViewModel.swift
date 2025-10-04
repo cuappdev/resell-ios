@@ -16,36 +16,26 @@ class FiltersViewModel: ObservableObject {
     @Published var highValue: Double = 1000
     @Published var showSale: Bool = false
     @Published var selectedSort: SortOption? = nil
-    @Published var presentPopup: Bool = false    
+    @Published var detailedFilterItems: [Post] = []
+    private var baseCategory: String? = nil // Store the base category for detailed view
+
+    func initializeDetailedFilter(category: String) async throws {
+        baseCategory = category
+        categoryFilters = [category.uppercased()] // Pre-populate with the category
+        try await applyFilters(homeViewModel: HomeViewModel.shared)
+    }
+        
+    let isHome: Bool
     
+    init(isHome: Bool = false) {
+           self.isHome = isHome
+       }
+       
     // TODO: Use Unified endpoint
     func applyFilters(homeViewModel: HomeViewModel) async throws {
         let categoryFiltersList = Array(categoryFilters)
-//        Task {
-//            homeViewModel.selectedFilter = categoryFiltersList.isEmpty ? homeViewModel.selectedFilter : categoryFiltersList
-//        }
         let conditionFiltersList = Array(conditionFilters)
-//        Task {
-//            try await NetworkManager.shared.filterByCondition(conditions: conditionFiltersList)
-//        }
         
-        
-        
-        
-        if let sort = selectedSort {
-            if selectedSort?.title == "Newly Listed" {
-                Task { try await NetworkManager.shared.filterNewlyListed() }
-            } else if selectedSort?.title == "Price: High to Low" {
-                Task { try await NetworkManager.shared.filterPriceHightoLow() }
-            } else if selectedSort?.title == "Price: Low to High" {
-                Task { try await NetworkManager.shared.filterPriceLowtoHigh() }
-            }
-        }
-
-        Task { try await NetworkManager.shared.filterByPrice(prices: PriceBody(lowPrice: Int(lowValue), maxPrice: Int(highValue))) }
-        
-        // TODO: Add stuff for new filter...
-        // Not sure if its extra work for the filter if it has default high and low vals
         let priceBody = PriceBody(lowPrice: Int(lowValue), maxPrice: Int(highValue))
         let unifiedFilter = FilterPostsUnifiedRequest(
                                 sortField: selectedSort?.title,
@@ -57,15 +47,17 @@ class FiltersViewModel: ObservableObject {
         Task {
             do {
                 let postsResponse = try await NetworkManager.shared.getUnifiedFilteredPosts(filters: unifiedFilter)
-                homeViewModel.filteredItems = postsResponse.posts
+                if isHome {
+        
+                    homeViewModel.filteredItems = postsResponse.posts
+                } else {
+                    detailedFilterItems = postsResponse.posts
+                }
             } catch {
                 NetworkManager.shared.logger.error("Error in FiltersViewModel.applyFilters: \(error)")
             }
         }
         
-        
-        
-        presentPopup = false
     }
     
     func resetFilters(homeViewModel: HomeViewModel) {
@@ -75,6 +67,15 @@ class FiltersViewModel: ObservableObject {
         highValue = 1000
         showSale = false
         selectedSort = nil
-        homeViewModel.selectedFilter = ["Recent"]
+        
+        if isHome {
+             homeViewModel.selectedFilter = ["Recent"]
+         } else if let category = baseCategory {
+             // For detailed view, reset to just the base category
+             categoryFilters = [category.uppercased()]
+             Task {
+                 try? await applyFilters(homeViewModel: homeViewModel)
+             }
+         }
     }
 }
