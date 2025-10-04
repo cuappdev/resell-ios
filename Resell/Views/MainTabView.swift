@@ -106,11 +106,9 @@ struct MainTabView: View {
             if selection == 0 {
                 HomeView()
             } else if selection == 1 {
-                SavedView()
-            } else if selection == 2 {
                 ChatsView()
                     .environmentObject(chatsViewModel)
-            } else if selection == 3 {
+            } else if selection == 2 {
                 ProfileView()
             }
         }
@@ -118,7 +116,7 @@ struct MainTabView: View {
 
     private var tabBarView: some View {
         HStack {
-            ForEach(0..<4, id: \.self) { index in
+            ForEach(0..<3, id: \.self) { index in
                 TabViewIcon(selectionIndex: $selection, itemIndex: index)
                     .frame(width: 28, height: 28)
 
@@ -126,6 +124,7 @@ struct MainTabView: View {
                     Spacer()
                 }
             }
+            .frame(alignment: .center)
         }
         .ignoresSafeArea(edges: .bottom)
         .padding(.horizontal, 40)
