@@ -127,7 +127,7 @@ struct FilterView: View {
                     }
                     .offset(y: -28)
                 }
-                if home{
+                if home {
                     Divider()
                         .frame(width: 344, height: 1)
                         .offset(y: -16)
@@ -245,6 +245,10 @@ struct FilterView: View {
                     }
                     .frame(width: 320, alignment: .leading)
                     .padding(.leading, -8)
+                    
+                    if !home {
+                        Spacer()
+                    }
                 }
                 .padding(.trailing, 32)
                 
@@ -287,8 +291,13 @@ struct FilterView: View {
                         presentPopup.toggle()
                     }
             }
-        }.frame(width: 414, height: 786)
-            .background(Color.white)
+        }.frame(width: 414, height: home ? 786 : 686)
+        .background(Color.white)
+        // TODO: Add border to filter view
+//        .overlay(
+//                RoundedRectangle(cornerRadius: 20) // Match your sheet's corner radius
+//                    .stroke(Color.gray.opacity(0.3), lineWidth: 1) // Customize color and width
+//            )
     }
     
     struct SortByView: View {

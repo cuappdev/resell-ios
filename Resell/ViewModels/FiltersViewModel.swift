@@ -21,7 +21,7 @@ class FiltersViewModel: ObservableObject {
 
     func initializeDetailedFilter(category: String) async throws {
         baseCategory = category
-        categoryFilters = [category.uppercased()] // Pre-populate with the category
+        categoryFilters = [category] // Pre-populate with the category
         try await applyFilters(homeViewModel: HomeViewModel.shared)
     }
         
@@ -47,8 +47,8 @@ class FiltersViewModel: ObservableObject {
         Task {
             do {
                 let postsResponse = try await NetworkManager.shared.getUnifiedFilteredPosts(filters: unifiedFilter)
+                print(postsResponse)
                 if isHome {
-        
                     homeViewModel.filteredItems = postsResponse.posts
                 } else {
                     detailedFilterItems = postsResponse.posts

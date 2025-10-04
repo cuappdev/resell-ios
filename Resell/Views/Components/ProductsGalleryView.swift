@@ -37,12 +37,12 @@ struct ProductsGalleryView: View {
                 LazyVStack(spacing: 20) {
                     ForEach(column1, id: \.id) { post in
                         ProductGalleryCell(selectedItem: $selectedItem, post: post, savedCell: false)
-//                            .onAppear {
+                            .onAppear {
 //                                // pls fix me im dying 
 //                                if post == column1.last  {
 //                                    onScrollToBottom?()
 //                                }
-//                            }
+                            }
                     }
                 }
 

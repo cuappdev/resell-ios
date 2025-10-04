@@ -227,7 +227,6 @@ class NetworkManager: APIClient {
         let url = try constructURL(endpoint: "/post/")
         print("trying to get all posts")
         return try await get(url: url)
-        
     }
     
     func getUnifiedFilteredPosts(filters: FilterPostsUnifiedRequest) async throws -> PostsResponse {
