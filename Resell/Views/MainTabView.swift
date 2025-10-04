@@ -120,7 +120,7 @@ struct MainTabView: View {
                 TabViewIcon(selectionIndex: $selection, itemIndex: index)
                     .frame(width: 28, height: 28)
 
-                if index != 3 {
+                if index != 2 {
                     Spacer()
                 }
             }
