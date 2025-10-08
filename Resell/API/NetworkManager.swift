@@ -480,7 +480,14 @@ class NetworkManager: APIClient {
         
         return try await post(url: url, body: image)
     }
+    
     // MARK: - Notifications Networking Functions
+    
+    func getNotifications() async throws -> [Notifications] {
+        let url = try constructURL(endpoint: "/notif/recent/")
+        
+        return try await get(url: url)
+    }
     
     //    func createNotif(notifBody: Notification) async throws -> ListingResponse {
     //        let url = try constructURL(endpoint: "/notif/")
@@ -488,5 +495,6 @@ class NetworkManager: APIClient {
     //        return try await post(url: url, body: notifBody)
     //        }
     }
+
     
 

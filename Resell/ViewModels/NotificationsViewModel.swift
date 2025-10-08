@@ -41,9 +41,22 @@ class NotificationsViewModel: ObservableObject {
             notifications[index].isRead = true
         }
     }
+    
+    func fetchNotifications() {
+        Task {
+            do {
+                // MARK: - Check with backend to see if there are actually any notis
+                print(self.notifications)
+                self.notifications = try await NetworkManager.shared.getNotifications()
+                print(self.notifications)
+            } catch {
+                NetworkManager.shared.logger.error("Error in NotificationsViewModel.fetchNotifications: \(error)")
+            }
+        }
+    }
 
     /// Simulate fetching data
-    func fetchNotifications() {
+    func dummyFetchNotifications() {
         notifications = [
             Notifications(
                 userID: "381527oef-42b4-4fdd-b074-dfwbejko229",

@@ -34,6 +34,9 @@ struct NotificationsView: View {
         .padding(.top, 5)
         .padding(.vertical, 1)
         .navigationTitle("Notifications")
+        .onAppear {
+            viewModel.fetchNotifications()
+        }
     }
     
     // Creates the filter for notifications sorting
@@ -65,7 +68,7 @@ struct NotificationsView: View {
                 Spacer()
                 notifText(for: notification)
                     .font(.system(size: 14))
-                Text("5 days ago")
+                Text("6 days ago")
                     .font(.footnote)
                     .foregroundColor(.gray)
                 Spacer()

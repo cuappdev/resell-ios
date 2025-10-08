@@ -22,6 +22,10 @@ struct NotificationData: Codable {
     let messageId: String
 }
 
+struct NotifcationResponse: Codable {
+    let notifications: [Notifications]
+}
+
 
 extension Notifications {
     static let dummydata: [Notifications] = [
