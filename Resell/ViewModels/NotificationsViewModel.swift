@@ -23,32 +23,7 @@ class NotificationsViewModel: ObservableObject {
         "Your Listings": 5
     ]
 
-    @Published var notifications: [Notifications] = [
-        Notifications(
-            userID: "381527oef-42b4-4fdd-b074-dfwbejko229",
-            title: "New Message",
-            body: "You have received a new message from Mateo",
-            data: NotificationData(type: "messages", messageId: "134841-42b4-4fdd-b074-jkfale")
-        ),
-        Notifications(
-            userID: "381527oef-42b4-4fdd-b074-dfwbejko229",
-            title: "Request Received",
-            body: "You have a new request from Angelina",
-            data: NotificationData(type: "requests", messageId: "1")
-        ),
-        Notifications(
-            userID: "381527oef-42b4-4fdd-b074-dfwbejko229",
-            title: "Bookmarked Item",
-            body: "Your bookmarked item is back in stock",
-            data: NotificationData(type: "bookmarks", messageId: "2")
-        ),
-        Notifications(
-            userID: "381527oef-42b4-4fdd-b074-dfwbejko229",
-            title: "Order Update",
-            body: "Your listing has been bookmarked",
-            data: NotificationData(type: "your listings", messageId: "3")
-        )
-    ]
+    @Published var notifications: [Notifications] = Notifications.dummydata
 
     var filteredNotifications: [Notifications] {
         if selectedTab == "All" {
@@ -74,13 +49,17 @@ class NotificationsViewModel: ObservableObject {
                 userID: "381527oef-42b4-4fdd-b074-dfwbejko229",
                 title: "New Message",
                 body: "You have received a new message from Mateo",
-                data: NotificationData(type: "messages", messageId: "12345")
+                data: NotificationData(type: "messages", messageId: "12345"),
+                createdAt: Date(),
+                updatedAt: Date()
             ),
             Notifications(
                 userID: "381527oef-42b4-4fdd-b074-dfwbejko229",
                 title: "New Request",
                 body: "You have a new request from Angelina",
-                data: NotificationData(type: "requests", messageId: "23456")
+                data: NotificationData(type: "requests", messageId: "23456"),
+                createdAt: Date(),
+                updatedAt: Date()
             )
         ]
     }
