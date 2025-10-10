@@ -28,6 +28,7 @@ class ProfileViewModel: ObservableObject {
 
     // REFACTOR I HATE THIS
     @Published var username: String = ""
+    @Published var givenName: String = ""
     @Published var bio: String = ""
     
 
@@ -78,6 +79,7 @@ class ProfileViewModel: ObservableObject {
                     selectedPosts = userPosts
                     
                     username = user.username
+                    givenName = user.givenName
                     bio = user.bio
                 
                     await decodeProfileImage(url: user.photoUrl)

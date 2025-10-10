@@ -41,10 +41,11 @@ struct SettingsView: View {
                     settingsRow(isRed: true, title: "Delete Account", icon: "") {
                         withAnimation { viewModel.didShowDeleteAccountView = true }
                     }
-                case .notifications:
-                    settingsRow(title: "Notifications", icon: "notifications") {
-                        router.push(.notifications)
-                    }
+                // MARK: Omit notifications for release...
+//                case .notifications:
+//                    settingsRow(title: "Notifications", icon: "notifications") {
+//                        router.push(.notifications)
+//                    }
                 case .sendFeedback:
                     settingsRow(title: "Send Feedback", icon: "feedback") {
                         router.push(.feedback)

@@ -27,7 +27,7 @@ struct ProfileView: View {
                 .foregroundStyle(Constants.Colors.black)
                 .padding(.bottom, 4)
 
-            Text(viewModel.user?.givenName ?? "")
+            Text(viewModel.givenName)
                 .font(Constants.Fonts.body2)
                 .foregroundStyle(Constants.Colors.secondaryGray)
                 .padding(.bottom, 16)
