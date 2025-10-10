@@ -47,7 +47,6 @@ class FiltersViewModel: ObservableObject {
         Task {
             do {
                 let postsResponse = try await NetworkManager.shared.getUnifiedFilteredPosts(filters: unifiedFilter)
-                print(postsResponse)
                 if isHome {
                     homeViewModel.filteredItems = postsResponse.posts
                 } else {
@@ -72,7 +71,7 @@ class FiltersViewModel: ObservableObject {
              homeViewModel.selectedFilter = ["Recent"]
          } else if let category = baseCategory {
              // For detailed view, reset to just the base category
-             categoryFilters = [category.uppercased()]
+             categoryFilters = [category]
              Task {
                  try? await applyFilters(homeViewModel: homeViewModel)
              }

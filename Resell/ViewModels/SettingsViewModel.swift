@@ -19,7 +19,8 @@ class SettingsViewModel: ObservableObject {
 
     var settings: [Settings] = [
         .accountSettings,
-        .notifications,
+        // MARK: Omit notifications for release
+        //        .notifications,
         .sendFeedback,
         .blockedUsers,
         .eula,
@@ -82,7 +83,7 @@ enum Settings {
     case editProfile
     case deleteAccount
     case accountSettings
-    case notifications
+//    case notifications
     case sendFeedback
     case blockedUsers
     case eula
