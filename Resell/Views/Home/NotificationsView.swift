@@ -13,31 +13,52 @@ struct NotificationsView: View {
     
     @EnvironmentObject var router: Router
     @StateObject private var viewModel = NotificationsViewModel()
+    
+    private let relativeFormatter: RelativeDateTimeFormatter = {
+        let f = RelativeDateTimeFormatter()
+        f.unitsStyle = .full
+        return f
+    }()
 
-        
+    private func timeAgo(_ date: Date) -> String {
+        relativeFormatter.localizedString(for: date, relativeTo: Date())
+    }
+    
     var body: some View {
         VStack {
             filtersView
                 .padding(.leading, 15)
-//            Text("New")
-//                .font(.headline)
-//                .frame(maxWidth: .infinity, alignment: .leading)
-//                .padding(.leading, 30)
-//                .padding(.vertical, 10)
-//            List(viewModel.filteredNotifications, id: \.data.messageId) { notification in
-//                notificationView(for: notification)
-//                    .listRowInsets(EdgeInsets())
-//                    .listRowSeparator(.hidden)
-//            }
-//            .listStyle(PlainListStyle())
-            // MARK: - Implement displaying grouped filtered messages by section and real data.
+                .zIndex(1)
+
+            List {
+                ForEach(NotificationSection.allCases) { section in
+                    if let items = viewModel.groupedFilteredNotifications[section], !items.isEmpty {
+                        Text(section.rawValue)
+                            .font(.custom("Rubik-Medium", size: 18))
+                            .foregroundColor(.primary)
+                            .fontWeight(.medium)
+                            .textCase(nil)
+                            .padding(.leading, 8)
+                            .padding(.top, 5)
+                            .listRowSeparator(.hidden)
+                        ForEach(items, id: \.data.messageId) { notification in
+                            notificationView(for: notification)
+                                .listRowInsets(EdgeInsets())
+                                .listRowSeparator(.hidden)
+                        }
+                    }
+                }
+            }
+            .listStyle(.plain)
+            .listRowSeparator(.hidden)
         }
         .padding(.top, 5)
         .padding(.vertical, 1)
         .navigationTitle("Notifications")
-        .onAppear {
-            viewModel.fetchNotifications()
-        }
+        // MARK: - Uncomment when confirm notification data in backend
+//        .onAppear {
+//            viewModel.fetchNotifications()
+//        }
     }
     
     // Creates the filter for notifications sorting
@@ -52,6 +73,7 @@ struct NotificationsView: View {
                     }
                 }
                 .padding(.top, 20)
+                .padding(.bottom, 1)
             }
             .padding(.leading, 15)
         }
@@ -69,7 +91,7 @@ struct NotificationsView: View {
                 Spacer()
                 notifText(for: notification)
                     .font(.system(size: 14))
-                Text("6 days ago")
+                Text(timeAgo(notification.createdAt))
                     .font(.footnote)
                     .foregroundColor(.gray)
                 Spacer()
@@ -79,8 +101,9 @@ struct NotificationsView: View {
         }
         .padding(15)
         .padding(.horizontal, 15)
+        .contentShape(Rectangle())
         .background(notification.isRead ? Color.white : Color.purple.opacity(0.1))
-        .swipeActions(edge: .leading) {
+        .swipeActions(edge: .leading, allowsFullSwipe: true) {
             Button(action: {
                 viewModel.markAsRead(notification: notification)
             }) {

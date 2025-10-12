@@ -33,7 +33,7 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
-    var groupedFilterNotifications: [NotificationSection: [Notifications]] {
+    var groupedFilteredNotifications: [NotificationSection: [Notifications]] {
         let source = filteredNotifications
         let now = Date()
         let cal = Calendar.current
