@@ -32,6 +32,31 @@ class NotificationsViewModel: ObservableObject {
             return notifications.filter { $0.data.type.lowercased() == selectedTab.lowercased() }
         }
     }
+    
+    var groupedFilterNotifications: [NotificationSection: [Notifications]] {
+        let source = filteredNotifications
+        let now = Date()
+        let cal = Calendar.current
+        
+        var dict: [NotificationSection: [Notifications]] = [:]
+        
+        for noti in source {
+            let days = cal.dateComponents([.day], from: noti.createdAt, to: now).day ?? 0
+            let section: NotificationSection
+            switch days {
+            case 0: section = .new
+            case 1...6: section = .last7
+            case 7...29: section = .last30
+            default: section = .older
+            }
+            dict[section, default: []].append(noti)
+        }
+        
+        for section in dict.keys {
+            dict[section]?.sort { $0.createdAt > $1.createdAt }
+        }
+        return dict
+    }
 
     // MARK: - Functions
 

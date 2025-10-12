@@ -22,10 +22,14 @@ struct NotificationData: Codable {
     let messageId: String
 }
 
-struct NotifcationResponse: Codable {
-    let notifications: [Notifications]
+enum NotificationSection: String, CaseIterable, Identifiable {
+    case new = "New"
+    case last7 = "Last 7 Days"
+    case last30 = "Last 30 Days"
+    case older = "Older"
+    
+    var id: String {rawValue}
 }
-
 
 extension Notifications {
     static let dummydata: [Notifications] = [

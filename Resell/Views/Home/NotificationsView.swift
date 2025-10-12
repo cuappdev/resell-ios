@@ -19,17 +19,18 @@ struct NotificationsView: View {
         VStack {
             filtersView
                 .padding(.leading, 15)
-            Text("New")
-                .font(.headline)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.leading, 30)
-                .padding(.vertical, 10)
-            List(viewModel.filteredNotifications, id: \.data.messageId) { notification in
-                notificationView(for: notification)
-                    .listRowInsets(EdgeInsets())
-                    .listRowSeparator(.hidden)
-            }
-            .listStyle(PlainListStyle())
+//            Text("New")
+//                .font(.headline)
+//                .frame(maxWidth: .infinity, alignment: .leading)
+//                .padding(.leading, 30)
+//                .padding(.vertical, 10)
+//            List(viewModel.filteredNotifications, id: \.data.messageId) { notification in
+//                notificationView(for: notification)
+//                    .listRowInsets(EdgeInsets())
+//                    .listRowSeparator(.hidden)
+//            }
+//            .listStyle(PlainListStyle())
+            // MARK: - Implement displaying grouped filtered messages by section and real data.
         }
         .padding(.top, 5)
         .padding(.vertical, 1)
