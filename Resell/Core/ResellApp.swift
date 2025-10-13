@@ -11,16 +11,28 @@ import GoogleSignIn
 import SwiftUI
 import UserNotifications
 import DeviceCheck
+import Kingfisher
 
 @main
 struct ResellApp: App {
 
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject var mainViewModel = MainViewModel()
-    //TODO: Refactor...
-      init() {
+    
+    init() {
+          //TODO: Refactor...
           HomeViewModel.shared.configure(mainViewModel: mainViewModel)
-      }
+          setupKingfisher()
+    }
+    
+    private func setupKingfisher() {
+        // Limit concurrent downloads to 4 (prevents CPU overload)
+        ImageDownloader.default.sessionConfiguration.httpMaximumConnectionsPerHost = 4
+        
+        // Enable progressive loading for better UX
+        ImageDownloader.default.sessionConfiguration.timeoutIntervalForRequest = 15
+    }
+    
     var body: some Scene {
         WindowGroup {
             MainView()
