@@ -26,19 +26,19 @@ struct ExternalProfileView: View {
                     .padding(.bottom, 12)
                     .padding(.horizontal, 24)
 
-                Text(viewModel.user?.username ?? "")
+                Text(viewModel.externalUser?.username ?? "")
                     .font(Constants.Fonts.h3)
                     .foregroundStyle(Constants.Colors.black)
                     .padding(.bottom, 4)
                     .padding(.horizontal, 24)
 
-                Text(viewModel.user?.givenName ?? "")
+                Text(viewModel.externalUser?.givenName ?? "")
                     .font(Constants.Fonts.body2)
                     .foregroundStyle(Constants.Colors.secondaryGray)
                     .padding(.bottom, 16)
                     .padding(.horizontal, 24)
 
-                Text(viewModel.user?.bio ?? "")
+                Text(viewModel.externalUser?.bio ?? "")
                     .font(Constants.Fonts.body2)
                     .foregroundStyle(Constants.Colors.black)
                     .padding(.bottom, 28)
@@ -47,8 +47,8 @@ struct ExternalProfileView: View {
 
                 Divider()
 
-                ProductsGalleryView(items: viewModel.selectedPosts)
-                    .loadingView(isLoading: viewModel.isLoadingUser)
+                ProductsGalleryView(items: viewModel.externalUserPosts)
+                    .loadingView(isLoading: viewModel.isLoadingExternalUser)
                     .padding(.top, 16)
             }
             .background(Constants.Colors.white)
@@ -83,7 +83,7 @@ struct ExternalProfileView: View {
                 }
             }
             .onAppear {
-                viewModel.getExternalUser(id: userID)
+                viewModel.loadExternalUser(id: userID)
             }
 
             if viewModel.sellerIsBlocked {
@@ -125,7 +125,7 @@ struct ExternalProfileView: View {
     }
 
     private var profileImageView: some View {
-        KFImage(viewModel.user?.photoUrl)
+        KFImage(viewModel.externalUser?.photoUrl)
             .cacheOriginalImage()
             .placeholder {
                 ShimmerView()
@@ -150,9 +150,14 @@ struct ExternalProfileView: View {
 
             PurpleButton(isLoading: viewModel.isLoading,text: viewModel.sellerIsBlocked ? "Unblock" : "Block", horizontalPadding: 100) {
                 if viewModel.sellerIsBlocked {
-                    viewModel.unblockUser(id: userID)
+                    Task {
+                        try await    viewModel.unblockUser(id: userID)
+
+                    }
                 } else {
-                    viewModel.blockUser(id: userID)
+                    Task{
+                        try await   viewModel.blockUser(id: userID)
+                    }
                 }
             }
 

@@ -15,109 +15,74 @@ class ProfileViewModel: ObservableObject {
     @Published var didShowOptionsMenu: Bool = false
     @Published var didShowBlockView: Bool = false
     @Published var sellerIsBlocked: Bool = false
-
-    @Published var isLoading: Bool = false
-    @Published var isLoadingUser: Bool = false
-
-    @Published var requests: [Request] = []
-    @Published var selectedPosts: [Post] = []
     @Published var selectedTab: Tab = .listing
-    @Published var user: User? = nil
     
-    @Published var profilePic: UIImage = UIImage(named: "emptyProfile")!
-
-    // REFACTOR I HATE THIS
-    @Published var username: String = ""
-    @Published var givenName: String = ""
-    @Published var bio: String = ""
-    
-
-    private var archivedPosts: [Post] = []
-    private var userPosts: [Post] = []
+    // For external users only
+    @Published var isLoadingExternalUser: Bool = false
+    @Published var externalUser: User? = nil
+    @Published var externalUserPosts: [Post] = []
 
     enum Tab: String {
         case listing, archive, wishlist
     }
+    
+    // MARK: - Computed Properties
+    
+    var isViewingCurrentUser: Bool {
+        externalUser == nil
+    }
+    
+    var selectedPosts: [Post] {
+        if isViewingCurrentUser {
+            return selectedTab == .listing
+                ? CurrentUserProfileManager.shared.userPosts
+                : CurrentUserProfileManager.shared.archivedPosts
+        } else {
+            return externalUserPosts
+        }
+    }
+    
+    var requests: [Request] {
+        CurrentUserProfileManager.shared.requests
+    }
+    
+    var isLoading: Bool {
+        isViewingCurrentUser
+            ? CurrentUserProfileManager.shared.isLoading
+            : isLoadingExternalUser
+    }
 
     // MARK: - Functions
 
-    func updateItemsGallery() {
-        switch selectedTab {
-        case .listing:
-            selectedPosts = userPosts
-            return
-        case .archive:
-            selectedPosts = archivedPosts
-            return
-        case .wishlist:
-            return
-        }
+    func loadCurrentUser(forceRefresh: Bool = false) {
+        CurrentUserProfileManager.shared.loadProfile(forceRefresh: forceRefresh)
     }
-
-    func getUser() {
-        isLoading = true
-
+    
+    func loadExternalUser(id: String) {
+        // Reset external user state
+        externalUser = nil
+        externalUserPosts = []
+        
         Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+            isLoadingExternalUser = true
+            defer { isLoadingExternalUser = false }
 
             do {
-                // why tf was this not here chat
-                guard let user = GoogleAuthManager.shared.user else {
-                    GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User not available.")
-                    return
-                }
-                
-                if let userId = GoogleAuthManager.shared.user?.firebaseUid {
-                    let postsResponse = try await NetworkManager.shared.getPostsByUserID(id: userId)
-                    let archivedResponse = try await NetworkManager.shared.getArchivedPostsByUserID(id: userId)
-                    let requestsResponse = try await NetworkManager.shared.getRequestsByUserID(id: userId)
-                    
-                    userPosts = Post.sortPostsByDate(postsResponse.posts)
-                    print("# User Posts: \(userPosts.count)")
-                    archivedPosts = Post.sortPostsByDate(archivedResponse.posts)
-                    requests = requestsResponse.requests
-                    selectedPosts = userPosts
-                    
-                    username = user.username
-                    givenName = user.givenName
-                    bio = user.bio
-                
-                    await decodeProfileImage(url: user.photoUrl)
-                } else {
-                    GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User id not available.")
-                }
-
+                externalUser = try await NetworkManager.shared.getUserByID(id: id).user
+                checkUserIsBlocked(userId: id)
+                externalUserPosts = try await NetworkManager.shared.getPostsByUserID(id: externalUser?.firebaseUid ?? "").posts
             } catch {
-                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error)")
+                NetworkManager.shared.logger.error("Error in ProfileViewModel.loadExternalUser: \(error)")
             }
         }
     }
 
-    func getExternalUser(id: String) {
-        Task {
-            isLoadingUser = true
-
-            do {
-                user = try await NetworkManager.shared.getUserByID(id: id).user
-                checkUserIsBlocked()
-                selectedPosts = try await NetworkManager.shared.getPostsByUserID(id: user?.firebaseUid ?? "").posts
-
-                isLoadingUser = false
-            } catch {
-                NetworkManager.shared.logger.error("Error in ProfileViewModel: \(error)")
-                isLoadingUser = false
-            }
-        }
-    }
-
-    func checkUserIsBlocked() {
+    func checkUserIsBlocked(userId: String) {
         Task {
             do {
-                if let userId = GoogleAuthManager.shared.user?.firebaseUid {
-                    let blockedUsers = try await NetworkManager.shared.getBlockedUsers(id: userId).users.map { $0.firebaseUid }
+                if let currentUserId = GoogleAuthManager.shared.user?.firebaseUid {
+                    let blockedUsers = try await NetworkManager.shared.getBlockedUsers(id: currentUserId).users.map { $0.firebaseUid }
                     sellerIsBlocked = blockedUsers.contains(userId)
-                } else {
-                    GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User id not available.")
                 }
             } catch {
                 NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error)")
@@ -125,51 +90,25 @@ class ProfileViewModel: ObservableObject {
         }
     }
 
-    func blockUser(id: String) {
-        isLoading = true
-
-        Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
-
-            do {
-                let blocked = BlockUserBody(blocked: id)
-                try await NetworkManager.shared.blockUser(blocked: blocked)
-            } catch {
-                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error)")
-            }
-        }
+    func blockUser(id: String) async throws {
+        let blocked = BlockUserBody(blocked: id)
+        try await NetworkManager.shared.blockUser(blocked: blocked)
+        sellerIsBlocked = true
     }
 
-    func unblockUser(id: String) {
-        isLoading = true
-
-        Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
-
-            do {
-                let unblocked = UnblockUserBody(unblocked: id)
-                try await NetworkManager.shared.unblockUser(unblocked: unblocked)
-            } catch {
-                NetworkManager.shared.logger.error("Error in ProfileViewModel.unblockUser: \(error)")
-            }
-        }
+    func unblockUser(id: String) async throws {
+        let unblocked = UnblockUserBody(unblocked: id)
+        try await NetworkManager.shared.unblockUser(unblocked: unblocked)
+        sellerIsBlocked = false
     }
 
     func deleteRequest(id: String) {
         Task {
             do {
-                try await NetworkManager.shared.deleteRequest(id: id)
+                try await CurrentUserProfileManager.shared.deleteRequest(id: id)
             } catch {
                 NetworkManager.shared.logger.error("Error in ProfileViewModel.deleteRequest: \(error)")
             }
         }
-    }
-    
-    private func decodeProfileImage(url: URL?) async {
-        guard let url,
-              let data = try? await URLSession.shared.data(from: url).0,
-              let image = UIImage(data: data) else { return }
-
-        profilePic = image
     }
 }

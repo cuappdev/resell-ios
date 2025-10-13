@@ -14,6 +14,7 @@ struct ProfileView: View {
 
     @EnvironmentObject var router: Router
     @StateObject private var viewModel = ProfileViewModel()
+    @ObservedObject private var currentUser = CurrentUserProfileManager.shared
 
     // MARK: - UI
 
@@ -22,17 +23,17 @@ struct ProfileView: View {
             profileImageView
                 .padding(.bottom, 12)
 
-            Text(viewModel.username)
+            Text(currentUser.username)
                 .font(Constants.Fonts.h3)
                 .foregroundStyle(Constants.Colors.black)
                 .padding(.bottom, 4)
 
-            Text(viewModel.givenName)
+            Text(currentUser.givenName)
                 .font(Constants.Fonts.body2)
                 .foregroundStyle(Constants.Colors.secondaryGray)
                 .padding(.bottom, 16)
 
-            Text(viewModel.bio)
+            Text(currentUser.bio)
                 .font(Constants.Fonts.body2)
                 .foregroundStyle(Constants.Colors.black)
                 .padding(.bottom, 28)
@@ -42,11 +43,20 @@ struct ProfileView: View {
 
             if viewModel.selectedTab == .wishlist {
                 requestsView
-                    .emptyState(isEmpty: viewModel.requests.isEmpty, title: "No active requests", text: "Submit a request and get notified when someone lists something similar")
+                    .emptyState(
+                        isEmpty: viewModel.requests.isEmpty,
+                        title: "No active requests",
+                        text: "Submit a request and get notified when someone lists something similar"
+                    )
             } else {
-                // so hard to read omg
                 ProductsGalleryView(items: viewModel.selectedPosts)
-                    .emptyState(isEmpty: viewModel.selectedPosts.isEmpty && !viewModel.isLoading, title: viewModel.selectedTab == .listing ? "No listings posted" : "No items archived", text: viewModel.selectedTab == .listing ? "When you post a listing, it will be displayed here" : "When a listing is sold or archived, it will be displayed here")
+                    .emptyState(
+                        isEmpty: viewModel.selectedPosts.isEmpty && !viewModel.isLoading,
+                        title: viewModel.selectedTab == .listing ? "No listings posted" : "No items archived",
+                        text: viewModel.selectedTab == .listing
+                            ? "When you post a listing, it will be displayed here"
+                            : "When a listing is sold or archived, it will be displayed here"
+                    )
                     .padding(.top, 24)
                     .loadingView(isLoading: viewModel.isLoading)
             }
@@ -63,7 +73,7 @@ struct ProfileView: View {
 
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    router.push(.search(viewModel.user?.firebaseUid))
+                    router.push(.search(GoogleAuthManager.shared.user?.firebaseUid))
                 } label: {
                     Icon(image: "search")
                 }
@@ -73,37 +83,20 @@ struct ProfileView: View {
             ExpandableAddButton()
                 .padding(.bottom, 40)
         }
-        .onChange(of: viewModel.selectedTab) { _ in
-            viewModel.updateItemsGallery()
-        }
         .onAppear {
-            // Called whenever this view pops up 
-            viewModel.getUser()
+            viewModel.loadCurrentUser()
         }
         .refreshable {
-            viewModel.getUser()
+            viewModel.loadCurrentUser(forceRefresh: true)
         }
     }
 
     private var profileImageView: some View {
-        // TODO: Figure out why this isn't working
-        
-        Image(uiImage: viewModel.profilePic)
+        Image(uiImage: currentUser.profilePic)
             .resizable()
             .frame(width: 90, height: 90)
             .background(Constants.Colors.stroke)
             .clipShape(.circle)
-        
-//        KFImage(viewModel.profilePic)
-//            .cacheOriginalImage()
-//            .placeholder {
-//                // Photo url NOT showing
-//                ShimmerView()
-//                    .frame(width: 90, height: 90)
-//            }
-//            .resizable()
-//            .frame(width: 90, height: 90)
-//            .clipShape(.circle)
     }
 
     private var profileTabsView: some View {
@@ -158,7 +151,6 @@ struct ProfileView: View {
                         }
                     } onDelete: {
                         viewModel.deleteRequest(id: request.id)
-                        viewModel.requests.removeAll { $0.id == request.id }
                     }
                 }
             }
@@ -167,5 +159,3 @@ struct ProfileView: View {
         .background(Constants.Colors.white)
     }
 }
-
-
