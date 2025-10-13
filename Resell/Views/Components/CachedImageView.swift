@@ -10,35 +10,34 @@ import SwiftUI
 
 /// A reusable view that displays an image from a URL with caching support using Kingfisher.
 struct CachedImageView: View {
-
-    // MARK: - Properties
-
+    
     @Binding var isImageLoaded: Bool
-
     var isForYou: Bool? = nil
     let imageURL: URL?
-
-    // MARK: - UI
-
+    
+    // Calculate target size based on screen
+    private let targetSize: CGSize = {
+        let cellWidth = (UIScreen.main.bounds.width - 68) / 2
+        return CGSize(width: cellWidth * 2, height: cellWidth * 2) // 2x for retina
+    }()
+    
     var body: some View {
         KFImage(imageURL)
             .placeholder {
                 ShimmerView()
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
             }
-            .onSuccess { _ in
-                DispatchQueue.main.async {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        isImageLoaded = true
-                    }
-                }
-            }
-            .fade(duration: 0.3)
-            .scaleFactor(UIScreen.main.scale)
-            .backgroundDecode()
+            .setProcessor(
+                DownsamplingImageProcessor(size: targetSize) // Downsample to exact size needed
+            )
             .cacheOriginalImage()
+            .fade(duration: 0.2)
+            .onSuccess { _ in
+                isImageLoaded = true
+            }
+            .onFailure { _ in
+                isImageLoaded = false
+            }
             .resizable()
             .aspectRatio(contentMode: .fill)
-            .clipped()
     }
 }
