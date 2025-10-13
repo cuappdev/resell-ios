@@ -96,11 +96,11 @@ struct NotificationsView: View {
                     .foregroundColor(.gray)
                 Spacer()
             }
-            .padding(.leading, 20)
+            .padding(.leading, 10)
             Spacer()
         }
-        .padding(15)
-        .padding(.horizontal, 15)
+        .padding(12)
+        .padding(.horizontal, 12)
         .contentShape(Rectangle())
         .background(notification.isRead ? Color.white : Color.purple.opacity(0.1))
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
