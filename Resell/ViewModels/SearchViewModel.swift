@@ -13,7 +13,9 @@ class SearchViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var isSearching: Bool = true
     @Published var recentlySearched: [Post] = []
-
+    
+    // published dict search queries to posts...
+    
     static let shared = SearchViewModel()
 
     func searchItems(with searchText: String, userID: String?, saveQuery: Bool = false, mainViewModel: MainViewModel? = nil, completion: @escaping () -> Void) {
@@ -40,6 +42,7 @@ class SearchViewModel: ObservableObject {
                 } else {
                     if !saveQuery {
                         recentlySearched.append(contentsOf: postsResponse.posts)
+                        
                     } else {
                         searchedItems = postsResponse.posts
                     }
