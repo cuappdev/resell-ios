@@ -36,14 +36,33 @@ class FiltersViewModel: ObservableObject {
         let categoryFiltersList = Array(categoryFilters)
         let conditionFiltersList = Array(conditionFilters)
         
+        var sortField: String?
+
+        guard let selectedSort = selectedSort else {
+            // selectedSort is nil, so just return
+            return
+        }
+
+        // Now selectedSort is unwrapped and safe to use
+        switch selectedSort {
+        case .any:
+            sortField = "any"
+        case .newlyListed:
+            sortField = "newlyListed"
+        case .priceHighToLow:
+            sortField = "priceHighToLow"
+        case .priceLowToHigh:
+            sortField = "priceLowToHigh"
+        }
+    
         let priceBody = PriceBody(lowPrice: Int(lowValue), maxPrice: Int(highValue))
         let unifiedFilter = FilterPostsUnifiedRequest(
-                                sortField: selectedSort?.title,
+                                sortField: sortField,
                                 price: priceBody,
                                 categories: categoryFiltersList,
                                 condition: conditionFiltersList
                                 )
-        
+
         Task {
             do {
                 let postsResponse = try await NetworkManager.shared.getUnifiedFilteredPosts(filters: unifiedFilter)
