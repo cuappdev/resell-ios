@@ -15,10 +15,9 @@ struct CachedImageView: View {
     var isForYou: Bool? = nil
     let imageURL: URL?
     
-    // Calculate target size based on screen
     private let targetSize: CGSize = {
         let cellWidth = (UIScreen.main.bounds.width - 68) / 2
-        return CGSize(width: cellWidth * 2, height: cellWidth * 2) // 2x for retina
+        return CGSize(width: cellWidth * 2, height: cellWidth * 2)
     }()
     
     var body: some View {
@@ -27,7 +26,7 @@ struct CachedImageView: View {
                 ShimmerView()
             }
             .setProcessor(
-                DownsamplingImageProcessor(size: targetSize) // Downsample to exact size needed
+                DownsamplingImageProcessor(size: targetSize)
             )
             .cacheOriginalImage()
             .fade(duration: 0.2)
