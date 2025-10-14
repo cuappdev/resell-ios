@@ -303,12 +303,7 @@ struct FilterView: View {
     struct SortByView: View {
         @Binding var selectedSort: SortOption?
 
-        let sortOptions = [
-            SortOption(title: "Any"),
-            SortOption(title: "Newly listed"),
-            SortOption(title: "Price: High to Low"),
-            SortOption(title: "Price: Low to High")
-        ]
+        let sortOptions = SortOption.allCases
         
         var body: some View {
             VStack(alignment: .leading, spacing: 0) {
@@ -342,11 +337,15 @@ struct FilterView: View {
 }
 
 
-// Implement Reset Button
-func reset(){}
-struct SortOption: Identifiable, Equatable {
-    let id = UUID()
-    let title: String
+enum SortOption: String, CaseIterable, Identifiable {
+    case any = "Any"
+    case newlyListed = "Newly listed"
+    case priceHighToLow = "Price: High to Low"
+    case priceLowToHigh = "Price: Low to High"
+    
+    var id: String { rawValue }
+    
+    var title: String { rawValue }
 }
 
 
