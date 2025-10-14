@@ -14,8 +14,8 @@ struct FilterPostsUnifiedRequest: Codable {
 }
 
 struct PriceBody: Codable {
-    let lowPrice: Int
-    let maxPrice: Int
+    let lowerBound: Int
+    let upperBound: Int
 }
 
 // we can prob refactor this...
