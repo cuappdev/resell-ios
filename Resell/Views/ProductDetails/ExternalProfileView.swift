@@ -151,12 +151,12 @@ struct ExternalProfileView: View {
             PurpleButton(isLoading: viewModel.isLoading,text: viewModel.sellerIsBlocked ? "Unblock" : "Block", horizontalPadding: 100) {
                 if viewModel.sellerIsBlocked {
                     Task {
-                        try await    viewModel.unblockUser(id: userID)
+                        try await viewModel.unblockUser(id: userID)
 
                     }
                 } else {
                     Task{
-                        try await   viewModel.blockUser(id: userID)
+                        try await viewModel.blockUser(id: userID)
                     }
                 }
             }

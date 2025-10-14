@@ -64,7 +64,9 @@ struct SearchView: View {
                     emptyState
                     Spacer()
                 } else {
-                    ProductsGalleryView(items: searchViewModel.searchedItems)
+                    ScrollView(.vertical) {
+                        ProductsGalleryView(items: searchViewModel.searchedItems)
+                    }
                 }
             }
         }
@@ -119,34 +121,5 @@ struct SearchView: View {
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
         }
-    }
-
-    // MARK: - Functions
-    
-    // TODO: move this (network manager) and call it multiple times for the forYou card
-
-//    private func searchItems(isSearchView: Bool) {
-//        isSearching = false
-//        isLoading = true
-//
-//        Task {
-//            defer { Task { @MainActor in withAnimation { isLoading = false } } }
-//            
-//            do {
-//                let postsResponse = try await NetworkManager.shared.getSearchedPosts(with: searchText)
-//
-//                if let userID {
-//                    searchedItems = postsResponse.posts.filter { $0.user?.firebaseUid == userID }
-//                } else {
-//                    searchedItems = postsResponse.posts
-//                }
-//                
-//                if isSearchView {
-//                    mainViewModel.saveSearchQuery(searchText)
-//                }
-//            } catch {
-//                NetworkManager.shared.logger.error("Error in SearchView.searchItems: \(error.localizedDescription)")
-//            }
-//        }
-//    }
+    }    
 }

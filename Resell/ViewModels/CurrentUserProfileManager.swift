@@ -32,14 +32,13 @@ class CurrentUserProfileManager: ObservableObject {
     
     private var hasLoadedData: Bool = false
     private var lastFetchTime: Date?
-    private let cacheValidityDuration: TimeInterval = 300 // 5 minutes
+    private let cacheValidityDuration: TimeInterval = 300
     
     private init() {}
     
     // MARK: - Public Methods
     
     func loadProfile(forceRefresh: Bool = false) {
-        // Check if we should use cached data
         if !forceRefresh && hasLoadedData && shouldUseCachedData() {
             return
         }
@@ -54,7 +53,6 @@ class CurrentUserProfileManager: ObservableObject {
             }
             
             do {
-                // Refresh auth if needed
                 try await GoogleAuthManager.shared.refreshSignInIfNeeded()
                 
                 guard let user = GoogleAuthManager.shared.user else {
@@ -64,14 +62,12 @@ class CurrentUserProfileManager: ObservableObject {
                 
                 let userId = user.firebaseUid
                 
-                // Fetch all data concurrently
                 async let postsResponse = NetworkManager.shared.getPostsByUserID(id: userId)
                 async let archivedResponse = NetworkManager.shared.getArchivedPostsByUserID(id: userId)
                 async let requestsResponse = NetworkManager.shared.getRequestsByUserID(id: userId)
                 
                 let (posts, archived, reqs) = try await (postsResponse, archivedResponse, requestsResponse)
                 
-                // Update properties
                 userPosts = Post.sortPostsByDate(posts.posts)
                 archivedPosts = Post.sortPostsByDate(archived.posts)
                 requests = reqs.requests
@@ -83,7 +79,6 @@ class CurrentUserProfileManager: ObservableObject {
                 
                 await decodeProfileImage(url: user.photoUrl)
                 
-                // Mark as loaded
                 hasLoadedData = true
                 lastFetchTime = Date()
                 
@@ -111,20 +106,17 @@ class CurrentUserProfileManager: ObservableObject {
         
         let _ = try await NetworkManager.shared.updateUserProfile(edit: edit)
         
-        // Update local cache
         self.username = username
         self.bio = bio
         self.venmoHandle = venmoHandle
         self.profilePic = profileImage
         
-        // Refresh full profile to get any server-side changes
         await refreshProfile()
     }
     
     func deleteRequest(id: String) async throws {
         try await NetworkManager.shared.deleteRequest(id: id)
         
-        // Update local cache
         requests.removeAll { $0.id == id }
     }
     
@@ -144,7 +136,6 @@ class CurrentUserProfileManager: ObservableObject {
     }
     
     private func refreshProfile() async {
-        // Force refresh without showing loading
         let wasLoading = isLoading
         await loadProfile(forceRefresh: true)
         if !wasLoading {
