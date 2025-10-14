@@ -120,8 +120,8 @@ class FiltersViewModel: ObservableObject {
     @Published var showSale: Bool = false
     @Published var selectedSort: SortOption? = nil
     @Published var detailedFilterItems: [Post] = []
-    @Published var searchedDetailedFilterItems: [Post] = [] // ✅ Added
-    @Published var isSearching: Bool = false // ✅ Added
+    @Published var searchedDetailedFilterItems: [Post] = []
+    @Published var isSearching: Bool = false
     
     private var baseCategory: String? = nil // Store the base category for detailed view
 
@@ -131,7 +131,6 @@ class FiltersViewModel: ObservableObject {
         try await applyFilters(homeViewModel: HomeViewModel.shared)
     }
     
-    // ✅ Added: Search within filtered items
     func searchWithinFilter(query: String) {
         guard !query.isEmpty else {
             searchedDetailedFilterItems = detailedFilterItems
@@ -150,7 +149,6 @@ class FiltersViewModel: ObservableObject {
         isSearching = false
     }
     
-    // ✅ Added: Clear search and show all filtered items
     func clearFilterSearch() {
         searchedDetailedFilterItems = detailedFilterItems
     }
@@ -198,7 +196,7 @@ class FiltersViewModel: ObservableObject {
                     homeViewModel.filteredItems = postsResponse.posts
                 } else {
                     detailedFilterItems = postsResponse.posts
-                    clearFilterSearch() // ✅ Update search results when filters change
+                    clearFilterSearch()
                 }
             } catch {
                 NetworkManager.shared.logger.error("Error in FiltersViewModel.applyFilters: \(error)")

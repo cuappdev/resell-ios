@@ -573,6 +573,7 @@
 		2C9B4D052C8FCAF20029DF61 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				2EFBCE4A2E9E259500DB2FFB /* RangeSlider.swift */,
 				2E8C3D9C2DBEE3590074BFAB /* SearchBar.swift */,
 				2E8A5AB42DBD5B3200B1F281 /* SavedRow.swift */,
 				2C6FB1852CFC08D000B35FF8 /* AvailabilitySelectorView.swift */,
@@ -959,6 +960,7 @@
 				2C18FFE62CA139D500564577 /* SettingsView.swift in Sources */,
 				2E8A5A6A2DBCCB7C00B1F281 /* MessageDocument.swift in Sources */,
 				2C9B4CF82C8FB84F0029DF61 /* Constants.swift in Sources */,
+				2EFBCE4B2E9E259B00DB2FFB /* RangeSlider.swift in Sources */,
 				2C93375A2C93667600818C8E /* TabViewIcon.swift in Sources */,
 				2C02B3A32CC074150020DF90 /* ProductDetailsView.swift in Sources */,
 				2C93374A2C92AD2D00818C8E /* ProductsGalleryView.swift in Sources */,
