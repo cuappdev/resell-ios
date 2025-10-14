@@ -65,8 +65,8 @@ struct CircularFilterButton: View {
                     .foregroundStyle(filter.color != nil ? filter.color! : Constants.Colors.filterGray)
                 Image(filter.title)
                     .resizable()
-                    .frame(width: 57, height: 46)
-                    
+                    .scaledToFit()  // ✅ Maintains aspect ratio
+                    .frame(width: 56, height: 56)
             }
         })
     }
