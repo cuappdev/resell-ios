@@ -45,13 +45,14 @@ struct FilterView: View {
                 Text("Filters")
                     .font(.custom("Rubik-Medium", size: 22))
                     .foregroundStyle(.black)
+                
                 Divider()
+                
                 HStack(spacing: 120) {
                     Text("Sort by")
                         .font(.custom("Rubik-Medium", size: 20))
                         .foregroundStyle(.black)
 
-                    
                     Button{
                         presentPopup.toggle()
                     } label: {
@@ -71,37 +72,31 @@ struct FilterView: View {
                     .padding(.top, 12)
                 
                 VStack(alignment: .leading){
-                    VStack{
+                    VStack {
                     Text("Price Range")
                         .font(.custom("Rubik-Medium", size: 20))
                         .padding(.leading, 28)
                         .padding(.bottom, 8)
 
-                                        
                         if filtersVM.lowValue == 0 && filtersVM.highValue == 1000 {
                         Text("Any")
                             .font(.custom("Rubik-Regular", size: 20))
                             .foregroundStyle(.gray)
                             .padding(.trailing, 52)
-                        
-
                         } else if filtersVM.lowValue == 0 {
                             Text("Up to $\(Int(filtersVM.highValue))")
                             .font(.custom("Rubik-Regular", size: 20))
                             .foregroundStyle(.gray)
-                        
                         } else if filtersVM.highValue == 1000 {
                             Text("$\(Int(filtersVM.lowValue)) +")
                             .font(.custom("Rubik-Regular", size: 20))
                             .foregroundStyle(.gray)
                             .padding(.trailing, filtersVM.lowValue > 99 ? 24 : 36)
-
-                        
-                    } else {
-                        Text("$\(Int(filtersVM.lowValue)) to $\(Int(filtersVM.highValue))")
-                            .font(.custom("Rubik-Regular", size: 20))
-                            .foregroundStyle(.gray)
-                        }
+                        } else {
+                            Text("$\(Int(filtersVM.lowValue)) to $\(Int(filtersVM.highValue))")
+                                .font(.custom("Rubik-Regular", size: 20))
+                                .foregroundStyle(.gray)
+                            }
                     }
                     
                     // SLIDER
@@ -139,7 +134,6 @@ struct FilterView: View {
                             .padding(.bottom, 8)
                             .padding(.trailing, 72)
                             .foregroundStyle(.black)
-                        
                         
                         HFlow {
                             ForEach(categories, id: \.self) { category in
@@ -201,7 +195,6 @@ struct FilterView: View {
                         .padding(.top, home ? 28 : 0)
                         .foregroundStyle(.black)
 
-
                     HStack {
                         ForEach(conditions, id: \.self){ condition in
                             Button {
@@ -231,9 +224,7 @@ struct FilterView: View {
                             .padding(.vertical, 8)
                             .background(
                                 RoundedRectangle(cornerRadius: 20)
-                                
                                     .stroke(filtersVM.conditionFilters.contains(condition) ? Constants.Colors.resellPurple : Constants.Colors.filterGray, lineWidth: 1)
-                                    
                                     .background(
                                         RoundedRectangle(cornerRadius: 20)
                                             .fill(filtersVM.conditionFilters.contains(condition) ? Constants.Colors.purpleWash : Color.white)
@@ -327,7 +318,7 @@ struct FilterView: View {
                 RoundedRectangle(cornerRadius: 13)
                     .stroke(Color.gray.opacity(0.3), lineWidth: 1)
             )
-            }
+        }
     }
 }
 

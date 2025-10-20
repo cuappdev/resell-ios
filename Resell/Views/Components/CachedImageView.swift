@@ -12,7 +12,6 @@ import SwiftUI
 struct CachedImageView: View {
     
     @Binding var isImageLoaded: Bool
-    var isForYou: Bool? = nil
     let imageURL: URL?
     
     private let targetSize: CGSize = {

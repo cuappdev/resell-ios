@@ -137,6 +137,7 @@ class MainViewModel: ObservableObject {
                 await MainActor.run {
                     clearUserData()
                     GoogleAuthManager.shared.signOut()
+                    
                     withAnimation { hidesSignInButton = false }
                     withAnimation { userDidLogin = false }
                 }
@@ -144,6 +145,5 @@ class MainViewModel: ObservableObject {
             }
         }
     }
-
 
 }

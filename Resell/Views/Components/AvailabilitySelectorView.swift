@@ -22,8 +22,7 @@ struct AvailabilitySelectorView: View {
     @Binding var selectedDates: [Availability]
     @Binding var didSubmit: Bool
     @Binding var isEditing: Bool
-    // isEditing should be a binding var thats set by the prior view
-//    var isEditing: Bool = true
+
     var proposerName: String? = nil
     let dates: [String] = generateDates()
     let times: [String] = generateTimes()
@@ -83,6 +82,7 @@ struct AvailabilitySelectorView: View {
                                         .font(Constants.Fonts.title2)
                                         .foregroundStyle(Constants.Colors.black)
                                         .multilineTextAlignment(.trailing)
+                                    
                                     Spacer()
                                 }
                                 .frame(width: 80, height: cellHeight)

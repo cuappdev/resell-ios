@@ -24,11 +24,13 @@ struct HomeView: View {
     var body: some View {
         VStack(spacing: 0) {
             headerView
+            
             ScrollView(.vertical, showsIndicators: true) {
                 VStack {
                     filtersView
                         .padding(.top, 12)
                         .padding(.bottom, 32)
+                    
                     ForYouView()
                         .padding(.bottom, 32)
                     Text("Recent Listings")
@@ -67,7 +69,6 @@ struct HomeView: View {
         }
     }
     
-    
     private var savedByYou: some View {
             VStack{
                 HStack(spacing: 220) {
@@ -95,13 +96,16 @@ struct HomeView: View {
                                 RoundedRectangle(cornerRadius: 20)
                                     .stroke(Constants.Colors.stroke, lineWidth: 2)
                             )
+                        
                         VStack{
                             Text("You haven't saved any listings yet.")
                                 .foregroundStyle(Constants.Colors.secondaryGray)
                             HStack{
                                 Text("Tap")
                                     .foregroundStyle(Constants.Colors.secondaryGray)
+                                
                                 Image("saved")
+                                
                                 Text("on a listing to save.")
                                     .foregroundStyle(Constants.Colors.secondaryGray)
                             }
@@ -133,12 +137,6 @@ struct HomeView: View {
                 })
                 .padding(.trailing, 20)
                 
-                // MARK: Omit notifications for release
-                //                Button(action: {
-                //                    router.push(.notifications)
-                //                }, label: {
-                //                    Icon(image: "bell")
-                //                })
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
             .padding(.vertical, -4)
@@ -180,13 +178,12 @@ struct HomeView: View {
                     .font(.custom("Rubik-Medium", size: 22))
                     .foregroundStyle(.black)
                     .padding(.leading, Constants.Spacing.horizontalPadding)
+                
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(alignment: .top) {
                         ForEach(Constants.filters.filter { $0.color != nil }, id: \.id) { filter in
                             VStack {
-                                CircularFilterButton(filter: filter) {
-                                        router.push(.detailedFilter(filter))
-                                    }
+                                CircularFilterButton(filter: filter) { router.push(.detailedFilter(filter)) }
                                 
                                 Text(filter.title)
                                     .font(Constants.Fonts.title4)
