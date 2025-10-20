@@ -104,7 +104,6 @@ class HomeViewModel: ObservableObject {
             return
         }
         
-        
         isFetchingMore = true
         page += 1
         
@@ -121,7 +120,6 @@ class HomeViewModel: ObservableObject {
                 
                 if newPosts.isEmpty {
                     hasMorePages = false
-                    print("🛑 No more posts available")
                     return
                 }
                 
@@ -131,8 +129,6 @@ class HomeViewModel: ObservableObject {
                     filteredItems = allItems
                 }
                 
-                print("✅ Loaded \(newPosts.count) more posts. Total posts: \(allItems.count), Memory: \(getMemoryUsage()) MB")
-
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.fetchMoreItems: \(error)")
                 page -= 1 // Revert page increment on error
@@ -140,7 +136,7 @@ class HomeViewModel: ObservableObject {
         }
     }
 
-    func getSavedPosts(completion: @escaping () -> Void)  {
+    func getSavedPosts() async  {
         isLoading = true
 
         Task {
@@ -149,7 +145,6 @@ class HomeViewModel: ObservableObject {
             do {
                 let postsResponse = try await NetworkManager.shared.getSavedPosts()
                 savedItems = Post.sortPostsByDate(postsResponse.posts)
-                completion()
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.getSavedPosts: \(error)")
             }
@@ -239,24 +234,24 @@ class HomeViewModel: ObservableObject {
     }
     
     // TODO: Add function that populates recently searched
-    func getRecentlySearched(completion: @escaping () -> Void) -> Void  {
+    func getRecentlySearched() async {
         guard let mainVM = mainViewModel else {
             print("Dependencies not configured")
             return
         }
         
-        let group = DispatchGroup()
+//        let group = DispatchGroup()
             // MARK: Prefetches all search items, maybe not that efficient?
             for searchHistoryItem in mainVM.searchHistory {
-                group.enter()
+//                group.enter()
                 // TODO: Update calling this to have mappings to posts for up to 5 recently searched queries
                 searchViewModel.searchItems(with: searchHistoryItem, userID: nil, saveQuery: false, mainViewModel: mainViewModel) {
-                    group.leave()
+//                    group.leave()
                 }
             }
             
-            group.notify(queue: .main) {
-                completion()
-            }
+//            group.notify(queue: .main) {
+//                completion()
+//            }
         }
     }

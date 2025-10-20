@@ -152,7 +152,6 @@ struct ExternalProfileView: View {
                 if viewModel.sellerIsBlocked {
                     Task {
                         try await viewModel.unblockUser(id: userID)
-
                     }
                 } else {
                     Task{

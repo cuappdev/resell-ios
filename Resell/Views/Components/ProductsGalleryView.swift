@@ -72,7 +72,6 @@ struct ProductsGalleryView: View {
         
         let threshold = items.count - 5
         if index >= threshold {
-            print("🔄 Reached item \(index + 1)/\(items.count) - triggering pagination")
             onScrollToBottom?()
         }
     }
@@ -127,7 +126,6 @@ struct ProductGalleryCell: View {
         .frame(width: cellWidth)
         .clipped()
         .clipShape(.rect(cornerRadius: 8))
-        .opacity(isImageLoaded ? 1 : 1)
         .onTapGesture {
             selectedItem = post
         }

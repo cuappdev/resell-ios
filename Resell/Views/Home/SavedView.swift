@@ -13,20 +13,25 @@ struct SavedView: View {
     @EnvironmentObject private var viewModel: HomeViewModel
 
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                headerView
-                ProductsGalleryView(items: viewModel.savedItems)
+        ScrollView(.vertical){
+            ZStack {
+                VStack(spacing: 0) {
+                    headerView
+                    
+                    ProductsGalleryView(items: viewModel.savedItems)
+                }
             }
-        }
-        .background(Constants.Colors.white)
-        .loadingView(isLoading: viewModel.isLoading)
-        .emptyState(isEmpty: $viewModel.savedItems.isEmpty, title: "No saved posts", text: "Posts you have bookmarked will be displayed here.")
-        .refreshable {
-            viewModel.getSavedPosts() {}
-        }
-        .onAppear {
-            viewModel.getSavedPosts() {}
+            .background(Constants.Colors.white)
+            .loadingView(isLoading: viewModel.isLoading)
+            .emptyState(isEmpty: $viewModel.savedItems.isEmpty, title: "No saved posts", text: "Posts you have bookmarked will be displayed here.")
+            .refreshable {
+                await viewModel.getSavedPosts()
+            }
+            .onAppear {
+                Task {
+                    await viewModel.getSavedPosts()
+                }
+            }
         }
     }
 

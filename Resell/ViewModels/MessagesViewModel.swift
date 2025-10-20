@@ -148,7 +148,6 @@ extension MessagesView {
                     if var lastCluster = messageClusters.last,
                        let lastMessage = lastCluster.messages.last,
                        Calendar.current.isDate(newMessage.timestamp, inSameDayAs: lastMessage.timestamp) {
-
                         // Add to existing cluster if it's from the same day
                         lastCluster.messages.append(newMessage)
                         messageClusters[messageClusters.count - 1] = lastCluster
@@ -237,7 +236,6 @@ extension MessagesView {
         /// Get the post id from the chat if it exists
         func getOrCreateChatId() async throws {
             let chatId = try await FirestoreManager.shared.findChatId(listingId: chatInfo.listing.id, buyerId: chatInfo.buyer.firebaseUid, sellerId: chatInfo.seller.firebaseUid)
-
 
             self.chatId = chatId ?? UUID().uuidString
         }
