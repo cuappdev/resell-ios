@@ -46,7 +46,6 @@ struct NotificationsView: View {
                             Text(section.rawValue)
                                 .font(.custom("Rubik-Medium", size: 18))
                                 .foregroundColor(.primary)
-                                .fontWeight(.medium)
                                 .textCase(nil)
                                 .padding(.leading, 8)
                                 .padding(.top, 5)
@@ -135,14 +134,14 @@ struct NotificationsView: View {
         .padding(12)
         .padding(.horizontal, 12)
         .contentShape(Rectangle())
-        .background(notification.isRead ? Color.white : Color.purple.opacity(0.1))
+        .background(notification.isRead ? Color.white : Color(red: 0.62, green: 0.44, blue: 0.96).opacity(0.1))
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
             Button(action: {
                 viewModel.markAsRead(notification: notification)
             }) {
                 Image("read-notification")
             }
-            .tint(Color.purple.opacity(0.7))
+            .tint(Color(red: 0.62, green: 0.44, blue: 0.96).opacity(0.7))
         }
     }
     
@@ -164,6 +163,5 @@ struct NotificationsView: View {
             return Text(notification.title)
         }
     }
-
 }
 

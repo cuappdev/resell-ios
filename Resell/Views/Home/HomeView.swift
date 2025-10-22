@@ -147,7 +147,13 @@ struct HomeView: View {
                 Button(action: {
                     router.push(.notifications)
                 }, label: {
-                    Icon(image: "bell")
+                    ZStack (alignment: .topTrailing){
+                        Icon(image: "bell")
+                        Circle()
+                            .fill(Color.red)
+                            .frame(width: 8, height: 8)
+                            .offset(x: -1, y: 4)
+                    }
                 })
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
