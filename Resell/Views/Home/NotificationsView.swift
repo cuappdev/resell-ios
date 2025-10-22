@@ -134,14 +134,14 @@ struct NotificationsView: View {
         .padding(12)
         .padding(.horizontal, 12)
         .contentShape(Rectangle())
-        .background(notification.isRead ? Color.white : Color(red: 0.62, green: 0.44, blue: 0.96).opacity(0.1))
+        .background(notification.isRead ? Color.white : Constants.Colors.resellPurple.opacity(0.1))
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
             Button(action: {
                 viewModel.markAsRead(notification: notification)
             }) {
                 Image("read-notification")
             }
-            .tint(Color(red: 0.62, green: 0.44, blue: 0.96).opacity(0.7))
+            .tint(Constants.Colors.resellPurple.opacity(0.7))
         }
     }
     
