@@ -29,28 +29,61 @@ struct NotificationsView: View {
             filtersView
                 .padding(.leading, 15)
                 .zIndex(1)
-
-            List {
-                ForEach(NotificationSection.allCases) { section in
-                    if let items = viewModel.groupedFilteredNotifications[section], !items.isEmpty {
-                        Text(section.rawValue)
-                            .font(.custom("Rubik-Medium", size: 18))
-                            .foregroundColor(.primary)
-                            .fontWeight(.medium)
-                            .textCase(nil)
-                            .padding(.leading, 8)
-                            .padding(.top, 5)
-                            .listRowSeparator(.hidden)
-                        ForEach(items, id: \.data.messageId) { notification in
-                            notificationView(for: notification)
-                                .listRowInsets(EdgeInsets())
+            
+            switch viewModel.loadState {
+            case .idle:
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                    .offset(y: -60)
+            case .loading:
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                    .offset(y: -60)
+            case .success:
+                List {
+                    ForEach(NotificationSection.allCases) { section in
+                        if let items = viewModel.groupedFilteredNotifications[section], !items.isEmpty {
+                            Text(section.rawValue)
+                                .font(.custom("Rubik-Medium", size: 18))
+                                .foregroundColor(.primary)
+                                .fontWeight(.medium)
+                                .textCase(nil)
+                                .padding(.leading, 8)
+                                .padding(.top, 5)
                                 .listRowSeparator(.hidden)
+                            ForEach(items, id: \.data.messageId) { notification in
+                                notificationView(for: notification)
+                                    .listRowInsets(EdgeInsets())
+                                    .listRowSeparator(.hidden)
+                            }
                         }
                     }
                 }
+                .listStyle(.plain)
+                .listRowSeparator(.hidden)
+            case .empty:
+                VStack (alignment: .center, spacing: 16) {
+                    Text("You're all caught up!")
+                        .font(.custom("Rubik-Medium", size: 22))
+                        .foregroundStyle(.black)
+                    Text("No new notifications right now")
+                        .font(.custom("Rubik", size: 18))
+                        .foregroundStyle(.gray)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                .offset(y: -60)
+            case .error:
+                VStack (alignment: .center, spacing: 16) {
+                    Text("Something went wrong!")
+                        .font(.custom("Rubik-Medium", size: 22))
+                        .foregroundStyle(.black)
+                    Text("Please try again. If this problem persists, feel free to let us know")
+                        .font(.custom("Rubik", size: 18))
+                        .foregroundStyle(.gray)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                .offset(y: -60)
             }
-            .listStyle(.plain)
-            .listRowSeparator(.hidden)
         }
         .padding(.top, 5)
         .padding(.vertical, 1)
@@ -115,7 +148,7 @@ struct NotificationsView: View {
     
     private func notifText(for notification: Notifications) -> some View {
         switch notification.data.type {
-        case "message":
+        case "messages":
             return Text(notification.userID).bold() + Text(" sent you a message")
         case "requests":
             return Text("Your request for ")

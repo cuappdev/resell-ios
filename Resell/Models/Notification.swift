@@ -31,6 +31,14 @@ enum NotificationSection: String, CaseIterable, Identifiable {
     var id: String {rawValue}
 }
 
+enum LoadState {
+    case idle
+    case loading
+    case success
+    case empty
+    case error
+}
+
 extension Notifications {
     static let dummydata: [Notifications] = {
         let now = Date()
@@ -49,7 +57,7 @@ extension Notifications {
                 userID: "user-mateo",
                 title: "New Message",
                 body: "You have received a new message from Mateo",
-                data: NotificationData(type: "message", messageId: "msg-0001"),
+                data: NotificationData(type: "messages", messageId: "msg-0001"),
                 createdAt: hoursAgo(1),
                 updatedAt: hoursAgo(1)
             ),
@@ -69,21 +77,21 @@ extension Notifications {
                 createdAt: hoursAgo(12),
                 updatedAt: hoursAgo(12)
             ),
-            Notifications(
-                userID: "user-jay",
-                title: "Listing Activity",
-                body: "Your listing has been bookmarked",
-                data: NotificationData(type: "your listings", messageId: "yl-0001"),
-                createdAt: hoursAgo(20),
-                updatedAt: hoursAgo(20)
-            ),
+//            Notifications(
+//                userID: "user-jay",
+//                title: "Listing Activity",
+//                body: "Your listing has been bookmarked",
+//                data: NotificationData(type: "your listings", messageId: "yl-0001"),
+//                createdAt: hoursAgo(20),
+//                updatedAt: hoursAgo(20)
+//            ),
 
             // === Last 7 Days (1–6 days) ===
             Notifications(
                 userID: "user-sam",
                 title: "New Message",
                 body: "Sam: Is this still available?",
-                data: NotificationData(type: "message", messageId: "msg-0002"),
+                data: NotificationData(type: "messages", messageId: "msg-0002"),
                 createdAt: daysAgo(1),
                 updatedAt: daysAgo(1)
             ),
@@ -103,19 +111,19 @@ extension Notifications {
                 createdAt: daysAgo(3),
                 updatedAt: daysAgo(3)
             ),
-            Notifications(
-                userID: "user-noah",
-                title: "Listing Saved",
-                body: "Noah bookmarked your listing",
-                data: NotificationData(type: "your listings", messageId: "yl-0002"),
-                createdAt: daysAgo(4),
-                updatedAt: daysAgo(4)
-            ),
+//            Notifications(
+//                userID: "user-noah",
+//                title: "Listing Saved",
+//                body: "Noah bookmarked your listing",
+//                data: NotificationData(type: "your listings", messageId: "yl-0002"),
+//                createdAt: daysAgo(4),
+//                updatedAt: daysAgo(4)
+//            ),
             Notifications(
                 userID: "user-ivy",
                 title: "New Message",
                 body: "Ivy sent you a follow-up",
-                data: NotificationData(type: "message", messageId: "msg-0003"),
+                data: NotificationData(type: "messages", messageId: "msg-0003"),
                 createdAt: daysAgo(6),
                 updatedAt: daysAgo(6)
             ),
@@ -137,19 +145,19 @@ extension Notifications {
                 createdAt: daysAgo(10),
                 updatedAt: daysAgo(10)
             ),
-            Notifications(
-                userID: "user-mia",
-                title: "Listing Saved",
-                body: "Mia bookmarked your listing",
-                data: NotificationData(type: "your listings", messageId: "yl-0003"),
-                createdAt: daysAgo(15),
-                updatedAt: daysAgo(15)
-            ),
+//            Notifications(
+//                userID: "user-mia",
+//                title: "Listing Saved",
+//                body: "Mia bookmarked your listing",
+//                data: NotificationData(type: "your listings", messageId: "yl-0003"),
+//                createdAt: daysAgo(15),
+//                updatedAt: daysAgo(15)
+//            ),
             Notifications(
                 userID: "user-omar",
                 title: "New Message",
                 body: "Omar sent a question about size",
-                data: NotificationData(type: "message", messageId: "msg-0004"),
+                data: NotificationData(type: "messages", messageId: "msg-0004"),
                 createdAt: daysAgo(20),
                 updatedAt: daysAgo(20)
             ),
@@ -167,7 +175,7 @@ extension Notifications {
                 userID: "user-quinn",
                 title: "Old Message",
                 body: "Quinn asked about shipping",
-                data: NotificationData(type: "message", messageId: "msg-0005"),
+                data: NotificationData(type: "messages", messageId: "msg-0005"),
                 createdAt: daysAgo(31),
                 updatedAt: daysAgo(31)
             ),
@@ -187,14 +195,14 @@ extension Notifications {
                 createdAt: daysAgo(60),
                 updatedAt: daysAgo(60)
             ),
-            Notifications(
-                userID: "user-tim",
-                title: "Older Listing Activity",
-                body: "Tim bookmarked your listing previously",
-                data: NotificationData(type: "your listings", messageId: "yl-0004"),
-                createdAt: daysAgo(120),
-                updatedAt: daysAgo(120)
-            )
+//            Notifications(
+//                userID: "user-tim",
+//                title: "Older Listing Activity",
+//                body: "Tim bookmarked your listing previously",
+//                data: NotificationData(type: "your listings", messageId: "yl-0004"),
+//                createdAt: daysAgo(120),
+//                updatedAt: daysAgo(120)
+//            )
         ]
     }()
 }

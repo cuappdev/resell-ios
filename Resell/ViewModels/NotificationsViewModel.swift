@@ -14,7 +14,11 @@ class NotificationsViewModel: ObservableObject {
 
     // MARK: - Properties
     
-    @Published var selectedTab: String = "All"
+    @Published var selectedTab: String = "All" {
+        didSet { recalcLoadState() }
+    }
+    
+    // MARK: - What is this for
     @Published var unreadNotifs: [String: Int] = [
         "All": 10,
         "Messages": 2,
@@ -23,14 +27,26 @@ class NotificationsViewModel: ObservableObject {
         "Your Listings": 5
     ]
 
-    @Published var notifications: [Notifications] = Notifications.dummydata
-
+    @Published var notifications: [Notifications] = Notifications.dummydata {
+        didSet { recalcLoadState() }
+    }
+    // MARK: - turn back to .idle when we use actual backend networking
+    @Published var loadState: LoadState = .success
+    
     var filteredNotifications: [Notifications] {
         if selectedTab == "All" {
             return notifications
         } else {
-            return notifications.filter { $0.data.type.lowercased() == selectedTab.lowercased() }
+            return notifications.filter { $0.data.type.lowercased() == selectedTab.lowercased() }        }
+    }
+    
+    private func recalcLoadState() {
+        switch loadState {
+        case .loading, .error:
+            return
+        default: break
         }
+        loadState = filteredNotifications.isEmpty ? .empty : .success
     }
     
     var groupedFilteredNotifications: [NotificationSection: [Notifications]] {
@@ -69,13 +85,13 @@ class NotificationsViewModel: ObservableObject {
     
     func fetchNotifications() {
         Task {
+            loadState = .loading
             do {
                 // MARK: - Check with backend to see if there are actually any notis
-                print(self.notifications)
                 self.notifications = try await NetworkManager.shared.getNotifications()
-                print(self.notifications)
             } catch {
-                NetworkManager.shared.logger.error("Error in NotificationsViewModel.fetchNotifications: \(error)")
+                NetworkManager.shared.logger.error("Error in NotificationsViewModel.fetchNotifications: \(error.localizedDescription)")
+                loadState = .error
             }
         }
     }
