@@ -6,7 +6,7 @@
 //
 
 import Foundation
-// Original name Notification overrides Foundation definition...
+
 struct Notifications: Codable {
     let userID: String
     let title: String
