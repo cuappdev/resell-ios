@@ -52,7 +52,6 @@ extension Notifications {
         }
 
         return [
-            // === New (same day, within 24h) ===
             Notifications(
                 userID: "user-mateo",
                 title: "New Message",
@@ -86,7 +85,6 @@ extension Notifications {
 //                updatedAt: hoursAgo(20)
 //            ),
 
-            // === Last 7 Days (1–6 days) ===
             Notifications(
                 userID: "user-sam",
                 title: "New Message",
@@ -128,7 +126,6 @@ extension Notifications {
                 updatedAt: daysAgo(6)
             ),
 
-            // === Last 30 Days (7–29 days) ===
             Notifications(
                 userID: "user-ken",
                 title: "Request Accepted",
@@ -170,7 +167,6 @@ extension Notifications {
                 updatedAt: daysAgo(28)
             ),
 
-            // === Older (30+ days) ===
             Notifications(
                 userID: "user-quinn",
                 title: "Old Message",
