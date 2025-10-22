@@ -80,7 +80,7 @@ struct NotificationsView: View {
                         .font(.custom("Rubik", size: 18))
                         .foregroundStyle(.gray)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                .frame(maxWidth: 312, maxHeight: .infinity, alignment: .center)
                 .offset(y: -60)
             }
         }
