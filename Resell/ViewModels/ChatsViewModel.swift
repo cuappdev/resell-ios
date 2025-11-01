@@ -412,10 +412,9 @@ extension ChatsViewModel {
         try await firestoreManager.updateSellerHistory(buyerEmail: buyerEmail, sellerEmail: sellerEmail, data: sellerData)
         try await firestoreManager.updateItems(email: buyerEmail, postId: postId, post: post)
 
-        if let token = try await firestoreManager.getUserFCMToken(email: recipientEmail) {
-//            let authToken = GoogleAuthManager.shared.getOAuthToken()
-//
-//            try await FirebaseNotificationService.shared.sendNotification(title: senderName, body: notificationText, recipientToken: token, navigationId: "", authToken: authToken ?? "")
+        if let token = try await firestoreManager.getUserFCMToken(email: recipientEmail),
+           let authToken = try await GoogleAuthManager.shared.getOAuthToken() {
+            try await FirebaseNotificationService.shared.sendNotification(title: senderName, body: notificationText, recipientToken: token, navigationId: "", authToken: authToken)
         }
     }
 

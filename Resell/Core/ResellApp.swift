@@ -64,15 +64,15 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             Task {
                 do {
                     guard let token = try await FirestoreManager.shared.getUserFCMToken(email: email) else { return }
-//                    let authToken = GoogleAuthManager.shared.getOAuthToken()
-//
-//                    try await FirebaseNotificationService.shared.sendNotification(
-//                        title: title,
-//                        body: body,
-//                        recipientToken: token,
-//                        navigationId: navigationId,
-//                        authToken: "Bearer \(authToken ?? "")"
-//                    )
+                    let authToken = try await GoogleAuthManager.shared.getOAuthToken()
+
+                    try await FirebaseNotificationService.shared.sendNotification(
+                        title: title,
+                        body: body,
+                        recipientToken: token,
+                        navigationId: navigationId,
+                        authToken: "Bearer \(authToken ?? "")"
+                    )
 
                     print("Notification sent successfully.")
                 } catch {

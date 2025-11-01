@@ -55,7 +55,6 @@ class SettingsViewModel: ObservableObject {
         Task {
             do {
                 let _ = try await NetworkManager.shared.logout()
-                GoogleAuthManager.shared.signOut()
             } catch {
                 NetworkManager.shared.logger.error("Error in SettingsViewModel.logout: \(error)")
             }
