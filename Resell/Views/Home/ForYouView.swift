@@ -41,15 +41,17 @@ struct ForYouView: View {
                         }
                     }
                 .padding(.leading, 24)
+
                 }
             }
-            .onAppear() {
-                if !viewModel.cardsLoaded {
-                    Task {
-                        await viewModel.getSavedPosts()
-                        await viewModel.getRecentlySearched()
-                        await MainActor.run {
-                            viewModel.cardsLoaded = true
+        .onAppear() {
+            if !viewModel.cardsLoaded {
+                    viewModel.getSavedPosts() {
+                        viewModel.getRecentlySearched() {
+                            // Now on main thread, update your state
+                            DispatchQueue.main.async {
+                                viewModel.cardsLoaded = true
+                            }
                         }
                     }
                 }
@@ -69,6 +71,7 @@ struct ForYouView: View {
                         ForEach(Array(posts.enumerated()).prefix(4), id: \.element) { index, item in
                             CachedImageView(
                                 isImageLoaded: loaded[index],
+                                isForYou: true,
                                 imageURL: URL(string: item.images.first ?? "")
                             )
                             .aspectRatio(contentMode: .fill)  // Add this
@@ -90,7 +93,6 @@ struct ForYouView: View {
                             )
                         }
                     }
-                    
                     Text(title)
                         .foregroundStyle(Color.white)
                         .font(Constants.Fonts.title1)
@@ -101,3 +103,4 @@ struct ForYouView: View {
             }
         }
     }
+

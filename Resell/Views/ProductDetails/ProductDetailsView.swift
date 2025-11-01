@@ -44,6 +44,7 @@ struct ProductDetailsView: View {
             }
             .ignoresSafeArea()
 
+
             if !viewModel.isMyPost() {
                 buttonGradientView
             }
@@ -398,6 +399,7 @@ struct ProductDetailsView: View {
             }
         }
     }
+
 
     private var deletePostView: some View {
         VStack(spacing: 24) {
