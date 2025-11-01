@@ -61,8 +61,6 @@ class SetupProfileViewModel: ObservableObject {
                     // TODO: Present Toast Error
                 }
 
-                // TODO: Login User after Account Creation
-
                 isLoading = false
             } catch {
                 NetworkManager.shared.logger.error("Error in SetupProfileViewModel.createNewUser: \(error.localizedDescription)")

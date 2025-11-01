@@ -103,7 +103,6 @@ class MainViewModel: ObservableObject {
                     UserSessionManager.shared.accessToken = userSession?.accessToken
                     UserSessionManager.shared.googleID = googleID
                     UserSessionManager.shared.userID = user.id
-                    UserSessionManager.shared.email = user.email
 
                     withAnimation { userDidLogin = true }
                 } else {
