@@ -13,13 +13,15 @@ struct HomeView: View {
 
     @EnvironmentObject private var mainViewModel: MainViewModel
     @EnvironmentObject private var searchViewModel: SearchViewModel
+    @EnvironmentObject private var filtersViewModel: FiltersViewModel
     @EnvironmentObject var router: Router
     
     @StateObject private var viewModel = HomeViewModel.shared
-    @StateObject private var filtersViewModel = FiltersViewModel(isHome: true)
     
     @State var forYouPosts: [[Post]] = []
-    @State private var presentPopup = false
+//    @State var presentPopup = false
+    
+    
 
     var body: some View {
         VStack(spacing: 0) {
@@ -53,9 +55,8 @@ struct HomeView: View {
         .refreshable { viewModel.getAllPosts() }
         .loadingView(isLoading: viewModel.isLoading)
         .navigationBarBackButtonHidden()
-        .sheet(isPresented: $presentPopup) {
-            FilterView(home: true, isPresented: $presentPopup)
-                .environmentObject(filtersViewModel)
+        .sheet(isPresented: $filtersViewModel.presentPopup) {
+            FilterView(home: true)
         }
     }
     
@@ -175,8 +176,10 @@ struct HomeView: View {
                     HStack {
                         ForEach(Constants.filters.filter { $0.color != nil }, id: \.id) { filter in
                             VStack {
-                                CircularFilterButton(filter: filter) {
+                                    CircularFilterButton(filter: filter, isSelected: viewModel.selectedFilter == [filter.title]) {
                                         router.push(.detailedFilter(filter))
+                                        viewModel.selectedFilter = [filter.title.uppercased()]
+                                        // TODO: Change Filter VM Selected Filter
                                     }
                                 
                                 Text(filter.title)
