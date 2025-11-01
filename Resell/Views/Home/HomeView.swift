@@ -24,12 +24,7 @@ struct HomeView: View {
                 filtersView
                     .padding(.bottom, 12)
 
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack{
-                        savedByYou
-                        ProductsGalleryView(items: viewModel.filteredItems)
-                    }
-                }
+                ProductsGalleryView(items: viewModel.filteredItems)
             }
             .background(Constants.Colors.white)
             .overlay(alignment: .bottomTrailing) {
@@ -54,43 +49,6 @@ struct HomeView: View {
             FilterView()
         }
     }
-    
-    private var savedByYou: some View {
-            VStack{
-                HStack(spacing: 96){
-                    Text("Saved By You")
-                        .font(.custom("Rubik-Medium", size: 22))
-                        .foregroundStyle(.black)
-                    
-                    
-                    
-                    Button {
-                        router.push(.saved)
-                    } label: {
-                        Text("See all")
-                            .font(Constants.Fonts.body1)
-                            .underline()
-                            .multilineTextAlignment(.center)
-                            .foregroundStyle(Constants.Colors.secondaryGray)
-                    }
-                    
-                }
-                
-                ZStack{
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.white)
-                        .frame(width: 366, height: 110)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 20)
-                                .stroke(Color.gray, lineWidth: 4)
-                        )
-                    VStack{
-                        Text("No Listings are Saved.")
-                        Text("Browse below to get started.")
-                    }
-                }
-        }
-    }
 
     private var headerView: some View {
         VStack(alignment: .leading) {
@@ -109,7 +67,6 @@ struct HomeView: View {
                 
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
-            .padding(.vertical, -4)
             HStack{
                 Button(action: {
                     router.push(.search(nil))
@@ -118,9 +75,9 @@ struct HomeView: View {
                         .frame(width: 309, height: 43)
                         .overlay {
                             HStack {
+                                Spacer()
                                 Image(systemName: "magnifyingglass")
                                     .foregroundStyle(.black)
-                                    .padding(.leading, 16)
                                 Text("Search")
                                     .font(Constants.Fonts.body1)
                                     .foregroundColor(Constants.Colors.black)
@@ -128,6 +85,7 @@ struct HomeView: View {
                             }
                         }
                         .foregroundColor(Constants.Colors.wash)
+                        .padding(.horizontal, Constants.Spacing.horizontalPadding)
                 })
                 
                 Button(action: {
@@ -139,7 +97,6 @@ struct HomeView: View {
                 })
             }
             .padding(.bottom,12)
-            .padding(.horizontal, Constants.Spacing.horizontalPadding)
 
             
             Button(action: {

@@ -39,8 +39,8 @@ struct MainTabView: View {
                             case .newListingImages:
                                 NewListingImagesView()
                                     .environmentObject(newListingViewModel)
-                            case .saved:
-                                SavedView()
+                            case .filters:
+                                FilterView()
                             case .newRequest:
                                 NewRequestView()
                             case .messages(let post):
