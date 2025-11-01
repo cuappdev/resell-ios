@@ -25,13 +25,38 @@ struct User: Codable {
     let googleId: String
     let bio: String
     let posts: [Post]?
-    let saved: [Post]?
+    let saved: [String]?
     let feedbacks: [Feedback]?
-    let requests: [Request]?
+    let requests: [String]?
     let blocking: [String]?
     let blockers: [String]?
-    let reports: [Report]?
+    let reports: [String]?
     let reportedBy: [String]?
+
+    enum CodingKeys: String, CodingKey {
+        case firebaseUid
+        case username
+        case netid
+        case givenName
+        case familyName
+        case admin
+        case isActive
+        case stars
+        case numReviews
+        case photoUrl
+        case venmoHandle
+        case email
+        case googleId
+        case bio
+        case posts
+        case saved
+        case feedbacks
+        case requests
+        case blocking
+        case blockers
+        case reports
+        case reportedBy
+    }
 
     func toCreateUserBody(username: String, bio: String, venmoHandle: String, imageUrl: String, fcmToken: String) -> CreateUserBody {
         return CreateUserBody(
