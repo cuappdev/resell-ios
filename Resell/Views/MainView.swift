@@ -19,7 +19,6 @@ struct MainView: View {
     @StateObject private var onboardingViewModel = SetupProfileViewModel()
     @StateObject private var reportViewModel = ReportViewModel()
     @StateObject private var searchViewModel = SearchViewModel()
-    @StateObject private var filterViewModel = FiltersViewModel()
 
     // MARK: - UI
 
@@ -30,7 +29,6 @@ struct MainView: View {
             .environmentObject(mainViewModel)
             .environmentObject(chatsViewModel)
             .environmentObject(newListingViewModel)
-            .environmentObject(filterViewModel)
             .environmentObject(onboardingViewModel)
             .environmentObject(reportViewModel)
             .background(Constants.Colors.white)

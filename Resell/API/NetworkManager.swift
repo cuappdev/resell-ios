@@ -296,10 +296,17 @@ class NetworkManager: APIClient {
         return try await post(url: url, body: prices)
     }
     
-    func filterByCondition(conditions: [String]) async throws -> PostsResponse {
+    // MARK: This endpoint doesn't exist currently...
+    func filterByCategory(category: CategoryBody) async throws -> PostsResponse {
+        let url = try constructURL(endpoint: "/post/filterByCategory/")
+        
+        return try await post(url: url, body: category)
+    }
+    
+    func filterByCondition(condition: ConditionBody) async throws -> PostsResponse {
         let url = try constructURL(endpoint: "/post/filterByCondition/")
         
-        return try await post(url: url, body: ConditionBody(conditions: conditions))
+        return try await post(url: url, body: condition)
     }
     
     func filterPriceLowtoHigh() async throws -> PostsResponse {

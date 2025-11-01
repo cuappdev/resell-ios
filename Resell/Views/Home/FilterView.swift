@@ -10,16 +10,19 @@ import Flow
 
 // TODO: Implement Apply Filters button.
     // use a set to store some encoding of the filters being currently applied
-    // why? quick removal + add operations
-    // add/remove when a filter button is toggled
+        // why? quick removal + add operations
+        // add/remove when a filter button is toggled
     // when apply filter button is clicked, iterate through the set and apply each filter
-    // Applied filters don't persist...
+
 struct FilterView: View {
     
     @State var presentPopup = false
-    
-    @EnvironmentObject var filtersVM: FiltersViewModel
-    @StateObject private var homeViewModel = HomeViewModel.shared
+    @State private var lowValue: Double = 0
+    @State private var highValue: Double = 1000
+    @State private var showSale = false
+    @State private var categoryFilters = Set<String>()
+    @State private var conditionFilters = Set<String>()
+    @State private var selectedSort: SortOption?
 
     private var categories : [String] = ["Clothing", "Books", "School", "Electronics", "Handmade", "Sports & Outdoors", "Other"]
     private var conditions : [String] = ["Gently Used", "Worn", "Never Used"]
@@ -59,7 +62,7 @@ struct FilterView: View {
                     Button{
                         presentPopup.toggle()
                     } label: {
-                        Text("\(filtersVM.selectedSort?.title ?? "Any")")
+                        Text("\(selectedSort?.title ?? "Any")")
                             .font(.custom("Rubik-Regular", size: 20))
                             .foregroundStyle(.gray)
                         
@@ -82,34 +85,34 @@ struct FilterView: View {
                         .padding(.bottom, 8)
 
                                         
-                        if filtersVM.lowValue == 0 && filtersVM.highValue == 1000 {
+                    if lowValue == 0 && highValue == 1000 {
                         Text("Any")
                             .font(.custom("Rubik-Regular", size: 20))
                             .foregroundStyle(.gray)
                             .padding(.trailing, 52)
                         
 
-                        } else if filtersVM.lowValue == 0 {
-                            Text("Up to $\(Int(filtersVM.highValue))")
+                    } else if lowValue == 0 {
+                        Text("Up to $\(Int(highValue))")
                             .font(.custom("Rubik-Regular", size: 20))
                             .foregroundStyle(.gray)
                         
-                        } else if filtersVM.highValue == 1000 {
-                            Text("$\(Int(filtersVM.lowValue)) +")
+                    } else if highValue == 1000 {
+                        Text("$\(Int(lowValue)) +")
                             .font(.custom("Rubik-Regular", size: 20))
                             .foregroundStyle(.gray)
-                            .padding(.trailing, filtersVM.lowValue > 99 ? 24 : 36)
+                            .padding(.trailing, lowValue > 99 ? 24 : 36)
 
                         
                     } else {
-                        Text("$\(Int(filtersVM.lowValue)) to $\(Int(filtersVM.highValue))")
+                        Text("$\(Int(lowValue)) to $\(Int(highValue))")
                             .font(.custom("Rubik-Regular", size: 20))
                             .foregroundStyle(.gray)
                         }
                     }
                     
                     // SLIDER
-                    RangeSlider(lowValue: $filtersVM.lowValue, highValue: $filtersVM.highValue, range: 0...1000)
+                    RangeSlider(lowValue: $lowValue, highValue: $highValue, range: 0...1000)
                         .padding(.leading, 28)
                         .offset(y: -20)
                     
@@ -122,9 +125,9 @@ struct FilterView: View {
                         Spacer()
                         
                         Button {
-                            filtersVM.showSale.toggle()
+                            showSale.toggle()
                         } label: {
-                            Image(filtersVM.showSale ? "toggle-set" : "toggle" )
+                            Image(showSale ? "toggle-set" : "toggle" )
                         }.padding(.trailing, 28)
                         
                         
@@ -149,14 +152,13 @@ struct FilterView: View {
                             ForEach(categories, id: \.self) { category in
                                 HStack {
                                     Button {
-                                        // TODO: change logic for uppercasing...
-                                        if filtersVM.categoryFilters.contains(category.uppercased()){
-                                            filtersVM.categoryFilters.remove(category.uppercased())
+                                        if categoryFilters.contains(category){
+                                            categoryFilters.remove(category)
                                         } else {
-                                            filtersVM.categoryFilters.insert(category.uppercased())
+                                            categoryFilters.insert(category)
                                         }
                                     } label: {
-                                        if filtersVM.categoryFilters.contains(category.uppercased()) {
+                                        if categoryFilters.contains(category) {
                                             HStack{
                                                 Text(category)
                                                     .font(.custom("Rubik-Medium", size: 14))
@@ -176,11 +178,11 @@ struct FilterView: View {
                                     .padding(.vertical, 8)
                                     .background(
                                         RoundedRectangle(cornerRadius: 20)
-                                            .stroke(filtersVM.categoryFilters.contains(category) ? Constants.Colors.resellPurple : Constants.Colors.filterGray, lineWidth: 1)
+                                            .stroke(categoryFilters.contains(category) ? Constants.Colors.resellPurple : Constants.Colors.filterGray, lineWidth: 1)
                                         
                                             .background(
                                                 RoundedRectangle(cornerRadius: 20)
-                                                    .fill(filtersVM.categoryFilters.contains(category) ? Constants.Colors.purpleWash : Color.white)
+                                                    .fill(categoryFilters.contains(category) ? Constants.Colors.purpleWash : Color.white)
                                             )
                                     )
                                 }
@@ -210,13 +212,13 @@ struct FilterView: View {
                         ForEach(conditions, id: \.self){ condition in
                             Button {
                                 // toggle condition, if true, add to set, if false, remove from set
-                                if filtersVM.conditionFilters.contains(condition){
-                                    filtersVM.conditionFilters.remove(condition)
+                                if conditionFilters.contains(condition){
+                                    conditionFilters.remove(condition)
                                 } else {
-                                    filtersVM.conditionFilters.insert(condition)
+                                    conditionFilters.insert(condition)
                                 }
                             } label: {
-                                if filtersVM.conditionFilters.contains(condition) {
+                                if conditionFilters.contains(condition) {
                                     HStack{
                                         Text(condition)
                                             .font(.custom("Rubik-Medium", size: 14))
@@ -237,11 +239,11 @@ struct FilterView: View {
                             .background(
                                 RoundedRectangle(cornerRadius: 20)
                                 
-                                    .stroke(filtersVM.conditionFilters.contains(condition) ? Constants.Colors.resellPurple : Constants.Colors.filterGray, lineWidth: 1)
+                                    .stroke(conditionFilters.contains(condition) ? Constants.Colors.resellPurple : Constants.Colors.filterGray, lineWidth: 1)
                                     
                                     .background(
                                         RoundedRectangle(cornerRadius: 20)
-                                            .fill(filtersVM.conditionFilters.contains(condition) ? Constants.Colors.purpleWash : Color.white)
+                                            .fill(conditionFilters.contains(condition) ? Constants.Colors.purpleWash : Color.white)
                                         )
                             )
                         }
@@ -254,8 +256,8 @@ struct FilterView: View {
                 
                 HStack{
                     Button {
-                        filtersVM.categoryFilters.removeAll()
-                        filtersVM.conditionFilters.removeAll()
+                        categoryFilters.removeAll()
+                        conditionFilters.removeAll()
                     } label: {
                         Text("Reset")
                             .font(.custom("Rubik-Medium", size: 20))
@@ -266,16 +268,39 @@ struct FilterView: View {
                     Spacer()
                     
                     Button{
-                        Task {
-                            try await filtersVM.applyFilters(homeViewModel: homeViewModel)
+                        for categoryFilter in categoryFilters {
+                            Task {
+                                try await NetworkManager.shared.filterByCategory(category: CategoryBody(category: categoryFilter))
+                            }
                         }
+                        for conditionFilter in conditionFilters {
+                            Task {
+                               try await NetworkManager.shared.filterByCondition(condition: ConditionBody(condition: conditionFilter))
+                            }
+                        }
+                        
+                        if let sort = selectedSort {
+                            if selectedSort?.title == "Newly Listed" {
+                                Task{ try await NetworkManager.shared.filterNewlyListed() }
+                            } else if selectedSort?.title == "Price: High to Low" {
+                                Task { try await NetworkManager.shared.filterPriceHightoLow() }
+                            } else if selectedSort?.title == "Price: Low to High" {
+                                Task { try await NetworkManager.shared.filterPriceLowtoHigh() }
+                            }
+                        }
+
+                        Task
+                        {
+                            try await NetworkManager.shared.filterByPrice(prices: PriceBody(lowPrice: Int(lowValue), maxPrice: Int(highValue)))
+                        }
+                        
                     } label: {
                             Text("Apply filters")
                                 .font(.custom("Rubik-Medium", size: 20))
                                 .foregroundStyle(Color.white)
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 8)
-                                .background(filtersVM.categoryFilters.isEmpty && filtersVM.conditionFilters.isEmpty ? Constants.Colors.resellPurple.opacity(0.4) : Constants.Colors.resellPurple)
+                                .background(categoryFilters.isEmpty && conditionFilters.isEmpty ? Constants.Colors.resellPurple.opacity(0.4) : Constants.Colors.resellPurple)
                                 .cornerRadius(20)
                     }
                     .padding(.trailing, 40)
@@ -284,7 +309,7 @@ struct FilterView: View {
             }
             
             if presentPopup {
-                SortByView(selectedSort: $filtersVM.selectedSort)
+                SortByView(selectedSort: $selectedSort)
                     .offset(x: 88, y: home ? -142 : 0)
                     .onTapGesture {
                         presentPopup.toggle()
@@ -340,7 +365,7 @@ struct FilterView: View {
 }
 
 
-// Implement Reset Button
+
 func reset(){}
 struct SortOption: Identifiable, Equatable {
     let id = UUID()
@@ -379,6 +404,8 @@ struct RangeSlider: View {
                     .fill(Constants.Colors.resellPurple.opacity(0.2))
                     .frame(width: trackWidth, height: 4)
                     .cornerRadius(4)
+                
+
                 
                 // Low handle
                 Circle()
@@ -422,5 +449,5 @@ struct RangeSlider: View {
 }
 
 #Preview {
-    FilterView(home: true)
+    FilterView(home: false)
 }

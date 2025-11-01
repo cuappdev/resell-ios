@@ -17,8 +17,6 @@ struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel.shared
     @State var forYouPosts: [[Post]] = []
     @State var presentPopup = false
-    
-    
 
     var body: some View {
         VStack(spacing: 0) {
@@ -76,6 +74,7 @@ struct HomeView: View {
                             .foregroundStyle(Constants.Colors.secondaryGray)
                     }
                 }
+                // if there are no saved posts
                 if viewModel.savedItems.isEmpty {
                     ZStack{
                         RoundedRectangle(cornerRadius: 8)
@@ -97,6 +96,9 @@ struct HomeView: View {
                             }
                         }
                     }
+                    // if there are saved posts
+                    // load the first X posts, then have a view more button that navigates to the saved view
+                    
                 } else {
                     SavedRow(row: viewModel.savedItems)
                 }
@@ -128,6 +130,7 @@ struct HomeView: View {
                 }, label: {
                     Icon(image: "bell")
                 })
+                
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
             .padding(.vertical, -4)
@@ -172,19 +175,20 @@ struct HomeView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack {
                         ForEach(Constants.filters.filter { $0.color != nil }, id: \.id) { filter in
-                            VStack {
-                                    CircularFilterButton(filter: filter, isSelected: viewModel.selectedFilter == [filter.title]) {
+                            VStack{
+                                 
+                                    CircularFilterButton(filter: filter, isSelected: viewModel.selectedFilter == filter.title) {
                                         router.push(.detailedFilter(filter))
-                                        viewModel.selectedFilter = [filter.title.uppercased()]
+                                        viewModel.selectedFilter = filter.title.uppercased()
                                     }
                                 
                                 Text(filter.title)
                                     .font(Constants.Fonts.title4)
+                                
                                     .multilineTextAlignment(.center)
                                     .foregroundStyle(Constants.Colors.black)
                             }
-                        }
-                        .padding(.trailing, 30)
+                        }.padding(.trailing, 30)
                     }
                     .padding(.leading, Constants.Spacing.horizontalPadding)
                     .padding(.vertical, 1)
@@ -192,3 +196,7 @@ struct HomeView: View {
             }
         }
     }
+    
+
+
+
