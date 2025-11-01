@@ -10,19 +10,16 @@ import SwiftUI
 // TODO: Consolidate SavedView and DetailedFilterView into one view...
 struct DetailedFilterView: View {
 
-    // pass through the filtersVM
     @State var presentPopup = false
     @EnvironmentObject var router: Router
     let filter : FilterCategory
-    
-    @StateObject private var filtersViewModel = FiltersViewModel(isHome: false)
     @StateObject private var viewModel = HomeViewModel.shared
 
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
                 headerView
-                ProductsGalleryView(items: filtersViewModel.detailedFilterItems)
+                ProductsGalleryView(items: viewModel.filteredItems)
             }
         }
         .background(Constants.Colors.white)
@@ -30,13 +27,9 @@ struct DetailedFilterView: View {
         .emptyState(isEmpty: $viewModel.filteredItems.isEmpty, title: "No \(filter.title) posts", text: "Posts in the \(filter.title) category will be displayed here.")
         .onAppear {
             viewModel.getBlockedUsers()
-            Task {
-                            try await filtersViewModel.initializeDetailedFilter(category: filter.title)
-                        }
         }
         .sheet(isPresented: $presentPopup) {
-            FilterView(home: false, isPresented: $presentPopup)
-                .environmentObject(filtersViewModel)
+            FilterView(home: false)
         }
     }
 
