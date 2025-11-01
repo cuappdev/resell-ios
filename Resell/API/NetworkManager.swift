@@ -29,9 +29,11 @@ class NetworkManager: APIClient {
 
     // MARK: - Template Helper Functions
 
-    /// Template function to FETCH data from URL and decodes it into a specified type `T`,
+    /// Template function to FETCH data from URL and decodes it into a specified type `T`, with caching support.
     ///
-    /// The function fetches data from the network, verifies the
+    /// This function first checks if a cached response for the given URL is available in `URLCache`.
+    /// If cached data exists, it decodes and returns it immediately, bypassing the network request.
+    /// If there is no cached response, the function fetches data from the network, verifies the
     /// HTTP status code, caches the response, decodes the data, and then returns it as a decoded model.
     ///
     /// - Parameter url: The URL from which data should be fetched.

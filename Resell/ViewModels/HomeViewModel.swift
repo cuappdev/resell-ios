@@ -62,7 +62,7 @@ class HomeViewModel: ObservableObject {
 
             do {
                 let postsResponse = try await NetworkManager.shared.getSavedPosts()
-                savedItems = Post.sortPostsByDate(postsResponse.posts)
+                savedItems = postsResponse.posts
 
                 isLoading = false
             } catch {

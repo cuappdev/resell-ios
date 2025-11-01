@@ -63,7 +63,7 @@ class ProfileViewModel: ObservableObject {
                     requests = requestsResponse.requests
                     selectedPosts = userPosts
 
-                    isLoading = false
+                    withAnimation { isLoading = false }
                 } else if let googleId = UserSessionManager.shared.googleID {
                     user = try await NetworkManager.shared.getUserByGoogleID(googleID: googleId).user
 
@@ -76,10 +76,10 @@ class ProfileViewModel: ObservableObject {
                     requests = requestsResponse.requests
                     selectedPosts = userPosts
 
-                    isLoading = false
+                    withAnimation { isLoading = false }
                 } else {
                     UserSessionManager.shared.logger.error("Error in ProfileViewModel.getUser: No userID or googleID found in UserSessionManager")
-                    isLoading = false
+                    withAnimation { isLoading = false }
                 }
 
             } catch {
