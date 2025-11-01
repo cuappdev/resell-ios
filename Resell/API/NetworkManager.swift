@@ -225,9 +225,8 @@ class NetworkManager: APIClient {
     
     func getAllPosts() async throws -> PostsResponse {
         let url = try constructURL(endpoint: "/post/")
-        print("trying to get all posts")
+        
         return try await get(url: url)
-    
     }
     
     func getSavedPosts() async throws -> PostsResponse {

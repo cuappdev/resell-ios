@@ -18,10 +18,9 @@ struct SavedRow: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 20) {
                 ForEach(row) { post in
-                    ProductGalleryCell(selectedItem: $selectedItem, post: post, savedCell: true)
+                    Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
                 }
             }
-            .padding(.horizontal, Constants.Spacing.horizontalPadding)
         }
     }
 }

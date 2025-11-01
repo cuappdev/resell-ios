@@ -54,7 +54,7 @@ struct NotificationsView: View {
     }
     
     // Creates individual notification rows / components
-    private func notificationView(for notification: Notifications) -> some View {
+    private func notificationView(for notification: Notification) -> some View {
         HStack(alignment: .top) {
             Image("justin_long")
                 .resizable()
@@ -86,7 +86,7 @@ struct NotificationsView: View {
         }
     }
     
-    private func notifText(for notification: Notifications) -> some View {
+    private func notifText(for notification: Notification) -> some View {
         switch notification.data.type {
         case "message":
             return Text(notification.userID).bold() + Text(" sent you a message")

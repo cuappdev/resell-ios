@@ -33,13 +33,13 @@ struct ProductsGalleryView: View {
             HStack(alignment: .top, spacing: 20) {
                 LazyVStack(spacing: 20) {
                     ForEach(column1) { post in
-                        ProductGalleryCell(selectedItem: $selectedItem, post: post, savedCell: false)
+                        ProductGalleryCell(selectedItem: $selectedItem, post: post)
                     }
                 }
 
                 LazyVStack(spacing: 20) {
                     ForEach(column2) { post in
-                        ProductGalleryCell(selectedItem: $selectedItem, post: post, savedCell: false)
+                        ProductGalleryCell(selectedItem: $selectedItem, post: post)
                     }
                 }
             }
@@ -75,9 +75,9 @@ struct ProductGalleryCell: View {
 
     @Binding var selectedItem: Post?
     @State private var isImageLoaded: Bool = false
-
+    // let fixedSize : Bool
     let post: Post
-    let savedCell : Bool
+
     private let cellWidth = (UIScreen.width - 68) / 2
 
     // MARK: UI
@@ -86,7 +86,7 @@ struct ProductGalleryCell: View {
         VStack(spacing: 0) {
             let url = URL(string: post.images.first ?? "")
             CachedImageView(isImageLoaded: $isImageLoaded, imageURL: url)
-                .frame(width: cellWidth, height: (savedCell ? cellWidth - 20 : cellWidth / 0.75))
+                .frame(width: cellWidth, height: cellWidth / 0.75)
 
             HStack {
                 Text(post.title)

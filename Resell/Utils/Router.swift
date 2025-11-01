@@ -58,19 +58,5 @@ class Router: ObservableObject {
     func lastPushedView() -> Route {
         return path.last ?? .home
     }
-    
-//    func navigateToProductDetails(post: Post) {
-//        if let existingIndex = path.firstIndex(where: {
-//            if case .productDetails = $0 {
-//                return true
-//            }
-//            return false
-//        }) {
-//            path[existingIndex] = .productDetails(post)
-//            popTo(path[existingIndex])
-//        } else {
-//            push(.productDetails(post))
-//        }
-//    }
 }
 

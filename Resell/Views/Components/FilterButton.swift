@@ -51,25 +51,3 @@ struct FilterButton: View {
     }
 }
 
-struct CircularFilterButton: View {
-    
-    // MARK: - Properties
-    let filter: FilterCategory
-    let isSelected: Bool
-    let action : () -> Void
-    
-    var body: some View {
-        Button(action: action, label: {
-            ZStack{
-                Circle()
-                    .frame(width: 80, height: 80)
-                    .foregroundStyle(filter.color != nil ? filter.color! : Constants.Colors.filterGray)
-                Image(filter.title)
-                    .resizable()
-                    .frame(width: 57, height: 46)
-                    
-            }
-        })
-    }
-}
-
