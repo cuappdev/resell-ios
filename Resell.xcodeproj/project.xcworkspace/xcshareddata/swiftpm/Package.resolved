@@ -1,5 +1,5 @@
 {
-  "originHash" : "9cf04a82210b4f4df77fe49adfd01c038ac95257610a78ad2449e8e003e656ba",
+  "originHash" : "3a10bb4aec24b5447b1945235a1a3b57b99c9edd72d94cf3eec11db0b7390735",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -49,7 +49,7 @@
     {
       "identity" : "firebase-ios-sdk",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/firebase/firebase-ios-sdk",
+      "location" : "https://github.com/firebase/firebase-ios-sdk.git",
       "state" : {
         "revision" : "6318278e8e64d21f0fdcc69004395e4d34048aaf",
         "version" : "11.8.1"
@@ -58,7 +58,7 @@
     {
       "identity" : "google-auth-library-swift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/googleapis/google-auth-library-swift",
+      "location" : "git@github.com:googleapis/google-auth-library-swift.git",
       "state" : {
         "revision" : "4b510d91fc74f1415eae6dabc9836b8c3e1f44f6",
         "version" : "0.5.3"
