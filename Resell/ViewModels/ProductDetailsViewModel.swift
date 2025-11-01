@@ -248,7 +248,7 @@ class ProductDetailsViewModel: ObservableObject {
                 NetworkManager.shared.logger.info("Notification sent successfully!")
 
             } catch let error as ErrorResponse {
-                // Specific error from app
+                // Specific error from your app
                 NetworkManager.shared.logger.error("API Error \(error.localizedDescription)")
             } catch {
                 // General error
