@@ -83,7 +83,7 @@ struct MessagesView: View {
                 .padding()
             }
         }
-        .sheet(isPresented: $didShowNegotiationView, onDismiss: setNegotiationText) {
+        .sheet(isPresented: $didShowNegotiationView) {
             VStack(spacing: 24) {
                 HStack(spacing: 16) {
                     KFImage(post.images.first)
@@ -129,12 +129,12 @@ struct MessagesView: View {
             .presentationBackground(.clear)
             .ignoresSafeArea()
         }
-        .sheet(isPresented: $didShowAvailabilityView) {
-            AvailabilitySelectorView(isPresented: $didShowAvailabilityView)
-                .presentationCornerRadius(25)
-                .presentationDragIndicator(.visible)
+        .onChange(of: didShowNegotiationView) { newValue in
+            if !newValue && !priceText.isEmpty {
+                viewModel.draftMessageText = "Hi! I'm interested in buying your \(post.title), but would you be open to selling it for $\(priceText)?"
+                priceText = ""
+            }
         }
-        .endEditingOnTap()
 
     }
 
@@ -246,11 +246,6 @@ struct MessagesView: View {
 
     private func onSend() {
 
-    }
-
-    private func setNegotiationText() {
-        viewModel.draftMessageText = "Hi! I'm interested in buying your \(post.title), but would you be open to selling it for $\(priceText)?"
-        priceText = ""
     }
 
 //    private var messageContentView: some View {
