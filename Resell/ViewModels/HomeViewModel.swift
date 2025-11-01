@@ -40,14 +40,12 @@ class HomeViewModel: ObservableObject {
     // MARK: - Functions
 
     func getAllPosts() {
-//        isLoading = true
+        isLoading = true
 
         Task {
-//            defer { Task { @MainActor in withAnimation { isLoading = false } } }
-//            
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+            
             do {
-                print("BEFORE GETTING ALL POSTS")
-
                 let postsResponse = try await NetworkManager.shared.getAllPosts()
                 print("AFTER GETTING ALL POSTS")
                 allItems = Post.sortPostsByDate(postsResponse.posts)
