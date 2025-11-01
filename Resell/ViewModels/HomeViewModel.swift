@@ -138,10 +138,9 @@ class HomeViewModel: ObservableObject {
         }
         
         let group = DispatchGroup()
-            // MARK: Prefetches all search items, maybe not that efficient?
+            
             for searchHistoryItem in mainVM.searchHistory {
                 group.enter()
-                // TODO: Update calling this to have mappings to posts for up to 5 recently searched queries
                 searchViewModel.searchItems(with: searchHistoryItem, userID: nil, saveQuery: false, mainViewModel: mainViewModel) {
                     group.leave()
                 }
