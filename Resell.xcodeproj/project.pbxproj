@@ -54,7 +54,6 @@
 		2C6FB17C2CFADCE000B35FF8 /* TransactionSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6FB17B2CFADCE000B35FF8 /* TransactionSummary.swift */; };
 		2C6FB17E2CFADD5200B35FF8 /* ChatDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6FB17D2CFADD5200B35FF8 /* ChatDocument.swift */; };
 		2C6FB1802CFADD9100B35FF8 /* UserDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6FB17F2CFADD9100B35FF8 /* UserDocument.swift */; };
-		2C6FB1822CFAEADC00B35FF8 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 2C6FB1812CFAEADC00B35FF8 /* FirebaseMessaging */; };
 		2C7460892CEEE054004832F5 /* Report.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C7460882CEEE054004832F5 /* Report.swift */; };
 		2C9337462C92A66C00818C8E /* FilterButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9337452C92A66C00818C8E /* FilterButton.swift */; };
 		2C9337482C92AAEE00818C8E /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9337472C92AAEE00818C8E /* HomeViewModel.swift */; };
@@ -173,7 +172,6 @@
 		2C6FB17B2CFADCE000B35FF8 /* TransactionSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionSummary.swift; sourceTree = "<group>"; };
 		2C6FB17D2CFADD5200B35FF8 /* ChatDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatDocument.swift; sourceTree = "<group>"; };
 		2C6FB17F2CFADD9100B35FF8 /* UserDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDocument.swift; sourceTree = "<group>"; };
-		2C6FB1832CFAEC9400B35FF8 /* Resell.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Resell.entitlements; sourceTree = "<group>"; };
 		2C7460882CEEE054004832F5 /* Report.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Report.swift; sourceTree = "<group>"; };
 		2C9337452C92A66C00818C8E /* FilterButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterButton.swift; sourceTree = "<group>"; };
 		2C9337472C92AAEE00818C8E /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
@@ -242,7 +240,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2C6FB1822CFAEADC00B35FF8 /* FirebaseMessaging in Frameworks */,
 				2C30246F2C90FFB40057D3D9 /* GoogleSignIn in Frameworks */,
 				2C3859E32CCD9FEA00DA20EA /* FirebaseFirestore in Frameworks */,
 				2C3859E12CCD9FDE00DA20EA /* FirebaseCore in Frameworks */,
@@ -371,7 +368,6 @@
 		2C9B4CC92C8FB7B70029DF61 /* Resell */ = {
 			isa = PBXGroup;
 			children = (
-				2C6FB1832CFAEC9400B35FF8 /* Resell.entitlements */,
 				2CDCEE5D2CD6BE8D008DF5E8 /* API */,
 				2C9337442C929B0600818C8E /* Models */,
 				2C9B4CFF2C8FBC860029DF61 /* Info.plist */,
@@ -600,7 +596,6 @@
 				2C3859E02CCD9FDE00DA20EA /* FirebaseCore */,
 				2C3859E22CCD9FEA00DA20EA /* FirebaseFirestore */,
 				2C41BB892CD90EA100EFF69E /* Kingfisher */,
-				2C6FB1812CFAEADC00B35FF8 /* FirebaseMessaging */,
 			);
 			productName = Resell;
 			productReference = 2C9B4CC72C8FB7B70029DF61 /* Resell.app */;
@@ -977,7 +972,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Resell/Resell.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Resell/Preview Content\"";
@@ -1011,7 +1005,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Resell/Resell.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Resell/Preview Content\"";
@@ -1208,11 +1201,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 2C41BB862CD90D7300EFF69E /* XCRemoteSwiftPackageReference "Kingfisher" */;
 			productName = Kingfisher;
-		};
-		2C6FB1812CFAEADC00B35FF8 /* FirebaseMessaging */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2CDDF3112CCD9B530061A564 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseMessaging;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

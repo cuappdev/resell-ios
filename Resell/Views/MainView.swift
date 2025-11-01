@@ -39,7 +39,6 @@ struct MainView: View {
         .onAppear {
             let signInConfig = GIDConfiguration.init(clientID: Keys.googleClientID)
             GIDSignIn.sharedInstance.configuration = signInConfig
-            mainViewModel.addFCMToken()
             mainViewModel.restoreSignIn()
             mainViewModel.setupNavBar()
             mainViewModel.hidesTabBar = false
