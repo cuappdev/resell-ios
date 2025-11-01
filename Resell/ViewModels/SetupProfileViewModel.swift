@@ -50,11 +50,9 @@ class SetupProfileViewModel: ObservableObject {
     }
 
     func createNewUser() {
-        isLoading = true
-
         Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
-
+            isLoading = true
+            
             do {
                 if let imageBase64 = selectedImage.toBase64() {
                     let user = CreateUserBody(username: username.cleaned(), netid: netid, givenName: givenName, familyName: familyName, photoUrl: imageBase64, email: email, googleID: googleID, bio: bio.cleaned())
@@ -66,8 +64,11 @@ class SetupProfileViewModel: ObservableObject {
                 } else {
                     // TODO: Present Toast Error
                 }
+
+                withAnimation { isLoading = false }
             } catch {
                 NetworkManager.shared.logger.error("Error in SetupProfileViewModel.createNewUser: \(error.localizedDescription)")
+                withAnimation { isLoading = false }
             }
         }
     }

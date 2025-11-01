@@ -29,10 +29,8 @@ class NewRequestViewModel: ObservableObject {
     }
 
     func createNewRequest() {
-        isLoading = true
-
         Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+            isLoading = true
 
             do {
                 guard let userID = UserSessionManager.shared.userID else {
@@ -42,8 +40,10 @@ class NewRequestViewModel: ObservableObject {
 
                 let requestBody = RequestBody(title: titleText, description: descriptionText, userId: userID)
                 let _ = try await NetworkManager.shared.postRequest(request: requestBody)
+                withAnimation { isLoading = false }
             } catch {
                 NetworkManager.shared.logger.error("Error in NewRequestViewModel.createNewRequest: \(error.localizedDescription)")
+                withAnimation { isLoading = false }
             }
         }
     }

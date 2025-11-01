@@ -133,8 +133,6 @@ struct SearchView: View {
         isLoading = true
 
         Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
-            
             do {
                 let postsResponse = try await NetworkManager.shared.getSearchedPosts(with: searchText)
 
@@ -145,8 +143,10 @@ struct SearchView: View {
                 }
                 
                 mainViewModel.saveSearchQuery(searchText)
+                withAnimation { isLoading = false }
             } catch {
                 NetworkManager.shared.logger.error("Error in SearchView.searchItems: \(error.localizedDescription)")
+                withAnimation { isLoading = false }
             }
         }
     }

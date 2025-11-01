@@ -50,10 +50,8 @@ class NewListingViewModel: ObservableObject {
     }
 
     func createNewListing() {
-        isLoading = true
-        
         Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+            isLoading = true
 
             do {
                 if let userID = UserSessionManager.shared.userID {

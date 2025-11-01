@@ -47,7 +47,6 @@ struct ProfileView: View {
                 } else {
                     ProductsGalleryView(items: viewModel.selectedPosts)
                         .emptyState(isEmpty: viewModel.selectedPosts.isEmpty && !viewModel.isLoading, title: viewModel.selectedTab == .listing ? "No listings posted" : "No items archived", text: viewModel.selectedTab == .listing ? "When you post a listing, it will be displayed here" : "When a listing is sold or archived, it will be displayed here")
-                        .padding(.top, 24)
                         .loadingView(isLoading: viewModel.isLoading)
                 }
             }

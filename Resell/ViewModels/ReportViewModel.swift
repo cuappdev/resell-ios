@@ -46,10 +46,8 @@ class ReportViewModel: ObservableObject {
     }
 
     func reportPost() {
-        isLoading = true
-
         Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+            isLoading = true
 
             do {
                 if let userID = user?.id,
@@ -57,42 +55,47 @@ class ReportViewModel: ObservableObject {
                     let reportBody = ReportPostBody(reported: userID, post: postID, reason: selectedOption)
                     try await NetworkManager.shared.reportPost(reportBody: reportBody)
                 }
+
+                withAnimation { isLoading = false }
             } catch {
                 NetworkManager.shared.logger.error("Error in ReportViewModel.reportPost: \(error.localizedDescription)")
+                withAnimation { isLoading = false }
             }
         }
     }
 
     func reportUser() {
-        isLoading = true
-
         Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+            isLoading = true
 
             do {
                 if let userID = user?.id {
                     let reportBody = ReportUserBody(reported: userID, reason: selectedOption)
                     try await NetworkManager.shared.reportUser(reportBody: reportBody)
                 }
+
+                withAnimation { isLoading = false }
             } catch {
                 NetworkManager.shared.logger.error("Error in ReportViewModel.reportUser: \(error.localizedDescription)")
+                withAnimation { isLoading = false }
             }
         }
     }
 
     func blockUser() {
-        isLoading = true
-
         Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+            isLoading = true
 
             do {
                 if let id = user?.id {
                     let blocked = BlockUserBody(blocked: id)
                     try await NetworkManager.shared.blockUser(blocked: blocked)
                 }
+
+                withAnimation { isLoading = false }
             } catch {
                 NetworkManager.shared.logger.error("Error in ProfileViewModel.blockUser: \(error.localizedDescription)")
+                withAnimation { isLoading = false }
             }
         }
     }
