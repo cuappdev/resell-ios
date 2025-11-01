@@ -19,13 +19,10 @@ struct DetailedFilterView: View {
     @StateObject private var viewModel = HomeViewModel.shared
 
     var body: some View {
-    
         ZStack {
             VStack(spacing: 0) {
                 headerView
-                ScrollView(.vertical) {
-                    ProductsGalleryView(items: filtersViewModel.detailedFilterItems)
-                }
+                ProductsGalleryView(items: filtersViewModel.detailedFilterItems)
             }
         }
         .background(Constants.Colors.white)
