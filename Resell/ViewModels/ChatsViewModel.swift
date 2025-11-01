@@ -227,8 +227,7 @@ class ChatsViewModel: ObservableObject {
                         content: document.text,
                         messageType: messageType,
                         imageUrl: document.image,
-                        post: document.product,
-                        availability: document.availability
+                        post: document.product
                     ),
                     document.user.id == myEmail
                 )

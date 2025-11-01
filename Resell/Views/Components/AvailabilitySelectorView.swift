@@ -22,8 +22,6 @@ struct AvailabilitySelectorView: View {
     @Binding var selectedDates: [AvailabilityBlock]
     @Binding var didSubmit: Bool
 
-    var isEditing: Bool = true
-    var proposerName: String? = nil
     let dates: [String] = generateDates()
     let times: [String] = generateTimes()
 
@@ -33,8 +31,6 @@ struct AvailabilitySelectorView: View {
         }
     }
 
-    private let cellHeight = UIScreen.height / 12 - 25
-
     // MARK: - UI
 
     var body: some View {
@@ -43,23 +39,21 @@ struct AvailabilitySelectorView: View {
                 Button(action: goToPreviousPage) {
                     Image(systemName: "chevron.left")
                         .font(Constants.Fonts.h1)
-                        .foregroundColor(currentPage > 0 ? Constants.Colors.black : Constants.Colors.white)
+                        .foregroundColor(currentPage > 0 ? .black : .gray)
                 }
                 .disabled(currentPage == 0)
 
                 Spacer()
 
                 VStack {
-                    Text(isEditing ? "When are you free to meet?" : "\(proposerName ?? "")'s Availability")
-                        .font(Constants.Fonts.title1)
+                    Text("When are you free to meet?")
+                        .font(Constants.Fonts.title2)
                         .foregroundColor(Constants.Colors.black)
                         .padding(.top)
 
-                    Text(isEditing ? "Click and drag cells to select meeting times" : "Select a 30-minute block to propose a meeting.")
+                    Text("Click and drag cells to select meeting times")
                         .font(Constants.Fonts.body2)
                         .foregroundColor(Constants.Colors.secondaryGray)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
                 }
 
                 Spacer()
@@ -67,10 +61,12 @@ struct AvailabilitySelectorView: View {
                 Button(action: goToNextPage) {
                     Image(systemName: "chevron.right")
                         .font(Constants.Fonts.h1)
-                        .foregroundColor(currentPage < paginatedDates.count - 1 ? Constants.Colors.black : Constants.Colors.secondaryGray)
+                        .foregroundColor(currentPage < paginatedDates.count - 1 ? .black : .gray)
                 }
                 .disabled(currentPage >= paginatedDates.count - 1)
             }
+
+            Spacer()
 
             ZStack {
                 ForEach(Array(paginatedDates.indices), id: \.self) { index in
@@ -79,17 +75,15 @@ struct AvailabilitySelectorView: View {
                             ForEach(times, id: \.self) { time in
                                 VStack {
                                     Text(time)
-                                        .font(Constants.Fonts.title2)
-                                        .foregroundStyle(Constants.Colors.black)
+                                        .font(Constants.Fonts.title4)
+                                        .foregroundStyle(Constants.Colors.secondaryGray)
                                         .multilineTextAlignment(.trailing)
                                     Spacer()
                                 }
-                                .frame(width: 80, height: cellHeight)
+                                .frame(width: 80, height: UIScreen.height / 14 - 25)
                             }
                         }
                         .padding(.top, 36)
-
-                        //title 1, body 1
 
                         HStack(spacing: 0) {
                             ForEach(Array(paginatedDates[index]), id: \.self) { date in
@@ -113,43 +107,37 @@ struct AvailabilitySelectorView: View {
                                             .contentShape(Rectangle())
                                             .gesture(DragGesture(minimumDistance: 0)
                                                 .onChanged { value in
-                                                    if isEditing {
-                                                        let isTopHalf = value.location.y < cellHeight / 2
-                                                        let identifier = CellIdentifier(date: date, time: isTopHalf ? "\(time) Top" : "\(time) Bottom")
+                                                    let isTopHalf = value.location.y < cellHeight / 2
+                                                    let identifier = CellIdentifier(date: date, time: isTopHalf ? "\(time) Top" : "\(time) Bottom")
 
-                                                        if toggleSelectionMode == nil {
-                                                            toggleSelectionMode = selectedCells.contains(identifier) ? false : true
-                                                        }
+                                                    if toggleSelectionMode == nil {
+                                                        toggleSelectionMode = selectedCells.contains(identifier) ? false : true
+                                                    }
 
-                                                        if toggleSelectionMode == true {
-                                                            draggedCells.insert(identifier)
-                                                        } else {
-                                                            draggedCells.insert(identifier)
-                                                        }
+                                                    if toggleSelectionMode == true {
+                                                        draggedCells.insert(identifier)
+                                                    } else {
+                                                        draggedCells.insert(identifier)
                                                     }
                                                 }
                                                 .onEnded { _ in
-                                                    if isEditing {
-                                                        if let toggleSelectionMode = toggleSelectionMode {
-                                                            if toggleSelectionMode {
-                                                                selectedCells.formUnion(draggedCells)
-                                                            } else {
-                                                                selectedCells.subtract(draggedCells)
-                                                            }
+                                                    if let toggleSelectionMode = toggleSelectionMode {
+                                                        if toggleSelectionMode {
+                                                            selectedCells.formUnion(draggedCells)
+                                                        } else {
+                                                            selectedCells.subtract(draggedCells)
                                                         }
-                                                        draggedCells.removeAll()
-                                                        toggleSelectionMode = nil
                                                     }
+                                                    draggedCells.removeAll()
+                                                    toggleSelectionMode = nil
                                                 }
                                             )
                                             .onTapGesture {
-                                                if isEditing {
-                                                    let isTopHalf = geometry.frame(in: .local).midY < cellHeight / 2
-                                                    toggleCellSelection(date: date, time: time, isTopHalf: isTopHalf)
-                                                }
+                                                let isTopHalf = geometry.frame(in: .local).midY < cellHeight / 2
+                                                toggleCellSelection(date: date, time: time, isTopHalf: isTopHalf)
                                             }
                                         }
-                                        .frame(width: UIScreen.width / 5 + 10, height: cellHeight)
+                                        .frame(width: UIScreen.width / 5 + 10, height: UIScreen.height / 14 - 25)
                                     }
                                 }
                             }
@@ -162,9 +150,7 @@ struct AvailabilitySelectorView: View {
 
             Spacer()
 
-            PurpleButton(text: isEditing ? "Send" : "Propose", action: saveAvailability)
-
-            Spacer()
+            PurpleButton(text: "Continue", action: saveAvailability)
         }
         .padding(.horizontal)
         .padding(.top)
@@ -256,13 +242,10 @@ struct AvailabilitySelectorView: View {
 // MARK: - CellView
 
 struct CellView: View {
-
     let isSelectedTop: Bool
     let isSelectedBottom: Bool
     let isHighlightedTop: Bool
     let isHighlightedBottom: Bool
-
-    private let cellHeight = UIScreen.height / 12 - 25
 
     var body: some View {
         ZStack {
@@ -270,19 +253,19 @@ struct CellView: View {
                 .fill(isHighlightedTop
                       ? (isSelectedTop ? Constants.Colors.resellPurple.opacity(0.3) : Constants.Colors.resellPurple.opacity(0.5))
                       : (isSelectedTop ? Constants.Colors.resellPurple : Color.clear))
-                .frame(width: UIScreen.width / 5 + 10, height: cellHeight / 2)
-                .offset(y: -cellHeight / 4)
+                .frame(width: UIScreen.width / 5 + 10, height: (UIScreen.height / 14 - 25) / 2)
+                .offset(y: -(UIScreen.height / 14 - 25) / 4)
 
             Rectangle()
                 .fill(isHighlightedBottom
                       ? (isSelectedBottom ? Constants.Colors.resellPurple.opacity(0.3) : Constants.Colors.resellPurple.opacity(0.5))
                       : (isSelectedBottom ? Constants.Colors.resellPurple : Color.clear))
-                .frame(width: UIScreen.width / 5 + 10, height: cellHeight / 2)
-                .offset(y: cellHeight / 4)
+                .frame(width: UIScreen.width / 5 + 10, height: (UIScreen.height / 14 - 25) / 2)
+                .offset(y: (UIScreen.height / 14 - 25) / 4)
 
             Rectangle()
                 .stroke(Color.gray.opacity(0.5), lineWidth: 0.5)
-                .frame(width: UIScreen.width / 5 + 10, height: cellHeight)
+                .frame(width: UIScreen.width / 5 + 10, height: UIScreen.height / 14 - 25)
         }
     }
 }
@@ -309,7 +292,7 @@ func generateTimes() -> [String] {
     formatter.dateFormat = "h:mm a"
 
     let startHour = 9
-    let endHour = 20
+    let endHour = 22
     return (startHour...endHour).map { hour in
         let date = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date())!
         return formatter.string(from: date)
