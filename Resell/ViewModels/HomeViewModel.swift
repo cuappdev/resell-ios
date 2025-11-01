@@ -65,9 +65,6 @@ class HomeViewModel: ObservableObject {
     }
 
     func fetchMoreItems() {
-        
-        print("This is being called to fetch more items")
-        
         page += 1
         Task {
             do {
