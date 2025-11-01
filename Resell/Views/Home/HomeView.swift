@@ -17,11 +17,12 @@ struct HomeView: View {
     @State var presentPopup = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            headerView
+        NavigationStack(path: $router.path) {
+            VStack(spacing: 0) {
+                headerView
 
-            filtersView
-                .padding(.bottom, 12)
+                filtersView
+                    .padding(.bottom, 12)
 
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack{
