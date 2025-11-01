@@ -73,6 +73,8 @@ class GoogleAuthManager {
 
             let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController)
 
+            let accessToken = result.user.accessToken.tokenString
+
             return result.user
         } catch {
             logger.error("Error in GoogleAuthManager: Error restoring Google Sign-In: \(error.localizedDescription)")
@@ -86,7 +88,8 @@ class GoogleAuthManager {
         } else {
             do {
                 let user = try await GIDSignIn.sharedInstance.restorePreviousSignIn()
-                
+
+                let accessToken = user.accessToken.tokenString
                 return user
             } catch {
                 logger.error("Error in GoogleAuthManager: Error restoring Google Sign-In: \(error.localizedDescription)")

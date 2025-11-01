@@ -47,9 +47,8 @@ class SendFeedbackViewModel: ObservableObject {
     }
 
     func submitFeedback() {
-        isLoading = true
         Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+            isLoading = true
 
             do {
                 if let userID = UserSessionManager.shared.userID {
@@ -59,8 +58,11 @@ class SendFeedbackViewModel: ObservableObject {
                 } else {
                     UserSessionManager.shared.logger.error("Error in SendFeedbackViewModel.submitFeedback: userID not found")
                 }
+
+                withAnimation { isLoading = false }
             } catch {
                 NetworkManager.shared.logger.error("Error in SendFeedbackViewModel.submitFeedback: \(error)")
+                withAnimation { isLoading = false }
             }
         }
     }

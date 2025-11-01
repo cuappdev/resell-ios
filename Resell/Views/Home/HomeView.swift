@@ -41,7 +41,6 @@ struct HomeView: View {
             .refreshable {
                 viewModel.getAllPosts()
             }
-            .loadingView(isLoading: viewModel.isLoading)
             .navigationBarBackButtonHidden()
         }
     }

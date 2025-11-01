@@ -59,10 +59,8 @@ class ChatsViewModel: ObservableObject {
     }
 
     func getAllChats() {
-        isLoading = true
-
         Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+            isLoading = true
 
             do {
                 if let userID = UserSessionManager.shared.userID {
@@ -75,25 +73,32 @@ class ChatsViewModel: ObservableObject {
                 }
             } catch {
                 NetworkManager.shared.logger.error("Error in BlockedUsersView: \(error.localizedDescription)")
+                isLoading = false
             }
         }
     }
 
     func getPurchaceChats() {
+        isLoading = true
+
         firestoreManager.getPurchaseChats { [weak self] purchaseChats in
             guard let self else { return }
 
             self.purchaseChats = purchaseChats.filter { !self.blockedUsers.contains($0.email) }
             purchaseUnread = countUnviewedChats(chats: self.purchaseChats)
+            withAnimation { self.isLoading = false }
         }
     }
 
     func getOfferChats() {
+        isLoading = true
+
         firestoreManager.getOfferChats { [weak self] offerChats in
             guard let self else { return }
 
             self.offerChats = offerChats.filter { !self.blockedUsers.contains($0.email) }
             offerUnread = countUnviewedChats(chats: self.offerChats)
+            withAnimation { self.isLoading = false }
         }
     }
 
@@ -108,19 +113,19 @@ class ChatsViewModel: ObservableObject {
     }
 
     func getSelectedChatPost(completion: @escaping (Post) -> Void) {
-        if let itemID = selectedChat?.recentItem["id"] as? String {
-            isLoading = true
+        isLoading = true
 
+        if let itemID = selectedChat?.recentItem["id"] as? String {
             Task {
-                defer { Task { @MainActor in withAnimation { isLoading = false } } }
-                
                 do {
                     let postResponse = try await NetworkManager.shared.getPostByID(id: itemID)
+                    isLoading = false
                     selectedPost = postResponse.post
 
                     completion(postResponse.post)
                 } catch {
                     NetworkManager.shared.logger.error("Error in ChatsViewModel.getSelectedChatPost: \(error.localizedDescription)")
+                    isLoading = false
                 }
             }
         }
