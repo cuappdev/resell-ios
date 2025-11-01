@@ -52,6 +52,8 @@ struct HomeView: View {
             .loadingView(isLoading: viewModel.isLoading)
             .navigationBarBackButtonHidden()
         }
+       
+    }
     
     private var savedByYou: some View {
             VStack{
@@ -167,9 +169,6 @@ struct HomeView: View {
             .padding(.vertical, 1)
         }
     }
-    }
-    
-
 
 
 
