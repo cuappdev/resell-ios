@@ -24,8 +24,8 @@ struct NotificationsView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.leading, 30)
                 .padding(.vertical, 10)
-            List(viewModel.filteredNotifications, id: \.data.messageId) { notification in
-                notificationView(for: notification)
+            List(viewModel.filteredNotifications) { notification in
+                    notificationView(for: notification)
                     .listRowInsets(EdgeInsets())
                     .listRowSeparator(.hidden)
             }
@@ -87,23 +87,24 @@ struct NotificationsView: View {
     }
     
     private func notifText(for notification: Notification) -> some View {
-        switch notification.data.type {
-        case "message":
-            return Text(notification.userID).bold() + Text(" sent you a message")
-        case "requests":
-            return Text("Your request for ")
-                + Text(notification.data.messageId).bold()
-                + Text(" has been met")
-        case "bookmarks":
-            return Text("\(notification.userID) discounted ")
-                + Text(notification.data.messageId).bold()
-        case "your listings":
-            return Text("\(notification.userID) bookmarked ")
-                + Text(notification.data.messageId).bold()
-        default:
-            return Text(notification.title)
+        switch notification.type {
+            case "messages":
+                return Text(notification.id).bold() + Text(" sent you a message")
+            case "requests":
+                return Text("Your request for ")
+                    + Text(notification.referenceID).bold()
+                    + Text(" has been met")
+            case "bookmarks":
+                return Text("\(notification.id) discounted ")
+                    + Text(notification.referenceID).bold()
+            case "your listings":
+                return Text("\(notification.id) bookmarked ")
+                    + Text(notification.referenceID).bold()
+            default:
+                return Text(notification.title)
         }
     }
+
 
 }
 
