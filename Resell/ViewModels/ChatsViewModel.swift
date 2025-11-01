@@ -48,7 +48,7 @@ class ChatsViewModel: ObservableObject {
 
             self.purchaseChats = purchaseChats
             purchaseUnread = countUnviewedChats(chats: purchaseChats)
-            withAnimation { self.isLoading = false }
+            isLoading = false
         }
     }
 
@@ -60,7 +60,7 @@ class ChatsViewModel: ObservableObject {
 
             self.offerChats = offerChats
             offerUnread = countUnviewedChats(chats: offerChats)
-            withAnimation { self.isLoading = false }
+            isLoading = false
         }
     }
 

@@ -124,10 +124,10 @@ class ProfileViewModel: ObservableObject {
                 let blocked = BlockUserBody(blocked: id)
                 try await NetworkManager.shared.blockUser(blocked: blocked)
 
-                withAnimation { isLoading = false }
+                isLoading = false
             } catch {
                 NetworkManager.shared.logger.error("Error in ProfileViewModel.blockUser: \(error.localizedDescription)")
-                withAnimation { isLoading = false }
+                isLoading = false
             }
         }
     }
@@ -140,10 +140,10 @@ class ProfileViewModel: ObservableObject {
                 let unblocked = UnblockUserBody(unblocked: id)
                 try await NetworkManager.shared.unblockUser(unblocked: unblocked)
 
-                withAnimation { isLoading = false }
+                isLoading = false
             } catch {
                 NetworkManager.shared.logger.error("Error in ProfileViewModel.unblockUser: \(error.localizedDescription)")
-                withAnimation { isLoading = false }
+                isLoading = false
             }
         }
     }

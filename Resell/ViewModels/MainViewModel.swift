@@ -122,39 +122,27 @@ class MainViewModel: ObservableObject {
 
     func addFCMToken() {
         let messaging = Messaging.messaging()
-        guard let email = UserSessionManager.shared.email else {
-            UserSessionManager.shared.logger.error("Error in MainViewModel: email not found")
-            return
-        }
 
-        // Check if user has allowed notifications
-        UNUserNotificationCenter.current().getNotificationSettings { settings in
-            Task {
-                do {
-                    let notificationsAllowed = settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional
-
-                    // Save the notification status to Firestore
-                    try await FirestoreManager.shared.saveNotificationsEnabled(userEmail: email, notificationsEnabled: notificationsAllowed)
-
-                    // Get the FCM token from Firestore
-                    let firestoreToken = try await FirestoreManager.shared.getUserFCMToken(email: email)
-
-                    // Get the device token from Firebase Messaging
-                    guard let deviceToken = messaging.fcmToken else {
-                        FirestoreManager.shared.logger.error("Device FCM token is missing.")
-                        return
-                    }
-
-                    // Save the device token to Firestore if it's not already there or if it has changed
-                    if firestoreToken == nil || firestoreToken != deviceToken {
-                        try await FirestoreManager.shared.saveDeviceToken(userEmail: email, deviceToken: deviceToken)
-                        FirestoreManager.shared.logger.log("FCM token successfully added for \(email).")
-                    }
-                } catch {
-                    FirestoreManager.shared.logger.error("Error saving notification status or FCM token: \(error.localizedDescription)")
+        Task {
+            do {
+                guard let email = UserSessionManager.shared.email else {
+                    UserSessionManager.shared.logger.error("Error in MainViewModel: email not found")
+                    return
                 }
+
+                let firestoreToken = try await FirestoreManager.shared.getUserFCMToken(email: email)
+
+                guard let deviceToken = messaging.fcmToken else {
+                    FirestoreManager.shared.logger.error("Device FCM token is missing.")
+                    return
+                }
+
+                if firestoreToken == nil || firestoreToken != deviceToken {
+                    try await FirestoreManager.shared.saveDeviceToken(userEmail: email, deviceToken: deviceToken)
+                }
+            } catch {
+                FirestoreManager.shared.logger.error("Error adding FCM token: \(error.localizedDescription)")
             }
         }
     }
-
 }
