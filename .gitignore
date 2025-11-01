@@ -6,5 +6,4 @@ build/
 
 ## Secrets
 Resell/Supporting/GoogleService-Info.plist
-Resell/Supporting/resell-service.json
 Keys.xcconfig

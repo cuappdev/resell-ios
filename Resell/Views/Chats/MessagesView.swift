@@ -9,6 +9,7 @@ import Kingfisher
 import PhotosUI
 import SwiftUI
 
+// MARK: - MessageView
 struct MessagesView: View {
 
     // MARK: - Properties
