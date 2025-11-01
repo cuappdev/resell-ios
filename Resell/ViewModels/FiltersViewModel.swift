@@ -42,14 +42,12 @@ class FiltersViewModel: ObservableObject {
         Task { try await NetworkManager.shared.filterByPrice(prices: PriceBody(lowPrice: Int(lowValue), maxPrice: Int(highValue))) }
     }
     
-    func resetFilters(homeViewModel: HomeViewModel) {
+    func resetFilters() {
         categoryFilters.removeAll()
         conditionFilters.removeAll()
         lowValue = 0
         highValue = 1000
         showSale = false
         selectedSort = nil
-        homeViewModel.selectedFilter = ["Recent"]
-//        homeViewModel.getAllPosts()
     }
 }
