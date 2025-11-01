@@ -102,8 +102,6 @@ class SetupProfileViewModel: ObservableObject {
                 UserSessionManager.shared.email = user.email
                 UserSessionManager.shared.profileURL = user.photoUrl
                 UserSessionManager.shared.name = "\(user.givenName) \(user.familyName)"
-
-                FirebaseNotificationService.shared.setupFCMToken()
             } catch {
                 NetworkManager.shared.logger.error("Error in LoginViewModel.getUserSession: \(error)")
             }
