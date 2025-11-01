@@ -22,7 +22,7 @@ struct ProfileView: View {
             profileImageView
                 .padding(.bottom, 12)
 
-            Text(viewModel.username)
+            Text(viewModel.user?.username ?? "")
                 .font(Constants.Fonts.h3)
                 .foregroundStyle(Constants.Colors.black)
                 .padding(.bottom, 4)
@@ -32,7 +32,7 @@ struct ProfileView: View {
                 .foregroundStyle(Constants.Colors.secondaryGray)
                 .padding(.bottom, 16)
 
-            Text(viewModel.bio)
+            Text(viewModel.user?.bio ?? "")
                 .font(Constants.Fonts.body2)
                 .foregroundStyle(Constants.Colors.black)
                 .padding(.bottom, 28)
@@ -44,7 +44,6 @@ struct ProfileView: View {
                 requestsView
                     .emptyState(isEmpty: viewModel.requests.isEmpty, title: "No active requests", text: "Submit a request and get notified when someone lists something similar")
             } else {
-                // so hard to read omg
                 ProductsGalleryView(items: viewModel.selectedPosts)
                     .emptyState(isEmpty: viewModel.selectedPosts.isEmpty && !viewModel.isLoading, title: viewModel.selectedTab == .listing ? "No listings posted" : "No items archived", text: viewModel.selectedTab == .listing ? "When you post a listing, it will be displayed here" : "When a listing is sold or archived, it will be displayed here")
                     .padding(.top, 24)
@@ -77,7 +76,6 @@ struct ProfileView: View {
             viewModel.updateItemsGallery()
         }
         .onAppear {
-            // Called whenever this view pops up 
             viewModel.getUser()
         }
         .refreshable {
@@ -86,24 +84,15 @@ struct ProfileView: View {
     }
 
     private var profileImageView: some View {
-        // TODO: Figure out why this isn't working
-        
-        Image(uiImage: viewModel.profilePic)
+        KFImage(viewModel.user?.photoUrl)
+            .cacheOriginalImage()
+            .placeholder {
+                ShimmerView()
+                    .frame(width: 90, height: 90)
+            }
             .resizable()
             .frame(width: 90, height: 90)
-            .background(Constants.Colors.stroke)
             .clipShape(.circle)
-        
-//        KFImage(viewModel.profilePic)
-//            .cacheOriginalImage()
-//            .placeholder {
-//                // Photo url NOT showing
-//                ShimmerView()
-//                    .frame(width: 90, height: 90)
-//            }
-//            .resizable()
-//            .frame(width: 90, height: 90)
-//            .clipShape(.circle)
     }
 
     private var profileTabsView: some View {

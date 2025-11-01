@@ -54,7 +54,7 @@ class EditProfileViewModel: ObservableObject {
             defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
-                let edit = EditUserBody(username: username, bio: bio, venmoHandle: venmoLink, photoUrlBase64: selectedImage.resizedToMaxDimension(256).toBase64() ?? "")
+                let edit = EditUserBody(username: username, bio: bio, venmoHandle: venmoLink, photoUrlBase64: selectedImage.toBase64() ?? "")
                 let _ = try await NetworkManager.shared.updateUserProfile(edit: edit)
             } catch {
                 NetworkManager.shared.logger.error("Error in EditProfileViewModel.updateProfile: \(error)")
@@ -74,7 +74,6 @@ class EditProfileViewModel: ObservableObject {
         }
     }
 
-    // refactor why do we have two view models im gonna kill myself
     private func decodeProfileImage(url: URL?) async {
         guard let url,
               let data = try? await URLSession.shared.data(from: url).0,

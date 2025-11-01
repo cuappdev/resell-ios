@@ -328,7 +328,7 @@ class NetworkManager: APIClient {
     
     func createPost(postBody: PostBody) async throws -> ListingResponse {
         let url = try constructURL(endpoint: "/post/")
-
+        
         return try await post(url: url, body: postBody)
     }
     
