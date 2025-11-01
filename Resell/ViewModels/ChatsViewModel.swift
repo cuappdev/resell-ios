@@ -23,7 +23,6 @@ class ChatsViewModel: ObservableObject {
     @Published var offerUnread: Int = 0
 
     @Published var selectedChat: ChatPreview? = nil
-    @Published var selectedPost: Post? = nil
 
     @Published var buyersHistory: [TransactionSummary] = []
     @Published var sellersHistory: [TransactionSummary] = []
@@ -34,7 +33,6 @@ class ChatsViewModel: ObservableObject {
 
     private let firestoreManager = FirestoreManager.shared
     private var blockedUsers: [String] = []
-
     var otherUser: User?
     var venmoURL: URL?
 
@@ -115,8 +113,6 @@ class ChatsViewModel: ObservableObject {
                 do {
                     let postResponse = try await NetworkManager.shared.getPostByID(id: itemID)
                     isLoading = false
-                    selectedPost = postResponse.post
-
                     completion(postResponse.post)
                 } catch {
                     NetworkManager.shared.logger.error("Error in ChatsViewModel.getSelectedChatPost: \(error.localizedDescription)")
@@ -220,29 +216,37 @@ class ChatsViewModel: ObservableObject {
 
     /// Send a text message
     func sendTextMessage(
-        senderEmail: String,
-        recipientEmail: String,
-        senderName: String,
-        recipientName: String,
-        senderImageUrl: URL,
-        recipientImageUrl: URL,
-        messageText: String,
-        isBuyer: Bool,
+        myEmail: String,
+        otherEmail: String,
+        text: String,
+        selfIsBuyer: Bool,
         postId: String
-    ) async throws {
-        try await sendGenericMessage(
-            senderEmail: senderEmail,
-            recipientEmail: recipientEmail,
-            senderName: senderName,
-            recipientName: recipientName,
-            senderImageUrl: senderImageUrl,
-            recipientImageUrl: recipientImageUrl,
-            isBuyer: isBuyer,
-            postId: postId,
-            messageText: messageText
-        )
-    }
+    ) {
+        Task {
+            do {
+                guard let imageUrl = UserSessionManager.shared.profileURL,
+                      let name = UserSessionManager.shared.name else { return }
+                let userDocument = UserDocument(id: myEmail, avatar: imageUrl, name: name)
+                let chatDocument = ChatDocument(
+                    _id: UUID().uuidString,
+                    createdAt: Timestamp(date: Date()),
+                    user: "",
+                    availability: text,
+                    product: userDocument,
+                    image: nil,
+                    text: nil
+                )
 
+                try await firestoreManager.sendTextMessage(
+                    buyerEmail: selfIsBuyer ? myEmail : otherEmail,
+                    sellerEmail: selfIsBuyer ? otherEmail : myEmail,
+                    chatDocument: chatDocument
+                )
+            } catch {
+                FirestoreManager.shared.logger.error("Error sending text message: \(error.localizedDescription)")
+            }
+        }
+    }
 
     // MARK: - Helper Functions
 
@@ -318,16 +322,14 @@ class ChatsViewModel: ObservableObject {
     }
 }
 
-// MARK: - ChatsViewModel: Message Functions
-
 extension ChatsViewModel {
     func sendGenericMessage(
         senderEmail: String,
         recipientEmail: String,
         senderName: String,
         recipientName: String,
-        senderImageUrl: URL,
-        recipientImageUrl: URL,
+        senderImageUrl: String,
+        recipientImageUrl: String,
         isBuyer: Bool,
         postId: String,
         imageUrl: String? = nil,
@@ -345,7 +347,7 @@ extension ChatsViewModel {
         let sellerImageUrl = isBuyer ? recipientImageUrl : senderImageUrl
         let timestamp = Timestamp(date: Date())
 
-        let senderDocument = UserDocument(id: senderEmail, avatar: senderImageUrl, name: senderName)
+        let senderDocument = UserDocument(id: senderEmail, name: senderName, avatar: senderImageUrl)
         var chatDocument = ChatDocument(
             _id: "\(currentTimeMillis)",
             createdAt: timestamp,
@@ -357,9 +359,9 @@ extension ChatsViewModel {
             meetingInfo: meetingInfo
         )
 
-        guard let post = selectedPost else { return }
+        let post = try await fetchPostById(postId: postId)
 
-        if ((subscribedChat?.history.isEmpty) != nil) {
+        if try await isFirstMessage(buyerEmail: buyerEmail, sellerEmail: sellerEmail) {
             try await firestoreManager.sendProductMessage(
                 buyerEmail: buyerEmail,
                 sellerEmail: sellerEmail,
@@ -408,58 +410,17 @@ extension ChatsViewModel {
             viewed: !isBuyer
         )
 
-        try await firestoreManager.updateBuyerHistory(sellerEmail: sellerEmail, buyerEmail: buyerEmail, data: buyerData)
+        try await firestoreManager.updateBuyerHistory(buyerEmail: buyerEmail, sellerEmail: sellerEmail, data: buyerData)
         try await firestoreManager.updateSellerHistory(buyerEmail: buyerEmail, sellerEmail: sellerEmail, data: sellerData)
         try await firestoreManager.updateItems(email: buyerEmail, postId: postId, post: post)
 
-        if let token = try await firestoreManager.getUserFCMToken(email: recipientEmail),
-           let authToken = try await GoogleAuthManager.shared.getOAuthToken() {
-            try await FirebaseNotificationService.shared.sendNotification(title: senderName, body: notificationText, recipientToken: token, navigationId: "", authToken: authToken)
+        if let token = try await firestoreManager.getUserFCMToken(email: recipientEmail) {
+            try await firestoreManager.sendNotification(
+                recipientToken: token,
+                senderName: senderName,
+                notificationText: notificationText
+            )
         }
-    }
-
-    // MARK: - Helper Functions
-
-    private func determineRecentMessage(
-        text: String?,
-        imageUrl: String?,
-        availability: AvailabilityDocument?,
-        meetingInfo: MeetingInfo?
-    ) -> String {
-        if let text = text { return text }
-        if let _ = imageUrl { return "[Image]" }
-        if let _ = availability { return "[Availability]" }
-        if let meetingInfo = meetingInfo {
-            switch meetingInfo.state {
-            case "proposed": return "Proposed a Meeting"
-            case "confirmed": return "Accepted a Meeting!"
-            case "declined": return "Declined a Meeting"
-            case "canceled": return "Canceled a Meeting"
-            default: return "Updated Meeting Details"
-            }
-        }
-        return ""
-    }
-
-    private func determineNotificationText(
-        text: String?,
-        imageUrl: String?,
-        availability: AvailabilityDocument?,
-        meetingInfo: MeetingInfo?
-    ) -> String {
-        if let text = text { return text }
-        if let _ = imageUrl { return "Sent an Image" }
-        if let _ = availability { return "Sent their Availability" }
-        if let meetingInfo = meetingInfo {
-            switch meetingInfo.state {
-            case "proposed": return "Proposed a Meeting"
-            case "confirmed": return "Accepted a Meeting!"
-            case "declined": return "Declined a Meeting"
-            case "canceled": return "Canceled a Meeting"
-            default: return "Updated Meeting Details"
-            }
-        }
-        return ""
     }
 
 }

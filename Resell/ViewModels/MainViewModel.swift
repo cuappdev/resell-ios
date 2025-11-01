@@ -88,25 +88,20 @@ class MainViewModel: ObservableObject {
     func restoreSignIn() {
         Task {
             do {
-                if let accessToken = UserSessionManager.shared.accessToken,
-                   let userID = UserSessionManager.shared.userID {
-                    // Validate the access token by prefetching saved post URLs
+                if let _ = UserSessionManager.shared.accessToken,
+                   let _ = UserSessionManager.shared.userID {
+                    // Verify that the accessToken is valid by attempting to prefetch post URLs
                     let urls = try await NetworkManager.shared.getSavedPosts().posts.compactMap { $0.images.first }
                     let prefetcher = ImagePrefetcher(urls: urls)
                     prefetcher.start()
 
                     withAnimation { userDidLogin = true }
                 } else if let googleID = UserSessionManager.shared.googleID {
-                    // Re-authenticate using Google ID
+                    // If accessToken is not available, try to re-authenticate using googleID
                     let user = try await NetworkManager.shared.getUserByGoogleID(googleID: googleID).user
-                    var userSession = try await NetworkManager.shared.getUserSession(id: user.id).sessions.first
-
-                    if !(userSession?.active ?? false) {
-                        userSession = try await NetworkManager.shared.refreshToken()
-                    }
+                    let userSession = try await NetworkManager.shared.getUserSession(id: user.id).sessions.first
 
                     UserSessionManager.shared.accessToken = userSession?.accessToken
-                    UserSessionManager.shared.refreshToken = userSession?.refreshToken
                     UserSessionManager.shared.googleID = googleID
                     UserSessionManager.shared.userID = user.id
                     UserSessionManager.shared.email = user.email
@@ -115,39 +110,51 @@ class MainViewModel: ObservableObject {
 
                     withAnimation { userDidLogin = true }
                 } else {
-                    // Attempt to restore Google Sign-In
-                    let user = try await GoogleAuthManager.shared.restorePreviousSignIn()
-                    guard let user,
-                          let googleID = user.userID else {
-                        withAnimation { userDidLogin = false }
-                        return
-                    }
-
-                    // Fetch user data from the server using Google credentials
-                    let serverUser = try await NetworkManager.shared.getUserByGoogleID(googleID: googleID).user
-                    var userSession = try await NetworkManager.shared.getUserSession(id: serverUser.id).sessions.first
-
-                    if !(userSession?.active ?? false) {
-                        userSession = try await NetworkManager.shared.refreshToken()
-                    }
-
-                    UserSessionManager.shared.accessToken = userSession?.accessToken
-                    UserSessionManager.shared.refreshToken = userSession?.refreshToken
-                    UserSessionManager.shared.googleID = googleID
-                    UserSessionManager.shared.userID = serverUser.id
-                    UserSessionManager.shared.email = serverUser.email
-                    UserSessionManager.shared.profileURL = serverUser.photoUrl
-                    UserSessionManager.shared.name = "\(serverUser.givenName) \(serverUser.familyName)"
-
-                    withAnimation { userDidLogin = true }
+                    withAnimation { userDidLogin = false }
                 }
             } catch {
-                // Session token has expired or re-authentication failed
+                // Session Token has expired
                 withAnimation { userDidLogin = false }
-                NetworkManager.shared.logger.log("User Session Has Expired or Google Sign-In Failed: \(error)")
+                NetworkManager.shared.logger.log("User Session Has Expired")
             }
         }
     }
 
+    func addFCMToken() {
+        let messaging = Messaging.messaging()
+        guard let email = UserSessionManager.shared.email else {
+            UserSessionManager.shared.logger.error("Error in MainViewModel: email not found")
+            return
+        }
+
+        // Check if user has allowed notifications
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            Task {
+                do {
+                    let notificationsAllowed = settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional
+
+                    // Save the notification status to Firestore
+                    try await FirestoreManager.shared.saveNotificationsEnabled(userEmail: email, notificationsEnabled: notificationsAllowed)
+
+                    // Get the FCM token from Firestore
+                    let firestoreToken = try await FirestoreManager.shared.getUserFCMToken(email: email)
+
+                    // Get the device token from Firebase Messaging
+                    guard let deviceToken = messaging.fcmToken else {
+                        FirestoreManager.shared.logger.error("Device FCM token is missing.")
+                        return
+                    }
+
+                    // Save the device token to Firestore if it's not already there or if it has changed
+                    if firestoreToken == nil || firestoreToken != deviceToken {
+                        try await FirestoreManager.shared.saveDeviceToken(userEmail: email, deviceToken: deviceToken)
+                        FirestoreManager.shared.logger.log("FCM token successfully added for \(email).")
+                    }
+                } catch {
+                    FirestoreManager.shared.logger.error("Error saving notification status or FCM token: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
 
 }

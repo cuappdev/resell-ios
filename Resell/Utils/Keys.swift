@@ -11,7 +11,6 @@ struct Keys {
 
     static let devServerURL = Keys.mainKeyDict(key: "RESELL_DEV_URL")
     static let prodServerURL = Keys.mainKeyDict(key: "RESELL_PROD_URL")
-    static let firebaseURL = Keys.mainKeyDict(key: "FIREBASE_URL")
 
     static let googleClientID = Keys.googleKeyDict["CLIENT_ID"] as? String ?? ""
     static let googlePlacesKey = Keys.googleKeyDict["GOOGLE_API_KEY"] as? String ?? ""

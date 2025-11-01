@@ -21,7 +21,7 @@ class Router: ObservableObject {
         case newListingImages
         case newRequest
         case profile(String)
-        case productDetails(Post)
+        case productDetails(String)
         case reportOptions(type: String, id: String)
         case reportDetails
         case reportConfirmation

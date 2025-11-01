@@ -46,18 +46,6 @@ class ProductDetailsViewModel: ObservableObject {
         }
     }
 
-    func setPost(post: Post) {
-        item = post
-        images = post.images
-
-        Task {
-            await calculateMaxImgRatio()
-        }
-
-        getIsSaved()
-        getSimilarPosts(id: post.id)
-    }
-
     func getSimilarPosts(id: String) {
         Task {
             isLoadingImages = true

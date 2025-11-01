@@ -39,8 +39,8 @@ class NetworkManager: APIClient {
     /// - Parameter url: The URL from which data should be fetched.
     /// - Returns: A publisher that emits a decoded instance of type `T` or an error if the decoding or network request fails.
     ///
-    func get<T: Decodable>(url: URL, isRefresh: Bool = false) async throws -> T {
-        let request = try createRequest(url: url, method: "GET", isRefresh: isRefresh)
+    func get<T: Decodable>(url: URL) async throws -> T {
+        let request = try createRequest(url: url, method: "GET")
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
@@ -102,15 +102,13 @@ class NetworkManager: APIClient {
         try handleResponse(data: data, response: response)
     }
 
-    private func createRequest(url: URL, method: String, body: Data? = nil, isRefresh: Bool = false) throws -> URLRequest {
+    private func createRequest(url: URL, method: String, body: Data? = nil) throws -> URLRequest {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        if let accessToken = UserSessionManager.shared.accessToken, !isRefresh {
+        if let accessToken = UserSessionManager.shared.accessToken {
             request.setValue("\(accessToken)", forHTTPHeaderField: "Authorization")
-        } else if let refreshToken = UserSessionManager.shared.refreshToken, isRefresh {
-            request.setValue("\(refreshToken)", forHTTPHeaderField: "Authorization")
         }
 
         request.httpBody = body
@@ -146,12 +144,6 @@ class NetworkManager: APIClient {
         let url = try constructURL(endpoint: "/auth/")
 
         return try await get(url: url)
-    }
-
-    func refreshToken() async throws -> UserSession {
-        let url = try constructURL(endpoint: "/auth/refresh/")
-
-        return try await get(url: url, isRefresh: true)
     }
 
     func getUserSession(id: String) async throws -> UserSessionData {

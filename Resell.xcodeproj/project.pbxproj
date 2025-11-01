@@ -56,9 +56,6 @@
 		2C6FB1802CFADD9100B35FF8 /* UserDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6FB17F2CFADD9100B35FF8 /* UserDocument.swift */; };
 		2C6FB1822CFAEADC00B35FF8 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 2C6FB1812CFAEADC00B35FF8 /* FirebaseMessaging */; };
 		2C6FB1862CFC08D000B35FF8 /* AvailabilitySelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6FB1852CFC08D000B35FF8 /* AvailabilitySelectorView.swift */; };
-		2C6FB1882CFF8ECD00B35FF8 /* FirebaseNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6FB1872CFF8ECD00B35FF8 /* FirebaseNotificationService.swift */; };
-		2C6FB18A2CFFBC9E00B35FF8 /* FCMNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6FB1892CFFBC9E00B35FF8 /* FCMNotification.swift */; };
-		2C6FB18C2CFFBE7C00B35FF8 /* GoogleAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6FB18B2CFFBE7C00B35FF8 /* GoogleAuthManager.swift */; };
 		2C7460892CEEE054004832F5 /* Report.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C7460882CEEE054004832F5 /* Report.swift */; };
 		2C9337462C92A66C00818C8E /* FilterButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9337452C92A66C00818C8E /* FilterButton.swift */; };
 		2C9337482C92AAEE00818C8E /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9337472C92AAEE00818C8E /* HomeViewModel.swift */; };
@@ -179,9 +176,6 @@
 		2C6FB17F2CFADD9100B35FF8 /* UserDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDocument.swift; sourceTree = "<group>"; };
 		2C6FB1832CFAEC9400B35FF8 /* Resell.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Resell.entitlements; sourceTree = "<group>"; };
 		2C6FB1852CFC08D000B35FF8 /* AvailabilitySelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailabilitySelectorView.swift; sourceTree = "<group>"; };
-		2C6FB1872CFF8ECD00B35FF8 /* FirebaseNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseNotificationService.swift; sourceTree = "<group>"; };
-		2C6FB1892CFFBC9E00B35FF8 /* FCMNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FCMNotification.swift; sourceTree = "<group>"; };
-		2C6FB18B2CFFBE7C00B35FF8 /* GoogleAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleAuthManager.swift; sourceTree = "<group>"; };
 		2C7460882CEEE054004832F5 /* Report.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Report.swift; sourceTree = "<group>"; };
 		2C9337452C92A66C00818C8E /* FilterButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterButton.swift; sourceTree = "<group>"; };
 		2C9337472C92AAEE00818C8E /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
@@ -329,7 +323,6 @@
 			children = (
 				2C6FB1742CFAC91900B35FF8 /* Chat.swift */,
 				2C6FB17D2CFADD5200B35FF8 /* ChatDocument.swift */,
-				2C6FB1892CFFBC9E00B35FF8 /* FCMNotification.swift */,
 				2C6FB1782CFAD93D00B35FF8 /* FirebaseDocument.swift */,
 				2C6FB17B2CFADCE000B35FF8 /* TransactionSummary.swift */,
 				2C6FB17F2CFADD9100B35FF8 /* UserDocument.swift */,
@@ -569,11 +562,9 @@
 			children = (
 				2CDCEE602CD6BEAD008DF5E8 /* APIClient.swift */,
 				2C6FB1762CFACB2500B35FF8 /* FirestoreManager.swift */,
-				2C6FB18B2CFFBE7C00B35FF8 /* GoogleAuthManager.swift */,
 				2C41BB822CD8718600EFF69E /* KeychainManager.swift */,
 				2CDCEE5E2CD6BE99008DF5E8 /* NetworkManager.swift */,
 				2CDCEE652CD8708B008DF5E8 /* UserSessionManager.swift */,
-				2C6FB1872CFF8ECD00B35FF8 /* FirebaseNotificationService.swift */,
 			);
 			path = API;
 			sourceTree = "<group>";
@@ -757,7 +748,6 @@
 				2C4DD97B2C98CC4D0055D0AB /* VenmoView.swift in Sources */,
 				2CDCEE612CD6BEAD008DF5E8 /* APIClient.swift in Sources */,
 				2C41BB8E2CD97E3E00EFF69E /* SearchView.swift in Sources */,
-				2C6FB1882CFF8ECD00B35FF8 /* FirebaseNotificationService.swift in Sources */,
 				2C9337502C92BF4400818C8E /* Array + Extensions.swift in Sources */,
 				2C6FB1862CFC08D000B35FF8 /* AvailabilitySelectorView.swift in Sources */,
 				2C525B7D2CB1DE55007D5B8E /* NotificationsSettingsView.swift in Sources */,
@@ -766,7 +756,6 @@
 				2CF3561D2CDE91170045A173 /* EditProfileView.swift in Sources */,
 				2CE473932CC2148B00BD7E2C /* ProductDetailsViewModel.swift in Sources */,
 				2C93374E2C92BE3000818C8E /* Item.swift in Sources */,
-				2C6FB18C2CFFBE7C00B35FF8 /* GoogleAuthManager.swift in Sources */,
 				2C9337542C935C9500818C8E /* ChatsView.swift in Sources */,
 				2CD7CAB92CE937B10056209E /* Listing.swift in Sources */,
 				2CD6CA8C2CB48286005A4F78 /* PopupModal.swift in Sources */,
@@ -822,7 +811,6 @@
 				2C1692912CE4361C009D2291 /* LoadingView.swift in Sources */,
 				2C525B7F2CB1E884007D5B8E /* SendFeedbackView.swift in Sources */,
 				2CBC6B692CBDDC8100C842A4 /* CustomPageControlIndicatorView.swift in Sources */,
-				2C6FB18A2CFFBC9E00B35FF8 /* FCMNotification.swift in Sources */,
 				2C4DD9812C98DC2D0055D0AB /* LabeledTextField.swift in Sources */,
 				2C18FFE62CA139D500564577 /* SettingsView.swift in Sources */,
 				2C9B4CF82C8FB84F0029DF61 /* Constants.swift in Sources */,
