@@ -54,18 +54,11 @@ struct AvailabilityBlock: Codable, Identifiable {
     }
 
     static var defaultColor: String {
-        let color = Constants.Colors.resellPurple
-        guard let components = color.cgColor?.components, components.count >= 3 else {
-            return "#000000"
-        }
-
-        let red = components[0]
-        let green = components[1]
-        let blue = components[2]
-
+        let color = UIColor.systemPurple
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
         return String(format: "#%02X%02X%02X", Int(red * 255), Int(green * 255), Int(blue * 255))
     }
-
 
     func toDictionary() -> [String: Any] {
         return [

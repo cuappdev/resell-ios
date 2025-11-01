@@ -159,31 +159,23 @@ struct MessagesView: View {
     }
 
     private var messageListView: some View {
-        ScrollViewReader { proxy in
+        ScrollViewReader { scrollViewProxy in
             ScrollView {
                 VStack {
                     ForEach(viewModel.subscribedChat?.history ?? []) { cluster in
-                        VStack(spacing: 12) {
+                        VStack(spacing: 10) {
                             ForEach(cluster.messages) { message in
-                                MessageBubbleView(otherUserPhoto: $viewModel.otherUserProfileImage, senderName: cluster.fromUser ? UserSessionManager.shared.name ?? "" : viewModel.otherUser?.givenName ?? "", message: message, fromUser: cluster.fromUser)
+                                MessageBubbleView(message: message, fromUser: cluster.fromUser)
                             }
                         }
                     }
-
-                    Color.clear
-                        .frame(height: 1)
-                        .id("BOTTOM")
                 }
                 .onChange(of: viewModel.subscribedChat?.history.count) { _ in
                     if let lastMessage = viewModel.subscribedChat?.history.last?.messages.last?.id {
-                        proxy.scrollTo(lastMessage, anchor: .bottom)
+                        scrollViewProxy.scrollTo(lastMessage, anchor: .bottom)
                     }
                 }
-                .onAppear {
-                    proxy.scrollTo("BOTTOM", anchor: .bottom)
-                }
             }
-            .padding(.horizontal, 12)
             .background(Constants.Colors.white)
         }
     }
@@ -250,9 +242,7 @@ struct MessagesView: View {
                 }
             }
             if let image = image {
-                Task {
-                    await sendImage(image: image)
-                }
+                print("Image selected")
             }
         }
     }
@@ -305,40 +295,6 @@ struct MessagesView: View {
         }
     }
 
-    private func sendImage(image: UIImage) async {
-        guard let myEmail = UserSessionManager.shared.email,
-              let myID = UserSessionManager.shared.userID,
-              let recipientEmail = viewModel.selectedChat?.email,
-              let senderName = UserSessionManager.shared.name else {
-            UserSessionManager.shared.logger.error("Error: Missing user or chat information.")
-            return
-        }
-
-        do {
-            guard let senderImageUrl = UserSessionManager.shared.profileURL,
-                  let recipientImageUrl = viewModel.otherUser?.photoUrl,
-                  let recipientGivenName = viewModel.otherUser?.givenName,
-                  let recipientFamilyName = viewModel.otherUser?.familyName else { return }
-
-            let imageBase64 = image.toBase64() ?? ""
-
-            try await viewModel.sendImageMessage(
-                senderEmail: myEmail,
-                recipientEmail: recipientEmail,
-                senderName: senderName,
-                recipientName: "\(recipientGivenName) \(recipientFamilyName)",
-                senderImageUrl: senderImageUrl,
-                recipientImageUrl: recipientImageUrl,
-                imageBase64: imageBase64,
-                isBuyer: !(post.user?.id == myID),
-                postId: post.id
-            )
-        } catch {
-            print("Error sending image message: \(error)")
-        }
-    }
-
-
     private func setNegotiationText() {
         viewModel.draftMessageText = "Hi! I'm interested in buying your \(post.title), but would you be open to selling it for $\(priceText)?"
         priceText = ""
@@ -348,110 +304,63 @@ struct MessagesView: View {
 // MARK: - MessageBubbleView
 
 struct MessageBubbleView: View {
-
-    @Binding var otherUserPhoto: UIImage
-
-    let senderName: String
     let message: ChatMessageData
     let fromUser: Bool
 
     var body: some View {
-        HStack(spacing: 12) {
-            if !fromUser && message.messageType != .state {
+        HStack {
+            if !fromUser {
                 profileImageView
             }
 
             VStack(alignment: fromUser ? .trailing : .leading) {
                 messageContentView
+                Text(message.timestampString)
+                    .font(.caption2)
+                    .foregroundColor(.gray)
             }
 
-            if fromUser && message.messageType != .state {
+            if fromUser {
                 Spacer()
             }
         }
-        .padding(fromUser ? .leading : .trailing, message.messageType == .state ? 0 : UIScreen.width / 4)
+        .padding(fromUser ? .leading : .trailing, 60)
     }
 
     @ViewBuilder
     private var messageContentView: some View {
         switch message.messageType {
         case .image:
-            HStack {
-                if fromUser {
-                    Spacer()
-                }
-
-                if let url = URL(string: message.imageUrl) {
-                    AsyncImage(url: url) { image in
-                        image.resizable()
-                            .scaledToFill()
-                            .frame(width: 200, height: 200)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                    } placeholder: {
-                        ProgressView()
-                    }
-                }
-
-                if !fromUser {
-                    Spacer()
+            if let url = URL(string: message.imageUrl) {
+                AsyncImage(url: url) { image in
+                    image.resizable()
+                        .scaledToFill()
+                        .frame(width: 200, height: 200)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                } placeholder: {
+                    ProgressView()
                 }
             }
-            .padding(.vertical, 6)
         case .message:
-            HStack {
-                if fromUser {
-                    Spacer()
-                }
-
-                VStack(alignment: fromUser ? .trailing : .leading, spacing: 8) {
-                    Text(message.content)
-                        .font(Constants.Fonts.body2)
-                        .foregroundStyle(fromUser ? Constants.Colors.white : Constants.Colors.black)
-
-                    Text(message.timestampString)
-                        .font(.caption2)
-                        .foregroundStyle(fromUser ? Constants.Colors.white : Constants.Colors.secondaryGray)
-                }
-                .padding(12)
-                .background(fromUser ? Constants.Colors.resellPurple : Constants.Colors.wash)
-                .foregroundColor(fromUser ? Constants.Colors.white : Constants.Colors.black)
+            Text(message.content)
+                .padding()
+                .background(fromUser ? Color.blue : Color.gray.opacity(0.2))
+                .foregroundColor(fromUser ? .white : .black)
                 .cornerRadius(10)
-
-                if !fromUser {
-                    Spacer()
-                }
-            }
         case .availability:
-            HStack {
-                Text("\(senderName)'s Availability")
-                    .font(Constants.Fonts.title2)
-                    .foregroundStyle(Constants.Colors.resellPurple)
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .foregroundStyle(Constants.Colors.resellPurple)
-            }
-            .padding(12)
-            .background(Constants.Colors.resellPurple.opacity(0.1))
-            .clipShape(.rect(cornerRadius: 10))
-            .padding(.vertical, 6)
+            Text("Availability:")
         case .state:
             Text(message.content)
-                .font(Constants.Fonts.subtitle1)
-                .foregroundColor(Constants.Colors.secondaryGray)
+                .foregroundColor(Constants.Colors.inactiveGray)
         default:
             Text("Unsupported message type.")
         }
     }
 
     private var profileImageView: some View {
-        Image(uiImage: otherUserPhoto)
-            .resizable()
-            .scaledToFill()
-            .background(Constants.Colors.secondaryGray)
+        Circle()
+            .fill(Color.gray)
             .frame(width: 40, height: 40)
-            .clipShape(.circle)
     }
 }
 
