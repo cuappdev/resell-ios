@@ -104,8 +104,6 @@ class MainViewModel: ObservableObject {
                     UserSessionManager.shared.googleID = googleID
                     UserSessionManager.shared.userID = user.id
                     UserSessionManager.shared.email = user.email
-                    UserSessionManager.shared.profileURL = user.photoUrl
-                    UserSessionManager.shared.name = "\(user.givenName) \(user.familyName)"
 
                     withAnimation { userDidLogin = true }
                 } else {
