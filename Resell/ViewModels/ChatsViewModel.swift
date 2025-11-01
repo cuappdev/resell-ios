@@ -293,31 +293,6 @@ class ChatsViewModel: ObservableObject {
         )
     }
 
-    /// Send an availability message
-    func sendAvailability(
-        senderEmail: String,
-        recipientEmail: String,
-        senderName: String,
-        recipientName: String,
-        senderImageUrl: URL,
-        recipientImageUrl: URL,
-        isBuyer: Bool,
-        postId: String,
-        availability: AvailabilityDocument
-    ) async throws {
-        try await sendGenericMessage(
-            senderEmail: senderEmail,
-            recipientEmail: recipientEmail,
-            senderName: senderName,
-            recipientName: recipientName,
-            senderImageUrl: senderImageUrl,
-            recipientImageUrl: recipientImageUrl,
-            isBuyer: isBuyer,
-            postId: postId,
-            availability: availability
-        )
-    }
-
     // MARK: - Helper Functions
 
     /// Cluster messages by sender
@@ -446,7 +421,7 @@ extension ChatsViewModel {
             _id: UUID().uuidString,
             createdAt: timestamp,
             user: senderDocument,
-            availability: availability?.availabilities,
+            availability: [:],
             product: [:],
             image: imageUrl ?? "",
             text: messageText ?? "",
@@ -490,6 +465,8 @@ extension ChatsViewModel {
             availability: availability,
             meetingInfo: meetingInfo
         )
+
+        print(post.title)
 
         let sellerData = TransactionSummary(
             item: post,
