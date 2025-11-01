@@ -15,15 +15,6 @@ class HomeViewModel: ObservableObject {
     static let shared = HomeViewModel()
 
     // MARK: - Properties
-    private var mainViewModel: MainViewModel?
-    
-    private var searchViewModel = SearchViewModel.shared
-
-    private init() { }
-
-    func configure(mainViewModel: MainViewModel) {
-        self.mainViewModel = mainViewModel
-    }
 
     @Published var isLoading: Bool = false
 
@@ -33,12 +24,11 @@ class HomeViewModel: ObservableObject {
             if selectedFilter == "Recent" {
                 filteredItems = allItems
             } else {
-                filterPosts()
+                filterPosts(by: selectedFilter)
             }
         }
     }
-    
-//    @Published var recentlySearched: [Post] = []
+
     @Published var savedItems: [Post] = []
 
     private var allItems: [Post] = []
@@ -56,17 +46,24 @@ class HomeViewModel: ObservableObject {
             defer { Task { @MainActor in withAnimation { isLoading = false } } }
             
             do {
+                print("BEFORE GETTING ALL POSTS")
+
                 let postsResponse = try await NetworkManager.shared.getAllPosts()
                 
+                print("AFTER GETTING ALL POSTS")
                 allItems = Post.sortPostsByDate(postsResponse.posts)
-                filteredItems = allItems
+                if selectedFilter == "Recent" {
+                    filteredItems = allItems
+                } else {
+                    filterPosts(by: selectedFilter)
+                }
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.getAllPosts: \(error)")
             }
         }
     }
 
-    func getSavedPosts(completion: @escaping () -> Void)  {
+    func getSavedPosts() {
         isLoading = true
 
         Task {
@@ -75,19 +72,15 @@ class HomeViewModel: ObservableObject {
             do {
                 let postsResponse = try await NetworkManager.shared.getSavedPosts()
                 savedItems = Post.sortPostsByDate(postsResponse.posts)
-                completion()
-                print("SAVED ITEMS: \(savedItems)")
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.getSavedPosts: \(error)")
             }
         }
     }
-    
     // TODO: We need support for multiple filters
-    func filterPosts() {
+    func filterPosts(by filter: String) {
         Task {
             do {
-                print("Filtering by \(selectedFilter)")
                 let postsResponse = try await NetworkManager.shared.getFilteredPosts(by: selectedFilter)
                 filteredItems = postsResponse.posts
             } catch {
@@ -114,26 +107,5 @@ class HomeViewModel: ObservableObject {
             }
         }
     }
-    
-    // TODO: Add function that populates recently searched
-    func getRecentlySearched(completion: @escaping () -> Void) -> Void  {
-        guard let mainVM = mainViewModel else {
-            print("Dependencies not configured")
-            return
-        }
-        
-        let group = DispatchGroup()
-            
-            for searchHistoryItem in mainVM.searchHistory {
-                group.enter()
-                searchViewModel.searchItems(with: searchHistoryItem, userID: nil, saveQuery: false, mainViewModel: mainViewModel) {
-                    group.leave()
-                }
-            }
-            
-            group.notify(queue: .main) {
-                print("Does this ever get callled ??")
-                completion()
-            }
-    }
+
 }

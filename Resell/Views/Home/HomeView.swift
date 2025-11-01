@@ -12,10 +12,8 @@ import SwiftUI
 struct HomeView: View {
 
     @EnvironmentObject private var mainViewModel: MainViewModel
-    @EnvironmentObject private var searchViewModel: SearchViewModel
     @EnvironmentObject var router: Router
     @StateObject private var viewModel = HomeViewModel.shared
-    @State var forYouPosts: [[Post]] = []
     @State var presentPopup = false
 
     var body: some View {
@@ -24,14 +22,9 @@ struct HomeView: View {
             
             ScrollView(.vertical, showsIndicators: true) {
                 VStack {
+                    savedByYou
                     filtersView
                         .padding(.top, 12)
-                    ForYouView()
-                    Text("Recent Listings")
-                        .font(.custom("Rubik-Medium", size: 22))
-                        .foregroundStyle(.black)
-                        .frame(maxWidth: .infinity, alignment: .leading) // <-- Align text left
-                        .padding(.leading, 24)
                     ProductsGalleryView(items: viewModel.filteredItems)
                 }
             }
@@ -59,12 +52,12 @@ struct HomeView: View {
     
     private var savedByYou: some View {
             VStack{
-                HStack(spacing: 220) {
-                    Text("For You")
+                HStack(spacing: 156) {
+                    Text("Saved By You")
                         .font(.custom("Rubik-Medium", size: 22))
                         .foregroundStyle(.black)
                     
-                    // TODO: Add new for you ...
+                    
                     Button {
                         router.push(.saved)
                     } label: {
@@ -74,6 +67,7 @@ struct HomeView: View {
                             .multilineTextAlignment(.center)
                             .foregroundStyle(Constants.Colors.secondaryGray)
                     }
+                    
                 }
                 // if there are no saved posts
                 if viewModel.savedItems.isEmpty {
@@ -83,18 +77,11 @@ struct HomeView: View {
                             .frame(width: 366, height: 110)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 20)
-                                    .stroke(Constants.Colors.stroke, lineWidth: 2)
+                                    .stroke(Color.gray, lineWidth: 4)
                             )
                         VStack{
-                            Text("You haven't saved any listings yet.")
-                                .foregroundStyle(Constants.Colors.secondaryGray)
-                            HStack{
-                                Text("Tap")
-                                    .foregroundStyle(Constants.Colors.secondaryGray)
-                                Image("saved")
-                                Text("on a listing to save.")
-                                    .foregroundStyle(Constants.Colors.secondaryGray)
-                            }
+                            Text("No Listings are Saved.")
+                            Text("Browse below to get started.")
                         }
                     }
                     // if there are saved posts
@@ -169,7 +156,7 @@ struct HomeView: View {
                                  
                                     CircularFilterButton(filter: filter, isSelected: viewModel.selectedFilter == filter.title) {
                                         router.push(.detailedFilter(filter))
-                                        viewModel.selectedFilter = filter.title.uppercased()
+                                        viewModel.selectedFilter = filter.title
                                     }
                                 
                                 Text(filter.title)
