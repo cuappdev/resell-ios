@@ -15,7 +15,6 @@ struct ProductsGalleryView: View {
     @State private var selectedItem: Post? = nil
     @EnvironmentObject var router: Router
 
-    let items: [Post]
     let column1: [Post]
     let column2: [Post]
 
@@ -24,7 +23,6 @@ struct ProductsGalleryView: View {
     // MARK: Init
 
     init(items: [Post], onScrollToBottom: (() -> Void)? = nil) {
-        self.items = items
         let (items1, items2): ([Post], [Post]) = items.splitIntoTwo()
         self.column1 = items1
         self.column2 = items2
@@ -34,49 +32,34 @@ struct ProductsGalleryView: View {
     // MARK: UI
 
     var body: some View {
-        // NO ScrollView here - use the parent's ScrollView
-        HStack(alignment: .top, spacing: 20) {
-            LazyVStack(spacing: 20) {
-                ForEach(column1, id: \.id) { post in
-                    ProductGalleryCell(selectedItem: $selectedItem, post: post, savedCell: false)
-                        .onAppear {
-                            checkAndLoadMore(for: post)
-                        }
+        ScrollView(.vertical, showsIndicators: true) {
+            HStack(alignment: .top, spacing: 20) {
+                LazyVStack(spacing: 20) {
+                    ForEach(column1, id: \.id) { post in
+                        ProductGalleryCell(selectedItem: $selectedItem, post: post, savedCell: false)
+                            .onAppear {
+//                                // pls fix me im dying 
+//                                if post == column1.last  {
+//                                    onScrollToBottom?()
+//                                }
+                            }
+                    }
+                }
+
+                LazyVStack(spacing: 20) {
+                    ForEach(column2, id: \.id) { post in
+                        ProductGalleryCell(selectedItem: $selectedItem, post: post, savedCell: false)
+                    }
                 }
             }
-            
-            LazyVStack(spacing: 20) {
-                ForEach(column2, id: \.id) { post in
-                    ProductGalleryCell(selectedItem: $selectedItem, post: post, savedCell: false)
-//                        .onAppear {
-//                            checkAndLoadMore(for: post)
-//                        }
-                }
-            }
+            .padding(.horizontal, Constants.Spacing.horizontalPadding)
+            .padding(.bottom, Constants.Spacing.horizontalPadding)
         }
-        .padding(.horizontal, Constants.Spacing.horizontalPadding)
-        .padding(.bottom, Constants.Spacing.horizontalPadding)
         .onChange(of: selectedItem) { item in
             if let selectedItem {
                 navigateToProductDetails(post: selectedItem)
                 self.selectedItem = nil
             }
-        }
-    }
-    
-    // MARK: - Private Methods
-    
-    private func checkAndLoadMore(for post: Post) {
-        // Find the index in the ORIGINAL items array
-        guard let index = items.firstIndex(where: { $0.id == post.id }) else {
-            return
-        }
-        
-        // Trigger pagination when we're 5 items from the end
-        let threshold = items.count - 4
-        if index >= threshold {
-            print("🔄 Reached item \(index + 1)/\(items.count) - triggering pagination")
-            onScrollToBottom?()
         }
     }
 
@@ -93,6 +76,7 @@ struct ProductsGalleryView: View {
             router.push(.productDetails(post))
         }
     }
+
 }
 
 struct ProductGalleryCell: View {
