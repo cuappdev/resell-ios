@@ -7,6 +7,7 @@
 
 import GoogleSignIn
 import OAuth2
+import SwiftJWT
 import SwiftUI
 
 class GoogleAuthManager {
@@ -65,6 +66,14 @@ class GoogleAuthManager {
         let token_uri: String
         let auth_provider_x509_cert_url: String
         let client_x509_cert_url: String
+    }
+
+    struct GoogleJWTClaims: Claims {
+        let iss: String
+        let scope: String
+        let aud: String
+        let exp: Date
+        let iat: Date
     }
 
     struct OAuthTokenResponse: Decodable {

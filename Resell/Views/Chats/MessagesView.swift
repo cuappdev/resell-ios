@@ -45,7 +45,8 @@ struct MessagesView: View {
 
             if didShowOptionsMenu {
                 OptionsMenuView(showMenu: $didShowOptionsMenu, options: [.report(type: "User", id: viewModel.otherUser?.id ?? "")])
-                    .zIndex(100)
+                    .padding(.top, (UIApplication.shared.keyWindow?.safeAreaInsets.top ?? 0) + 30)
+                    .zIndex(1)
             }
         }
         .background(Constants.Colors.white)
@@ -156,18 +157,11 @@ struct MessagesView: View {
 
             viewModel.getOtherUser(email: viewModel.selectedChat?.email ?? post.user?.email ?? "")
         }
-        .onChange(of: router.path) { newPath in
-            if !newPath.contains(where: { $0 == .messages(post: post) }) {
-                print("ProductsGalleryView was popped from the stack!")
-                viewModel.selectedChat = nil
-            }
-        }
         .onChange(of: didSubmitAvailabilities) { didSubmit in
             if didSubmit {
                 Task {
                     await sendAvailabilities(availabilities: viewModel.availabilityDates)
                     viewModel.availabilityDates = []
-                    didSubmitAvailabilities = false
                 }
             }
         }
@@ -176,48 +170,35 @@ struct MessagesView: View {
     }
 
     private var messageListView: some View {
-        VStack {
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack {
-                        ForEach(viewModel.subscribedChat?.history ?? []) { cluster in
-                            VStack(spacing: 12) {
-                                ForEach(cluster.messages) { message in
-                                    MessageBubbleView(
-                                        didShowAvailabilityView: $didShowAvailabilityView,
-                                        isEditing: $isEditing,
-                                        otherUserPhoto: $viewModel.otherUserProfileImage,
-                                        selectedAvailabilities: $viewModel.availabilityDates,
-                                        senderName: cluster.fromUser ? UserSessionManager.shared.name ?? "" : viewModel.otherUser?.givenName ?? "",
-                                        message: message,
-                                        fromUser: cluster.fromUser
-                                    )
-                                }
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack {
+                    ForEach(viewModel.subscribedChat?.history ?? []) { cluster in
+                        VStack(spacing: 12) {
+                            ForEach(cluster.messages) { message in
+                                MessageBubbleView(didShowAvailabilityView: $didShowAvailabilityView, isEditing: $isEditing, otherUserPhoto: $viewModel.otherUserProfileImage, selectedAvailabilities: $viewModel.availabilityDates, senderName: cluster.fromUser ? UserSessionManager.shared.name ?? "" : viewModel.otherUser?.givenName ?? "", message: message, fromUser: cluster.fromUser)
                             }
                         }
-                        Color.clear.frame(height: 1).id("BOTTOM")
                     }
+
+                    Color.clear
+                        .frame(height: 1)
+                        .id("BOTTOM")
                 }
-                .padding(.horizontal, 12)
-                .background(Constants.Colors.white)
                 .onChange(of: viewModel.subscribedChat?.history.count) { _ in
-                    withAnimation {
-                        proxy.scrollTo("BOTTOM", anchor: .bottom)
-                    }
-                }
-                .onChange(of: viewModel.subscribedChat?.history.last?.messages.count) { _ in
-                    withAnimation {
-                        proxy.scrollTo("BOTTOM", anchor: .bottom)
+                    if let lastMessage = viewModel.subscribedChat?.history.last?.messages.last?.id {
+                        proxy.scrollTo(lastMessage, anchor: .bottom)
                     }
                 }
                 .onAppear {
-                    withAnimation {
-                        proxy.scrollTo("BOTTOM", anchor: .bottom)
-                    }
+                    proxy.scrollTo("BOTTOM", anchor: .bottom)
                 }
             }
+            .padding(.horizontal, 12)
+            .background(Constants.Colors.white)
         }
     }
+
 
     private var messageInputView: some View {
         VStack(spacing: 12) {
@@ -250,6 +231,7 @@ struct MessagesView: View {
                             isEditing = false
                             withAnimation { didShowAvailabilityView = true }
                             // TODO: Pull up other user Recent Avail
+
                         }
                     }
                 }
