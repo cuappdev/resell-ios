@@ -48,9 +48,9 @@ struct ProductsGalleryView: View {
             LazyVStack(spacing: 20) {
                 ForEach(column2, id: \.id) { post in
                     ProductGalleryCell(selectedItem: $selectedItem, post: post, savedCell: false)
-                        .onAppear {
-                            checkAndLoadMore(for: post)
-                        }
+//                        .onAppear {
+//                            checkAndLoadMore(for: post)
+//                        }
                 }
             }
         }
@@ -73,7 +73,7 @@ struct ProductsGalleryView: View {
         }
         
         // Trigger pagination when we're 5 items from the end
-        let threshold = items.count - 5
+        let threshold = items.count - 4
         if index >= threshold {
             print("🔄 Reached item \(index + 1)/\(items.count) - triggering pagination")
             onScrollToBottom?()
@@ -113,7 +113,6 @@ struct ProductGalleryCell: View {
             let url = URL(string: post.images.first ?? "")
             CachedImageView(isImageLoaded: $isImageLoaded, imageURL: url)
                 .frame(width: cellWidth, height: (savedCell ? cellWidth - 20 : cellWidth / 0.75))
-                .clipped()
 
             HStack {
                 Text(post.title)
