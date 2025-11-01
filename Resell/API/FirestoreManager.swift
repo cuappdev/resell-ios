@@ -348,120 +348,37 @@ class FirestoreManager {
         onSnapshotUpdate: @escaping ([ChatDocument]) -> Void
     ) {
         listener?.remove()
-
-        let chatDocRef = firestore.collection("chats")
-            .document(buyerEmail)
-            .collection(sellerEmail)
-            .order(by: "createdAt", descending: false)
+        let chatDocRef = chatsCollection.document(buyerEmail).collection(sellerEmail).order(by: "createdAt", descending: false)
 
         listener = chatDocRef.addSnapshotListener { snapshot, error in
             if let error = error {
-                print("Firestore subscription error: \(error.localizedDescription)")
+                self.logger.error("Error in snapshot listener: \(error.localizedDescription)")
                 return
             }
 
-            guard let snapshot = snapshot else {
-                print("Firestore subscription returned no data.")
+            guard let documents = snapshot?.documents else {
+                self.logger.error("Snapshot listener received no documents.")
                 return
             }
 
-            let messages: [ChatDocument] = snapshot.documents.compactMap { document in
-                do {
-                    // Map Firestore document to ChatDocument
-                    let chatDoc = try document.data(as: ChatDocument.self)
-                    return chatDoc
-                } catch {
-                    print("Error decoding ChatDocument: \(error.localizedDescription)")
-                    return nil
-                }
-            }
-
-            onSnapshotUpdate(messages)
+            let chatDocuments = documents.compactMap { try? $0.data(as: ChatDocument.self) }
+            onSnapshotUpdate(chatDocuments)
         }
     }
 
     // Send Text Message
-    func sendChatMessage(
+    func sendTextMessage(
         buyerEmail: String,
         sellerEmail: String,
         chatDocument: ChatDocument
     ) async throws {
-        let chatRef = firestore.collection("chats")
-            .document(buyerEmail)
-            .collection(sellerEmail)
-
-        let data = chatDocument.availability?.toFirebaseArray()
-        if let data {
-            try await chatRef.addDocument(data: data)
+        do {
+            let chatRef = chatsCollection.document(buyerEmail).collection(sellerEmail)
+            try chatRef.addDocument(from: chatDocument)
+        } catch {
+            logger.error("Error sending text message: \(error.localizedDescription)")
+            throw error
         }
-    }
-
-    // Send Product Message
-    func sendProductMessage(
-        buyerEmail: String,
-        sellerEmail: String,
-        otherDocument: ChatDocument,
-        post: Post
-    ) async throws {
-        var chatDocument = otherDocument
-        chatDocument._id = "\(Date().timeIntervalSince1970)"
-        chatDocument.createdAt = Timestamp(date: Date())
-        chatDocument.image = ""
-        chatDocument.text = ""
-        chatDocument.availability = nil
-        chatDocument.product = post
-
-        let chatRef = firestore.collection("chats")
-            .document(buyerEmail)
-            .collection(sellerEmail)
-
-        let data = chatDocument.availability?.toFirebaseArray()
-        if let data {
-            try await chatRef.addDocument(data: data)
-        }
-    }
-
-    // Update Buyer History
-    func updateBuyerHistory(
-        sellerEmail: String,
-        buyerEmail: String,
-        data: TransactionSummary
-    ) async throws {
-        let docRef = firestore.collection("history")
-            .document(sellerEmail)
-            .collection("buyers")
-            .document(buyerEmail)
-
-        try docRef.setData(from: data)
-    }
-
-    // Update Seller History
-    func updateSellerHistory(
-        buyerEmail: String,
-        sellerEmail: String,
-        data: TransactionSummary
-    ) async throws {
-        let docRef = firestore.collection("history")
-            .document(buyerEmail)
-            .collection("sellers")
-            .document(sellerEmail)
-
-        try docRef.setData(from: data)
-    }
-
-
-    // Update Items
-    func updateItems(
-        email: String,
-        postId: String,
-        post: Post
-    ) async throws {
-        let docRef = firestore.collection("history")
-            .document(email)
-            .collection("items")
-            .document(postId)
-
-        try docRef.setData(from: post)
     }
 }
 

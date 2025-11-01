@@ -48,10 +48,6 @@ struct UserSessionData: Codable {
     }
 }
 
-struct UserEmailBody: Codable {
-    let email: String
-}
-
 struct CreateUserBody: Codable {
     let username: String
     let netid: String
