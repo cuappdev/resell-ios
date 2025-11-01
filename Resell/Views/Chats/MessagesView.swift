@@ -135,13 +135,6 @@ struct MessagesView: View {
                 .presentationCornerRadius(25)
                 .presentationDragIndicator(.visible)
         }
-        .sheet(isPresented: $didShowWebView) {
-            WebView(url: viewModel.venmoURL!)
-                .edgesIgnoringSafeArea(.all)
-        }
-        .onAppear {
-            viewModel.parsePayWithVenmoURL(email: post.user?.email ?? "")
-        }
         .endEditingOnTap()
 
     }
