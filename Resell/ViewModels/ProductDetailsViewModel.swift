@@ -55,10 +55,9 @@ class ProductDetailsViewModel: ObservableObject {
         }
 
         getIsSaved()
-        getSimilarPostsNaive(post: post)
+        getSimilarPosts(id: post.id)
     }
 
-    // Replace once backend endpoint is fix. Currently, making this call blocks all other incoming requests to our backend :(
     func getSimilarPosts(id: String) {
         Task {
             isLoadingImages = true
@@ -78,30 +77,7 @@ class ProductDetailsViewModel: ObservableObject {
             }
         }
     }
-
-    func getSimilarPostsNaive(post: Post) {
-        Task {
-            do {
-                guard let category = post.categories.first else { return }
-
-                let postsResponse = try await NetworkManager.shared.getFilteredPosts(by: category)
-                var otherPosts = postsResponse.posts
-                otherPosts.removeAll { $0.id == post.id }
-
-                if otherPosts.count >= 4 {
-                    similarPosts = Array(otherPosts.prefix(4))
-                } else {
-                    similarPosts = otherPosts
-                }
-
-                isLoadingImages = false
-            } catch {
-                NetworkManager.shared.logger.error("Errror in ProductDetailsViewModel.getSimilarPostsNaive: \(error.localizedDescription)")
-                isLoadingImages = false
-            }
-        }
-    }
-
+    
     func updateItemSaved() {
         Task {
             do {

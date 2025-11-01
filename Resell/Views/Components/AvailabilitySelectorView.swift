@@ -19,7 +19,7 @@ struct AvailabilitySelectorView: View {
     @State private var isMovingForward: Bool = true
 
     @Binding var isPresented: Bool
-    @Binding var selectedDates: [AvailabilityBlock]
+    @Binding var selectedDates: [Date]
 
     let dates: [String] = generateDates()
     let times: [String] = generateTimes()
@@ -77,6 +77,8 @@ struct AvailabilitySelectorView: View {
                                         .font(Constants.Fonts.title4)
                                         .foregroundStyle(Constants.Colors.secondaryGray)
                                         .multilineTextAlignment(.trailing)
+
+
                                     Spacer()
                                 }
                                 .frame(width: 80, height: UIScreen.height / 14 - 25)
@@ -147,6 +149,7 @@ struct AvailabilitySelectorView: View {
                 }
             }
 
+
             Spacer()
 
             PurpleButton(text: "Continue", action: saveAvailability)
@@ -154,33 +157,9 @@ struct AvailabilitySelectorView: View {
         .padding(.horizontal)
         .padding(.top)
         .background(Constants.Colors.white)
-        .onAppear(perform: initializeSelectedCells)
     }
 
     // MARK: - Functions
-
-
-    // TODO: FIX THIS
-    private func initializeSelectedCells() {
-        print(selectedDates)
-        for block in selectedDates {
-            let startDate = block.startDate.dateValue()
-
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "E \nMMM d, yyyy"
-            let dateString = dateFormatter.string(from: startDate)
-
-            let timeFormatter = DateFormatter()
-            timeFormatter.dateFormat = "h:mm a"
-            let timeString = timeFormatter.string(from: startDate)
-
-            let calendar = Calendar.current
-            let minute = calendar.component(.minute, from: startDate)
-            let isTopHalf = (minute != 30)
-
-            toggleCellSelection(date: dateString, time: timeString, isTopHalf: isTopHalf)
-        }
-    }
 
     private func goToPreviousPage() {
         if currentPage > 0 {
@@ -208,18 +187,17 @@ struct AvailabilitySelectorView: View {
     }
 
     private func saveAvailability() {
-        selectedDates = selectedCells.compactMap { createDate(from: $0.date, timeString: $0.time) }
-
-        print(selectedDates)
+        selectedDates = selectedCells.map { createDate(from: $0.date, timeString: $0.time) ?? Date() }
 
         isPresented = false
     }
 
-    private func createDate(from dateString: String, timeString: String) -> AvailabilityBlock? {
+    private func createDate(from dateString: String, timeString: String) -> Date? {
         let cleanDateString = dateString.replacingOccurrences(of: "\n", with: " ")
         let cleanTimeString = timeString.replacingOccurrences(of: " Top", with: "").replacingOccurrences(of: " Bottom", with: "")
 
         let combinedString = "\(cleanDateString) \(cleanTimeString)"
+        print("Combined String: '\(combinedString)'")
 
         let formatter = DateFormatter()
         formatter.dateFormat = "E MMM d, yyyy h:mm a"
@@ -230,15 +208,14 @@ struct AvailabilitySelectorView: View {
             if timeString.contains("Bottom") {
                 parsedDate = parsedDate.adding(minutes: 30)
             }
-
-            return AvailabilityBlock(startDate: Timestamp(date: parsedDate))
+            print("Parsed Date in Local Time: \(formatter.string(from: parsedDate))")
+            return parsedDate
         } else {
             print("Failed to parse date from: '\(combinedString)'")
             return nil
         }
     }
 }
-
 
 // MARK: - CellView
 
