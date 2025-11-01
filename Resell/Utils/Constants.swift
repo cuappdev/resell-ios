@@ -95,14 +95,6 @@ struct Constants {
         FilterCategory(id: 7, title: "Sports & Outdoors"),
         FilterCategory(id: 8, title: "Other")
     ]
-    
-    static let notificationFilters = [
-        FilterCategory(id: 0, title: "All"),
-        FilterCategory(id: 1, title: "Messages"),
-        FilterCategory(id: 2, title: "Requests"),
-        FilterCategory(id: 3, title: "Bookmarks"),
-        FilterCategory(id: 4, title: "Your Listings")
-    ]
 
     static let chatMessageOptions: [ChatMessageOption] = [
         .negotiate,
