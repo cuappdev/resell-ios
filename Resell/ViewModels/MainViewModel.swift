@@ -89,20 +89,80 @@ class MainViewModel: ObservableObject {
 
     func restoreSignIn() {
         Task {
-            hidesSignInButton = true
             do {
-                try await GoogleAuthManager.shared.refreshSignInIfNeeded()
+                hidesSignInButton = true
 
-                await MainActor.run {
-                    withAnimation { hidesSignInButton = true }
+                if let _ = UserSessionManager.shared.accessToken,
+                   let _ = UserSessionManager.shared.userID {
+                    // Validate the access token by prefetching saved post URLs
+                    let urls = try await NetworkManager.shared.getSavedPosts().posts.compactMap { $0.images.first }
+                    let prefetcher = ImagePrefetcher(urls: urls)
+                    prefetcher.start()
+
+                    try? GoogleAuthManager.shared.getOAuthToken { token in
+                        UserSessionManager.shared.oAuthToken = token
+                    }
+
+                    await MainActor.run {
+                        withAnimation { userDidLogin = true }
+                    }
+                } else if let googleID = UserSessionManager.shared.googleID {
+                    // Re-authenticate using Google ID
+                    let user = try await NetworkManager.shared.getUserByGoogleID(googleID: googleID).user
+                    var userSession = try await NetworkManager.shared.getUserSession(id: user.id).sessions.first
+
+                    if !(userSession?.active ?? false) {
+                        userSession = try await NetworkManager.shared.refreshToken()
+                    }
+
+                    UserSessionManager.shared.accessToken = userSession?.accessToken
+                    UserSessionManager.shared.refreshToken = userSession?.refreshToken
+                    UserSessionManager.shared.googleID = googleID
+                    UserSessionManager.shared.userID = user.id
+                    UserSessionManager.shared.email = user.email
+                    UserSessionManager.shared.profileURL = user.photoUrl
+                    UserSessionManager.shared.name = "\(user.givenName) \(user.familyName)"
+
+                    withAnimation { userDidLogin = true }
+                } else {
+                    // Attempt to restore Google Sign-In
+                    let user = try await GoogleAuthManager.shared.restorePreviousSignIn()
+                    guard let user,
+                          let googleID = user.userID else {
+                        await MainActor.run {
+                            withAnimation { hidesSignInButton = false }
+                            withAnimation { userDidLogin = false }
+                        }
+                        return
+                    }
+
+                    // Fetch user data from the server using Google credentials
+                    let serverUser = try await NetworkManager.shared.getUserByGoogleID(googleID: googleID).user
+                    var userSession = try await NetworkManager.shared.getUserSession(id: serverUser.id).sessions.first
+
+                    if !(userSession?.active ?? false) {
+                        userSession = try await NetworkManager.shared.refreshToken()
+                    }
+
+                    UserSessionManager.shared.accessToken = userSession?.accessToken
+                    UserSessionManager.shared.refreshToken = userSession?.refreshToken
+                    UserSessionManager.shared.googleID = googleID
+                    UserSessionManager.shared.userID = serverUser.id
+                    UserSessionManager.shared.email = serverUser.email
+                    UserSessionManager.shared.profileURL = serverUser.photoUrl
+                    UserSessionManager.shared.name = "\(serverUser.givenName) \(serverUser.familyName)"
+
+                    try? GoogleAuthManager.shared.getOAuthToken { token in
+                        UserSessionManager.shared.oAuthToken = token
+                    }
+
                     withAnimation { userDidLogin = true }
                 }
             } catch {
-                // Session token has expired and Google Sign-In retrieval has failed
-                GoogleAuthManager.shared.signOut()
+                // Session token has expired or re-authentication failed
                 withAnimation { hidesSignInButton = false }
                 withAnimation { userDidLogin = false }
-                GoogleAuthManager.shared.logger.log("User Session Has Expired or Google Sign-In Failed: \(error.localizedDescription)")
+                NetworkManager.shared.logger.log("User Session Has Expired or Google Sign-In Failed: \(error)")
             }
         }
     }

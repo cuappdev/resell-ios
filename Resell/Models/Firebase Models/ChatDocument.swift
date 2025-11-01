@@ -2,39 +2,84 @@
 //  ChatDocument.swift
 //  Resell
 //
-//  Created by Peter Bidoshi on 2/25/25.
+//  Created by Richie Sun on 11/30/24.
 //
 
+import Foundation
 import FirebaseFirestore
 
-/// Structure of each chat document inside the chats collection on Firestore
-struct ChatDocument: Codable {
-    @DocumentID var id: String?
-    let listingId: String
-    let buyerId: String
-    let sellerId: String
-    let lastMessage: String
-    let updatedAt: Date
-    let messageDocuments: [MessageDocument]
-
-    /// Convert chat document to chat, using the current users user id
-    func toChat(userId: String) async throws -> Chat {
-        let post = try await NetworkManager.shared.getPostByID(id: listingId).post
-        let buyer = try await NetworkManager.shared.getUserByID(id: buyerId).user
-        let seller = try await NetworkManager.shared.getUserByID(id: sellerId).user
-
-        return Chat(
-            id: id,
-            post: post,
-            other: userId == buyerId ? seller : buyer,
-            lastMessage: lastMessage,
-            updatedAt: updatedAt,
-            messages: messageDocuments.map { $0.toMessage(buyer: buyer, seller: seller) }
-        )
-    }
-
-    static let buyerIdKey = CodingKeys.buyerId.stringValue
-    static let sellerIdKey = CodingKeys.sellerId.stringValue
-    static let idKey = CodingKeys.id.stringValue
+struct ChatDocument: Codable, Identifiable {
+    var id: String { _id }
+    var _id: String
+    var createdAt: Timestamp
+    var user: UserDocument
+    var availability: AvailabilityDocument?
+    var product: Post?
+    var image: String
+    var text: String
+    var meetingInfo: MeetingInfo?
 }
 
+struct ChatDocumentSendable: Codable, Identifiable {
+    var id: String { _id }
+    var _id: String
+    var createdAt: Timestamp
+    var user: UserDocument
+    var availability: [AvailabilityBlock]?
+    var product: [String : String]
+    var image: String
+    var text: String
+    var meetingInfo: MeetingInfo?
+}
+
+struct AvailabilityDocument: Codable {
+    let availabilities: [AvailabilityBlock]
+}
+
+struct AvailabilityBlock: Codable, Identifiable {
+    let startDate: Timestamp
+    let color: String
+    var id: Int
+    var endDate: Timestamp
+
+    init(startDate: Timestamp, color: String = AvailabilityBlock.defaultColor, id: Int? = nil) {
+        self.startDate = startDate
+        self.color = color
+        self.id = id ?? Int.random(in: 0...9999)
+        
+        let startDateTime = startDate.dateValue()
+        let endDateTime = Calendar.current.date(byAdding: .minute, value: 30, to: startDateTime) ?? startDateTime
+        self.endDate = Timestamp(date: endDateTime)
+    }
+
+    static var defaultColor: String {
+        let color = Constants.Colors.resellPurple
+        guard let components = color.cgColor?.components, components.count >= 3 else {
+            return "#000000"
+        }
+
+        let red = components[0]
+        let green = components[1]
+        let blue = components[2]
+
+        return String(format: "#%02X%02X%02X", Int(red * 255), Int(green * 255), Int(blue * 255))
+    }
+}
+
+struct MeetingInfo: Codable {
+    var state: String
+    var proposeTime: String
+    var proposer: String?
+    var canceler: String?
+    var mostRecent: Bool
+
+    func toFirebaseMap() -> [String: Any] {
+        return [
+            "state": state,
+            "proposeTime": proposeTime,
+            "proposer": proposer ?? "",
+            "canceler": canceler ?? "",
+            "mostRecent": mostRecent
+        ]
+    }
+}

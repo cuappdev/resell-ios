@@ -8,6 +8,9 @@
 import GoogleSignIn
 import SwiftUI
 
+import GoogleSignIn
+import SwiftUI
+
 struct MainView: View {
 
     // MARK: - Properties

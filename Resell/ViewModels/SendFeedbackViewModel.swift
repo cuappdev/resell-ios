@@ -52,15 +52,15 @@ class SendFeedbackViewModel: ObservableObject {
             defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
-                if let user = GoogleAuthManager.shared.user {
+                if let userID = UserSessionManager.shared.userID {
                     let imagesBase64 = selectedImages.map { $0.toBase64() ?? "" }
-                    let feedbackBody = FeedbackBody(description: feedbackText, images: imagesBase64, userId: user.firebaseUid)
+                    let feedbackBody = FeedbackBody(description: feedbackText, images: imagesBase64, userId: userID)
                     try await NetworkManager.shared.postFeedback(feedback: feedbackBody)
                 } else {
-                    GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User not available.")
+                    UserSessionManager.shared.logger.error("Error in SendFeedbackViewModel.submitFeedback: userID not found")
                 }
             } catch {
-                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in SendFeedbackViewModel.submitFeedback: \(error)")
             }
         }
     }

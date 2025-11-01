@@ -7,14 +7,7 @@
 
 import Foundation
 
-struct ErrorResponse: Codable, Error, Equatable, LocalizedError {
+struct ErrorResponse: Codable, Error {
     let error: String
     let httpCode: Int
-
-    static let accountCreationNeeded = ErrorResponse(error: "User not found. Please create an account first.", httpCode: 403)
-    static let noCornellEmail = ErrorResponse(error: "User not found. Please create an account first.", httpCode: 403)
-
-    var errorDescription: String? {
-        return error
-    }
 }

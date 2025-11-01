@@ -15,51 +15,63 @@ class LoginViewModel: ObservableObject {
 
     @Published var didPresentError: Bool = false
     @Published var isLoading: Bool = false
-    var errorText: String = ""
+    var errorText: String = "Please sign in with a Cornell email"
 
     // MARK: - Functions
 
-    func googleSignIn() async -> LoginResponse {
-        do {
-            try await GoogleAuthManager.shared.signIn()
-            return .success
-        } catch {
-            switch error {
-            case let errorResponse as ErrorResponse:
-                if errorResponse == ErrorResponse.accountCreationNeeded {
-                    return .accountCreationNeeded
-                } else {
-                    errorText = "\(errorResponse.error)"
+    func googleSignIn(success: @escaping () -> Void, failure: @escaping (_ netid: String, _ givenName: String, _ familyName: String, _ email: String, _ googleId: String) -> Void) {
+        Task {
+            guard let user = await GoogleAuthManager.shared.signIn(),
+                  let id = user.userID else { return }
+
+            guard let email = user.profile?.email else { return }
+
+            guard email.contains("@cornell.edu") else {
+                GIDSignIn.sharedInstance.signOut()
+                didPresentError = true
+                return
+            }
+
+            do {
+                let user = try await NetworkManager.shared.getUserByGoogleID(googleID: id).user
+                var userSession = try await NetworkManager.shared.getUserSession(id: user.id).sessions.first
+
+                if !(userSession?.active ?? false) {
+                    userSession = try await NetworkManager.shared.refreshToken()
                 }
-            default:
-                errorText = "Error: \(error)"
+
+                UserSessionManager.shared.accessToken = userSession?.accessToken
+                UserSessionManager.shared.refreshToken = userSession?.refreshToken
+                UserSessionManager.shared.googleID = id
+                UserSessionManager.shared.userID = user.id
+                UserSessionManager.shared.email = user.email
+                UserSessionManager.shared.profileURL = user.photoUrl
+                UserSessionManager.shared.name = "\(user.givenName) \(user.familyName)"
+
+                try? GoogleAuthManager.shared.getOAuthToken { token in
+                    UserSessionManager.shared.oAuthToken = token
+                }
+
+                success()
+            } catch {
+                NetworkManager.shared.logger.error("Error in LoginViewModel.getUserSession: \(error)")
+
+                guard let givenName = user.profile?.givenName,
+                      let familyName = user.profile?.familyName else { return }
+
+                // User id does not exist, take to onboarding
+                failure(self.getNetID(email: email), givenName, familyName, email, id)
             }
-
-            GoogleAuthManager.shared.logger.log("Error in \(#file) \(#function): \(error)")
-
-            await MainActor.run {
-                didPresentError = true
-            }
-
-            return .failed
         }
-
-        if GoogleAuthManager.shared.user == nil {
-            await MainActor.run {
-                isLoading = false
-                didPresentError = true
-                return LoginResponse.failed
-            }
-        }
-
-        return .success
     }
 
-    enum LoginResponse {
-        case failed
-        case accountCreationNeeded
-        case success
+    private func getNetID(email: String?) -> String {
+        if let atIndex = email?.firstIndex(of: "@"),
+           let username = email?[..<atIndex] {
+            return String(username)
+        } else {
+            return ""
+        }
     }
-
 }
 

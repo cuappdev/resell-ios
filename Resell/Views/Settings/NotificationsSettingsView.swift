@@ -67,6 +67,18 @@ struct NotificationsSettingsView: View {
 
     /// Handles toggling notifications and updates Firestore as needed
     private func handleNotificationToggle(chatNotificationsDisabled: Bool) {
-        // TODO: NETWORKING REQUEST TO TOGGLE NOTIFICATIONS FOR THE USER
+        guard let userEmail = UserSessionManager.shared.email else {
+            FirestoreManager.shared.logger.error("User email not found while updating notification settings.")
+            return
+        }
+
+        Task {
+            do {
+                try await FirestoreManager.shared.saveNotificationsEnabled(userEmail: userEmail, notificationsEnabled: !chatNotificationsDisabled)
+                FirestoreManager.shared.logger.log("Notifications updated for \(userEmail): \(!chatNotificationsDisabled).")
+            } catch {
+                FirestoreManager.shared.logger.error("Failed to update notifications for \(userEmail): \(error.localizedDescription)")
+            }
+        }
     }
 }
