@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Kingfisher
 import UserNotifications
 
 @MainActor
@@ -222,44 +221,41 @@ class ProductDetailsViewModel: ObservableObject {
 //        }
 //    }
     
-    // MARK: I DONT KNOW WHAT THIS DOES - Charles
-    
-//    func createNewNotif() {
-//        print(UserSessionManager.shared.userID)
-//        Task {
-//            do {
-//                guard let product = item else {
-//                    NetworkManager.shared.logger.error("Error: Product details not available.")
-//                    return
-//                }
-//
-//                guard let sellerID = product.user?.id else {
-//                    NetworkManager.shared.logger.error("Error: Seller ID not found.")
-//                    return
-//                }
-//
-//                let productName = product.title
-//
-////                let notification = Notification(
-////                   // userID: sellerID,
-////                    //name: "\(UserSessionManager.shared.userID ?? "Someone") has bookmarked \(productName)"
-////                    // body: "Your item '\(productName)' was bookmarked!"
-////                    
-////                   // data: NotificationData(type: "bookmarks", messageId: UUID().uuidString)
-////                )
-//
-//                try await NetworkManager.shared.createNotif(notifBody: notification)
-//                NetworkManager.shared.logger.info("Notification sent successfully!")
-//
-//            } catch let error as ErrorResponse {
-//                // Specific error from app
-//                NetworkManager.shared.logger.error("API Error \(error.localizedDescription)")
-//            } catch {
-//                // General error
-//                NetworkManager.shared.logger.error("Unexpected error \(error.localizedDescription)")
-//            }
-//        }
-//    }
+    func createNewNotif() {
+        print(UserSessionManager.shared.userID)
+        Task {
+            do {
+                guard let product = item else {
+                    NetworkManager.shared.logger.error("Error: Product details not available.")
+                    return
+                }
+
+                guard let sellerID = product.user?.id else {
+                    NetworkManager.shared.logger.error("Error: Seller ID not found.")
+                    return
+                }
+
+                let productName = product.title
+
+                let notification = Notification(
+                    userID: sellerID,
+                    title: "\(UserSessionManager.shared.userID ?? "Someone") has bookmarked \(productName)",
+                    body: "Your item '\(productName)' was bookmarked!",
+                    data: NotificationData(type: "bookmarks", messageId: UUID().uuidString)
+                )
+
+                try await NetworkManager.shared.createNotif(notifBody: notification)
+                NetworkManager.shared.logger.info("Notification sent successfully!")
+
+            } catch let error as ErrorResponse {
+                // Specific error from app
+                NetworkManager.shared.logger.error("API Error \(error.localizedDescription)")
+            } catch {
+                // General error
+                NetworkManager.shared.logger.error("Unexpected error \(error.localizedDescription)")
+            }
+        }
+    }
 
 
     private func calculateMaxImgRatio() async {
