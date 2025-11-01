@@ -356,12 +356,12 @@ class FirestoreManager {
 
         listener = chatDocRef.addSnapshotListener { snapshot, error in
             if let error = error {
-                self.logger.error("Firestore subscription error: \(error.localizedDescription)")
+                print("Firestore subscription error: \(error.localizedDescription)")
                 return
             }
 
             guard let snapshot = snapshot else {
-                self.logger.error("Firestore subscription returned no data.")
+                print("Firestore subscription returned no data.")
                 return
             }
 
@@ -371,7 +371,7 @@ class FirestoreManager {
                     let chatDoc = try document.data(as: ChatDocument.self)
                     return chatDoc
                 } catch {
-                    self.logger.error("Error decoding ChatDocument: \(error.localizedDescription)")
+                    print("Error decoding ChatDocument: \(error.localizedDescription)")
                     return nil
                 }
             }

@@ -64,7 +64,7 @@ struct VenmoView: View {
         .onChange(of: viewModel.isLoading) { newValue in
             if !newValue {
                 withAnimation {
-                    FirebaseNotificationService.shared.setupFCMToken()
+                    mainViewModel.addFCMToken()
                     router.popToRoot()
                     userDidLogin = true
                 }

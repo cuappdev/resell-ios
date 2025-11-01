@@ -16,6 +16,6 @@ struct TransactionSummary: Codable, Identifiable {
     let confirmedTime: String
     let confirmedViewed: Bool
     let name: String
-    let image: URL
+    let image: String
     let viewed: Bool
 }

@@ -29,20 +29,10 @@ class UserSessionManager: ObservableObject {
         }
     }
 
-    @Published var refreshToken: String? {
-        didSet {
-            if let token = refreshToken {
-                KeychainManager.shared.save(token, forKey: "refreshToken")
-            } else {
-                KeychainManager.shared.delete(forKey: "refreshToken")
-            }
-        }
-    }
-
     @Published var googleID: String? {
         didSet {
-            if let googleID {
-                KeychainManager.shared.save(googleID, forKey: "googleID")
+            if let token = accessToken {
+                KeychainManager.shared.save(token, forKey: "googleID")
             } else {
                 KeychainManager.shared.delete(forKey: "googleID")
             }
@@ -93,7 +83,6 @@ class UserSessionManager: ObservableObject {
 
     private init() {
         self.accessToken = KeychainManager.shared.get(forKey: "accessToken")
-        self.refreshToken = KeychainManager.shared.get(forKey: "refreshToken")
         self.googleID = KeychainManager.shared.get(forKey: "googleID")
         self.userID = KeychainManager.shared.get(forKey: "userID")
         self.email = KeychainManager.shared.get(forKey: "email")
@@ -105,7 +94,6 @@ class UserSessionManager: ObservableObject {
 
     func logout() {
         accessToken = nil
-        refreshToken = nil
         googleID = nil
         userID = nil
         email = nil
