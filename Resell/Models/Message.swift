@@ -10,20 +10,19 @@ import Foundation
 protocol Message {
     var messageId: String? { get set }
     var messageType: MessageType { get }
+    var to: User { get set }
+    var from: User { get set }
     var timestamp: Date { get set }
     var read: Bool { get set }
-    var fromUser: Bool { get set }
-    /// Has this message been confirmed to have been sent?
-    var confirmed: Bool { get set }
 }
 
 struct ChatMessage: Message {
     var messageId: String?
     var messageType: MessageType = .chat
+    var to: User
+    var from: User
     var timestamp: Date
     var read: Bool
-    var fromUser: Bool
-    var confirmed: Bool
     var text: String
     var images: [String]
 }
@@ -31,33 +30,33 @@ struct ChatMessage: Message {
 struct AvailabilityMessage: Message {
     var messageId: String?
     var messageType: MessageType = .availability
+    var to: User
+    var from: User
     var timestamp: Date
     var read: Bool
-    var fromUser: Bool
-    var confirmed: Bool
     var availabilities: [Availability]
 }
 
 struct ProposalMessage: Message {
     var messageId: String?
     var messageType: MessageType = .proposal
+    var to: User
+    var from: User
     var timestamp: Date
     var read: Bool
-    var fromUser: Bool
-    var confirmed: Bool
     var startDate: Date
     var endDate: Date
     /// Has this proposal been accepted? `nil` if no action has been taken
     var accepted: Bool?
 }
 
-struct Availability: Codable, Hashable {
+struct Availability: Codable {
     let startDate: Date
     let endDate: Date
 }
 
 enum MessageType: String, Codable {
-    case chat = "message"
+    case chat = "chat"
     case availability = "availability"
     case proposal = "proposal"
 }

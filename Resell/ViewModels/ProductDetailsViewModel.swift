@@ -39,7 +39,7 @@ class ProductDetailsViewModel: ObservableObject {
             do {
                 let postResponse = try await NetworkManager.shared.getPostByID(id: id)
                 item = postResponse.post
-                images = postResponse.post.images.compactMap { URL(string: $0) }
+                images = postResponse.post.images
 
                 await calculateMaxImgRatio()
                 getIsSaved()
@@ -51,7 +51,7 @@ class ProductDetailsViewModel: ObservableObject {
 
     func setPost(post: Post) {
         item = post
-        images = post.images.compactMap { URL(string: $0) }
+        images = post.images
 
         Task {
             await calculateMaxImgRatio()
@@ -83,7 +83,9 @@ class ProductDetailsViewModel: ObservableObject {
     func getSimilarPostsNaive(post: Post) {
         Task {
             do {
-                let postsResponse = try await NetworkManager.shared.getFilteredPosts(by: post.category ?? "")
+                guard let category = post.categories.first else { return }
+
+                let postsResponse = try await NetworkManager.shared.getFilteredPosts(by: category)
                 var otherPosts = postsResponse.posts
                 otherPosts.removeAll { $0.id == post.id }
 

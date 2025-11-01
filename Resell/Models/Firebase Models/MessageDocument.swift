@@ -8,11 +8,10 @@
 import FirebaseFirestore
 
 /// Structure of each message document inside the messages subcollection of a chat on Firestore
-struct MessageDocument: Codable, Hashable {
-
+struct MessageDocument: Codable {
     @DocumentID var id: String?
     let type: MessageType
-    let senderID: String
+    let senderId: String
     let timestamp: Date
     let read: Bool
 
@@ -28,43 +27,38 @@ struct MessageDocument: Codable, Hashable {
     let endDate: Date?
     let accepted: Bool?
 
-    static func == (lhs: MessageDocument, rhs: MessageDocument) -> Bool {
-        lhs.id == rhs.id
-    }
-
     /// Converts a MessageDocument to a Message
     func toMessage(buyer: User, seller: User) -> Message {
-        let to = senderID == buyer.firebaseUid ? seller : buyer
-        let from = senderID == buyer.firebaseUid ? buyer : seller
-
-        let fromUser: Bool = from.firebaseUid == GoogleAuthManager.shared.user?.firebaseUid ?? ""
+        let to = senderId == buyer.firebaseUid ? seller : buyer
+        let from = senderId == buyer.firebaseUid ? buyer : seller
 
         switch type {
         case .chat:
             return ChatMessage(
                 messageId: id,
+                to: to,
+                from: from,
                 timestamp: timestamp,
                 read: read,
-                fromUser: fromUser,
-                confirmed: true, text: text ?? "",
+                text: text ?? "",
                 images: images ?? []
             )
         case .availability:
             return AvailabilityMessage(
                 messageId: id,
+                to: to,
+                from: from,
                 timestamp: timestamp,
                 read: read,
-                fromUser: fromUser,
-                confirmed: true,
                 availabilities: availabilities ?? []
             )
         case .proposal:
             return ProposalMessage(
                 messageId: id,
+                to: to,
+                from: from,
                 timestamp: timestamp,
                 read: read,
-                fromUser: fromUser,
-                confirmed: true,
                 startDate: startDate ?? Date(),
                 endDate: endDate ?? Date(),
                 accepted: accepted
