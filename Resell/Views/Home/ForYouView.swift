@@ -13,12 +13,10 @@ struct ForYouView: View {
     @StateObject private var searchViewModel = SearchViewModel.shared
 
     @State private var imageLoadedStates: [Bool]
+    @State private var dataLoaded: Bool = false
+    
     @State private var data: [[Post]] = []
-    
     private var titles: [String] = ["Saved By You", "Recently Searched"]
-    
-    @State private var savedLoadedStates: [Bool] = Array(repeating: false, count: 4)
-    @State private var recentLoadedStates: [Bool] = Array(repeating: false, count: 4)
     
     init() {
         _imageLoadedStates = State(initialValue: Array(repeating: false, count: 2))
@@ -33,40 +31,34 @@ struct ForYouView: View {
 
             ScrollView(.horizontal) {
                 LazyHStack(spacing: 20) {
-                    if viewModel.cardsLoaded {
+                    if dataLoaded {
                         // TODO: Refactor if we have a large amount of cards
-                        forYouCard(title: titles[0], posts: viewModel.savedItems, loaded: $savedLoadedStates)
-                        forYouCard(title: titles[1], posts: searchViewModel.recentlySearched, loaded: $recentLoadedStates)
+                        forYouCard(title: titles[0], posts: viewModel.savedItems, loaded: $imageLoadedStates[0])
+                        forYouCard(title: titles[1], posts: searchViewModel.recentlySearched, loaded: $imageLoadedStates[1])
                         }
                     }
                 .padding(.leading, 24)
 
                 }
             }
-        .onAppear() {
-            if !viewModel.cardsLoaded {
-                    viewModel.getSavedPosts() {
-                        viewModel.getRecentlySearched() {
-                            // Now on main thread, update your state
-                            DispatchQueue.main.async {
-                                viewModel.cardsLoaded = true
-                            }
+            .onAppear() {
+                viewModel.getSavedPosts() {
+                    viewModel.getRecentlySearched() {
+                        // Now on main thread, update your state
+                        DispatchQueue.main.async {
+                            dataLoaded = true
                         }
                     }
                 }
             }
-        }
+         }
     }
 
-    func forYouCard(title: String, posts: [Post], loaded: Binding<[Bool]>) -> some View {
+    func forYouCard(title: String, posts: [Post], loaded: Binding<Bool>) -> some View {
         ZStack {
             LazyVGrid(columns: [GridItem(.fixed(120), spacing: 0), GridItem(.fixed(120), spacing: 0)], spacing: 0) {
                 ForEach(Array(posts.enumerated()).prefix(4), id: \.element) { index, item in
-                    CachedImageView(
-                        isImageLoaded: loaded[index],
-                        isForYou: true,
-                        imageURL: URL(string: item.images.first ?? "")
-                    )
+                    CachedImageView(isImageLoaded: loaded, isForYou: true, imageURL: URL(string: item.images.first ?? ""))
                         .frame(width: 120, height: 120)
                         .overlay(
                                 index >= 2 ?

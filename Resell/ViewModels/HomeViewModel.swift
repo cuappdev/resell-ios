@@ -25,7 +25,6 @@ class HomeViewModel: ObservableObject {
 
     @Published var isLoading: Bool = false
     @Published var filteredItems: [Post] = []
-    @Published var cardsLoaded: Bool = false
     
     @Published var selectedFilter: [String] = ["Recent"] {
         didSet {
