@@ -126,11 +126,11 @@ struct HomeView: View {
                 .padding(.trailing, 20)
                 
                 // MARK: Omit notifications for release
-                //                Button(action: {
-                //                    router.push(.notifications)
-                //                }, label: {
-                //                    Icon(image: "bell")
-                //                })
+//                Button(action: {
+//                    router.push(.notifications)
+//                }, label: {
+//                    Icon(image: "bell")
+//                })
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
             .padding(.vertical, -4)

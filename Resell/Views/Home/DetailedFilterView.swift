@@ -61,7 +61,6 @@ struct DetailedFilterView: View {
             
             HStack{
                 Button(action: {
-                    // TODO: refactor search for detailed filter
                     router.push(.search(nil))
                 }, label: {
                     SearchBar()
