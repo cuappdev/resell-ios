@@ -31,8 +31,8 @@ struct DetailedFilterView: View {
         .onAppear {
             viewModel.getBlockedUsers()
             Task {
-                try await filtersViewModel.initializeDetailedFilter(category: filter.title)
-            }
+                            try await filtersViewModel.initializeDetailedFilter(category: filter.title)
+                        }
         }
         .sheet(isPresented: $presentPopup) {
             FilterView(home: false, isPresented: $presentPopup)
