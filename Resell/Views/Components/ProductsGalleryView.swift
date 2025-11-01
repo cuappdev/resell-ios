@@ -34,6 +34,7 @@ struct ProductsGalleryView: View {
     // MARK: UI
 
     var body: some View {
+        // NO ScrollView here - use the parent's ScrollView
         HStack(alignment: .top, spacing: 20) {
             LazyVStack(spacing: 20) {
                 ForEach(column1, id: \.id) { post in
@@ -66,10 +67,12 @@ struct ProductsGalleryView: View {
     // MARK: - Private Methods
     
     private func checkAndLoadMore(for post: Post) {
+        // Find the index in the ORIGINAL items array
         guard let index = items.firstIndex(where: { $0.id == post.id }) else {
             return
         }
         
+        // Trigger pagination when we're 5 items from the end
         let threshold = items.count - 5
         if index >= threshold {
             print("🔄 Reached item \(index + 1)/\(items.count) - triggering pagination")

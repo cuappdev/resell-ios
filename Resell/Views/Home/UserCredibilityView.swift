@@ -5,8 +5,6 @@
 //  Created by Charles Liggins on 10/11/25.
 //
 
-// MARK: This isn't being used currently...
-
 // MARK: This applies when viewing external profiles, but I think a lot of things can be ported to the current user viewing their own profile, such as the follower count...
 
 import SwiftUI

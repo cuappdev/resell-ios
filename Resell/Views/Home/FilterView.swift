@@ -294,6 +294,10 @@ struct FilterView: View {
         }.frame(width: 414, height: home ? 786 : 686)
         .background(Color.white)
         // TODO: Add border to filter view
+//        .overlay(
+//                RoundedRectangle(cornerRadius: 20) // Match your sheet's corner radius
+//                    .stroke(Color.gray.opacity(0.3), lineWidth: 1) // Customize color and width
+//            )
     }
     
     struct SortByView: View {

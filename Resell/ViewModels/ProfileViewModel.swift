@@ -17,6 +17,7 @@ class ProfileViewModel: ObservableObject {
     @Published var sellerIsBlocked: Bool = false
     @Published var selectedTab: Tab = .listing
     
+    // For external users only
     @Published var isLoadingExternalUser: Bool = false
     @Published var externalUser: User? = nil
     @Published var externalUserPosts: [Post] = []
@@ -58,6 +59,7 @@ class ProfileViewModel: ObservableObject {
     }
     
     func loadExternalUser(id: String) {
+        // Reset external user state
         externalUser = nil
         externalUserPosts = []
         

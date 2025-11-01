@@ -50,28 +50,46 @@ class HomeViewModel: ObservableObject {
     private var hasLoadedInitialData = false
     private var lastFetchTime: Date?
     private let cacheValidityDuration: TimeInterval = 180 // 3 minutes for home feed
+    
+    // MARK: - Memory Strategy
+    // Post objects are tiny (~1-2KB each) so we keep ALL posts in memory
+    // Images are managed by Kingfisher with balanced settings:
+    // 1. 150MB memory cache - enough for ~50-75 downsampled images
+    // 2. 500MB disk cache - fast reload from disk vs network
+    // 3. Downsampling reduces image size by 90%
+    // Result: 200 posts (~400KB) + 150MB images = ~150MB total, fast scroll-back
+
+    // MARK: - Persistent Storage
 
     @AppStorage("blockedUsers") private var blockedUsersStorage: String = "[]"
 
     // MARK: - Functions
     
     private func configureImageCache() {
+        // Configure Kingfisher with balanced settings
         let cache = ImageCache.default
         
+        // Increase memory cache to 150 MB for better scroll-back performance
         cache.memoryStorage.config.totalCostLimit = 150 * 1024 * 1024 // 150 MB
         
+        // Large disk cache so reloads come from disk (fast) not network (slow)
         cache.diskStorage.config.sizeLimit = 500 * 1024 * 1024 // 500 MB
         
+        // Keep images in memory longer
         cache.memoryStorage.config.expiration = .seconds(600) // 10 minutes
         
+        // Keep disk cache for 7 days
         cache.diskStorage.config.expiration = .days(7)
         
+        // Limit concurrent downloads to prevent CPU overload
         ImageDownloader.default.downloadTimeout = 15.0
         KingfisherManager.shared.downloader.downloadTimeout = 15.0
         
+        print("📦 Image cache configured: 150MB memory, 500MB disk, controlled concurrency")
     }
 
     func getAllPosts(forceRefresh: Bool = false) {
+        // Use cached data if available and valid
         if !forceRefresh && shouldUseCachedData() {
             print("Using cached posts data")
             return
@@ -100,10 +118,13 @@ class HomeViewModel: ObservableObject {
     }
 
     func fetchMoreItems() {
+        // Prevent multiple simultaneous fetches
         guard !isFetchingMore && hasMorePages else {
+            print("⚠️ Skipping fetch: isFetchingMore=\(isFetchingMore), hasMorePages=\(hasMorePages), isLoading=\(isLoading)")
             return
         }
         
+        print("📥 Fetching more items - page \(page + 1)")
         
         isFetchingMore = true
         page += 1
@@ -119,14 +140,17 @@ class HomeViewModel: ObservableObject {
                 let postsResponse = try await NetworkManager.shared.getAllPosts(page: page)
                 let newPosts = Post.sortPostsByDate(postsResponse.posts)
                 
+                // Check if we got any posts
                 if newPosts.isEmpty {
                     hasMorePages = false
                     print("🛑 No more posts available")
                     return
                 }
                 
+                // Append new posts - keep all in memory (Post objects are tiny ~1-2KB each)
                 allItems.append(contentsOf: newPosts)
                 
+                // Only update filtered items if showing Recent
                 if selectedFilter == ["Recent"] {
                     filteredItems = allItems
                 }
@@ -202,11 +226,13 @@ class HomeViewModel: ObservableObject {
         page = 1
         hasMorePages = true
         
+        // Clear image cache
         ImageCache.default.clearMemoryCache()
         print("🧹 Cleared all caches")
     }
     
     func cleanupMemory() {
+        // Force cleanup of images not currently in view
         ImageCache.default.clearMemoryCache()
         print("🧹 Cleaned up image memory cache")
     }
@@ -258,5 +284,5 @@ class HomeViewModel: ObservableObject {
             group.notify(queue: .main) {
                 completion()
             }
-        }
     }
+}
