@@ -7,7 +7,6 @@
 
 import FirebaseFirestore
 import os
-import FirebaseVertexAI
 
 class FirestoreManager {
 
