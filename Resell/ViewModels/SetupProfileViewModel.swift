@@ -57,18 +57,16 @@ class SetupProfileViewModel: ObservableObject {
                 if let imageBase64 = selectedImage.toBase64() {
                     let user = CreateUserBody(username: username.cleaned(), netid: netid, givenName: givenName, familyName: familyName, photoUrl: imageBase64, email: email, googleID: googleID, bio: bio.cleaned())
                     try await NetworkManager.shared.createUser(user: user)
-
-                    try await FirestoreManager.shared.saveOnboarded(userEmail: email)
-                    try await FirestoreManager.shared.saveVenmo(userEmail: email, venmo: venmoHandle)
+                    
                     loginUser(id: googleID)
                 } else {
                     // TODO: Present Toast Error
                 }
 
-                withAnimation { isLoading = false }
+                isLoading = false
             } catch {
                 NetworkManager.shared.logger.error("Error in SetupProfileViewModel.createNewUser: \(error.localizedDescription)")
-                withAnimation { isLoading = false }
+                isLoading = false
             }
         }
     }

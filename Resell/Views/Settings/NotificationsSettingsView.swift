@@ -26,17 +26,10 @@ struct NotificationsSettingsView: View {
                 get: { allNotificationsEnabled },
                 set: { paused in
                     mainViewModel.toggleAllNotifications(paused: paused)
-                    handleNotificationToggle(chatNotificationsDisabled: !mainViewModel.chatNotificationsEnabled)
                 }
             ))
 
-            notificationSetting(name: "Chat Notifications", isOn: Binding<Bool>(
-                get: { mainViewModel.chatNotificationsEnabled },
-                set: { enabled in
-                    mainViewModel.chatNotificationsEnabled = enabled
-                    handleNotificationToggle(chatNotificationsDisabled: !enabled)
-                }
-            ))
+            notificationSetting(name: "Chat Notifications", isOn: $mainViewModel.chatNotificationsEnabled)
 
             notificationSetting(name: "New Listings", isOn: $mainViewModel.newListingsEnabled)
 
@@ -46,6 +39,7 @@ struct NotificationsSettingsView: View {
         .padding(.top, 40)
         .background(Constants.Colors.white)
         .toolbar {
+
             ToolbarItem(placement: .principal) {
                 Text("Notification Preferences")
                     .font(Constants.Fonts.h3)
@@ -65,20 +59,4 @@ struct NotificationsSettingsView: View {
         .tint(Constants.Colors.resellPurple)
     }
 
-    /// Handles toggling notifications and updates Firestore as needed
-    private func handleNotificationToggle(chatNotificationsDisabled: Bool) {
-        guard let userEmail = UserSessionManager.shared.email else {
-            FirestoreManager.shared.logger.error("User email not found while updating notification settings.")
-            return
-        }
-
-        Task {
-            do {
-                try await FirestoreManager.shared.saveNotificationsEnabled(userEmail: userEmail, notificationsEnabled: !chatNotificationsDisabled)
-                FirestoreManager.shared.logger.log("Notifications updated for \(userEmail): \(!chatNotificationsDisabled).")
-            } catch {
-                FirestoreManager.shared.logger.error("Failed to update notifications for \(userEmail): \(error.localizedDescription)")
-            }
-        }
-    }
 }

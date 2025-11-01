@@ -59,10 +59,10 @@ class SendFeedbackViewModel: ObservableObject {
                     UserSessionManager.shared.logger.error("Error in SendFeedbackViewModel.submitFeedback: userID not found")
                 }
 
-                withAnimation { isLoading = false }
+                isLoading = false
             } catch {
                 NetworkManager.shared.logger.error("Error in SendFeedbackViewModel.submitFeedback: \(error)")
-                withAnimation { isLoading = false }
+                isLoading = false
             }
         }
     }

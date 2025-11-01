@@ -93,10 +93,10 @@ class ReportViewModel: ObservableObject {
                     try await NetworkManager.shared.blockUser(blocked: blocked)
                 }
 
-                withAnimation { isLoading = false }
+                isLoading = false
             } catch {
                 NetworkManager.shared.logger.error("Error in ProfileViewModel.blockUser: \(error.localizedDescription)")
-                withAnimation { isLoading = false }
+                isLoading = false
             }
         }
     }

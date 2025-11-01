@@ -21,13 +21,10 @@ struct SavedView: View {
                 }
             }
             .background(Constants.Colors.white)
-            .emptyState(isEmpty: $viewModel.savedItems.isEmpty, title: "No saved posts", text: "Posts you have bookmarked will be displayed here.")
-            .refreshable {
-                viewModel.getSavedPosts()
-            }
             .onAppear {
                 viewModel.getSavedPosts()
             }
+            .emptyState(isEmpty: $viewModel.savedItems.isEmpty, title: "No saved posts", text: "Posts you have bookmarked will be displayed here.")
         }
     }
 

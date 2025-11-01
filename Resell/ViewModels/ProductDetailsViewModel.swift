@@ -41,7 +41,7 @@ class ProductDetailsViewModel: ObservableObject {
                 getIsSaved()
             } catch {
                 NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getPost: \(error.localizedDescription)")
-                withAnimation { isLoading = false }
+                isLoading = false
             }
         }
     }
@@ -88,11 +88,11 @@ class ProductDetailsViewModel: ObservableObject {
                 if let id = item?.id {
                     isSaved = try await NetworkManager.shared.postIsSaved(id: id).isSaved
                     
-                    withAnimation { isLoading = false }
+                    isLoading = false
                 }
             } catch {
                 NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getIsSaved: \(error.localizedDescription)")
-                withAnimation { isLoading = false }
+                isLoading = false
             }
         }
     }
