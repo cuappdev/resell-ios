@@ -102,59 +102,58 @@ struct AvailabilitySelectorView: View {
                                         .padding(.bottom, 8)
 
                                     ForEach(times, id: \.self) { time in
+                                        GeometryReader { geometry in
+                                            let cellHeight = geometry.size.height
                                             CellView(
                                                 isSelectedTop: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
                                                 isSelectedBottom: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom")),
                                                 isHighlightedTop: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
                                                 isHighlightedBottom: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom"))
                                             )
+                                            .contentShape(Rectangle())
+                                            .gesture(DragGesture(minimumDistance: 0)
+                                                .onChanged { value in
+                                                    if isEditing {
+                                                        let isTopHalf = value.location.y < cellHeight / 2
+                                                        let identifier = CellIdentifier(date: date, time: isTopHalf ? "\(time) Top" : "\(time) Bottom")
+
+                                                        if toggleSelectionMode == nil {
+                                                            toggleSelectionMode = selectedCells.contains(identifier) ? false : true
+                                                        }
+
+                                                        if toggleSelectionMode == true {
+                                                            draggedCells.insert(identifier)
+                                                        } else {
+                                                            draggedCells.insert(identifier)
+                                                        }
+                                                    }
+                                                }
+                                                .onEnded { _ in
+                                                    if isEditing {
+                                                        if let toggleSelectionMode = toggleSelectionMode {
+                                                            if toggleSelectionMode {
+                                                                selectedCells.formUnion(draggedCells)
+                                                            } else {
+                                                                selectedCells.subtract(draggedCells)
+                                                            }
+                                                        }
+                                                        draggedCells.removeAll()
+                                                        toggleSelectionMode = nil
+                                                    }
+                                                }
+                                            )
+                                            .onTapGesture {
+                                                if isEditing {
+                                                    let isTopHalf = geometry.frame(in: .local).midY < cellHeight / 2
+                                                    toggleCellSelection(date: date, time: time, isTopHalf: isTopHalf)
+                                                }
+                                            }
+                                        }
                                         .frame(width: UIScreen.width / 5 + 10, height: cellHeight)
                                     }
                                 }
                             }
                         }
-                        .background(
-                            GeometryReader { geo in
-                                Color.clear
-                                    .contentShape(Rectangle())
-                                    .gesture(
-                                        DragGesture(minimumDistance: 0)
-                                            .onChanged { value in
-                                                if isEditing {
-                                                    if let identifier = mapDragLocationToCell(
-                                                        location: value.location,
-                                                        in: geo.frame(in: .local),
-                                                        dates: Array(paginatedDates[index]),
-                                                        times: times,
-                                                        cellHeight: cellHeight
-                                                    ) {
-                                                        if toggleSelectionMode == nil {
-                                                            toggleSelectionMode = selectedCells.contains(identifier) ? false : true
-                                                        }
-                                                        draggedCells.insert(identifier)
-                                                    }
-                                                }
-                                            }
-                                            .onEnded { _ in
-                                                if let toggleSelectionMode = toggleSelectionMode {
-                                                    if toggleSelectionMode {
-                                                        selectedCells.formUnion(draggedCells)
-                                                    } else {
-                                                        selectedCells.subtract(draggedCells)
-                                                    }
-                                                }
-                                                draggedCells.removeAll()
-                                                toggleSelectionMode = nil
-                                            }
-//                                            .onTapGesture {
-//                                                if isEditing {
-//                                                    let isTopHalf = geometry.frame(in: .local).midY < cellHeight / 2
-//                                                    toggleCellSelection(date: date, time: time, isTopHalf: isTopHalf)
-//                                                }
-//                                            }
-                                    )
-                            }
-                        )
                     }
                     .offset(x: index < currentPage ? -UIScreen.main.bounds.width : index > currentPage ? UIScreen.main.bounds.width : 0)
                     .animation(.easeInOut(duration: 0.3), value: currentPage)
@@ -174,31 +173,6 @@ struct AvailabilitySelectorView: View {
     }
 
     // MARK: - Functions
-    private func mapDragLocationToCell(
-            location: CGPoint,
-            in frame: CGRect,
-            dates: [String],
-            times: [String],
-            cellHeight: CGFloat
-        ) -> CellIdentifier? {
-        let columnWidth = (UIScreen.width / 5 + 10)
-        let rowHeight = cellHeight
-
-        // Column index: which date
-        let col = Int(location.x / columnWidth)
-        guard col >= 0, col < dates.count else { return nil }
-
-        // Row index: which time slot
-        let row = Int((location.y - 35) / rowHeight) // adjust for header height
-        guard row >= 0, row < times.count else { return nil }
-
-        let isTopHalf = (location.y.truncatingRemainder(dividingBy: rowHeight)) < rowHeight / 2
-        let date = dates[col]
-        let time = times[row]
-
-        return CellIdentifier(date: date, time: isTopHalf ? "\(time) Top" : "\(time) Bottom")
-    }
-
 
     private func initializeSelectedCells() {
         for block in selectedDates {
