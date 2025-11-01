@@ -8,7 +8,6 @@
 import Foundation
 import FirebaseFirestore
 import os
-import SwiftUI
 
 class FirestoreManager {
 
@@ -24,9 +23,9 @@ class FirestoreManager {
     private let historyCollection = Firestore.firestore().collection("history")
     private let chatsCollection = Firestore.firestore().collection("chats")
 
-    private var listener: ListenerRegistration?
+    private var lastSubscription: ListenerRegistration?
 
-    // MARK: - User Functions
+    // MARK: - Functions
 
     // Check if a user is onboarded
     func getUserOnboarded(email: String) async throws -> Bool {
@@ -116,209 +115,6 @@ class FirestoreManager {
         }
     }
 
-    // MARK: - Chat Functions
-
-    func getPurchaseChats(completion: @escaping ([ChatPreview]) -> Void) {
-        guard let userEmail = UserSessionManager.shared.email else {
-            UserSessionManager.shared.logger.error("Error in ChatsViewModel: User email not available.")
-            completion([])
-            return
-        }
-
-        let sellersQuery = historyCollection
-            .document(userEmail)
-            .collection("sellers")
-
-        listener = sellersQuery.addSnapshotListener { [weak self] querySnapshot, error in
-            guard let self = self else { return }
-
-            if let error = error {
-                logger.error("Error loading chat previews: \(error.localizedDescription)")
-                completion([])
-                return
-            }
-
-            guard let documents = querySnapshot?.documents else {
-                logger.info("No documents found.")
-                completion([])
-                return
-            }
-
-            var tempPurchases: [ChatPreview] = []
-
-            let group = DispatchGroup()
-
-            for document in documents {
-                group.enter()
-
-                let data = document.data()
-                let sellerId = document.documentID
-
-                guard let sellerName = data["name"] as? String,
-                      let image = data["image"] as? String,
-                      let recentMessage = data["recentMessage"] as? String,
-                      let recentSender = data["recentSender"] as? String,
-                      let recentMessageTime = data["recentMessageTime"] as? String,
-                      let viewed = data["viewed"] as? Bool,
-                      let confirmedTime = data["confirmedTime"] as? String else {
-                    group.leave()
-                    continue
-                }
-
-                let sellerHistoryRef = historyCollection
-                    .document(sellerId)
-                    .collection("buyers")
-                    .document(userEmail)
-
-                let itemsCollection = sellerHistoryRef.collection("items")
-
-                itemsCollection.getDocuments { snapshot, error in
-                    if let error = error {
-                        self.logger.error("Error fetching items: \(error.localizedDescription)")
-                        group.leave()
-                        return
-                    }
-
-                    let items = snapshot?.documents.compactMap { $0.data() } ?? []
-
-                    let chatPreview = ChatPreview(
-                        sellerName: sellerName,
-                        email: sellerId,
-                        recentItem: (data["item"] as? [String: Any])?["title"] as? String ?? "",
-                        image: URL(string: image),
-                        recentMessage: recentMessage,
-                        recentSender: recentSender == userEmail ? 1 : 0,
-                        viewed: viewed,
-                        confirmedTime: confirmedTime,
-                        proposedTime: data["proposedTime"] as? String,
-                        proposedViewed: data["proposedViewed"] as? Bool ?? false,
-                        recentMessageTime: recentMessageTime,
-                        proposer: data["proposer"] as? String,
-                        items: items
-                    )
-
-                    tempPurchases.append(chatPreview)
-                    group.leave()
-                }
-            }
-
-            group.notify(queue: .main) {
-                let sortedPurchases = tempPurchases.sorted(by: { $0.recentMessageTime > $1.recentMessageTime })
-                completion(sortedPurchases)
-            }
-        }
-    }
-
-    func getOfferChats(completion: @escaping ([ChatPreview]) -> Void) {
-        guard let userEmail = UserSessionManager.shared.email else {
-            UserSessionManager.shared.logger.error("Error in ChatsViewModel: User email not available.")
-            completion([])
-            return
-        }
-
-        let buyersQuery = historyCollection
-            .document(userEmail)
-            .collection("buyers")
-
-        listener = buyersQuery.addSnapshotListener { [weak self] querySnapshot, error in
-            guard let self = self else { return }
-
-            if let error = error {
-                logger.error("Error loading chat previews: \(error.localizedDescription)")
-                completion([])
-                return
-            }
-
-            guard let documents = querySnapshot?.documents else {
-                logger.info("No documents found.")
-                completion([])
-                return
-            }
-
-            var tempOffers: [ChatPreview] = []
-
-            let group = DispatchGroup()
-
-            for document in documents {
-                group.enter()
-
-                let data = document.data()
-                let buyerId = document.documentID
-
-                guard let buyerName = data["name"] as? String,
-                      let image = data["image"] as? String,
-                      let recentMessage = data["recentMessage"] as? String,
-                      let recentSender = data["recentSender"] as? String,
-                      let recentMessageTime = data["recentMessageTime"] as? String,
-                      let viewed = data["viewed"] as? Bool,
-                      let confirmedTime = data["confirmedTime"] as? String else {
-                    group.leave()
-                    continue
-                }
-
-                let buyerHistoryRef = historyCollection
-                    .document(buyerId)
-                    .collection("sellers")
-                    .document(userEmail)
-
-                let itemsCollection = buyerHistoryRef.collection("items")
-
-                itemsCollection.getDocuments { snapshot, error in
-                    if let error = error {
-                        self.logger.error("Error fetching items: \(error.localizedDescription)")
-                        group.leave()
-                        return
-                    }
-
-                    let items = snapshot?.documents.compactMap { $0.data() } ?? []
-
-                    let chatPreview = ChatPreview(
-                        sellerName: buyerName,
-                        email: buyerId,
-                        recentItem: (data["item"] as? [String: Any])?["title"] as? String ?? "",
-                        image: URL(string: image),
-                        recentMessage: recentMessage,
-                        recentSender: recentSender == userEmail ? 1 : 0,
-                        viewed: viewed,
-                        confirmedTime: confirmedTime,
-                        proposedTime: data["proposedTime"] as? String,
-                        proposedViewed: data["proposedViewed"] as? Bool ?? false,
-                        recentMessageTime: recentMessageTime,
-                        proposer: data["proposer"] as? String,
-                        items: items
-                    )
-
-                    tempOffers.append(chatPreview)
-                    group.leave()
-                }
-            }
-
-            group.notify(queue: .main) {
-                let sortedOffers = tempOffers.sorted(by: { $0.recentMessageTime > $1.recentMessageTime })
-                completion(sortedOffers)
-            }
-        }
-    }
-
-    func updateChatViewedStatus(chatType: String, userEmail: String, chatId: String, isViewed: Bool) {
-        let collectionType = chatType == "Purchases" ? "sellers" : "buyers"
-        let chatDocument = historyCollection.document(userEmail).collection(collectionType).document(chatId)
-
-        chatDocument.updateData(["viewed": isViewed]) { error in
-            if let error = error {
-                FirestoreManager.shared.logger.error("Error updating chat viewed status: \(error.localizedDescription)")
-            } else {
-                FirestoreManager.shared.logger.info("Successfully updated chat viewed status for chat \(chatId).")
-            }
-        }
-    }
-
-
-    /// Stop listening for updates
-    func stopListening() {
-        listener?.remove()
-    }
-
     // Fetch Buyer History
     func getBuyerHistory(email: String) async throws -> [TransactionSummary] {
         do {
@@ -347,10 +143,10 @@ class FirestoreManager {
         sellerEmail: String,
         onSnapshotUpdate: @escaping ([ChatDocument]) -> Void
     ) {
-        listener?.remove()
+        lastSubscription?.remove()
         let chatDocRef = chatsCollection.document(buyerEmail).collection(sellerEmail).order(by: "createdAt", descending: false)
 
-        listener = chatDocRef.addSnapshotListener { snapshot, error in
+        lastSubscription = chatDocRef.addSnapshotListener { snapshot, error in
             if let error = error {
                 self.logger.error("Error in snapshot listener: \(error.localizedDescription)")
                 return
@@ -381,28 +177,3 @@ class FirestoreManager {
         }
     }
 }
-
-extension Date {
-    func toFormattedString() -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter.string(from: self)
-    }
-
-    static func timeAgo(from timestampString: String) -> String {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
-        guard let date = formatter.date(from: timestampString) else {
-            return "Invalid Date"
-        }
-
-        let relativeFormatter = RelativeDateTimeFormatter()
-        relativeFormatter.unitsStyle = .full
-
-        let now = Date()
-        return relativeFormatter.localizedString(for: date, relativeTo: now)
-    }
-
-}
-
