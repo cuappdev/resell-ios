@@ -16,8 +16,6 @@ class FiltersViewModel: ObservableObject {
     @Published var highValue: Double = 1000
     @Published var showSale: Bool = false
     @Published var selectedSort: SortOption? = nil
-    @Published var presentPopup: Bool = false
-    
     
     func applyFilters(homeViewModel: HomeViewModel) async throws {
         let categoryFiltersList = Array(categoryFilters)
@@ -42,8 +40,6 @@ class FiltersViewModel: ObservableObject {
         }
 
         Task { try await NetworkManager.shared.filterByPrice(prices: PriceBody(lowPrice: Int(lowValue), maxPrice: Int(highValue))) }
-        
-        presentPopup = false
     }
     
     func resetFilters(homeViewModel: HomeViewModel) {
@@ -54,5 +50,6 @@ class FiltersViewModel: ObservableObject {
         showSale = false
         selectedSort = nil
         homeViewModel.selectedFilter = ["Recent"]
+//        homeViewModel.getAllPosts()
     }
 }

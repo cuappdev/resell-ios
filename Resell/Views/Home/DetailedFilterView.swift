@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-// TODO: Consolidate SavedView and DetailedFilterView into one view...
 struct DetailedFilterView: View {
 
     @State var presentPopup = false

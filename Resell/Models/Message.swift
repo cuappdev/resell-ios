@@ -60,6 +60,7 @@ struct AvailabilityMessage: Message {
 
         return self.sent == otherMessage.sent && self.messageId == otherMessage.messageId
     }
+
 }
 
 struct ProposalMessage: Message {
@@ -85,8 +86,10 @@ struct ProposalMessage: Message {
 }
 
 struct Availability: Codable, Hashable {
+
     let startDate: Date
     let endDate: Date
+
 }
 
 enum MessageType: String, Codable {

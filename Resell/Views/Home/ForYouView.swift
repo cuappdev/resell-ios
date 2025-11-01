@@ -31,7 +31,7 @@ struct ForYouView: View {
                 .foregroundStyle(.black)
                 .padding(.leading, 24)
 
-            ScrollView(.horizontal, showsIndicators: false) {
+            ScrollView(.horizontal) {
                 LazyHStack(spacing: 20) {
                     if viewModel.cardsLoaded {
                         // TODO: Refactor if we have a large amount of cards
@@ -58,35 +58,32 @@ struct ForYouView: View {
         }
     }
 
-func forYouCard(title: String, posts: [Post], loaded: Binding<[Bool]>) -> some View {
-    Button {
-        
-    } label: {
-            ZStack {
-                LazyVGrid(columns: [GridItem(.fixed(120), spacing: 0), GridItem(.fixed(120), spacing: 0)], spacing: 0) {
-                    ForEach(Array(posts.enumerated()).prefix(4), id: \.element) { index, item in
-                        CachedImageView(
-                            isImageLoaded: loaded[index],
-                            isForYou: true,
-                            imageURL: URL(string: item.images.first ?? "")
-                        )
+    func forYouCard(title: String, posts: [Post], loaded: Binding<[Bool]>) -> some View {
+        ZStack {
+            LazyVGrid(columns: [GridItem(.fixed(120), spacing: 0), GridItem(.fixed(120), spacing: 0)], spacing: 0) {
+                ForEach(Array(posts.enumerated()).prefix(4), id: \.element) { index, item in
+                    CachedImageView(
+                        isImageLoaded: loaded[index],
+                        isForYou: true,
+                        imageURL: URL(string: item.images.first ?? "")
+                    )
                         .frame(width: 120, height: 120)
                         .overlay(
-                            index >= 2 ?
-                            LinearGradient(
-                                gradient: Gradient(colors: [
-                                    Color.black.opacity(0.8), // very dark at bottom
-                                    Color.black.opacity(0.5), // fading upward
-                                    Color.clear // fully transparent by middle
-                                ]),
-                                startPoint: .bottom, endPoint: .top
+                                index >= 2 ?
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [
+                                            Color.black.opacity(0.8), // very dark at bottom
+                                            Color.black.opacity(0.5), // fading upward
+                                            Color.clear // fully transparent by middle
+                                        ]),
+                                        startPoint: .bottom, endPoint: .top
+                                    )
+                                    .frame(height: 60) // covers the bottom half
+                                    .frame(maxHeight: .infinity, alignment: .bottom)
+                                : nil
                             )
-                            .frame(height: 60) // covers the bottom half
-                                .frame(maxHeight: .infinity, alignment: .bottom)
-                            : nil
-                        )
+                        }
                     }
-                }
                 Text(title)
                     .foregroundStyle(Color.white)
                     .font(Constants.Fonts.title1)
@@ -95,4 +92,3 @@ func forYouCard(title: String, posts: [Post], loaded: Binding<[Bool]>) -> some V
             .frame(width: 240, height: 240)
             .clipShape(RoundedRectangle(cornerRadius: 20))
         }
-    }

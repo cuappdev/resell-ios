@@ -117,6 +117,8 @@ extension MessagesView {
                 // TODO: bad type
                 break
             }
+
+
         }
 
         /// Send a chat message contain text, images, or both
