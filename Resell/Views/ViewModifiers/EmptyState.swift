@@ -47,7 +47,6 @@ struct EmptyStateModifier: ViewModifier {
             }
         }
     }
-
 }
 
 // MARK: - View Extension
@@ -60,5 +59,4 @@ extension View {
     func emptyState(isEmpty: Bool, title: String, text: String) -> some View {
         self.modifier(EmptyStateModifier(isEmpty: isEmpty, title: title, text: text))
     }
-
 }

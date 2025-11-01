@@ -96,6 +96,7 @@
 		2CE473A22CC4577500BD7E2C /* ReportConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE473A12CC4577500BD7E2C /* ReportConfirmationView.swift */; };
 		2CE473A42CC4595C00BD7E2C /* ReportViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE473A32CC4595C00BD7E2C /* ReportViewModel.swift */; };
 		2CE473AC2CC5FF8A00BD7E2C /* Router.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE473AB2CC5FF8A00BD7E2C /* Router.swift */; };
+		2CF356152CDD8C020045A173 /* EmptyState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF356142CDD8C020045A173 /* EmptyState.swift */; };
 		2CF356172CDDC2110045A173 /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF356162CDDC2110045A173 /* Request.swift */; };
 		2CF356192CDDD4A30045A173 /* HapticFeedbackGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF356182CDDD4A30045A173 /* HapticFeedbackGenerator.swift */; };
 		2CF3561B2CDDD65F0045A173 /* SwipeableRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF3561A2CDDD65F0045A173 /* SwipeableRow.swift */; };
@@ -274,6 +275,7 @@
 		2CE473A12CC4577500BD7E2C /* ReportConfirmationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportConfirmationView.swift; sourceTree = "<group>"; };
 		2CE473A32CC4595C00BD7E2C /* ReportViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportViewModel.swift; sourceTree = "<group>"; };
 		2CE473AB2CC5FF8A00BD7E2C /* Router.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router.swift; sourceTree = "<group>"; };
+		2CF356142CDD8C020045A173 /* EmptyState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyState.swift; sourceTree = "<group>"; };
 		2CF356162CDDC2110045A173 /* Request.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
 		2CF356182CDDD4A30045A173 /* HapticFeedbackGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticFeedbackGenerator.swift; sourceTree = "<group>"; };
 		2CF3561A2CDDD65F0045A173 /* SwipeableRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipeableRow.swift; sourceTree = "<group>"; };
@@ -388,6 +390,7 @@
 			isa = PBXGroup;
 			children = (
 				D051D8162D7E2E0500C089AF /* GoogleService-Info.plist */,
+				D0B4A25F2DA7184C00A1722C /* resell-service.json */,
 			);
 			path = Supporting;
 			sourceTree = "<group>";
@@ -670,7 +673,7 @@
 		2CF356132CDD8BD60045A173 /* ViewModifiers */ = {
 			isa = PBXGroup;
 			children = (
-				D0A25DED2E5804A900607E1F /* EmptyStateModifier.swift */,
+				2CF356142CDD8C020045A173 /* EmptyState.swift */,
 				2C1692902CE4361C009D2291 /* LoadingView.swift */,
 				2CD6CA8B2CB48286005A4F78 /* PopupModal.swift */,
 			);
@@ -900,7 +903,6 @@
 				2E8A5A682DBCCB3400B1F281 /* MessageCluster.swift in Sources */,
 				2C9B4CCB2C8FB7B70029DF61 /* ResellApp.swift in Sources */,
 				2C4DD97D2C98D45B0055D0AB /* SetupProfileViewModel.swift in Sources */,
-				D0A25DEE2E5804A900607E1F /* EmptyStateModifier.swift in Sources */,
 				2CE473A42CC4595C00BD7E2C /* ReportViewModel.swift in Sources */,
 				2CF3561B2CDDD65F0045A173 /* SwipeableRow.swift in Sources */,
 				2CE473AC2CC5FF8A00BD7E2C /* Router.swift in Sources */,
@@ -951,6 +953,7 @@
 				2C9B4CF82C8FB84F0029DF61 /* Constants.swift in Sources */,
 				2C93375A2C93667600818C8E /* TabViewIcon.swift in Sources */,
 				2C02B3A32CC074150020DF90 /* ProductDetailsView.swift in Sources */,
+				2CF356152CDD8C020045A173 /* EmptyState.swift in Sources */,
 				2C93374A2C92AD2D00818C8E /* ProductsGalleryView.swift in Sources */,
 				2C02B39F2CC06D760020DF90 /* NewRequestViewModel.swift in Sources */,
 				2C1692932CE43737009D2291 /* CustomProgressView.swift in Sources */,

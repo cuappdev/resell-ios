@@ -58,7 +58,7 @@ class ReportViewModel: ObservableObject {
                     try await NetworkManager.shared.reportPost(reportBody: reportBody)
                 }
             } catch {
-                NetworkManager.shared.logger.error("Error in ReportViewModel.reportPost: \(error)")
+                NetworkManager.shared.logger.error("Error in ReportViewModel.reportPost: \(error.localizedDescription)")
             }
         }
     }
@@ -75,7 +75,7 @@ class ReportViewModel: ObservableObject {
                     try await NetworkManager.shared.reportUser(reportBody: reportBody)
                 }
             } catch {
-                NetworkManager.shared.logger.error("Error in ReportViewModel.reportUser: \(error)")
+                NetworkManager.shared.logger.error("Error in ReportViewModel.reportUser: \(error.localizedDescription)")
             }
         }
     }
@@ -92,7 +92,7 @@ class ReportViewModel: ObservableObject {
                     try await NetworkManager.shared.blockUser(blocked: blocked)
                 }
             } catch {
-                NetworkManager.shared.logger.error("Error in ProfileViewModel.blockUser: \(error)")
+                NetworkManager.shared.logger.error("Error in ProfileViewModel.blockUser: \(error.localizedDescription)")
             }
         }
     }
@@ -102,7 +102,7 @@ class ReportViewModel: ObservableObject {
             do {
                 user = try await NetworkManager.shared.getUserByID(id: id).user
             } catch {
-                NetworkManager.shared.logger.error("Error in ReportViewModel.getUser: \(error)")
+                NetworkManager.shared.logger.error("Error in ReportViewModel.getUser: \(error.localizedDescription)")
             }
         }
     }
@@ -113,7 +113,7 @@ class ReportViewModel: ObservableObject {
                 post = try await NetworkManager.shared.getPostByID(id: id).post
                 user = post?.user
             } catch {
-                NetworkManager.shared.logger.error("Error in ReportViewModel.getUser: \(error)")
+                NetworkManager.shared.logger.error("Error in ReportViewModel.getUser: \(error.localizedDescription)")
             }
         }
     }

@@ -88,40 +88,10 @@ class GoogleAuthManager {
     }
 
     func signOut() {
-        logger.info("Signing out user")
-        
-        // Sign out from Google
+        // TODO: Logout networking endpoint with FCM
         GIDSignIn.sharedInstance.signOut()
-        
-        // Sign out from Firebase
-        do {
-            try Auth.auth().signOut()
-        } catch {
-            logger.error("Error signing out from Firebase: \(error.localizedDescription)")
-        }
-        
-        // Clear stored credentials
         accessToken = nil
         user = nil
-        
-        logger.info("User signed out successfully")
-    }
-    
-    /// Force logout user due to authentication failures
-    /// This should be called when authentication cannot be recovered
-    func forceLogout(reason: String = "Authentication failed") {
-        logger.warning("Forcing user logout. Reason: \(reason)")
-        
-        // Perform logout
-        signOut()
-        
-        // Notify the app that user needs to be logged out
-        DispatchQueue.main.async {
-            NotificationCenter.default.post(
-                name: Constants.Notifications.LogoutUser,
-                object: nil
-            )
-        }
     }
 
     private func authorizeUser() async throws {
@@ -129,6 +99,8 @@ class GoogleAuthManager {
         guard let fcmToken = await FirebaseNotificationService.shared.getFCMRegToken() else {
             throw GoogleAuthError.noFCMToken
         }
+
+        print("fcmToken:", fcmToken)
 
         let body = AuthorizeBody(token: fcmToken)
         self.user = try await NetworkManager.shared.authorize(authorizeBody: body)

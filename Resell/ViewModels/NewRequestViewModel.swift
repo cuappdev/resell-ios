@@ -43,7 +43,7 @@ class NewRequestViewModel: ObservableObject {
                 let requestBody = RequestBody(title: titleText, description: descriptionText, userId: userID)
                 let _ = try await NetworkManager.shared.postRequest(request: requestBody)
             } catch {
-                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error)")
+                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error.localizedDescription)")
             }
         }
     }
