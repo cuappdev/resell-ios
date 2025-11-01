@@ -230,12 +230,6 @@ class NetworkManager: APIClient {
         
     }
     
-    func getUnifiedFilteredPosts(filters: FilterPostsUnifiedRequest) async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/filter/")
-        
-        return try await post(url: url, body: filters)
-    }
-    
     func getSavedPosts() async throws -> PostsResponse {
         let url = try constructURL(endpoint: "/post/save/")
         
