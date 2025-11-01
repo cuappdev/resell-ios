@@ -35,27 +35,27 @@ class FiltersViewModel: ObservableObject {
     func applyFilters(homeViewModel: HomeViewModel) async throws {
         let categoryFiltersList = Array(categoryFilters)
         let conditionFiltersList = Array(conditionFilters)
+        
+        var sortField: String?
 
-        var sortField: String
+        guard let selectedSort = selectedSort else {
+            // selectedSort is nil, so just return
+            return
+        }
 
-        if let selectedSort = selectedSort {
-            // selectedSort has a value
-            switch selectedSort {
-            case .any:
-                sortField = "any"
-            case .newlyListed:
-                sortField = "newlyListed"
-            case .priceHighToLow:
-                sortField = "priceHighToLow"
-            case .priceLowToHigh:
-                sortField = "priceLowToHigh"
-            }
-        } else {
-            // selectedSort is nil
+        // Now selectedSort is unwrapped and safe to use
+        switch selectedSort {
+        case .any:
             sortField = "any"
+        case .newlyListed:
+            sortField = "newlyListed"
+        case .priceHighToLow:
+            sortField = "priceHighToLow"
+        case .priceLowToHigh:
+            sortField = "priceLowToHigh"
         }
     
-        let priceBody = PriceBody(lowerBound: Int(lowValue), upperBound: Int(highValue))
+        let priceBody = PriceBody(lowPrice: Int(lowValue), maxPrice: Int(highValue))
         let unifiedFilter = FilterPostsUnifiedRequest(
                                 sortField: sortField,
                                 price: priceBody,
@@ -63,20 +63,15 @@ class FiltersViewModel: ObservableObject {
                                 condition: conditionFiltersList
                                 )
 
-        
         Task {
             do {
                 let postsResponse = try await NetworkManager.shared.getUnifiedFilteredPosts(filters: unifiedFilter)
                 if isHome {
                     homeViewModel.filteredItems = postsResponse.posts
                 } else {
-                    print("hello wtf1")
-
                     detailedFilterItems = postsResponse.posts
                 }
             } catch {
-                print("hello wtf2")
-
                 NetworkManager.shared.logger.error("Error in FiltersViewModel.applyFilters: \(error)")
             }
         }
