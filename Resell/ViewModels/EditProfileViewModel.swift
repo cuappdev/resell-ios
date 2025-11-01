@@ -41,7 +41,7 @@ class EditProfileViewModel: ObservableObject {
 
                 await decodeProfileImage(url: user.photoUrl)
             } catch {
-                GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): \(error)")
+                GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): \(error.localizedDescription)")
                 return
             }
         }

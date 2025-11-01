@@ -84,11 +84,6 @@ struct Constants {
         static let horizontalPadding: CGFloat = 24.0
     }
 
-    /// Notifications for pub/sub
-    enum Notifications {
-        static let LogoutUser = Notification.Name("LogoutUser")
-    }
-
     /// Chat  categories used in Resell's design system
     static let chats = [
         FilterCategory(id: 0, title: ChatTab.purchases.rawValue),
@@ -137,7 +132,6 @@ struct Constants {
         Item(id: UUID(), title: "Justin", image: "justin_long", price: "100", category: "School"),
         Item(id: UUID(), title: "Justin", image: "justin", price: "100", category: "School"),
     ]
-
 }
 
 struct FilterCategory: Hashable {

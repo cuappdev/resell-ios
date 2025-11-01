@@ -25,8 +25,8 @@ struct MessagesView: View {
 
     // MARK: - Init
 
-    init(chatInfo: ChatInfo) {
-        _viewModel = StateObject(wrappedValue: ViewModel(chatInfo: chatInfo))
+    init(chatInfo: SimpleChatInfo) {
+        _viewModel = StateObject(wrappedValue: ViewModel(simpleChatInfo: chatInfo))
     }
 
     // MARK: - UI
@@ -61,7 +61,7 @@ struct MessagesView: View {
         }
         .onAppear(perform: setupOnAppear)
         .onDisappear {
-            FirestoreManager.shared.stopListeningToChat()
+            FirestoreManager.shared.stopListening()
         }
         .onChange(of: didSubmitAvailabilities, perform: handleAvailabilitySubmit)
         .endEditingOnTap()
@@ -72,17 +72,14 @@ struct MessagesView: View {
     private var mainContentView: some View {
         VStack {
             messageListView
-
             Spacer()
-
             Divider()
-
             messageInputView
         }
     }
 
     private var optionsMenuOverlay: some View {
-        OptionsMenuView(showMenu: $didShowOptionsMenu, options: [.report(type: "User", id: viewModel.chatInfo.buyer.firebaseUid)])
+        OptionsMenuView(showMenu: $didShowOptionsMenu, options: [.report(type: "User", id: viewModel.chatInfo?.buyer.firebaseUid ?? "")])
             .zIndex(100)
     }
     
@@ -91,13 +88,13 @@ struct MessagesView: View {
             navigateToProductDetails()
         } label: {
             VStack(spacing: 0) {
-                Text(viewModel.chatInfo.listing.title)
+                Text(viewModel.chatInfo?.listing.title ?? "Listing")
                     .font(Constants.Fonts.title1)
                     .foregroundStyle(Constants.Colors.black)
                     .lineLimit(1)
                     .truncationMode(.tail)
 
-                Text("\(viewModel.chatInfo.listing.user?.givenName ?? "") \(viewModel.chatInfo.listing.user?.familyName ?? "")")
+                Text("\(viewModel.chatInfo?.listing.user?.givenName ?? "") \(viewModel.chatInfo?.listing.user?.familyName ?? "")")
                     .font(Constants.Fonts.title3)
                     .foregroundStyle(Constants.Colors.secondaryGray)
                     .lineLimit(1)
@@ -125,10 +122,9 @@ struct MessagesView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 12) {
-                        ForEach(viewModel.messageClusters, id: \.id) { cluster in
+                        ForEach(viewModel.messageClusters) { cluster in
                             messageCluster(cluster: cluster)
                         }
-
                         Color.clear.frame(height: 1).id("BOTTOM")
                     }
                 }
@@ -165,20 +161,20 @@ struct MessagesView: View {
     }
 
     private func messageCluster(cluster: MessageCluster) -> some View {
-        return VStack(spacing: 2) {
+        VStack(spacing: 2) {
             if let first = cluster.messages.first {
+                // format date like "Mon, Apr 21, 2025", no time
                 Text("\(first.timestamp.formatted(date: .abbreviated, time: .omitted))")
                     .font(.caption)
                     .padding(10)
             }
 
-            ForEach(cluster.messages, id: \.hashValue) { message in
+            ForEach(cluster.messages, id: \.messageId) { message in
                 MessageBubbleView(
-                    didShowAvailabilityView: $didShowAvailabilityView,
+                    didShowAvailabilityView: $didShowAvailabilityView, 
                     isEditing: $isEditing, 
                     selectedAvailabilities: $viewModel.availability, 
-                    message: message,
-                    chatInfo: viewModel.chatInfo
+                    message: message
                 )
             }
         }
@@ -245,11 +241,8 @@ struct MessagesView: View {
     private func handleAvailabilitySubmit(_ didSubmit: Bool) {
         if didSubmit {
             Task {
-                do {
-                    try await viewModel.sendMessage(availability: viewModel.availability)
-                } catch {
-                    NetworkManager.shared.logger.error("Error sending availability in \(#file) \(#function): \(error)")
-                }
+                // TODO: fix
+                // await sendAvailabilities(availabilities: viewModel.availabilityDates)
                 viewModel.availability = []
                 didSubmitAvailabilities = false
             }
@@ -257,7 +250,8 @@ struct MessagesView: View {
     }
 
     private func navigateToProductDetails() {
-        let post = viewModel.chatInfo.listing
+        guard let post = viewModel.chatInfo?.listing else { return }
+
         if let existingIndex = router.path.firstIndex(where: {
             if case let .productDetails(existingPost) = $0, existingPost.id == post.id {
                 return true
@@ -271,7 +265,7 @@ struct MessagesView: View {
     }
 
     private func setNegotiationText() {
-        viewModel.draftMessageText = "Hi! I'm interested in buying your \(viewModel.chatInfo.listing.title), but would you be open to selling it for $\(priceText)?"
+        viewModel.draftMessageText = "Hi! I'm interested in buying your \(viewModel.chatInfo?.listing.title ?? "item"), but would you be open to selling it for $\(priceText)?"
         priceText = ""
     }
 }
@@ -304,7 +298,7 @@ struct FilterOptionsView: View {
                             withAnimation { didShowWebView = true }
                         }
                     case .viewAvailability:
-                        chatOption(title: "View \(viewModel.chatInfo.listing.user?.givenName ?? "")'s Availability") {
+                        chatOption(title: "View \(viewModel.chatInfo?.listing.user?.givenName ?? "")'s Availability") {
                             isEditing = false
                             withAnimation { didShowAvailabilityView = true }
                         }
@@ -402,23 +396,21 @@ struct MessageBubbleView: View {
     @Binding var isEditing: Bool
     @Binding var selectedAvailabilities: [Availability]
 
-    let message: any Message
-    let chatInfo: ChatInfo
+    let message: Message
 
     var body: some View {
         HStack {
-            if message.mine {
+            if message.fromUser {
                 Spacer()
             }
 
             messageContentView
-                .padding(.leading, message.mine ? 64 : 0)
-                .padding(.trailing, message.mine ? 0 : 64)
 
-            if !message.mine {
+            if !message.fromUser {
                 Spacer()
             }
         }
+//        .frame(maxWidth: .infinity)
         .padding(.horizontal, 12)
     }
 
@@ -437,7 +429,7 @@ struct MessageBubbleView: View {
     @ViewBuilder
     private var chatMessageView: some View {
         if let message = message as? ChatMessage {
-            VStack() {
+            VStack {
                 if !message.text.isEmpty {
                     textBubbleView(message: message)
                 }
@@ -454,18 +446,18 @@ struct MessageBubbleView: View {
     @ViewBuilder
     private func textBubbleView(message: ChatMessage) -> some View {
         HStack {
-            VStack(alignment: message.mine ? .trailing : .leading, spacing: 8) {
+            VStack(alignment: message.fromUser ? .trailing : .leading, spacing: 8) {
                 Text(message.text)
                     .font(Constants.Fonts.body2)
-                    .foregroundStyle(message.mine ? Constants.Colors.white : Constants.Colors.black)
+                    .foregroundStyle(message.fromUser ? Constants.Colors.white : Constants.Colors.black)
 
                 Text(message.timestamp.formatted(date: .omitted, time: .shortened))
                     .font(.caption2)
-                    .foregroundStyle(message.mine ? Constants.Colors.white : Constants.Colors.secondaryGray)
+                    .foregroundStyle(message.fromUser ? Constants.Colors.white : Constants.Colors.secondaryGray)
             }
             .padding(12)
-            .background(message.mine ? (message.sent ? Constants.Colors.resellPurple : Constants.Colors.resellPurple.opacity(0.5)) : Constants.Colors.wash)
-            .foregroundColor(message.mine ? Constants.Colors.white : Constants.Colors.black)
+            .background(message.fromUser ? (message.confirmed ? Constants.Colors.resellPurple : Constants.Colors.resellPurple.opacity(0.5)) : Constants.Colors.wash)
+            .foregroundColor(message.fromUser ? Constants.Colors.white : Constants.Colors.black)
             .cornerRadius(10)
         }
     }
@@ -473,7 +465,7 @@ struct MessageBubbleView: View {
     @ViewBuilder
     private func imageView(imageUrl: String) -> some View {
         HStack {
-            if message.mine {
+            if message.fromUser {
                 Spacer()
             }
 
@@ -488,7 +480,7 @@ struct MessageBubbleView: View {
                 }
             }
 
-            if !message.mine {
+            if !message.fromUser {
                 Spacer()
             }
         }
@@ -506,7 +498,7 @@ struct MessageBubbleView: View {
                 HStack {
 //                    Text("\(message.from.givenName)'s Availability")
                     // TODO: FIX
-                    Text("\(message.from.givenName)'s Availability")
+                    Text("deez's Availability")
                         .font(Constants.Fonts.title2)
                         .foregroundStyle(Constants.Colors.resellPurple)
 

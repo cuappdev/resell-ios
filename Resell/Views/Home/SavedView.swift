@@ -10,7 +10,7 @@ import SwiftUI
 struct SavedView: View {
 
     @EnvironmentObject var router: Router
-    @EnvironmentObject private var viewModel: HomeViewModel
+    @StateObject private var viewModel = HomeViewModel.shared
 
     var body: some View {
         ZStack {

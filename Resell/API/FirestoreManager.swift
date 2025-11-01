@@ -22,7 +22,7 @@ class FirestoreManager {
     // MARK: - Properties
 
     private let chatsCollection = Firestore.firestore().collection("chats_refactored")
-    var listeners: [String: ListenerRegistration] = [:]
+    var listener: ListenerRegistration?
     let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.cornellappdev.Resell", category: "FirestoreManager")
 
     // MARK: - Chat Functions
@@ -43,14 +43,14 @@ class FirestoreManager {
             .whereField(field, isEqualTo: isEqualTo)
 
         // remove the listener if it exists
-        listeners[field]?.remove()
+        listener?.remove()
 
         // add a new listener
-        listeners[field] = query.addSnapshotListener { [weak self] querySnapshot, error in
+        listener = query.addSnapshotListener { [weak self] querySnapshot, error in
             guard let self = self else { return }
 
             if let error = error {
-                logger.error("Error loading chat previews: \(error)")
+                logger.error("Error loading chat previews: \(error.localizedDescription)")
                 onSnapshotUpdate([])
                 return
             }
@@ -82,10 +82,7 @@ class FirestoreManager {
 
                     do {
                         let messagesSnapshot = try await messagesQuery.getDocuments()
-//                        let messageDocuments = try messagesSnapshot.documents.compactMap({ try $0.data(as: MessageDocument.self) })
-                        let messageDocuments = try messagesSnapshot.documents.compactMap({ doc in
-                            return try doc.data(as: MessageDocument.self)
-                        })
+                        let messageDocuments = try messagesSnapshot.documents.compactMap({ try $0.data(as: MessageDocument.self) })
 
                         // Create chat with messages
                         if let chatDocument = chatDocument {
@@ -93,7 +90,7 @@ class FirestoreManager {
                             chats.append(chat)
                         }
                     } catch {
-                        self.logger.error("Error fetching messages for chat \(chatId): \(error)")
+                        self.logger.error("Error fetching messages for chat \(chatId): \(error.localizedDescription)")
                     }
 
                     group.leave()
@@ -139,19 +136,15 @@ class FirestoreManager {
 
         let messagesQuery = chatQuery.collection("messages")
 
-        // remove all listeners from the dictionary
-        listeners.forEach { _, listener in
-            listener.remove()
-        }
-
-        listeners = [:]
+        // remove the listener if it exists
+        listener?.remove()
 
         // add a new listener
-        listeners["chat"] = messagesQuery.addSnapshotListener { [weak self] messagesSnapshot, error in
+        listener = messagesQuery.addSnapshotListener { [weak self] messagesSnapshot, error in
             guard let self = self else { return }
 
             if let error = error {
-                logger.error("Error loading chat: \(error)")
+                logger.error("Error loading chat: \(error.localizedDescription)")
                 onSnapshotUpdate([])
                 return
             }
@@ -162,15 +155,22 @@ class FirestoreManager {
                 return
             }
 
-            let messageDocuments = messages.documents.compactMap({ doc in
-                do {
-                    return try doc.data(as: MessageDocument.self)
-                } catch {
-                    self.logger.error("Error decoding message document: \(error)")
-                }
+            do {
+                try messages.documents.compactMap({ try $0.data(as: MessageDocument.self) })
+            } catch {
+                logger.error("Error decoding messages: \(error)")
+                onSnapshotUpdate([])
+                return
+            }
 
-                return nil
-            })
+            let messageDocuments = try? messages.documents.compactMap({ try $0.data(as: MessageDocument.self) })
+
+            guard let messageDocuments = messageDocuments, messageDocuments.count > 0 else {
+                logger.log("No messages found.")
+                onSnapshotUpdate([])
+                return
+            }
+
 
             Task {
                 guard let chatDocument = try? await self.chatsCollection.document(id).getDocument(as: ChatDocument.self) else {
@@ -194,25 +194,7 @@ class FirestoreManager {
 
     /// Stop listening for updates
     func stopListening() {
-        listeners.forEach { _, listener in
-            listener.remove()
-        }
-        
-        listeners = [:]
-    }
-
-    /// Stop listening to the purchase and buyer chats
-    func stopListeningAll() {
-        listeners[ChatDocument.buyerIdKey]?.remove()
-        listeners[ChatDocument.sellerIdKey]?.remove()
-        listeners.removeValue(forKey: ChatDocument.buyerIdKey)
-        listeners.removeValue(forKey: ChatDocument.sellerIdKey)
-    }
-
-    /// Stop listening to a single chat
-    func stopListeningToChat() {
-        listeners["chat"]?.remove()
-        listeners.removeValue(forKey: "chat")
+        listener?.remove()
     }
 
 }
