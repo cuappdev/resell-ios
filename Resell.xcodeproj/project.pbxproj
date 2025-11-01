@@ -327,7 +327,7 @@
 			isa = PBXGroup;
 			children = (
 				D051D8162D7E2E0500C089AF /* GoogleService-Info.plist */,
-				D0B4A25F2DA7184C00A1722C /* resell-service.json */,
+				D0A595232D91AE2D002C9E26 /* resell-service.json */,
 			);
 			path = Supporting;
 			sourceTree = "<group>";
@@ -741,7 +741,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D0B4A2602DA7184C00A1722C /* resell-service.json in Resources */,
+				D0A595242D91AE2D002C9E26 /* resell-service.json in Resources */,
 				D051D8172D7E2E0500C089AF /* GoogleService-Info.plist in Resources */,
 				2C9EAF702CF26DA00010A44C /* Rubik-Regular.ttf in Resources */,
 				2C9B4D0C2C90EF1D0029DF61 /* Launch Screen.storyboard in Resources */,
