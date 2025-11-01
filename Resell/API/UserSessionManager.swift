@@ -59,45 +59,18 @@ class UserSessionManager: ObservableObject {
         }
     }
 
-    @Published var profileURL: URL? {
-        didSet {
-            if let profileURL {
-                KeychainManager.shared.save(profileURL.absoluteString, forKey: "profileURL")
-            } else {
-                KeychainManager.shared.delete(forKey: "profileURL")
-            }
-        }
-    }
-
-    @Published var name: String? {
-        didSet {
-            if let name {
-                KeychainManager.shared.save(name, forKey: "name")
-            } else {
-                KeychainManager.shared.delete(forKey: "name")
-            }
-        }
-    }
-
     // MARK: - Init
 
     private init() {
         self.accessToken = KeychainManager.shared.get(forKey: "accessToken")
         self.googleID = KeychainManager.shared.get(forKey: "googleID")
         self.userID = KeychainManager.shared.get(forKey: "userID")
-        self.email = KeychainManager.shared.get(forKey: "email")
-        self.profileURL = URL(string: KeychainManager.shared.get(forKey: "profileURL") ?? "")
-        self.name = KeychainManager.shared.get(forKey: "name")
     }
 
     // MARK: - Functions
 
     func logout() {
         accessToken = nil
-        googleID = nil
         userID = nil
-        email = nil
-        profileURL = nil
-        name = nil
     }
 }

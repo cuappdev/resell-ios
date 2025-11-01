@@ -45,8 +45,6 @@ class LoginViewModel: ObservableObject {
                     UserSessionManager.shared.googleID = id
                     UserSessionManager.shared.userID = user.id
                     UserSessionManager.shared.email = user.email
-                    UserSessionManager.shared.profileURL = user.photoUrl
-                    UserSessionManager.shared.name = "\(user.givenName) \(user.familyName)"
 
                     success()
                 } catch {
