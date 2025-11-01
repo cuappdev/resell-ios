@@ -97,10 +97,12 @@ class HomeViewModel: ObservableObject {
         }
     }
     
-    // TODO: Use Unified Endpoint...
+    // TODO: We need support for multiple filters
     func filterPosts() {
         Task {
             do {
+            
+                
                 let postsResponse = try await NetworkManager.shared.getFilteredPostsByCategory(for: selectedFilter)
                 filteredItems = postsResponse.posts
             } catch {

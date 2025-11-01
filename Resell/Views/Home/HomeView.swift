@@ -179,7 +179,6 @@ struct HomeView: View {
                                     CircularFilterButton(filter: filter, isSelected: viewModel.selectedFilter == [filter.title]) {
                                         router.push(.detailedFilter(filter))
                                         viewModel.selectedFilter = [filter.title.uppercased()]
-                                        // TODO: Change Filter VM Selected Filter
                                     }
                                 
                                 Text(filter.title)
