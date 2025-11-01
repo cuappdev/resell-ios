@@ -5,32 +5,13 @@
 //  Created by Richie Sun on 11/29/24.
 //
 
-import FirebaseFirestore
 import Foundation
-
-struct ChatPreview {
-    let sellerName: String
-    let email: String
-    let recentItem: String
-    let image: URL?
-    let recentMessage: String
-    let recentSender: Int
-    let viewed: Bool
-    let confirmedTime: String
-    let proposedTime: String?
-    let proposedViewed: Bool
-    let recentMessageTime: String
-    let proposer: String?
-    let items: [[String: Any]]
-}
-
-extension ChatPreview: Identifiable {
-    var id: String { email }
-}
 
 struct Chat {
     var history: [ChatMessageCluster]
 }
+
+import FirebaseFirestore
 
 struct ChatMessageData: Identifiable {
     let id: String
