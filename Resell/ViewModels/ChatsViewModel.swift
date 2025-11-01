@@ -32,41 +32,12 @@ class ChatsViewModel: ObservableObject {
     @Published var draftMessageText: String = ""
 
     private let firestoreManager = FirestoreManager.shared
-    private var blockedUsers: [String] = []
 
     // MARK: - Functions
 
-    func checkEmptyState() -> Bool {
-        if selectedTab == "Purchases" {
-            return purchaseChats.isEmpty
-        } else {
-            return offerChats.isEmpty
-        }
-    }
-
-    func emptyStateTitle() -> String {
-        return "No messages with \(selectedTab == "Purchases" ? "Sellers" : "Buyers") yet"
-    }
-
-    func emptyStateMessage() -> String {
-        return selectedTab == "Purchases" ? "When you contact a seller, you’ll see your messages here" : "When a buyer contacts you, you’ll see their messages here"
-    }
-
     func getAllChats() {
-        Task {
-            do {
-                if let userID = UserSessionManager.shared.userID {
-                    blockedUsers = try await NetworkManager.shared.getBlockedUsers(id: userID).users.map { $0.email }
-
-                    getPurchaceChats()
-                    getOfferChats()
-                } else {
-                    UserSessionManager.shared.logger.error("Error in BlockedUsersView: userID not found.")
-                }
-            } catch {
-                NetworkManager.shared.logger.error("Error in BlockedUsersView: \(error.localizedDescription)")
-            }
-        }
+        getPurchaceChats()
+        getOfferChats()
     }
 
     func getPurchaceChats() {
@@ -75,8 +46,8 @@ class ChatsViewModel: ObservableObject {
         firestoreManager.getPurchaseChats { [weak self] purchaseChats in
             guard let self else { return }
 
-            self.purchaseChats = purchaseChats.filter { !self.blockedUsers.contains($0.email) }
-            purchaseUnread = countUnviewedChats(chats: self.purchaseChats)
+            self.purchaseChats = purchaseChats
+            purchaseUnread = countUnviewedChats(chats: purchaseChats)
             withAnimation { self.isLoading = false }
         }
     }
@@ -87,8 +58,8 @@ class ChatsViewModel: ObservableObject {
         firestoreManager.getOfferChats { [weak self] offerChats in
             guard let self else { return }
 
-            self.offerChats = offerChats.filter { !self.blockedUsers.contains($0.email) }
-            offerUnread = countUnviewedChats(chats: self.offerChats)
+            self.offerChats = offerChats
+            offerUnread = countUnviewedChats(chats: offerChats)
             withAnimation { self.isLoading = false }
         }
     }
@@ -101,23 +72,6 @@ class ChatsViewModel: ObservableObject {
         guard let userEmail = UserSessionManager.shared.email,
               let chatID = selectedChat?.id else { return }
         firestoreManager.updateChatViewedStatus(chatType: selectedTab, userEmail: userEmail, chatId: chatID, isViewed: true)
-    }
-
-    func getSelectedChatPost(completion: @escaping (Post) -> Void) {
-        isLoading = true
-
-        if let itemID = selectedChat?.recentItem["id"] as? String {
-            Task {
-                do {
-                    let postResponse = try await NetworkManager.shared.getPostByID(id: itemID)
-                    isLoading = false
-                    completion(postResponse.post)
-                } catch {
-                    NetworkManager.shared.logger.error("Error in ChatsViewModel.getSelectedChatPost: \(error.localizedDescription)")
-                    isLoading = false
-                }
-            }
-        }
     }
 
     /// Fetch seller's transaction history

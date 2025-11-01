@@ -271,7 +271,9 @@
 		2C02B3A02CC073340020DF90 /* Home */ = {
 			isa = PBXGroup;
 			children = (
+				2C9337532C935C9500818C8E /* ChatsView.swift */,
 				2C52E4F02C926C4B0042312C /* HomeView.swift */,
+				2CDDF30D2CCD915E0061A564 /* MessagesView.swift */,
 				2C9337552C935CB600818C8E /* ProfileView.swift */,
 				2C9337512C935C8100818C8E /* SavedView.swift */,
 				2C41BB8D2CD97E3E00EFF69E /* SearchView.swift */,
@@ -326,15 +328,6 @@
 				2C6FB17F2CFADD9100B35FF8 /* UserDocument.swift */,
 			);
 			path = "Firebase Models";
-			sourceTree = "<group>";
-		};
-		2C6FB1842CFBC0D600B35FF8 /* Chats */ = {
-			isa = PBXGroup;
-			children = (
-				2C9337532C935C9500818C8E /* ChatsView.swift */,
-				2CDDF30D2CCD915E0061A564 /* MessagesView.swift */,
-			);
-			path = Chats;
 			sourceTree = "<group>";
 		};
 		2C9337442C929B0600818C8E /* Models */ = {
@@ -467,7 +460,6 @@
 			children = (
 				2CBC6B5E2CB75ACD00C842A4 /* MainTabView.swift */,
 				2C52E4F22C926CFE0042312C /* MainView.swift */,
-				2C6FB1842CFBC0D600B35FF8 /* Chats */,
 				2C02B3A02CC073340020DF90 /* Home */,
 				2CBC6B6A2CBDF74700C842A4 /* NewListing */,
 				2C02B3A12CC0734F0020DF90 /* Onboarding */,

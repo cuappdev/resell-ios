@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Post: Codable, Equatable, Identifiable, Hashable {
+struct Post: Codable, Equatable, Identifiable {
     let id: String
     let title: String
     let description: String
@@ -29,10 +29,6 @@ struct Post: Codable, Equatable, Identifiable, Hashable {
     
     static func == (lhs: Post, rhs: Post) -> Bool {
         return lhs.id == rhs.id
-    }
-
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
     }
 
     static func sortPostsByDate(_ posts: [Post], ascending: Bool = true) -> [Post] {
