@@ -11,24 +11,22 @@ struct Post: Codable, Equatable, Identifiable, Hashable {
     let id: String
     let title: String
     let description: String
-    let category: String?
-    let condition: String?
+    let categories: [String]
     let originalPrice: String
-    let alteredPrice: String?
-    let images: [String]
+    let alteredPrice: String
+    let images: [URL]
     let created: String
     let location: String?
     let archive: Bool
     let user: User?
-    let sold: Bool?
 
     enum CodingKeys: String, CodingKey {
-        case id, title, description, category, condition
+        case id, title, description, categories
         case originalPrice = "original_price"
         case alteredPrice = "altered_price"
-        case images, created, location, archive, user, sold
+        case images, created, location, archive, user
     }
-
+    
     static func == (lhs: Post, rhs: Post) -> Bool {
         return lhs.id == rhs.id
     }
@@ -75,19 +73,17 @@ struct SavedResponse: Codable {
 struct PostBody: Codable {
     let title: String
     let description: String
-    let category: String
+    let categories: [String]
     let originalPrice: Double
     let imagesBase64: [String]
     let userId: String
-    let condition: String = "idk"
 
     enum CodingKeys: String, CodingKey {
         case title
         case description
-        case category
+        case categories
         case originalPrice = "original_price"
         case imagesBase64
         case userId
-        case condition
     }
 }

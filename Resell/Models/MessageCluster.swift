@@ -9,8 +9,9 @@ import SwiftUICore
 
 struct MessageCluster: Identifiable, Equatable {
     let id: String
+    let sender: MessageSender
     let location: MessageLocation
-    var messages: [Message]
+    let messages: [Message]
 
     static func == (lhs: MessageCluster, rhs: MessageCluster) -> Bool {
         if lhs.messages.count != rhs.messages.count { return false }
@@ -25,6 +26,11 @@ struct MessageCluster: Identifiable, Equatable {
 
         return true
     }
+}
+
+enum MessageSender {
+    case user(user: User)
+    // other message senders could be added here
 }
 
 enum MessageLocation {

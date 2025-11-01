@@ -192,7 +192,7 @@ struct ProductDetailsView: View {
 
             Spacer()
 
-            Text("$\(viewModel.item?.originalPrice ?? "0")")
+            Text("$\(viewModel.item?.originalPrice ?? "")")
                 .font(Constants.Fonts.h2)
                 .foregroundStyle(Constants.Colors.black)
         }
@@ -245,22 +245,19 @@ struct ProductDetailsView: View {
                     }
                 } else {
                     ForEach(viewModel.similarPosts, id: \.self.id) { item in
-                        let url = URL(string: item.images.first ?? "")
-                        if let url = url {
-                            KFImage(url)
-                                .placeholder {
-                                    ShimmerView()
-                                        .frame(width: imageSize, height: imageSize)
-                                        .clipShape(.rect(cornerRadius: 10))
-                                }
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: imageSize, height: imageSize)
-                                .clipShape(.rect(cornerRadius: 10))
-                                .onTapGesture {
-                                    changeItem(post: item)
-                                }
-                        }
+                        KFImage(item.images.first)
+                            .placeholder {
+                                ShimmerView()
+                                    .frame(width: imageSize, height: imageSize)
+                                    .clipShape(.rect(cornerRadius: 10))
+                            }
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: imageSize, height: imageSize)
+                            .clipShape(.rect(cornerRadius: 10))
+                            .onTapGesture {
+                                changeItem(post: item)
+                            }
                     }
                 }
             }

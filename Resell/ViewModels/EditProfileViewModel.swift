@@ -36,7 +36,7 @@ class EditProfileViewModel: ObservableObject {
                 }
 
                 username = user.username
-                venmoLink = user.venmoHandle ?? ""
+                venmoLink = user.venmoHandle
                 bio = user.bio
 
                 await decodeProfileImage(url: user.photoUrl)
