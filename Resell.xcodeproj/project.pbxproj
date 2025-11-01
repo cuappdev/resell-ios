@@ -149,7 +149,6 @@
 		2E8A5AB02DBCD16500B1F281 /* FirebaseVertexAI in Frameworks */ = {isa = PBXBuildFile; productRef = 2E8A5AAF2DBCD16500B1F281 /* FirebaseVertexAI */; };
 		2E8A5AB12DBCD68200B1F281 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = D051D8162D7E2E0500C089AF /* GoogleService-Info.plist */; };
 		2E8A5AB22DBCD68700B1F281 /* resell-service.json in Resources */ = {isa = PBXBuildFile; fileRef = D0B4A25F2DA7184C00A1722C /* resell-service.json */; };
-		2E8A5AB52DBD5B4300B1F281 /* SavedRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8A5AB42DBD5B3200B1F281 /* SavedRow.swift */; };
 		2EBB64182D8B783800CCAC48 /* Filter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EBB64172D8B783600CCAC48 /* Filter.swift */; };
 /* End PBXBuildFile section */
 
@@ -278,7 +277,6 @@
 		2CF3561E2CDE93E00045A173 /* EditProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileViewModel.swift; sourceTree = "<group>"; };
 		2CFE42712D4097CF007D503F /* Image.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Image.swift; sourceTree = "<group>"; };
 		2E3034B62D6D4E4400C1FDA9 /* FilterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterView.swift; sourceTree = "<group>"; };
-		2E8A5AB42DBD5B3200B1F281 /* SavedRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedRow.swift; sourceTree = "<group>"; };
 		2EBB64172D8B783600CCAC48 /* Filter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Filter.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -561,7 +559,6 @@
 		2C9B4D052C8FCAF20029DF61 /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				2E8A5AB42DBD5B3200B1F281 /* SavedRow.swift */,
 				2C6FB1852CFC08D000B35FF8 /* AvailabilitySelectorView.swift */,
 				2C41BB872CD90DF800EFF69E /* CachedImageView.swift */,
 				2CBC6B682CBDDC8100C842A4 /* CustomPageControlIndicatorView.swift */,
@@ -871,7 +868,6 @@
 				2C93374E2C92BE3000818C8E /* Item.swift in Sources */,
 				2C6FB18C2CFFBE7C00B35FF8 /* GoogleAuthManager.swift in Sources */,
 				2C9337542C935C9500818C8E /* ChatsView.swift in Sources */,
-				2E8A5AB52DBD5B4300B1F281 /* SavedRow.swift in Sources */,
 				2CD7CAB92CE937B10056209E /* Listing.swift in Sources */,
 				2CD6CA8C2CB48286005A4F78 /* PopupModal.swift in Sources */,
 				2CF3561F2CDE93E00045A173 /* EditProfileViewModel.swift in Sources */,
