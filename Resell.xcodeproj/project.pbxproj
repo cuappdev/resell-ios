@@ -150,7 +150,6 @@
 		2E8A5AB12DBCD68200B1F281 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = D051D8162D7E2E0500C089AF /* GoogleService-Info.plist */; };
 		2E8A5AB22DBCD68700B1F281 /* resell-service.json in Resources */ = {isa = PBXBuildFile; fileRef = D0B4A25F2DA7184C00A1722C /* resell-service.json */; };
 		2E8A5AB52DBD5B4300B1F281 /* SavedRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8A5AB42DBD5B3200B1F281 /* SavedRow.swift */; };
-		2E8C3D972DBD8A8B0074BFAB /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C1CE75D2CF6D04F00D38C25 /* NotificationsView.swift */; };
 		2EBB64182D8B783800CCAC48 /* Filter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EBB64172D8B783600CCAC48 /* Filter.swift */; };
 /* End PBXBuildFile section */
 
@@ -920,7 +919,6 @@
 				2CBC6B5B2CB72ED200C842A4 /* ExpandableAddButton.swift in Sources */,
 				2CFE42722D4097CF007D503F /* Image.swift in Sources */,
 				2C41BB882CD90DF800EFF69E /* CachedImageView.swift in Sources */,
-				2E8C3D972DBD8A8B0074BFAB /* NotificationsView.swift in Sources */,
 				2CDDF30C2CCD871A0061A564 /* ChatsViewModel.swift in Sources */,
 				2E8A5A672DBCCB0900B1F281 /* Chat.swift in Sources */,
 				2CBC6B5F2CB75ACD00C842A4 /* MainTabView.swift in Sources */,

@@ -19,18 +19,14 @@ struct HomeView: View {
     var body: some View {
         VStack(spacing: 0) {
             headerView
-            
+            filtersView
+                .padding(.bottom, 12)
             ScrollView(.vertical, showsIndicators: true) {
                 VStack {
                     savedByYou
-                    filtersView
-                        .padding(.top, 12)
                     ProductsGalleryView(items: viewModel.filteredItems)
                 }
             }
-            
-            
-                .padding(.top, 12)
         }
         .onAppear {
             viewModel.getAllPosts()
@@ -49,13 +45,13 @@ struct HomeView: View {
         }
     }
     
-    
     private var savedByYou: some View {
             VStack{
-                HStack(spacing: 156) {
+                HStack(spacing: 96){
                     Text("Saved By You")
                         .font(.custom("Rubik-Medium", size: 22))
                         .foregroundStyle(.black)
+                    
                     
                     
                     Button {
@@ -70,26 +66,23 @@ struct HomeView: View {
                     
                 }
                 // if there are no saved posts
-                if viewModel.savedItems.isEmpty {
-                    ZStack{
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.white)
-                            .frame(width: 366, height: 110)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(Color.gray, lineWidth: 4)
-                            )
-                        VStack{
-                            Text("No Listings are Saved.")
-                            Text("Browse below to get started.")
-                        }
+                ZStack{
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.white)
+                        .frame(width: 366, height: 110)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(Color.gray, lineWidth: 4)
+                        )
+                    VStack{
+                        Text("No Listings are Saved.")
+                        Text("Browse below to get started.")
                     }
-                    // if there are saved posts
-                    // load the first X posts, then have a view more button that navigates to the saved view
-                    
-                } else {
-                    SavedRow(row: viewModel.savedItems)
                 }
+                // if there are saved posts
+                // load the first X posts, then have a view more button that navigates to the saved view
+                
+                
         }
     }
 
@@ -154,36 +147,26 @@ struct HomeView: View {
 //                Icon(image: "search")
 //            })
         }
+
     }
 
     private var filtersView: some View {
-            VStack(alignment: .leading) {
-                Text("Shop By Category")
-                    .font(.custom("Rubik-Medium", size: 22))
-                    .foregroundStyle(.black)
-                    .padding(.leading, Constants.Spacing.horizontalPadding)
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack {
-                        ForEach(Constants.filters.filter { $0.color != nil }, id: \.id) { filter in
-                            VStack{
-                                CircularFilterButton(filter: filter, isSelected: viewModel.selectedFilter == filter.title) {
-                                    viewModel.selectedFilter = filter.title
-                                }
-                                Text(filter.title)
-                                    .font(Constants.Fonts.title4)
-                                
-                                    .multilineTextAlignment(.center)
-                                    .foregroundStyle(Constants.Colors.black)
-                            }
-                        }.padding(.trailing, 30)
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack {
+                ForEach(Constants.filters, id: \.id) { filter in
+                    FilterButton(filter: filter, isSelected: viewModel.selectedFilter == filter.title) {
+                        viewModel.selectedFilter = filter.title
                     }
-                    .padding(.leading, Constants.Spacing.horizontalPadding)
-                    .padding(.vertical, 1)
                 }
             }
+            .padding(.leading, Constants.Spacing.horizontalPadding)
+            .padding(.vertical, 1)
         }
     }
+    }
     
+
+
 
 
 

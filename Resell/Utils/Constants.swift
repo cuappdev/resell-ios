@@ -23,15 +23,8 @@ struct Constants {
         static let tint = Color(red: 0/255, green: 0/255, blue: 0/255, opacity: 20/100)
         static let wash = Color(red: 244/255, green: 244/255, blue: 244/255)
         static let white = Color(red: 255/255, green: 255/255, blue: 255/255)
-        
-        // filter colors
+        // Change name ?
         static let filterGray = Color(red: 214/255, green: 214/255, blue: 214/255)
-        static let filterPink = Color(red: 202/255, green: 149/255, blue: 163/255)
-        static let filterGreen = Color(red: 49/255, green: 96/255, blue: 84/255)
-        static let filterLightGreen = Color(red: 164/255, green: 183/255, blue: 171/255)
-        static let filterYellow = Color(red: 227/255, green: 181/255, blue: 112/255)
-        static let filterBlue = Color(red: 115/255, green: 162/255, blue: 171/255)
-        
 
         // Gradients
         static let resellGradient = LinearGradient(stops: [
@@ -93,13 +86,13 @@ struct Constants {
     /// Product filter categories used in Resell's design system
     static let filters = [
         FilterCategory(id: 0, title: "Recent"),
-        FilterCategory(id: 1, title: "Clothing", color: Constants.Colors.filterPink),
-        FilterCategory(id: 2, title: "Books", color: Constants.Colors.filterGreen) ,
-        FilterCategory(id: 3, title: "School", color: Constants.Colors.filterLightGreen),
-        FilterCategory(id: 4, title: "Electronics", color: Constants.Colors.filterPink),
+        FilterCategory(id: 1, title: "Clothing"),
+        FilterCategory(id: 2, title: "Books"),
+        FilterCategory(id: 3, title: "School"),
+        FilterCategory(id: 4, title: "Electronics"),
         FilterCategory(id: 5, title: "Household"),
-        FilterCategory(id: 6, title: "Handmade", color: Constants.Colors.filterYellow),
-        FilterCategory(id: 7, title: "Sports & Outdoors", color: Constants.Colors.filterBlue),
+        FilterCategory(id: 6, title: "Handmade"),
+        FilterCategory(id: 7, title: "Sports & Outdoors"),
         FilterCategory(id: 8, title: "Other")
     ]
     
@@ -137,13 +130,6 @@ struct Constants {
 struct FilterCategory: Hashable {
     let id: Int
     let title: String
-    let color: Color?
-    
-    init(id: Int, title: String, color: Color? = nil) {
-         self.id = id
-         self.title = title
-         self.color = color
-     }
 }
 
 enum ChatMessageOption: String {
