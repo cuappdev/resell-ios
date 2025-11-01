@@ -18,13 +18,11 @@ struct MainView: View {
     @StateObject private var newListingViewModel = NewListingViewModel()
     @StateObject private var onboardingViewModel = SetupProfileViewModel()
     @StateObject private var reportViewModel = ReportViewModel()
-    @StateObject private var searchViewModel = SearchViewModel()
 
     // MARK: - UI
 
     var body: some View {
         MainTabView(isHidden: $mainViewModel.hidesTabBar, selection: $mainViewModel.selection)
-            .environmentObject(searchViewModel)
             .environmentObject(router)
             .environmentObject(mainViewModel)
             .environmentObject(chatsViewModel)

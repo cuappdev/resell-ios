@@ -236,6 +236,7 @@ class NetworkManager: APIClient {
         return try await get(url: url)
     }
     
+    //REUSE 
     func getFilteredPosts(by filter: String) async throws -> PostsResponse {
         let url = try constructURL(endpoint: "/post/filter/")
         
