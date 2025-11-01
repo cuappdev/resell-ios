@@ -81,7 +81,7 @@ class FirebaseNotificationService: NSObject, MessagingDelegate, UNUserNotificati
     func setupFCMToken() {
         let messaging = Messaging.messaging()
         guard let email = UserSessionManager.shared.email else {
-            UserSessionManager.shared.logger.error("Email not found")
+            UserSessionManager.shared.logger.error("Error in MainViewModel: email not found")
             return
         }
 

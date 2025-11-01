@@ -38,10 +38,11 @@ struct LoginView: View {
                         }
                     } failure: { netid, givenName, familyName, email, googleId in
                         DispatchQueue.main.async {
-                            userDidLogin = false
-                            router.path.append(.setupProfile(netid: netid, givenName: givenName, familyName: familyName, email: email, googleId: googleId))
+                            withAnimation { userDidLogin = false }
                         }
+                        router.push(.setupProfile(netid: netid, givenName: givenName, familyName: familyName, email: email, googleId: googleId))
                     }
+
                 }
             } else {
                 Image("appdev")

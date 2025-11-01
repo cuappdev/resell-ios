@@ -20,7 +20,11 @@ class LoginViewModel: ObservableObject {
     // MARK: - Functions
 
     func googleSignIn(success: @escaping () -> Void, failure: @escaping (_ netid: String, _ givenName: String, _ familyName: String, _ email: String, _ googleId: String) -> Void) {
+        isLoading = true
+
         Task {
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+
             guard let user = await GoogleAuthManager.shared.signIn(),
                   let id = user.userID else { return }
 
