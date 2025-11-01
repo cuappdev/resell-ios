@@ -12,6 +12,7 @@ import SwiftUI
 import UserNotifications
 
 
+
 @main
 struct ResellApp: App {
 
@@ -31,32 +32,25 @@ struct ResellApp: App {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             switch settings.authorizationStatus {
             case .notDetermined:
-                // Request notification permissions
                 UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
-                    if let error = error {
-                        FirestoreManager.shared.logger.error("Error requesting notifications permission: \(error.localizedDescription)")
-                    } else if granted {
-                        DispatchQueue.main.async {
-                            UIApplication.shared.registerForRemoteNotifications()
-                        }
-                    } else {
-                        FirestoreManager.shared.logger.info("Notifications permission denied.")
+                    if !granted {
+                        showPermissionError()
                     }
                 }
-            case .authorized, .provisional:
-                DispatchQueue.main.async {
-                    UIApplication.shared.registerForRemoteNotifications()
-                }
             case .denied:
-                FirestoreManager.shared.logger.info("Notifications permission denied. Cannot register for remote notifications.")
-            case .ephemeral:
-                DispatchQueue.main.async {
-                    UIApplication.shared.registerForRemoteNotifications()
-                }
-                FirestoreManager.shared.logger.info("App has ephemeral authorization for notifications.")
+                showPermissionError()
+            case .authorized, .provisional, .ephemeral:
+                break
             @unknown default:
                 break
             }
+        }
+    }
+
+    /// Show a notification permission error (replace with actual UI if needed)
+    private func showPermissionError() {
+        DispatchQueue.main.async {
+            print("Notifications permission denied. Implement a toast-style message or alert.")
         }
     }
 }

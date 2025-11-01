@@ -39,6 +39,8 @@ class ProductDetailsViewModel: ObservableObject {
 
                 await calculateMaxImgRatio()
                 getIsSaved()
+
+                isLoading = false
             } catch {
                 NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getPost: \(error.localizedDescription)")
                 isLoading = false
@@ -87,12 +89,9 @@ class ProductDetailsViewModel: ObservableObject {
             do {
                 if let id = item?.id {
                     isSaved = try await NetworkManager.shared.postIsSaved(id: id).isSaved
-                    
-                    isLoading = false
                 }
             } catch {
                 NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getIsSaved: \(error.localizedDescription)")
-                isLoading = false
             }
         }
     }

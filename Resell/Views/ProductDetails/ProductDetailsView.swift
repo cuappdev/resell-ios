@@ -16,8 +16,7 @@ struct ProductDetailsView: View {
     @EnvironmentObject var router: Router
 
     @StateObject private var viewModel = ProductDetailsViewModel()
-
-    var id: String
+    @State var id: String
 
     // MARK: - UI
 
@@ -266,6 +265,7 @@ struct ProductDetailsView: View {
     }
 
     private func changeItem(postID: String) {
+        id = postID
         viewModel.clear()
         viewModel.getPost(id: postID)
         viewModel.getSimilarPosts(id: postID)
