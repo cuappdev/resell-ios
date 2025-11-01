@@ -125,7 +125,7 @@ struct SettingsView: View {
                 .padding(.top, 48)
 
             PurpleButton(isAlert: true, text: "Logout", horizontalPadding: 70) {
-                GoogleAuthManager.shared.signOut()
+                UserSessionManager.shared.logout()
                 viewModel.logout()
                 router.popToRoot()
                 mainViewModel.selection = 0

@@ -16,7 +16,7 @@ class Router: ObservableObject {
         case saved
         case chats
         case editProfile
-        case messages(chatInfo: SimpleChatInfo)
+        case messages(post: Post)
         case newListingDetails
         case newListingImages
         case newRequest
