@@ -222,7 +222,7 @@ class NetworkManager: APIClient {
     }
 
     // MARK: - Post Networking Functions
-    
+
     func getAllPosts() async throws -> PostsResponse {
         let url = try constructURL(endpoint: "/post/")
 
@@ -288,44 +288,7 @@ class NetworkManager: APIClient {
 
         return try await get(url: url)
     }
-    
-    func filterByPrice(prices: PriceBody) async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/filterByPrice/")
-        
-        return try await post(url: url, body: prices)
-    }
-    
-    // MARK: This endpoint doesn't exist currently...
-    func filterByCategory(category: CategoryBody) async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/filterByCategory/")
-        
-        return try await post(url: url, body: category)
-    }
-    
-    func filterByCondition(condition: ConditionBody) async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/filterByCondition/")
-        
-        return try await post(url: url, body: condition)
-    }
-    
-    func filterPriceLowtoHigh() async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/priceLowtoHigh/")
-        
-        return try await get(url: url)
-    }
-    
-    func filterPriceHightoLow() async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/priceHightoLow/")
-        
-        return try await get(url: url)
-    }
-    
-    func filterNewlyListed() async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/filterNewlyListed/")
-        
-        return try await get(url: url)
-    }
-    
+
     func createPost(postBody: PostBody) async throws -> ListingResponse {
         let url = try constructURL(endpoint: "/post/")
 
