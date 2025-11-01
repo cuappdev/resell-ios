@@ -33,7 +33,6 @@ class ChatsViewModel: ObservableObject {
 
     private let firestoreManager = FirestoreManager.shared
     private var blockedUsers: [String] = []
-    var venmoURL: URL?
 
     // MARK: - Functions
 
@@ -117,19 +116,6 @@ class ChatsViewModel: ObservableObject {
                     NetworkManager.shared.logger.error("Error in ChatsViewModel.getSelectedChatPost: \(error.localizedDescription)")
                     isLoading = false
                 }
-            }
-        }
-    }
-
-    func parsePayWithVenmoURL(email: String) {
-        Task {
-            do {
-                let venmoHandle = try await firestoreManager.getVenmoHandle(email: email)
-                print(venmoHandle)
-                let url = URL(string: "https://account.venmo.com/u/\(venmoHandle)")
-                venmoURL = url
-            } catch {
-                firestoreManager.logger.error("Error in ChatsViewModel.parsePayWithVenmoURL: \(error.localizedDescription)")
             }
         }
     }
