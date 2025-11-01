@@ -158,6 +158,7 @@ struct MessagesView: View {
         }
         .onChange(of: router.path) { newPath in
             if !newPath.contains(where: { $0 == .messages(post: post) }) {
+                print("ProductsGalleryView was popped from the stack!")
                 viewModel.selectedChat = nil
             }
         }
@@ -333,7 +334,7 @@ struct MessagesView: View {
             )
 
         } catch {
-            NetworkManager.shared.logger.error("Error in MessagesView.sendMessage: Error sending message: \(error)")
+            print("Error sending message: \(error)")
         }
     }
 
@@ -366,7 +367,7 @@ struct MessagesView: View {
                 postId: post.id
             )
         } catch {
-            NetworkManager.shared.logger.error("Error in MessagesView.sendImage: Error sending image message: \(error)")
+            print("Error sending image message: \(error)")
         }
     }
 
@@ -375,7 +376,7 @@ struct MessagesView: View {
               let myID = UserSessionManager.shared.userID,
               let recipientEmail = viewModel.selectedChat?.email,
               let senderName = UserSessionManager.shared.name else {
-            UserSessionManager.shared.logger.error("Error in MessagesView.sendAvailabilities: Missing user or chat information.")
+            UserSessionManager.shared.logger.error("Error: Missing user or chat information.")
             return
         }
 
@@ -406,7 +407,7 @@ struct MessagesView: View {
                 availability: availabilityDocument
             )
         } catch {
-            NetworkManager.shared.logger.error("Error in MessagesView.sendAvailability: Error sending availability: \(error)")
+            print("Error sending availability: \(error)")
         }
     }
 

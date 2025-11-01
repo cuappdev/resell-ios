@@ -48,6 +48,9 @@ struct AvailabilitySelectorView: View {
                 .disabled(currentPage == 0)
 
                 Spacer()
+                    .onAppear {
+                        print(selectedDates.count)
+                    }
 
                 VStack {
                     Text(isEditing ? "When are you free to meet?" : "\(proposerName ?? "")'s Availability")
