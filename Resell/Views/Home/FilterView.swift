@@ -146,13 +146,13 @@ struct FilterView: View {
                                 HStack {
                                     Button {
                                         // TODO: change logic for uppercasing...
-                                        if filtersVM.categoryFilters.contains(category){
-                                            filtersVM.categoryFilters.remove(category)
+                                        if filtersVM.categoryFilters.contains(category.uppercased()){
+                                            filtersVM.categoryFilters.remove(category.uppercased())
                                         } else {
-                                            filtersVM.categoryFilters.insert(category)
+                                            filtersVM.categoryFilters.insert(category.uppercased())
                                         }
                                     } label: {
-                                        if filtersVM.categoryFilters.contains(category) {
+                                        if filtersVM.categoryFilters.contains(category.uppercased()) {
                                             HStack{
                                                 Text(category)
                                                     .font(.custom("Rubik-Medium", size: 14))
