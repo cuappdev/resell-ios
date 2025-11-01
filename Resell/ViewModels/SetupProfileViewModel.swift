@@ -75,7 +75,7 @@ class SetupProfileViewModel: ObservableObject {
                     let userBody = user.toCreateUserBody(username: username, bio: bio, venmoHandle: venmoHandle, imageUrl: imageUrl, fcmToken: fcmToken)
                     try await NetworkManager.shared.createUser(user: userBody)
                 } else {
-                    print("AHHH?AHAHAHAHAHHHx2")
+                    print("AHHH?AHAHAHAHAHHH")
                 }
             } catch {
                 NetworkManager.shared.logger.error("Error in SetupProfileViewModel.createNewUser: \(error)")
