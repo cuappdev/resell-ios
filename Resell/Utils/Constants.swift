@@ -94,13 +94,6 @@ struct Constants {
         FilterCategory(id: 8, title: "Other")
     ]
 
-    static let chatMessageOptions: [ChatMessageOption] = [
-        .negotiate,
-        .sendAvailability,
-        .venmo,
-        .viewAvailability
-    ]
-
     static let dummyItemsData: [Item] = [
         Item(id: UUID(), title: "Justin", image: "justin", price: "100", category: "School"),
         Item(id: UUID(), title: "Justin", image: "justin_long", price: "100", category: "School"),
@@ -120,11 +113,4 @@ struct Constants {
 struct FilterCategory: Hashable {
     let id: Int
     let title: String
-}
-
-enum ChatMessageOption: String {
-    case negotiate = "Negotiate"
-    case sendAvailability = "Send Availability"
-    case venmo = "Pay with Venmo"
-    case viewAvailability = "View Availability"
 }

@@ -19,7 +19,6 @@ struct MainTabView: View {
 
     // MARK: - ViewModels
 
-    @StateObject private var chatsViewModel = ChatsViewModel()
     @StateObject private var newListingViewModel = NewListingViewModel()
     @StateObject private var reportViewModel = ReportViewModel()
 
@@ -35,7 +34,6 @@ struct MainTabView: View {
                         SavedView()
                     } else if selection == 2 {
                         ChatsView()
-                            .environmentObject(chatsViewModel)
                     } else if selection == 3 {
                         ProfileView()
                     }
@@ -50,9 +48,8 @@ struct MainTabView: View {
                             .environmentObject(newListingViewModel)
                     case .newRequest:
                         NewRequestView()
-                    case .messages(let post):
-                        MessagesView(post: post)
-                            .environmentObject(chatsViewModel)
+                    case .messages:
+                        MessagesView()
                     case .productDetails(let itemID):
                         ProductDetailsView(id: itemID)
                     case .reportConfirmation:
