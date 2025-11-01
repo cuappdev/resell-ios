@@ -6,7 +6,6 @@
 //
 
 import Kingfisher
-import PhotosUI
 import SwiftUI
 
 // MARK: - MessageView
@@ -44,8 +43,8 @@ struct MessagesView: View {
 
             if didShowOptionsMenu {
                 OptionsMenuView(showMenu: $didShowOptionsMenu, options: [.report(type: "User", id: post.user?.id ?? "")])
-                    .padding(.top, (UIApplication.shared.keyWindow?.safeAreaInsets.top ?? 0) + 30)
-                    .zIndex(1)
+                .padding(.top, (UIApplication.shared.keyWindow?.safeAreaInsets.top ?? 0) + 30)
+                .zIndex(1)
             }
         }
         .background(Constants.Colors.white)
@@ -193,13 +192,40 @@ struct MessagesView: View {
     }
 
     private var textInputView: some View {
-        TextInputView(draftMessageText: $viewModel.draftMessageText) { text, image in
-            print("Text: \(text ?? "No text")")
-            onSend()
-            if let image = image {
-                print("Image selected")
+        HStack(spacing: 8) {
+            Button {
+
+            } label: {
+                Image(systemName: "photo")
+                    .foregroundStyle(Constants.Colors.secondaryGray)
             }
+
+            TextEditor(text: $viewModel.draftMessageText)
+                .font(Constants.Fonts.body2)
+                .foregroundColor(Constants.Colors.black)
+                .padding(12)
+                .scrollContentBackground(.hidden)
+                .background(Constants.Colors.wash)
+                .clipShape(.rect(cornerRadius: 10))
+                .frame(height: 48)
+                .onChange(of: viewModel.draftMessageText) { newText in
+                    if newText.count > maxCharacters {
+                        viewModel.draftMessageText = String(newText.prefix(maxCharacters))
+                    }
+                }
+                .overlay(alignment: .trailing) {
+                    if !viewModel.draftMessageText.isEmpty {
+                        Button(action: onSend) {
+                            Image("sendButton")
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                        }
+                        .padding(.trailing, 8)
+                    }
+                }
         }
+        .padding(.trailing, 24)
+        .padding(.leading, 8)
     }
 
     // MARK: - Functions
@@ -219,139 +245,13 @@ struct MessagesView: View {
     }
 
     private func onSend() {
-        // TODO: Implement Send
+
     }
 
     private func setNegotiationText() {
         viewModel.draftMessageText = "Hi! I'm interested in buying your \(post.title), but would you be open to selling it for $\(priceText)?"
         priceText = ""
     }
-}
-
-struct TextInputView: View {
-
-    // MARK: - Properties
-
-    @State private var selectedImage: UIImage? = nil
-    @State private var showingPhotoPicker = false
-    @Binding var draftMessageText: String
-
-    let onSend: (String?, UIImage?) -> Void
-    let maxCharacters: Int = 1000
-
-    // MARK: - UI
-
-    var body: some View {
-        HStack(spacing: 8) {
-            VStack(alignment: .leading, spacing: 8) {
-                // Image Preview with Delete Option
-                if let selectedImage = selectedImage {
-                    ZStack(alignment: .topTrailing) {
-                        Image(uiImage: selectedImage)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 80)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-
-                        Button(action: {
-                            self.selectedImage = nil
-                        }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.white)
-                                .shadow(radius: 2)
-                                .padding(4)
-                        }
-                    }
-                    .padding(.leading, 32)
-                }
-
-                HStack {
-                    Button {
-                        showingPhotoPicker = true
-                    } label: {
-                        Image(systemName: "photo")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 24, height: 24)
-                            .foregroundStyle(Constants.Colors.secondaryGray)
-                    }
-                    .sheet(isPresented: $showingPhotoPicker) {
-                        SingleImagePicker(selectedImage: $selectedImage)
-                    }
-
-                    TextEditor(text: $draftMessageText)
-                        .font(Constants.Fonts.body2)
-                        .foregroundColor(Constants.Colors.black)
-                        .padding(12)
-                        .scrollContentBackground(.hidden)
-                        .background(Constants.Colors.wash)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .frame(height: 48)
-                        .onChange(of: draftMessageText) { newText in
-                            if newText.count > maxCharacters {
-                                draftMessageText = String(newText.prefix(maxCharacters))
-                            }
-                        }
-                }
-
-            }
-
-            // Send Button
-            if !draftMessageText.isEmpty || selectedImage != nil {
-                Button(action: {
-                    onSend(draftMessageText.isEmpty ? nil : draftMessageText, selectedImage)
-                    draftMessageText = ""
-                    selectedImage = nil
-                }) {
-                    Image("sendButton")
-                        .resizable()
-                        .frame(width: 24, height: 24)
-                }
-                .padding(.trailing, 8)
-            }
-        }
-        .padding(.trailing, 24)
-        .padding(.leading, 8)
-    }
-}
-
-// MARK: - ImagePicker View
-struct SingleImagePicker: UIViewControllerRepresentable {
-    @Binding var selectedImage: UIImage?
-
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.delegate = context.coordinator
-        picker.sourceType = .photoLibrary
-        return picker
-    }
-
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-
-    func makeCoordinator() -> Coordinator {
-        return Coordinator(self)
-    }
-
-    class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
-        let parent: SingleImagePicker
-
-        init(_ parent: SingleImagePicker) {
-            self.parent = parent
-        }
-
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-            if let image = info[.originalImage] as? UIImage {
-                parent.selectedImage = image
-            }
-            picker.dismiss(animated: true)
-        }
-
-        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            picker.dismiss(animated: true)
-        }
-    }
-}
-
 
 //    private var messageContentView: some View {
 //        ScrollViewReader { scrollViewProxy in
@@ -373,6 +273,7 @@ struct SingleImagePicker: UIViewControllerRepresentable {
 //            }
 //        }
 //    }
+}
 
 // MARK: - MessageBubbleView
 //struct MessageBubbleView: View {
