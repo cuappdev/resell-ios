@@ -116,17 +116,6 @@ struct HomeView: View {
                 Spacer()
                 
                 Button(action: {
-                    router.push(.search(nil))
-                }, label: {
-                    Image(systemName: "magnifyingglass")
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 20, height: 20)
-                        .foregroundStyle(Color.black)
-                })
-                .padding(.trailing, 20)
-                
-                Button(action: {
                     router.push(.notifications)
                 }, label: {
                     Icon(image: "bell")
