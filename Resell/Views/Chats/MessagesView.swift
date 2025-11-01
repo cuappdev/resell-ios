@@ -47,7 +47,6 @@ struct MessagesView: View {
             }
         }
         .background(Constants.Colors.white)
-        .toolbarBackground(Constants.Colors.white, for: .automatic)
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Button {
@@ -130,7 +129,7 @@ struct MessagesView: View {
             .ignoresSafeArea()
         }
         .sheet(isPresented: $didShowAvailabilityView) {
-            AvailabilitySelectorView(isPresented: $didShowAvailabilityView, selectedDates: $viewModel.availabilityDates)
+            AvailabilitySelectorView(isPresented: $didShowAvailabilityView)
                 .presentationCornerRadius(25)
                 .presentationDragIndicator(.visible)
         }
@@ -144,15 +143,15 @@ struct MessagesView: View {
                 UserSessionManager.shared.logger.error("Error in MessagesView: User Email Not Found")
                 return
             }
-            viewModel.parsePayWithVenmoURL(email: viewModel.selectedChat?.email ?? post.user?.email ?? "")
+            viewModel.parsePayWithVenmoURL(email: viewModel.selectedChat?.email ?? "")
 
             viewModel.subscribeToChat(
                 myEmail: myEmail,
-                otherEmail: viewModel.selectedChat?.email ?? post.user?.email ?? "",
+                otherEmail: viewModel.selectedChat?.email ?? "",
                 selfIsBuyer: !(post.user?.id == myID)
             )
-
-            viewModel.getOtherUser(email: viewModel.selectedChat?.email ?? post.user?.email ?? "")
+            
+            viewModel.getOtherUser(email: viewModel.selectedChat?.email ?? "")
         }
         .endEditingOnTap()
 
@@ -176,7 +175,7 @@ struct MessagesView: View {
                     }
                 }
             }
-            .background(Constants.Colors.white)
+            .background(Color(UIColor.systemBackground))
         }
     }
 
@@ -236,11 +235,8 @@ struct MessagesView: View {
 
     private var textInputView: some View {
         TextInputView(draftMessageText: $viewModel.draftMessageText) { text, image in
-            if let text {
-                Task {
-                    await sendMessage(text: text)
-                }
-            }
+            print("Text: \(text ?? "No text")")
+            onSend()
             if let image = image {
                 print("Image selected")
             }
@@ -263,36 +259,8 @@ struct MessagesView: View {
         }
     }
 
-    private func sendMessage(text: String) async {
-        guard let myEmail = UserSessionManager.shared.email,
-              let myID = UserSessionManager.shared.userID,
-              let recipientEmail = viewModel.selectedChat?.email,
-              let senderName = UserSessionManager.shared.name else {
-            UserSessionManager.shared.logger.error("Error: Missing user or chat information.")
-            return
-        }
-
-        do {
-            guard let senderImageUrl = UserSessionManager.shared.profileURL,
-                  let recipientImageUrl = viewModel.otherUser?.photoUrl,
-            let recipientGivenName = viewModel.otherUser?.givenName,
-            let recipientFamilyName = viewModel.otherUser?.familyName else { return }
-
-            try await viewModel.sendTextMessage(
-                senderEmail: myEmail,
-                recipientEmail: recipientEmail,
-                senderName: senderName,
-                recipientName: "\(recipientGivenName) \(recipientFamilyName)",
-                senderImageUrl: senderImageUrl,
-                recipientImageUrl: recipientImageUrl,
-                messageText: text,
-                isBuyer: !(post.user?.id == myID),
-                postId: post.id
-            )
-
-        } catch {
-            print("Error sending message: \(error)")
-        }
+    private func onSend() {
+        // TODO: Implement Send
     }
 
     private func setNegotiationText() {
@@ -348,10 +316,10 @@ struct MessageBubbleView: View {
                 .foregroundColor(fromUser ? .white : .black)
                 .cornerRadius(10)
         case .availability:
-            Text("Availability:")
-        case .state:
-            Text(message.content)
-                .foregroundColor(Constants.Colors.inactiveGray)
+            Text("Availability: \(message.content)")
+                .padding()
+                .background(Color.green.opacity(0.2))
+                .cornerRadius(10)
         default:
             Text("Unsupported message type.")
         }
@@ -384,6 +352,7 @@ struct TextInputView: View {
     var body: some View {
         HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 8) {
+                // Image Preview with Delete Option
                 if let selectedImage = selectedImage {
                     ZStack(alignment: .topTrailing) {
                         Image(uiImage: selectedImage)
@@ -490,3 +459,66 @@ struct SingleImagePicker: UIViewControllerRepresentable {
         }
     }
 }
+
+
+//    private var messageContentView: some View {
+//        ScrollViewReader { scrollViewProxy in
+//            ScrollView {
+//                VStack {
+//                    ForEach(viewModel.messages) { message in
+//                        MessageBubbleView(message: message)
+//                    }
+//                }
+//                .onChange(of: viewModel.messages.count) { _ in
+//                    if let lastMessage = viewModel.messages.last?.id {
+//                        scrollViewProxy.scrollTo(lastMessage, anchor: .bottom)
+//                    }
+//                }
+//            }
+//            .background(Constants.Colors.white)
+//            .onAppear {
+//                viewModel.fetchMessages()
+//            }
+//        }
+//    }
+
+// MARK: - MessageBubbleView
+//struct MessageBubbleView: View {
+//    let message: Message
+//
+//    var body: some View {
+//        HStack(alignment: .bottom, spacing: 10) {
+//            if message.isSentByCurrentUser {
+//                Spacer()
+//            }
+//
+//            if !message.isSentByCurrentUser {
+//                AsyncImage(url: URL(string: message.user.avatar)) { image in
+//                    image.resizable()
+//                } placeholder: {
+//                    Circle().fill(Color.gray)
+//                }
+//                .frame(width: 40, height: 40)
+//                .clipShape(Circle())
+//            }
+//
+//            VStack(alignment: message.isSentByCurrentUser ? .trailing : .leading) {
+//                Text(message.text)
+//                    .padding()
+//                    .background(message.isSentByCurrentUser ? Color.blue : Color.gray.opacity(0.2))
+//                    .foregroundColor(message.isSentByCurrentUser ? .white : .black)
+//                    .cornerRadius(15)
+//
+//                Text(message.createdAt, style: .time)
+//                    .font(.caption2)
+//                    .foregroundColor(.gray)
+//            }
+//
+//            if !message.isSentByCurrentUser {
+//                Spacer()
+//            }
+//        }
+//        .padding(message.isSentByCurrentUser ? .leading : .trailing, 60)
+//        .padding(.vertical, 5)
+//    }
+//}

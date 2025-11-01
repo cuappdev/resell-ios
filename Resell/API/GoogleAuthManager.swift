@@ -25,7 +25,7 @@ class GoogleAuthManager {
 
     private init() { }
 
-    func getOAuthToken(completion: @escaping (String) -> Void) throws {
+    func getOAuthToken(completion: @escaping (String) -> Void) {
         // 1. Locate the service account JSON file
         guard let credentialsPath = Bundle.main.path(forResource: "resell-service", ofType: "json") else {
             print("Service account file not found.")
@@ -44,13 +44,18 @@ class GoogleAuthManager {
         }
 
         // 3. Fetch the token synchronously
-        try provider.withToken { token, error in
-            if let error = error {
-                print("Error fetching token: \(error)")
+        do {
+            try provider.withToken { token, error in
+                if let error = error {
+                    print("Error fetching token: \(error)")
+                }
+                if let accessToken = token?.AccessToken  {
+                    completion(accessToken)
+                }
             }
-            if let accessToken = token?.AccessToken  {
-                completion(accessToken)
-            }
+        } catch {
+            print("Failed to fetch token: \(error)")
+            return
         }
     }
 
@@ -80,6 +85,52 @@ class GoogleAuthManager {
         let access_token: String
         let token_type: String
         let expires_in: Int
+    }
+
+    func getAccessToken() async throws -> String {
+        // 1. Load the service account JSON file
+        guard let credentialsPath = Bundle.main.path(forResource: "resell-service", ofType: "json"),
+              let credentialsData = try? Data(contentsOf: URL(fileURLWithPath: credentialsPath)) else {
+            throw NSError(domain: "OAuthError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Service account file not found"])
+        }
+        let serviceAccount = try JSONDecoder().decode(ServiceAccount.self, from: credentialsData)
+
+        // 2. Create JWT claims
+        let iat = Date()
+        let exp = iat.addingTimeInterval(3600) // Token valid for 1 hour
+        let claims = GoogleJWTClaims(
+            iss: serviceAccount.client_email,
+            scope: "https://www.googleapis.com/auth/cloud-platform",
+            aud: serviceAccount.token_uri,
+            exp: exp,
+            iat: iat
+        )
+
+        // 3. Create and sign the JWT
+        var jwt = JWT(header: Header(kid: serviceAccount.private_key_id), claims: claims)
+        let privateKey = serviceAccount.private_key.replacingOccurrences(of: "\\n", with: "\n")
+        guard let privateKeyData = privateKey.data(using: .utf8) else {
+            throw NSError(domain: "JWTError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to convert private key to Data"])
+        }
+        let signer = JWTSigner.rs256(privateKey: privateKeyData)
+        let jwtString = try jwt.sign(using: signer)
+
+        // 4. Exchange JWT for an access token
+        var request = URLRequest(url: URL(string: serviceAccount.token_uri)!)
+        request.httpMethod = "POST"
+        request.addValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        let requestBody = "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=\(jwtString)"
+        request.httpBody = requestBody.data(using: .utf8)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            let responseBody = String(data: data, encoding: .utf8) ?? "No response body"
+            throw NSError(domain: "OAuthError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to fetch access token. Response: \(responseBody)"])
+        }
+
+        // 5. Parse the access token from the response
+        let tokenResponse = try JSONDecoder().decode(OAuthTokenResponse.self, from: data)
+        return tokenResponse.access_token
     }
 
     func signIn() async -> GIDGoogleUser? {

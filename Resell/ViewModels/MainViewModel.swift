@@ -19,8 +19,6 @@ class MainViewModel: ObservableObject {
 
     @Published var selection = 0
 
-    var hidesSignInButton = true
-
     // MARK: - Persistent Storage
 
     @AppStorage("chatNotificationsEnabled") var chatNotificationsEnabled: Bool = true
@@ -90,18 +88,12 @@ class MainViewModel: ObservableObject {
     func restoreSignIn() {
         Task {
             do {
-                hidesSignInButton = true
-
-                if let _ = UserSessionManager.shared.accessToken,
-                   let _ = UserSessionManager.shared.userID {
+                if let accessToken = UserSessionManager.shared.accessToken,
+                   let userID = UserSessionManager.shared.userID {
                     // Validate the access token by prefetching saved post URLs
                     let urls = try await NetworkManager.shared.getSavedPosts().posts.compactMap { $0.images.first }
                     let prefetcher = ImagePrefetcher(urls: urls)
                     prefetcher.start()
-
-                    try GoogleAuthManager.shared.getOAuthToken { token in
-                        UserSessionManager.shared.oAuthToken = token
-                    }
 
                     withAnimation { userDidLogin = true }
                 } else if let googleID = UserSessionManager.shared.googleID {
@@ -127,7 +119,6 @@ class MainViewModel: ObservableObject {
                     let user = try await GoogleAuthManager.shared.restorePreviousSignIn()
                     guard let user,
                           let googleID = user.userID else {
-                        withAnimation { hidesSignInButton = false }
                         withAnimation { userDidLogin = false }
                         return
                     }
@@ -148,15 +139,10 @@ class MainViewModel: ObservableObject {
                     UserSessionManager.shared.profileURL = serverUser.photoUrl
                     UserSessionManager.shared.name = "\(serverUser.givenName) \(serverUser.familyName)"
 
-                    try? GoogleAuthManager.shared.getOAuthToken { token in
-                        UserSessionManager.shared.oAuthToken = token
-                    }
-
                     withAnimation { userDidLogin = true }
                 }
             } catch {
                 // Session token has expired or re-authentication failed
-                withAnimation { hidesSignInButton = false }
                 withAnimation { userDidLogin = false }
                 NetworkManager.shared.logger.log("User Session Has Expired or Google Sign-In Failed: \(error)")
             }

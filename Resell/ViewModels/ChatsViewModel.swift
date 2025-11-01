@@ -5,7 +5,7 @@
 //  Created by Richie Sun on 10/26/24.
 //
 
-//import Firebase
+import Firebase
 import FirebaseFirestore
 import SwiftUI
 
@@ -31,7 +31,6 @@ class ChatsViewModel: ObservableObject {
     @Published var selectedTab: String = "Purchases"
 
     @Published var draftMessageText: String = ""
-    @Published var availabilityDates: [Date] = []
 
     private let firestoreManager = FirestoreManager.shared
     private var blockedUsers: [String] = []
@@ -59,8 +58,6 @@ class ChatsViewModel: ObservableObject {
 
     func getAllChats() {
         Task {
-            isLoading = true
-
             do {
                 if let userID = UserSessionManager.shared.userID {
                     blockedUsers = try await NetworkManager.shared.getBlockedUsers(id: userID).users.map { $0.email }
@@ -72,7 +69,6 @@ class ChatsViewModel: ObservableObject {
                 }
             } catch {
                 NetworkManager.shared.logger.error("Error in BlockedUsersView: \(error.localizedDescription)")
-                isLoading = false
             }
         }
     }
@@ -136,7 +132,7 @@ class ChatsViewModel: ObservableObject {
                 let userResponse = try await NetworkManager.shared.getUserByEmail(email: email)
                 otherUser = userResponse.user
             } catch {
-                NetworkManager.shared.logger.error("Error in ChatsViewModel.getOtherUser: \(error)")
+                NetworkManager.shared.logger.error("Error in ChatsViewModel: \(error.localizedDescription)")
             }
         }
     }
@@ -148,7 +144,7 @@ class ChatsViewModel: ObservableObject {
                 let url = URL(string: "https://account.venmo.com/u/\(venmoHandle)")
                 venmoURL = url
             } catch {
-                firestoreManager.logger.error("Error in ChatsViewModel.parsePayWithVenmoURL: \(error)")
+                firestoreManager.logger.error("Error in ChatsViewModel.parsePayWithVenmoURL: \(error.localizedDescription)")
             }
         }
     }
@@ -194,20 +190,12 @@ class ChatsViewModel: ObservableObject {
             sellerEmail: selfIsBuyer ? otherEmail : myEmail
         ) { [weak self] documents in
             guard let self = self else { return }
+
             let messageData = documents.map { document -> (ChatMessageData, Bool) in
                 let messageType: MessageType = {
-                    if !document.image.isEmpty {
-                        return .image
-                    } else if !document.text.isEmpty {
-                        return .message
-                    } else if document.availability != nil {
-                        return .availability
-                    } else if document.meetingInfo != nil {
-                        return .state
-                    } else if document.product != nil {
-                        return .card
-                    }
-
+                    if !document.image.isEmpty { return .image }
+                    if document.availability != nil { return .availability }
+                    if document.product != nil { return .card }
                     return .message
                 }()
                 return (
@@ -304,13 +292,9 @@ class ChatsViewModel: ObservableObject {
         var lastTimestamp: Date = Date.distantPast
 
         return clusters.map { cluster in
-            guard !cluster.messages.isEmpty else { return cluster }
-
-            var newMessages: [ChatMessageData] = []
-
-            for message in cluster.messages {
+            var newMessages = cluster.messages
+            for (index, message) in cluster.messages.enumerated() {
                 let messageDate = message.timestamp.dateValue()
-
                 if !Calendar.current.isDate(messageDate, inSameDayAs: lastTimestamp) {
                     let dateMessage = ChatMessageData(
                         id: UUID().uuidString,
@@ -320,14 +304,10 @@ class ChatsViewModel: ObservableObject {
                         imageUrl: "",
                         post: nil
                     )
-                    newMessages.append(dateMessage)
+                    newMessages.insert(dateMessage, at: index)
                 }
-
-                newMessages.append(message)
-
                 lastTimestamp = messageDate
             }
-
             return ChatMessageCluster(
                 senderId: cluster.senderId,
                 senderImage: cluster.senderImage,
@@ -363,27 +343,10 @@ extension ChatsViewModel {
         let sellerName = isBuyer ? recipientName : senderName
         let buyerImageUrl = isBuyer ? senderImageUrl : recipientImageUrl
         let sellerImageUrl = isBuyer ? recipientImageUrl : senderImageUrl
-        let timestamp = Timestamp()
+        let timestamp = Timestamp(date: Date())
 
-        let isoDateFormatter = ISO8601DateFormatter()
-        isoDateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        isoDateFormatter.timeZone = TimeZone.current
-        let isoFormattedDate = isoDateFormatter.string(from: timestamp.dateValue())
-
-        let senderDocument = UserDocument(_id: senderEmail, avatar: senderImageUrl, name: senderName)
-
-        let chatDocumentSendable = ChatDocumentSendable(
-            _id: UUID().uuidString,
-            createdAt: timestamp,
-            user: senderDocument,
-            availability: [:],
-            product: [:],
-            image: imageUrl ?? "",
-            text: messageText ?? "",
-            meetingInfo: meetingInfo
-        )
-
-        let chatDocument = ChatDocument(
+        let senderDocument = UserDocument(id: senderEmail, avatar: senderImageUrl, name: senderName)
+        var chatDocument = ChatDocument(
             _id: "\(currentTimeMillis)",
             createdAt: timestamp,
             user: senderDocument,
@@ -396,7 +359,7 @@ extension ChatsViewModel {
 
         guard let post = selectedPost else { return }
 
-        if subscribedChat?.history.isEmpty ?? true {
+        if ((subscribedChat?.history.isEmpty) != nil) {
             try await firestoreManager.sendProductMessage(
                 buyerEmail: buyerEmail,
                 sellerEmail: sellerEmail,
@@ -405,7 +368,7 @@ extension ChatsViewModel {
             )
         }
 
-        try await firestoreManager.sendChatMessage(buyerEmail: buyerEmail, sellerEmail: sellerEmail, chatDocument: chatDocumentSendable)
+        try await firestoreManager.sendChatMessage(buyerEmail: buyerEmail, sellerEmail: sellerEmail, chatDocument: chatDocument)
 
         let recentMessage = determineRecentMessage(
             text: messageText,
@@ -421,12 +384,10 @@ extension ChatsViewModel {
             meetingInfo: meetingInfo
         )
 
-        print(post.title)
-
         let sellerData = TransactionSummary(
             item: post,
             recentMessage: recentMessage,
-            recentMessageTime: isoFormattedDate,
+            recentMessageTime: timestamp.dateValue().iso8601String,
             recentSender: senderName,
             confirmedTime: "",
             confirmedViewed: false,
@@ -447,15 +408,14 @@ extension ChatsViewModel {
             viewed: !isBuyer
         )
 
-        print(isBuyer)
-
         try await firestoreManager.updateBuyerHistory(sellerEmail: sellerEmail, buyerEmail: buyerEmail, data: buyerData)
         try await firestoreManager.updateSellerHistory(buyerEmail: buyerEmail, sellerEmail: sellerEmail, data: sellerData)
         try await firestoreManager.updateItems(email: buyerEmail, postId: postId, post: post)
 
         if let token = try await firestoreManager.getUserFCMToken(email: recipientEmail) {
-
-            try await FirebaseNotificationService.shared.sendNotification(title: senderName, body: notificationText, recipientToken: token, navigationId: "", authToken: UserSessionManager.shared.oAuthToken ?? "")
+//            let authToken = GoogleAuthManager.shared.getOAuthToken()
+//
+//            try await FirebaseNotificationService.shared.sendNotification(title: senderName, body: notificationText, recipientToken: token, navigationId: "", authToken: authToken ?? "")
         }
     }
 

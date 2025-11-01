@@ -30,6 +30,26 @@ struct HomeView: View {
                     .padding(.bottom, 40)
             }
             .onAppear {
+                GoogleAuthManager.shared.getOAuthToken { token in
+                    Task {
+                        do {
+                            try await FirebaseNotificationService.shared.sendNotification(title: "PENIS", body: "I WANT YOUR PENIS", recipientToken: "eS3G22mJQZaQPqAdjbJ5Bp:APA91bGnkNJFNKDWSVxDGTF5eJSR4Lem9uvr1MgZ3jVAluPRAFei1nlYkM1EtS4Z2W55zv74CBp1yUpQwnKl6TOY1DScsNRLRAoFSYMD22IcGnOvMPmmhKA", navigationId: "", authToken: "Bearer \(token)")
+                        } catch {
+                            print(error)
+                        }
+
+                    }
+                }
+//                Task {
+//                    do {
+//                        let authToken = try await GoogleAuthManager.shared.getAccessToken()
+//                        print(authToken)
+//                        try await FirebaseNotificationService.shared.sendNotification(title: "PENIS", body: "I WANT YOUR PENIS", recipientToken: "eS3G22mJQZaQPqAdjbJ5Bp:APA91bGnkNJFNKDWSVxDGTF5eJSR4Lem9uvr1MgZ3jVAluPRAFei1nlYkM1EtS4Z2W55zv74CBp1yUpQwnKl6TOY1DScsNRLRAoFSYMD22IcGnOvMPmmhKA", navigationId: "", authToken: "Bearer \(authToken)")
+//                    } catch {
+//                        print(error)
+//                    }
+//
+//                }
                 viewModel.getAllPosts()
                 viewModel.getBlockedUsers()
 
