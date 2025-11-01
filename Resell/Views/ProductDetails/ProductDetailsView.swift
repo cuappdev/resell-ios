@@ -7,7 +7,6 @@
 
 import Kingfisher
 import SwiftUI
-import UserNotifications
 
 struct ProductDetailsView: View {
 
@@ -304,88 +303,25 @@ struct ProductDetailsView: View {
             ], startPoint: .top, endPoint: .bottom)
         )
     }
-    
-    // TODO: FIX
-    
-    func sendNotification() {
-        let content = UNMutableNotificationContent()
-        content.title = "New Post"
-        content.subtitle = "Testing bookmarks"
-        content.sound = UNNotificationSound.default
-        
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false)
-        
-        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
-        
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("Error sending notification: \(error.localizedDescription)")
-            } else {
-                print("Notification sent successfully!")
-            }
-        }
-    }
-    
-    func requestNotificationAuthorization() {
-        @AppStorage("isNotificationAuthorized") var isNotificationAuthorized = false
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { (granted, error) in
-            if let error = error {
-                print("Error sending notification: \(error.localizedDescription)")
-                return
-            }
-            
-            if granted {
-                isNotificationAuthorized = true
-                print("Notification permission granted.")
-            } else {
-                isNotificationAuthorized = false
-                print("Notification permission denied.")
-            }
-        }
-    }
-    
-    @AppStorage("isNotificationAuthorized") var isNotificationAuthorized = false
-    
+
     private var saveButton: some View {
-        if isNotificationAuthorized {
-            Button {
-                viewModel.isSaved.toggle()
-                viewModel.updateItemSaved()
-                sendNotification()
-            } label: {
-                ZStack {
-                    Circle()
-                        .frame(width: 72, height: 72)
-                        .foregroundStyle(Constants.Colors.white)
-                        .opacity(viewModel.isSaved ? 1.0 : 0.9)
-                        .shadow(radius: 2)
+        Button {
+            viewModel.isSaved.toggle()
+            viewModel.updateItemSaved()
+        } label: {
+            ZStack {
+                Circle()
+                    .frame(width: 72, height: 72)
+                    .foregroundStyle(Constants.Colors.white)
+                    .opacity(viewModel.isSaved ? 1.0 : 0.9)
+                    .shadow(radius: 2)
 
-                    Image(viewModel.isSaved ? "saved.fill" : "saved")
-                        .resizable()
-                        .frame(width: 21, height: 27)
-                }
-            }
-        } else {
-            Button {
-                viewModel.isSaved.toggle()
-                viewModel.updateItemSaved()
-                requestNotificationAuthorization()
-            } label: {
-                ZStack {
-                    Circle()
-                        .frame(width: 72, height: 72)
-                        .foregroundStyle(Constants.Colors.white)
-                        .opacity(viewModel.isSaved ? 1.0 : 0.9)
-                        .shadow(radius: 2)
-
-                    Image(viewModel.isSaved ? "saved.fill" : "saved")
-                        .resizable()
-                        .frame(width: 21, height: 27)
-                }
+                Image(viewModel.isSaved ? "saved.fill" : "saved")
+                    .resizable()
+                    .frame(width: 21, height: 27)
             }
         }
     }
-
 
     private var deletePostView: some View {
         VStack(spacing: 24) {
