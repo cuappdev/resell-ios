@@ -75,7 +75,7 @@ struct ProductGalleryCell: View {
 
     @Binding var selectedItem: Post?
     @State private var isImageLoaded: Bool = false
-    // let fixedSize : Bool
+
     let post: Post
 
     private let cellWidth = (UIScreen.width - 68) / 2
