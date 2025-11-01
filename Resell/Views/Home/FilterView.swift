@@ -40,13 +40,10 @@ struct FilterView: View {
             VStack{
                 Text("Filters")
                     .font(.custom("Rubik-Medium", size: 22))
-                    .foregroundStyle(.black)
                 Divider()
                 HStack(spacing: 120) {
                     Text("Sort by")
                         .font(.custom("Rubik-Medium", size: 20))
-                        .foregroundStyle(.black)
-
                     
                     Button{
                         presentPopup.toggle()
@@ -133,8 +130,6 @@ struct FilterView: View {
                         .font(.custom("Rubik-Medium", size: 20))
                         .padding(.bottom, 8)
                         .padding(.trailing, 72)
-                        .foregroundStyle(.black)
-
                     
                     HFlow {
                         ForEach(categories, id: \.self) { category in
@@ -191,8 +186,6 @@ struct FilterView: View {
                         .padding(.trailing, 218)
                         .padding(.bottom, 8)
                         .padding(.top, 28)
-                        .foregroundStyle(.black)
-
 
                     HStack {
                         ForEach(conditions, id: \.self){ condition in
@@ -304,8 +297,7 @@ struct FilterView: View {
                         presentPopup.toggle()
                     }
             }
-        }.frame(width: 414, height: 786)
-            .background(Color.white)
+        }
     }
     
     struct SortByView: View {

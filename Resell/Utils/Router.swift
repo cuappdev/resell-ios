@@ -21,7 +21,6 @@ class Router: ObservableObject {
         case newListingImages
         case newRequest
         case notifications
-        case filters
         case profile(String)
         case productDetails(Post)
         case reportOptions(type: String, id: String)
