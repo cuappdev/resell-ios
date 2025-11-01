@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "add_user 1.png",
+      "filename" : "Component 1.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "add_user 2.png",
+      "filename" : "Component 2.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "add_user 3.png",
+      "filename" : "Component 3.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

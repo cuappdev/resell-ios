@@ -17,6 +17,7 @@ struct LoginView: View {
 
     var body: some View {
         VStack {
+            
             Image("resell")
                 .padding(.top, 180)
 
@@ -57,6 +58,7 @@ struct LoginView: View {
             loginSheetView
         }
     }
+
 
     private var loginSheetView: some View {
         VStack {
