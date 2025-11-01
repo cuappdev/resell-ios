@@ -47,8 +47,7 @@ struct ChatMessageData: Identifiable {
     }
 }
 
-struct ChatMessageCluster: Identifiable {
-    var id: UUID = UUID()
+struct ChatMessageCluster {
     let senderId: String
     let senderImage: String?
     let fromUser: Bool

@@ -45,7 +45,6 @@ struct ExternalProfileView: View {
 
                 ProductsGalleryView(items: viewModel.selectedPosts)
             }
-            .padding(.horizontal, 24)
             .background(Constants.Colors.white)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

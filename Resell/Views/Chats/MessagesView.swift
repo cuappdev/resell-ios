@@ -32,17 +32,18 @@ struct MessagesView: View {
     var body: some View {
         ZStack {
             VStack {
-                messageListView
+                //            messageContentView
 
                 Spacer()
 
                 Divider()
 
                 messageInputView
+
             }
 
             if didShowOptionsMenu {
-                OptionsMenuView(showMenu: $didShowOptionsMenu, options: [.report(type: "User", id: viewModel.otherUser?.id ?? "")])
+                OptionsMenuView(showMenu: $didShowOptionsMenu, options: [.report(type: "User", id: post.user?.id ?? "")])
                     .padding(.top, (UIApplication.shared.keyWindow?.safeAreaInsets.top ?? 0) + 30)
                     .zIndex(1)
             }
@@ -139,47 +140,11 @@ struct MessagesView: View {
                 .edgesIgnoringSafeArea(.all)
         }
         .onAppear {
-            guard let myEmail = UserSessionManager.shared.email,
-                  let myID = UserSessionManager.shared.userID else {
-                UserSessionManager.shared.logger.error("Error in MessagesView: User Email Not Found")
-                return
-            }
-            viewModel.parsePayWithVenmoURL(email: viewModel.selectedChat?.email ?? "")
-
-            viewModel.subscribeToChat(
-                myEmail: myEmail,
-                otherEmail: viewModel.selectedChat?.email ?? "",
-                selfIsBuyer: !(post.user?.id == myID)
-            )
-            
-            viewModel.getOtherUser(email: viewModel.selectedChat?.email ?? "")
+            viewModel.parsePayWithVenmoURL(email: post.user?.email ?? "")
         }
         .endEditingOnTap()
 
     }
-
-    private var messageListView: some View {
-        ScrollViewReader { scrollViewProxy in
-            ScrollView {
-                VStack {
-                    ForEach(viewModel.subscribedChat?.history ?? []) { cluster in
-                        VStack(spacing: 10) {
-                            ForEach(cluster.messages) { message in
-                                MessageBubbleView(message: message, fromUser: cluster.fromUser)
-                            }
-                        }
-                    }
-                }
-                .onChange(of: viewModel.subscribedChat?.history.count) { _ in
-                    if let lastMessage = viewModel.subscribedChat?.history.last?.messages.last?.id {
-                        scrollViewProxy.scrollTo(lastMessage, anchor: .bottom)
-                    }
-                }
-            }
-            .background(Color(UIColor.systemBackground))
-        }
-    }
-
 
     private var messageInputView: some View {
         VStack(spacing: 12) {
@@ -270,73 +235,6 @@ struct MessagesView: View {
     }
 }
 
-// MARK: - MessageBubbleView
-
-struct MessageBubbleView: View {
-    let message: ChatMessageData
-    let fromUser: Bool
-
-    var body: some View {
-        HStack {
-            if !fromUser {
-                profileImageView
-            }
-
-            VStack(alignment: fromUser ? .trailing : .leading) {
-                messageContentView
-                Text(message.timestampString)
-                    .font(.caption2)
-                    .foregroundColor(.gray)
-            }
-
-            if fromUser {
-                Spacer()
-            }
-        }
-        .padding(fromUser ? .leading : .trailing, 60)
-    }
-
-    @ViewBuilder
-    private var messageContentView: some View {
-        switch message.messageType {
-        case .image:
-            if let url = URL(string: message.imageUrl) {
-                AsyncImage(url: url) { image in
-                    image.resizable()
-                        .scaledToFill()
-                        .frame(width: 200, height: 200)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                } placeholder: {
-                    ProgressView()
-                }
-            }
-        case .message:
-            Text(message.content)
-                .padding()
-                .background(fromUser ? Color.blue : Color.gray.opacity(0.2))
-                .foregroundColor(fromUser ? .white : .black)
-                .cornerRadius(10)
-        case .availability:
-            Text("Availability: \(message.content)")
-                .padding()
-                .background(Color.green.opacity(0.2))
-                .cornerRadius(10)
-        default:
-            Text("Unsupported message type.")
-        }
-    }
-
-    private var profileImageView: some View {
-        Circle()
-            .fill(Color.gray)
-            .frame(width: 40, height: 40)
-    }
-}
-
-
-
-// MARK: - TextInputView
-
 struct TextInputView: View {
 
     // MARK: - Properties
@@ -405,6 +303,7 @@ struct TextInputView: View {
 
             }
 
+            // Send Button
             if !draftMessageText.isEmpty || selectedImage != nil {
                 Button(action: {
                     onSend(draftMessageText.isEmpty ? nil : draftMessageText, selectedImage)
@@ -424,7 +323,6 @@ struct TextInputView: View {
 }
 
 // MARK: - ImagePicker View
-
 struct SingleImagePicker: UIViewControllerRepresentable {
     @Binding var selectedImage: UIImage?
 
