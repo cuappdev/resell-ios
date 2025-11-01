@@ -23,26 +23,26 @@ class NotificationsViewModel: ObservableObject {
         "Your Listings": 5
     ]
 
-    @Published var notifications: [Notifications] = [
-        Notifications(
+    @Published var notifications: [Notification] = [
+        Notification(
             userID: "381527oef-42b4-4fdd-b074-dfwbejko229",
             title: "New Message",
             body: "You have received a new message from Mateo",
             data: NotificationData(type: "messages", messageId: "134841-42b4-4fdd-b074-jkfale")
         ),
-        Notifications(
+        Notification(
             userID: "381527oef-42b4-4fdd-b074-dfwbejko229",
             title: "Request Received",
             body: "You have a new request from Angelina",
             data: NotificationData(type: "requests", messageId: "1")
         ),
-        Notifications(
+        Notification(
             userID: "381527oef-42b4-4fdd-b074-dfwbejko229",
             title: "Bookmarked Item",
             body: "Your bookmarked item is back in stock",
             data: NotificationData(type: "bookmarks", messageId: "2")
         ),
-        Notifications(
+        Notification(
             userID: "381527oef-42b4-4fdd-b074-dfwbejko229",
             title: "Order Update",
             body: "Your listing has been bookmarked",
@@ -50,7 +50,7 @@ class NotificationsViewModel: ObservableObject {
         )
     ]
 
-    var filteredNotifications: [Notifications] {
+    var filteredNotifications: [Notification] {
         if selectedTab == "All" {
             return notifications
         } else {
@@ -61,7 +61,7 @@ class NotificationsViewModel: ObservableObject {
     // MARK: - Functions
 
     /// Mark a notification as read
-    func markAsRead(notification: Notifications) {
+    func markAsRead(notification: Notification) {
         if let index = notifications.firstIndex(where: { $0.data.messageId == notification.data.messageId}) {
             notifications[index].isRead = true
         }
@@ -70,13 +70,13 @@ class NotificationsViewModel: ObservableObject {
     /// Simulate fetching data
     func fetchNotifications() {
         notifications = [
-            Notifications(
+            Notification(
                 userID: "381527oef-42b4-4fdd-b074-dfwbejko229",
                 title: "New Message",
                 body: "You have received a new message from Mateo",
                 data: NotificationData(type: "messages", messageId: "12345")
             ),
-            Notifications(
+            Notification(
                 userID: "381527oef-42b4-4fdd-b074-dfwbejko229",
                 title: "New Request",
                 body: "You have a new request from Angelina",
