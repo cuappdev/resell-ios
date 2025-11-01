@@ -23,6 +23,7 @@ class ReportViewModel: ObservableObject {
         }
     }
 
+    // TODO: Add Logic to change this later
     @Published var reportType: String = "Post"
     @Published var selectedOption: String = ""
 
