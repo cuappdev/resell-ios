@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSExceptionDomains</key>
+		<dict/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleExecutable</key>
+	<string></string>
+	<key>CFBundleIdentifier</key>
+	<string></string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>Google</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.1534649394-98pts94l83s9309oijhplbo0duvu9abd</string>
+			</array>
+		</dict>
+	</array>
+	<key>FIREBASE_URL</key>
+	<string>$(FIREBASE_URL)</string>
+	<key>DEV_DATABASE_ID</key>
+	<string></string>
+	<key>PROD_DATABASE_ID</key>
+	<string></string>
+	<key>RESELL_DEV_URL</key>
+	<string>$(RESELL_DEV_URL)</string>
+	<key>RESELL_SSHDEV_URL</key>
+	<string>$(RESELL_SSHDEV_URL)</string>
+	<key>RESELL_LOCAL_URL</key>
+	<string>$(RESELL_LOCAL_URL)</string>
+	<key>RESELL_PROD_URL</key>
+	<string>$(RESELL_PROD_URL)</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Rubik-Regular.ttf</string>
+		<string>Rubik-Medium.ttf</string>
+		<string>ReemKufi-Regular.ttf</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+</dict>
+</plist>
