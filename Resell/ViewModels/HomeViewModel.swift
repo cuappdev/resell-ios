@@ -212,12 +212,10 @@ class HomeViewModel: ObservableObject {
         hasMorePages = true
         
         ImageCache.default.clearMemoryCache()
-        print("🧹 Cleared all caches")
     }
     
     func cleanupMemory() {
         ImageCache.default.clearMemoryCache()
-        print("🧹 Cleaned up image memory cache")
     }
     
     // MARK: - Private Methods

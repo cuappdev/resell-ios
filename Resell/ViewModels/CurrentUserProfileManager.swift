@@ -104,16 +104,20 @@ class CurrentUserProfileManager: ObservableObject {
             photoUrlBase64: profileImage.resizedToMaxDimension(256).toBase64() ?? ""
         )
         
-        let _ = try await NetworkManager.shared.updateUserProfile(edit: edit)
-        
-        print("got past this!")
-        
+        // Update local state immediately for UI responsiveness
         self.username = username
         self.bio = bio
         self.venmoHandle = venmoHandle
         self.profilePic = profileImage
         
-        await refreshProfile()
+        // Perform network request
+        let updatedUserResponse = try await NetworkManager.shared.updateUserProfile(edit: edit)
+        
+        // Update GoogleAuthManager user to persist changes across app restarts
+        GoogleAuthManager.shared.user = updatedUserResponse.user
+        
+        // Update cache timestamp so we don't immediately re-fetch old data
+        lastFetchTime = Date()
     }
     
     func deleteRequest(id: String) async throws {
