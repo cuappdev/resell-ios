@@ -246,15 +246,4 @@ class HomeViewModel: ObservableObject {
         }
         return 0
     }
-    
-    // TODO: Add function that populates recently searched
-//    func getRecentlySearched() async {
-//        guard let mainVM = mainViewModel else {
-//                print("Dependencies not configured")
-//                return
-//            }
-//            
-//            // Simply delegate to SearchViewModel with the search history
-//            await searchViewModel.loadRecentlySearched(searchHistory: mainVM.searchHistory)
-//        }
-    }
+}

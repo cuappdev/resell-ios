@@ -31,13 +31,10 @@ struct ChatsView: View {
         .background(Constants.Colors.white)
         .emptyState(isEmpty: viewModel.checkEmptyState(), title: viewModel.emptyStateTitle(), text: viewModel.emptyStateMessage())
         .refreshable {
-            viewModel.getAllChats()
+            viewModel.refreshChats()
         }
         .onAppear {
             viewModel.getAllChats()
-        }
-        .onDisappear {
-            FirestoreManager.shared.stopListeningAll()
         }
         .loadingView(isLoading: viewModel.isLoading)
     }

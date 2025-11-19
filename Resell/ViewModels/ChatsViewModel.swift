@@ -34,11 +34,23 @@ class ChatsViewModel: ObservableObject {
     @Published var availabilityDates: [Availability] = []
 
     @Published var otherUserProfileImage: UIImage = UIImage(named: "emptyProfile")!
-
+    
+    private var isListening = false
     private var blockedUsers: [String] = []
 
     var otherUser: User?
     var venmoURL: URL?
+    
+    // MARK: - Init
+    
+    init() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(stopListening),
+            name: Constants.Notifications.LogoutUser,
+            object: nil
+        )
+    }
 
     // MARK: - Functions
 
@@ -70,8 +82,25 @@ class ChatsViewModel: ObservableObject {
     }
 
     func getAllChats() {
+        guard !isListening else { return }
+        isListening = true
+        
         getPurchaceChats()
         getOfferChats()
+    }
+    
+    func refreshChats() {
+        stopListening()
+        getAllChats()
+    }
+    
+    @objc func stopListening() {
+        FirestoreManager.shared.stopListeningAll()
+        isListening = false
+        purchaseChats = []
+        offerChats = []
+        purchaseUnread = 0
+        offerUnread = 0
     }
 
     func getPurchaceChats() {
