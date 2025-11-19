@@ -106,6 +106,8 @@ class CurrentUserProfileManager: ObservableObject {
         
         let _ = try await NetworkManager.shared.updateUserProfile(edit: edit)
         
+        print("got past this!")
+        
         self.username = username
         self.bio = bio
         self.venmoHandle = venmoHandle

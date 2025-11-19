@@ -28,9 +28,18 @@ struct SearchBar: View {
                         .padding(.leading, 16)
                     
                     if isEditable {
-                        TextField(placeholder, text: textBinding)
-                            .font(Constants.Fonts.body1)
-                            .foregroundColor(Constants.Colors.black)
+                        ZStack(alignment: .leading) {
+                           // ✅ Custom placeholder that respects your color
+                           if textBinding.wrappedValue.isEmpty {
+                               Text(placeholder)
+                                   .font(Constants.Fonts.body1)
+                                   .foregroundColor(Constants.Colors.secondaryGray) // Use a visible gray
+                           }
+                           
+                           TextField("", text: textBinding)
+                               .font(Constants.Fonts.body1)
+                               .foregroundColor(Constants.Colors.black)
+                       }
                         
                         if !textBinding.wrappedValue.isEmpty {
                             Button(action: {

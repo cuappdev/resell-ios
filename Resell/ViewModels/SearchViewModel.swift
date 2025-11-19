@@ -9,7 +9,7 @@ import SwiftUI
 
 @MainActor
 class SearchViewModel: ObservableObject {
-    @Published var searchedItems: [Post] = []
+        @Published var searchedItems: [Post] = []
         @Published var isLoading: Bool = false
         @Published var isSearching: Bool = true
         

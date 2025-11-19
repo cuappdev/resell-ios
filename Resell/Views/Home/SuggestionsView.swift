@@ -59,6 +59,7 @@ struct SuggestionsView: View {
                 loadSuggestions()
             }
         }
+        .background(Constants.Colors.white)
     }
       
     

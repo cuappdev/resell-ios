@@ -250,7 +250,7 @@ extension MessagesView {
             let otherUser = chatInfo.buyer.firebaseUid == user.firebaseUid ? chatInfo.seller : chatInfo.buyer
             let venmoHandle = otherUser.venmoHandle
 
-            let url = URL(string: "https://account.venmo.com/u/\(venmoHandle)")
+            let url = URL(string: "https://venmo.com/u/\(venmoHandle ?? "")")
             self.venmoURL = url
         }
 
