@@ -46,7 +46,9 @@ struct ForYouView: View {
 
                             VStack {
                                 Text("You haven't saved any listings yet.")
+                                    .foregroundStyle(Constants.Colors.black)
                                 Text("Tap \(Image(systemName: "bookmark")) on a listing to save.")
+                                    .foregroundStyle(Constants.Colors.black)
                             }
                         }
                     }
