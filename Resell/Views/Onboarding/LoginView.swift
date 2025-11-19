@@ -10,63 +10,51 @@ import SwiftUI
 struct LoginView: View {
 
     @EnvironmentObject var router: Router
+    @EnvironmentObject private var mainViewModel: MainViewModel
+    @EnvironmentObject private var onboardingViewModel: SetupProfileViewModel
 
     @StateObject private var viewModel = LoginViewModel()
-    @StateObject private var onboardingViewModel = SetupProfileViewModel()
-    @Binding var userDidLogin: Bool
 
     var body: some View {
-        NavigationStack(path: $router.path) {
-            VStack {
-                Image("resell")
-                    .padding(.top, 180)
+        VStack {
+            Image("resell")
+                .padding(.top, 180)
 
-                Text("resell")
-                    .font(Constants.Fonts.resellLogo)
-                    .foregroundStyle(Constants.Colors.resellGradient)
-                    .multilineTextAlignment(.center)
+            Text("resell")
+                .font(Constants.Fonts.resellLogo)
+                .foregroundStyle(Constants.Colors.resellGradient)
+                .multilineTextAlignment(.center)
 
-                Spacer()
+            Spacer()
 
+            if !mainViewModel.hidesSignInButton {
                 PurpleButton(text: "Login with NetID", horizontalPadding: 28) {
-                    viewModel.googleSignIn {
-                        userDidLogin = true
-                    } failure: { netid, givenName, familyName, email, googleId in
-                        userDidLogin = false
-                        router.push(.setupProfile(netid: netid, givenName: givenName, familyName: familyName, email: email, googleId: googleId))
+                    viewModel.isLoading = true
+                    Task {
+                        let signInResult = await viewModel.googleSignIn()
+                        viewModel.isLoading = false
+                        switch signInResult {
+                        case .success:
+                            mainViewModel.userDidLogin = true
+                        case .accountCreationNeeded:
+                            router.push(.setupProfile)
+                            break
+                        default:
+                            break
+                        }
                     }
-
                 }
+            } else {
+                Image("appdev")
+                    .padding(.bottom, 24)
             }
-            .background(LoginGradient())
-            .onAppear {
-                onboardingViewModel.clear()
-            }
-            .navigationDestination(for: Router.Route.self) { route in
-                switch route {
-                case .setupProfile(let netid, let givenName, let familyName, let email, let googleId):
-                    SetupProfileView(userDidLogin: $userDidLogin, netid: netid, givenName: givenName, familyName: familyName, email: email, googleID: googleId)
-                        .environmentObject(onboardingViewModel)
-                case .venmo:
-                    VenmoView(userDidLogin: $userDidLogin)
-                        .environmentObject(onboardingViewModel)
-                default:
-                    EmptyView()
-                }
-            }
+        }
+        .background(LoginGradient())
+        .onAppear {
+            onboardingViewModel.clear()
         }
         .sheet(isPresented: $viewModel.didPresentError) {
             loginSheetView
-        }
-        .navigationDestination(for: Router.Route.self) { route in
-            switch route {
-            case .setupProfile:
-                SetupProfileView(userDidLogin: $userDidLogin)
-            case .venmo:
-                VenmoView(userDidLogin: $userDidLogin)
-            default:
-                EmptyView()
-            }
         }
     }
 
@@ -81,13 +69,23 @@ struct LoginView: View {
             Spacer()
 
             PurpleButton(text: "Try Again", horizontalPadding: 60) {
-                viewModel.googleSignIn {
-                    userDidLogin = true
-                } failure: { netid, givenName, familyName, email, googleId in
-                    userDidLogin = false
-                    router.push(.setupProfile(netid: netid, givenName: givenName, familyName: familyName, email: email, googleId: googleId))
+                Task {
+                    viewModel.didPresentError = false
+                    viewModel.isLoading = true
+                    Task {
+                        let signInResult = await viewModel.googleSignIn()
+                        viewModel.isLoading = false
+                        switch signInResult {
+                        case .success:
+                            mainViewModel.userDidLogin = true
+                        case .accountCreationNeeded:
+                            router.push(.setupProfile)
+                            break
+                        default:
+                            break
+                        }
+                    }
                 }
-                viewModel.didPresentError = false
             }
         }
         .presentationDetents([.height(200)])

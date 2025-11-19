@@ -14,85 +14,84 @@ struct ProfileView: View {
 
     @EnvironmentObject var router: Router
     @StateObject private var viewModel = ProfileViewModel()
+    @ObservedObject private var currentUser = CurrentUserProfileManager.shared
 
     // MARK: - UI
 
     var body: some View {
-        NavigationStack(path: $router.path) {
+        ScrollView {
             VStack(spacing: 0) {
                 profileImageView
                     .padding(.bottom, 12)
-
-                Text(viewModel.user?.username ?? "")
+                
+                Text(currentUser.username)
                     .font(Constants.Fonts.h3)
                     .foregroundStyle(Constants.Colors.black)
                     .padding(.bottom, 4)
-
-                Text(viewModel.user?.givenName ?? "")
+                
+                Text(currentUser.givenName)
                     .font(Constants.Fonts.body2)
                     .foregroundStyle(Constants.Colors.secondaryGray)
                     .padding(.bottom, 16)
-
-                Text(viewModel.user?.bio ?? "")
+                
+                Text(currentUser.bio)
                     .font(Constants.Fonts.body2)
                     .foregroundStyle(Constants.Colors.black)
                     .padding(.bottom, 28)
                     .lineLimit(3)
-
+                
                 profileTabsView
-
+                
                 if viewModel.selectedTab == .wishlist {
                     requestsView
-                        .emptyState(isEmpty: viewModel.requests.isEmpty, title: "No active requests", text: "Submit a request and get notified when someone lists something similar")
+                        .emptyState(
+                            isEmpty: viewModel.requests.isEmpty,
+                            title: "No active requests",
+                            text: "Submit a request and get notified when someone lists something similar"
+                        )
                 } else {
-                    ProductsGalleryView(items: viewModel.selectedPosts)
-                        .emptyState(isEmpty: viewModel.selectedPosts.isEmpty && !viewModel.isLoading, title: viewModel.selectedTab == .listing ? "No listings posted" : "No items archived", text: viewModel.selectedTab == .listing ? "When you post a listing, it will be displayed here" : "When a listing is sold or archived, it will be displayed here")
-                        .loadingView(isLoading: viewModel.isLoading)
-                }
-            }
-            .background(Constants.Colors.white)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        router.push(.settings(false))
-                    } label: {
-                        Icon(image: "settings")
-                    }
-                }
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        router.push(.search(viewModel.user?.id))
-                    } label: {
-                        Icon(image: "search")
+                    ScrollView{
+                        ProductsGalleryView(items: viewModel.selectedPosts)
+                            .emptyState(
+                                isEmpty: viewModel.selectedPosts.isEmpty && !viewModel.isLoading,
+                                title: viewModel.selectedTab == .listing ? "No listings posted" : "No items archived",
+                                text: viewModel.selectedTab == .listing
+                                ? "When you post a listing, it will be displayed here"
+                                : "When a listing is sold or archived, it will be displayed here"
+                            )
+                            .padding(.top, 24)
+                            .loadingView(isLoading: viewModel.isLoading)
                     }
                 }
             }
-            .overlay(alignment: .bottomTrailing) {
-                ExpandableAddButton()
-                    .padding(.bottom, 40)
+        }
+        .background(Constants.Colors.white)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    router.push(.settings(false))
+                } label: {
+                    Icon(image: "settings")
+                }
             }
-            .onChange(of: viewModel.selectedTab) { _ in
-                viewModel.updateItemsGallery()
-            }
-            .onAppear {
-                viewModel.getUser()
-            }
-            .refreshable {
-                viewModel.getUser()
-            }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            ExpandableAddButton()
+                .padding(.bottom, 40)
+        }
+        .onAppear {
+            viewModel.loadCurrentUser()
+        }
+        .refreshable {
+            viewModel.loadCurrentUser(forceRefresh: true)
         }
     }
 
     private var profileImageView: some View {
-        KFImage(viewModel.user?.photoUrl)
-            .cacheOriginalImage()
-            .placeholder {
-                ShimmerView()
-                    .frame(width: 90, height: 90)
-            }
+        Image(uiImage: currentUser.profilePic)
             .resizable()
             .frame(width: 90, height: 90)
+            .background(Constants.Colors.stroke)
             .clipShape(.circle)
     }
 
@@ -148,7 +147,6 @@ struct ProfileView: View {
                         }
                     } onDelete: {
                         viewModel.deleteRequest(id: request.id)
-                        viewModel.requests.removeAll { $0.id == request.id }
                     }
                 }
             }

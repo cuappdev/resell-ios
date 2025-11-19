@@ -23,7 +23,6 @@ class ReportViewModel: ObservableObject {
         }
     }
 
-    // TODO: Add Logic to change this later
     @Published var reportType: String = "Post"
     @Published var selectedOption: String = ""
 
@@ -47,56 +46,53 @@ class ReportViewModel: ObservableObject {
     }
 
     func reportPost() {
+        isLoading = true
+
         Task {
-            isLoading = true
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
-                if let userID = user?.id,
+                if let userID = user?.firebaseUid,
                    let postID = post?.id {
                     let reportBody = ReportPostBody(reported: userID, post: postID, reason: selectedOption)
                     try await NetworkManager.shared.reportPost(reportBody: reportBody)
                 }
-
-                withAnimation { isLoading = false }
             } catch {
-                NetworkManager.shared.logger.error("Error in ReportViewModel.reportPost: \(error.localizedDescription)")
-                withAnimation { isLoading = false }
+                NetworkManager.shared.logger.error("Error in ReportViewModel.reportPost: \(error)")
             }
         }
     }
 
     func reportUser() {
+        isLoading = true
+
         Task {
-            isLoading = true
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
-                if let userID = user?.id {
+                if let userID = user?.firebaseUid {
                     let reportBody = ReportUserBody(reported: userID, reason: selectedOption)
                     try await NetworkManager.shared.reportUser(reportBody: reportBody)
                 }
-
-                withAnimation { isLoading = false }
             } catch {
-                NetworkManager.shared.logger.error("Error in ReportViewModel.reportUser: \(error.localizedDescription)")
-                withAnimation { isLoading = false }
+                NetworkManager.shared.logger.error("Error in ReportViewModel.reportUser: \(error)")
             }
         }
     }
 
     func blockUser() {
+        isLoading = true
+
         Task {
-            isLoading = true
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
-                if let id = user?.id {
+                if let id = user?.firebaseUid {
                     let blocked = BlockUserBody(blocked: id)
                     try await NetworkManager.shared.blockUser(blocked: blocked)
                 }
-
-                isLoading = false
             } catch {
-                NetworkManager.shared.logger.error("Error in ProfileViewModel.blockUser: \(error.localizedDescription)")
-                isLoading = false
+                NetworkManager.shared.logger.error("Error in ProfileViewModel.blockUser: \(error)")
             }
         }
     }
@@ -106,7 +102,7 @@ class ReportViewModel: ObservableObject {
             do {
                 user = try await NetworkManager.shared.getUserByID(id: id).user
             } catch {
-                NetworkManager.shared.logger.error("Error in ReportViewModel.getUser: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in ReportViewModel.getUser: \(error)")
             }
         }
     }
@@ -117,7 +113,7 @@ class ReportViewModel: ObservableObject {
                 post = try await NetworkManager.shared.getPostByID(id: id).post
                 user = post?.user
             } catch {
-                NetworkManager.shared.logger.error("Error in ReportViewModel.getUser: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in ReportViewModel.getUser: \(error)")
             }
         }
     }

@@ -15,7 +15,7 @@ struct TabViewIcon: View {
     @Binding var selectionIndex: Int
 
     let itemIndex: Int
-    private let tabItems = ["home", "bookmark", "messages", "user"]
+    private let tabItems = ["home", "messages", "user"]
 
     // MARK: - UI
     

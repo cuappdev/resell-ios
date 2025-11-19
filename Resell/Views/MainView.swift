@@ -8,43 +8,41 @@
 import GoogleSignIn
 import SwiftUI
 
-import GoogleSignIn
-import SwiftUI
-
 struct MainView: View {
 
     // MARK: - Properties
 
-    @StateObject private var mainViewModel = MainViewModel()
+    @EnvironmentObject private var mainViewModel: MainViewModel
     @StateObject private var router = Router()
+    @StateObject private var chatsViewModel = ChatsViewModel()
+    @StateObject private var newListingViewModel = NewListingViewModel()
+    @StateObject private var onboardingViewModel = SetupProfileViewModel()
+    @StateObject private var reportViewModel = ReportViewModel()
+    @StateObject private var searchViewModel = SearchViewModel()
+    @StateObject private var filterViewModel = FiltersViewModel()
 
     // MARK: - UI
 
     var body: some View {
-        ZStack {
-            if mainViewModel.userDidLogin {
-                MainTabView(isHidden: $mainViewModel.hidesTabBar, selection: $mainViewModel.selection)
-                    .transition(.opacity)
-                    .animation(.easeInOut, value: mainViewModel.userDidLogin)
-                    .environmentObject(router)
-            } else {
-                LoginView(userDidLogin: $mainViewModel.userDidLogin)
-                    .transition(.opacity)
-                    .animation(.easeInOut, value: mainViewModel.userDidLogin)
-                    .environmentObject(router)
+        MainTabView(isHidden: $mainViewModel.hidesTabBar, selection: $mainViewModel.selection)
+            .environmentObject(searchViewModel)
+            .environmentObject(router)
+            .environmentObject(mainViewModel)
+            .environmentObject(chatsViewModel)
+            .environmentObject(newListingViewModel)
+            .environmentObject(filterViewModel)
+            .environmentObject(onboardingViewModel)
+            .environmentObject(reportViewModel)
+            .background(Constants.Colors.white)
+            .onAppear {
+                let signInConfig = GIDConfiguration.init(clientID: Keys.googleClientID)
+                GIDSignIn.sharedInstance.configuration = signInConfig
+                mainViewModel.restoreSignIn()
+                mainViewModel.setupNavBar()
+                mainViewModel.hidesTabBar = false
             }
-        }
-        .background(Constants.Colors.white)
-        .environmentObject(mainViewModel)
-        .onAppear {
-            let signInConfig = GIDConfiguration.init(clientID: Keys.googleClientID)
-            GIDSignIn.sharedInstance.configuration = signInConfig
-            mainViewModel.restoreSignIn()
-            mainViewModel.setupNavBar()
-            mainViewModel.hidesTabBar = false
-        }
-        .onOpenURL { url in
-            GIDSignIn.sharedInstance.handle(url)
-        }
+            .onOpenURL { url in
+                GIDSignIn.sharedInstance.handle(url)
+            }
     }
 }

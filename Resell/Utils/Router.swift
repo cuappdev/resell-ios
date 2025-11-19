@@ -16,21 +16,25 @@ class Router: ObservableObject {
         case saved
         case chats
         case editProfile
-        case messages
+        case messages(chatInfo: ChatInfo)
         case newListingDetails
         case newListingImages
         case newRequest
+        case notifications
+        case filters
         case profile(String)
-        case productDetails(String)
+        case productDetails(Post)
         case reportOptions(type: String, id: String)
         case reportDetails
         case reportConfirmation
-        case search(String?)
+        case discover
+        case detailedFilter(FilterCategory)
+        case search(String?) //
+        case recentlySearched
         case settings(Bool)
         case blockedUsers
         case feedback
-        case notifications
-        case setupProfile(netid: String, givenName: String, familyName: String, email: String, googleId: String)
+        case setupProfile
         case venmo
     }
 
@@ -57,5 +61,19 @@ class Router: ObservableObject {
     func lastPushedView() -> Route {
         return path.last ?? .home
     }
+    
+//    func navigateToProductDetails(post: Post) {
+//        if let existingIndex = path.firstIndex(where: {
+//            if case .productDetails = $0 {
+//                return true
+//            }
+//            return false
+//        }) {
+//            path[existingIndex] = .productDetails(post)
+//            popTo(path[existingIndex])
+//        } else {
+//            push(.productDetails(post))
+//        }
+//    }
 }
 

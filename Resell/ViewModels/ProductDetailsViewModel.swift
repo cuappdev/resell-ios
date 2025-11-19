@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import Kingfisher
+import UserNotifications
 
 @MainActor
 class ProductDetailsViewModel: ObservableObject {
@@ -29,28 +31,54 @@ class ProductDetailsViewModel: ObservableObject {
     // MARK: - Functions
 
     func getPost(id: String) {
+        isLoading = true
+
         Task {
-            isLoading = true
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
                 let postResponse = try await NetworkManager.shared.getPostByID(id: id)
                 item = postResponse.post
-                images = postResponse.post.images
+                if let post = postResponse.post {
+                    images = post.images.compactMap { URL(string: $0) }
+                }
 
                 await calculateMaxImgRatio()
                 getIsSaved()
-
-                isLoading = false
+                getSimilarPosts(id: id)
             } catch {
-                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getPost: \(error.localizedDescription)")
-                isLoading = false
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getPost: \(error)")
             }
         }
     }
 
+    func isMyPost() -> Bool {
+        if let userID = GoogleAuthManager.shared.user?.firebaseUid {
+            if userID == item?.user?.firebaseUid {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    func setPost(post: Post) {
+        item = post
+        images = post.images.compactMap { URL(string: $0) }
+
+        Task {
+            await calculateMaxImgRatio()
+        }
+
+        getIsSaved()
+        getSimilarPosts(id: post.id)
+    }
+
+    // Replace once backend endpoint is fix. Currently, making this call blocks all other incoming requests to our backend :(
     func getSimilarPosts(id: String) {
         Task {
             isLoadingImages = true
+            defer { isLoadingImages = false }
 
             do {
                 let postsResponse = try await NetworkManager.shared.getSimilarPostsByID(id: id)
@@ -59,15 +87,35 @@ class ProductDetailsViewModel: ObservableObject {
                 } else {
                     similarPosts = postsResponse.posts
                 }
+             
+            } catch {
+                NetworkManager.shared.logger.error("Errror in ProductDetailsViewModel.getSimilarPosts: \(error)")
+            }
+        }
+    }
+
+    func getSimilarPostsNaive(post: Post) {
+        Task {
+            do {
+                // idk if this is what the endpoint even wants...
+                let postsResponse = try await NetworkManager.shared.getFilteredPosts(by: post.category != nil ? post.category! : "")
+                var otherPosts = postsResponse.posts
+                otherPosts.removeAll { $0.id == post.id }
+
+                if otherPosts.count >= 4 {
+                    similarPosts = Array(otherPosts.prefix(4))
+                } else {
+                    similarPosts = otherPosts
+                }
 
                 isLoadingImages = false
             } catch {
-                NetworkManager.shared.logger.error("Errror in ProductDetailsViewModel.getSimilarPosts: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Errror in ProductDetailsViewModel.getSimilarPostsNaive: \(error)")
                 isLoadingImages = false
             }
         }
     }
-    
+
     func updateItemSaved() {
         Task {
             do {
@@ -79,7 +127,7 @@ class ProductDetailsViewModel: ObservableObject {
                     }
                 }
             } catch {
-                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel:.updateItemSaved \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel:.updateItemSaved \(error)")
             }
         }
     }
@@ -91,7 +139,7 @@ class ProductDetailsViewModel: ObservableObject {
                     isSaved = try await NetworkManager.shared.postIsSaved(id: id).isSaved
                 }
             } catch {
-                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getIsSaved: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getIsSaved: \(error)")
             }
         }
     }
@@ -105,7 +153,7 @@ class ProductDetailsViewModel: ObservableObject {
 
                 didShowDeleteView = false
             } catch {
-                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.archivePost: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.archivePost: \(error)")
             }
         }
     }
@@ -119,14 +167,14 @@ class ProductDetailsViewModel: ObservableObject {
 
                 didShowDeleteView = false
             } catch {
-                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.deletePost: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.deletePost: \(error)")
             }
         }
     }
 
     func isUserPost() -> Bool {
-        if let userId = UserSessionManager.shared.userID,
-           let itemUserId = item?.user?.id {
+        if let userId = GoogleAuthManager.shared.user?.firebaseUid,
+           let itemUserId = item?.user?.firebaseUid {
             return userId == itemUserId
         }
 
@@ -142,6 +190,90 @@ class ProductDetailsViewModel: ObservableObject {
         item = nil
         similarPosts = []
     }
+    
+//    // Creates a new notification for type = bookmarks
+//    // __(person)__ has bookmarked __(item)__
+    
+//    func createNewNotif() {
+//        Task {
+//            do {
+//                // Checks product exists
+//                guard let product = item else {
+//                    NetworkManager.shared.logger.error("Error in createNewNotif: Product not available.")
+//                        return
+//                }
+//                
+//                guard let userID = UserSessionManager.shared.userID else {
+//                    UserSessionManager.shared.logger.error("Error in createNewNotif: userID not found")
+//                    return
+//                }
+//                
+//                // Checks
+//                guard let sellerID = product.user?.id else {
+//                    NetworkManager.shared.logger.error("Error in createNewNotif: Seller ID not found.")
+//                        return
+//                }
+//                
+//                let productName = product.title
+//                
+//                // Posts a notification under the sellerID
+//                let notification = Notification(
+//                    userID: sellerID,
+//                    title: "\(userID) has bookmarked \(productName)",
+//                    body: "\(productName) was bookmarked!",
+//                    data: NotificationData(type: "bookmarks", messageId: UUID().uuidString)
+//                )
+//                
+//                let _ = try await NetworkManager.shared.createNotif(notifBody: notification)
+//                
+//                NetworkManager.shared.logger.info("Notification sent!!")
+//            } catch {
+//
+//                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.createNewNotif: \(error.localizedDescription)")
+//
+//            }
+//        }
+//    }
+    
+    // MARK: I DONT KNOW WHAT THIS DOES - Charles
+    
+//    func createNewNotif() {
+//        print(UserSessionManager.shared.userID)
+//        Task {
+//            do {
+//                guard let product = item else {
+//                    NetworkManager.shared.logger.error("Error: Product details not available.")
+//                    return
+//                }
+//
+//                guard let sellerID = product.user?.id else {
+//                    NetworkManager.shared.logger.error("Error: Seller ID not found.")
+//                    return
+//                }
+//
+//                let productName = product.title
+//
+////                let notification = Notification(
+////                   // userID: sellerID,
+////                    //name: "\(UserSessionManager.shared.userID ?? "Someone") has bookmarked \(productName)"
+////                    // body: "Your item '\(productName)' was bookmarked!"
+////                    
+////                   // data: NotificationData(type: "bookmarks", messageId: UUID().uuidString)
+////                )
+//
+//                try await NetworkManager.shared.createNotif(notifBody: notification)
+//                NetworkManager.shared.logger.info("Notification sent successfully!")
+//
+//            } catch let error as ErrorResponse {
+//                // Specific error from app
+//                NetworkManager.shared.logger.error("API Error \(error.localizedDescription)")
+//            } catch {
+//                // General error
+//                NetworkManager.shared.logger.error("Unexpected error \(error.localizedDescription)")
+//            }
+//        }
+//    }
+
 
     private func calculateMaxImgRatio() async {
         var maxRatio = 0.0

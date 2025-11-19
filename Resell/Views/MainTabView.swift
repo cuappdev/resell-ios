@@ -11,7 +11,6 @@ struct MainTabView: View {
 
     // MARK: - Properties
 
-    @EnvironmentObject private var mainViewModel: MainViewModel
     @EnvironmentObject var router: Router
 
     @Binding var isHidden: Bool
@@ -19,94 +18,128 @@ struct MainTabView: View {
 
     // MARK: - ViewModels
 
-    @StateObject private var newListingViewModel = NewListingViewModel()
-    @StateObject private var reportViewModel = ReportViewModel()
+    @EnvironmentObject private var chatsViewModel: ChatsViewModel
+    @EnvironmentObject private var mainViewModel: MainViewModel
+    @EnvironmentObject private var newListingViewModel: NewListingViewModel
+    @EnvironmentObject private var onboardingViewModel: SetupProfileViewModel
+    @EnvironmentObject private var reportViewModel: ReportViewModel
 
     // MARK: - UI
 
     var body: some View {
         NavigationStack(path: $router.path) {
-            ZStack(alignment: .bottom) {
-                ZStack() {
-                    if selection == 0 {
-                        HomeView()
-                    } else if selection == 1 {
-                        SavedView()
-                    } else if selection == 2 {
-                        ChatsView()
-                    } else if selection == 3 {
-                        ProfileView()
-                    }
-                }
-                .navigationDestination(for: Router.Route.self) { route in
-                    switch route {
-                    case .newListingDetails:
-                        NewListingDetailsView()
-                            .environmentObject(newListingViewModel)
-                    case .newListingImages:
-                        NewListingImagesView()
-                            .environmentObject(newListingViewModel)
-                    case .newRequest:
-                        NewRequestView()
-                    case .messages:
-                        MessagesView()
-                    case .productDetails(let itemID):
-                        ProductDetailsView(id: itemID)
-                    case .reportConfirmation:
-                        ReportConfirmationView()
-                            .environmentObject(reportViewModel)
-                    case .reportDetails:
-                        ReportDetailsView()
-                            .environmentObject(reportViewModel)
-                    case .reportOptions(let type, let id):
-                        ReportOptionsView(type: type, id: id)
-                            .environmentObject(reportViewModel)
-                    case .search(let id):
-                        SearchView(userID: id)
-                    case .settings(let isAccountSettings):
-                        SettingsView(isAccountSettings: isAccountSettings)
-                    case .blockedUsers:
-                        BlockedUsersView()
-                    case .editProfile:
-                        EditProfileView()
-                    case .feedback:
-                        SendFeedbackView()
-                    case .notifications:
-                        NotificationsSettingsView()
-                    case .login:
-                        LoginView(userDidLogin: $mainViewModel.userDidLogin)
-                    case .profile(let id):
-                        ExternalProfileView(userID: id)
-                    default:
-                        EmptyView()
-                    }
-                }
-
-
-                if !isHidden {
-                    HStack {
-                        ForEach(0..<4, id: \.self) { index in
-                            TabViewIcon(selectionIndex: $selection, itemIndex: index)
-                                .frame(width: 28, height: 28)
-
-                            if index != 3 {
-                                Spacer()
+                Group {
+                    if mainViewModel.userDidLogin {
+                        VStack(spacing: 0) {
+                            mainView
+                            
+                            if !isHidden {
+                                tabBarView
                             }
                         }
+                        .ignoresSafeArea(edges: .bottom)
+                        .transition(.opacity)
+                        .background(.white)
+                        .environmentObject(router)
+                    } else {
+                        LoginView()
+                            .transition(.opacity)
+                            .environmentObject(onboardingViewModel)
+                            .environmentObject(router)
                     }
-                    .ignoresSafeArea(edges: .bottom)
-                    .padding(.horizontal, 40)
-                    .padding(.top, 16)
-                    .padding(.bottom, 36)
-                    .frame(width: UIScreen.width)
-                    .background(Constants.Colors.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
-                    .shadow(radius: 4)
-                    .offset(y: 34)
-                    .transition(.move(edge: .bottom))
-                    .animation(.easeInOut, value: isHidden)
+            }
+            .navigationDestination(for: Router.Route.self) { route in
+                switch route {
+                case .newListingDetails:
+                    NewListingDetailsView()
+                        .environmentObject(newListingViewModel)
+                case .newListingImages:
+                    NewListingImagesView()
+                        .environmentObject(newListingViewModel)
+                case .newRequest:
+                    NewRequestView()
+                case .messages(let chatInfo):
+                    MessagesView(chatInfo: chatInfo)
+                case .discover:
+                    SuggestionsView()
+                case .productDetails(let item):
+                    ProductDetailsView(post: item)
+                case .reportConfirmation:
+                    ReportConfirmationView()
+                        .environmentObject(reportViewModel)
+                case .reportDetails:
+                    ReportDetailsView()
+                        .environmentObject(reportViewModel)
+                case .reportOptions(let type, let id):
+                    ReportOptionsView(type: type, id: id)
+                        .environmentObject(reportViewModel)
+                case .search(let id):
+                    SearchView(userID: id)
+                case .settings(let isAccountSettings):
+                    SettingsView(isAccountSettings: isAccountSettings)
+                case .blockedUsers:
+                    BlockedUsersView()
+                case .editProfile:
+                    EditProfileView()
+                case .feedback:
+                    SendFeedbackView()
+                case .detailedFilter(let filter):
+                    DetailedFilterView(filter: filter)
+                case .saved:
+                    SavedView()
+//                case .notifications:
+//                    NotificationsSettingsView()
+                case .login:
+                    LoginView()
+                        .environmentObject(onboardingViewModel)
+                case .profile(let id):
+                    ExternalProfileView(userID: id)
+                case .setupProfile:
+                    SetupProfileView(userDidLogin: $mainViewModel.userDidLogin, user: GoogleAuthManager.shared.user)
+                        .environmentObject(onboardingViewModel)
+                case .venmo:
+                    VenmoView(userDidLogin: $mainViewModel.userDidLogin)
+                        .environmentObject(onboardingViewModel)
+                default:
+                    EmptyView()
                 }
             }
         }
+    }
+
+    private var mainView: some View {
+        ZStack() {
+            if selection == 0 {
+                HomeView()
+            } else if selection == 1 {
+                ChatsView()
+                    .environmentObject(chatsViewModel)
+            } else if selection == 2 {
+                ProfileView()
+            }
+        }
+    }
+
+    private var tabBarView: some View {
+        HStack {
+            ForEach(0..<3, id: \.self) { index in
+                TabViewIcon(selectionIndex: $selection, itemIndex: index)
+                    .frame(width: 28, height: 28)
+
+                if index != 2 {
+                    Spacer()
+                }
+            }
+        }
+        .ignoresSafeArea(edges: .bottom)
+        .padding(.horizontal, 40)
+        .padding(.top, 16)
+        .padding(.bottom, 46)
+        .frame(width: UIScreen.width)
+        .background(Constants.Colors.white)
+        .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+        .shadow(radius: 4)
+        .transition(.move(edge: .bottom))
+        .animation(.easeInOut, value: isHidden)
     }
 }

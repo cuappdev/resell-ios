@@ -27,6 +27,9 @@ class NewListingViewModel: ObservableObject {
     @Published var descriptionText: String = ""
     @Published var priceText: String = ""
     @Published var selectedFilter: String = "Clothing"
+    @Published var selectedCondition: String = "Never Used"
+
+    
     @Published var titleText: String = ""
 
     // MARK: - Functions
@@ -50,18 +53,29 @@ class NewListingViewModel: ObservableObject {
     }
 
     func createNewListing() {
+        isLoading = true
+        
         Task {
-            isLoading = true
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
-                if let userID = UserSessionManager.shared.userID {
-                    let imagesBase64 = selectedImages.map { $0.toBase64() ?? "" }
-                    let postBody = PostBody(title: titleText, description: descriptionText, categories: [selectedFilter], originalPrice: Double(priceText) ?? 0, imagesBase64: imagesBase64, userId: userID)
-                    let _ = try await NetworkManager.shared.createPost(postBody: postBody)
+                if let user = GoogleAuthManager.shared.user {
+                    
+                    let imagesToProcess = selectedImages
 
+                    let imagesBase64: [String] = await Task.detached {
+                        return imagesToProcess.map { image in
+                            image.resizedToMaxDimension(512).toBase64() ?? ""
+                        }
+                    }.value
+                    
+                    
+                    let postBody = PostBody(title: titleText, description: descriptionText, categories: [selectedFilter], condition: selectedCondition, original_price: Double(priceText) ?? 0, imagesBase64: imagesBase64, userId: user.firebaseUid)
+                    
+                    let _ = try await NetworkManager.shared.createPost(postBody: postBody)
                     clear()
                 } else {
-                    UserSessionManager.shared.logger.error("Error in NewListingViewModel.createNewListing: userID not found")
+                    GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User not available.")
                     clear()
                 }
             } catch {
@@ -81,6 +95,7 @@ class NewListingViewModel: ObservableObject {
         descriptionText = ""
         priceText = ""
         selectedFilter = "Clothing"
+        selectedCondition = "Never Worn"
         isLoading = false
     }
 }

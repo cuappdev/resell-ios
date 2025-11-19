@@ -41,10 +41,6 @@ struct SettingsView: View {
                     settingsRow(isRed: true, title: "Delete Account", icon: "") {
                         withAnimation { viewModel.didShowDeleteAccountView = true }
                     }
-                case .notifications:
-                    settingsRow(title: "Notifications", icon: "notifications") {
-                        router.push(.notifications)
-                    }
                 case .sendFeedback:
                     settingsRow(title: "Send Feedback", icon: "feedback") {
                         router.push(.feedback)
@@ -125,11 +121,9 @@ struct SettingsView: View {
                 .padding(.top, 48)
 
             PurpleButton(isAlert: true, text: "Logout", horizontalPadding: 70) {
-                UserSessionManager.shared.logout()
                 viewModel.logout()
+                NotificationCenter.default.post(name: Constants.Notifications.LogoutUser, object: nil)
                 router.popToRoot()
-                mainViewModel.selection = 0
-                mainViewModel.userDidLogin = false
             }
 
             Button{

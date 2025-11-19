@@ -20,106 +20,110 @@ struct ExternalProfileView: View {
     // MARK: - UI
 
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                profileImageView
-                    .padding(.bottom, 12)
-
-                Text(viewModel.user?.username ?? "")
-                    .font(Constants.Fonts.h3)
-                    .foregroundStyle(Constants.Colors.black)
-                    .padding(.bottom, 4)
-
-                Text(viewModel.user?.givenName ?? "")
-                    .font(Constants.Fonts.body2)
-                    .foregroundStyle(Constants.Colors.secondaryGray)
-                    .padding(.bottom, 16)
-
-                Text(viewModel.user?.bio ?? "")
-                    .font(Constants.Fonts.body2)
-                    .foregroundStyle(Constants.Colors.black)
-                    .padding(.bottom, 28)
-                    .lineLimit(3)
-
-                Divider()
-
-                ProductsGalleryView(items: viewModel.selectedPosts)
-            }
-            .background(Constants.Colors.white)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    HStack {
-                        Button {
-                            router.push(.search(userID))
-                        } label: {
-                            Icon(image: "search")
-                        }
-
-                        Button {
-                            withAnimation {
-                                viewModel.didShowOptionsMenu.toggle()
+        ScrollView {
+            ZStack {
+                VStack(spacing: 0) {
+                    profileImageView
+                        .padding(.bottom, 12)
+                        .padding(.horizontal, 24)
+                    
+                    Text(viewModel.externalUser?.username ?? "")
+                        .font(Constants.Fonts.h3)
+                        .foregroundStyle(Constants.Colors.black)
+                        .padding(.bottom, 4)
+                        .padding(.horizontal, 24)
+                    
+                    Text(viewModel.externalUser?.givenName ?? "")
+                        .font(Constants.Fonts.body2)
+                        .foregroundStyle(Constants.Colors.secondaryGray)
+                        .padding(.bottom, 16)
+                        .padding(.horizontal, 24)
+                    
+                    Text(viewModel.externalUser?.bio ?? "")
+                        .font(Constants.Fonts.body2)
+                        .foregroundStyle(Constants.Colors.black)
+                        .padding(.bottom, 28)
+                        .padding(.horizontal, 24)
+                        .lineLimit(3)
+                    
+                    Divider()
+                    
+                    ProductsGalleryView(items: viewModel.externalUserPosts)
+                        .loadingView(isLoading: viewModel.isLoadingExternalUser)
+                        .padding(.top, 16)
+                }
+                .background(Constants.Colors.white)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        HStack {
+                            Button {
+                                router.push(.search(userID))
+                            } label: {
+                                Icon(image: "search")
                             }
-                        } label: {
-                            Image(systemName: "ellipsis")
-                                .resizable()
-                                .frame(width: 24, height: 6)
-                                .foregroundStyle(viewModel.sellerIsBlocked ? Constants.Colors.white : Constants.Colors.black)
+                            
+                            Button {
+                                withAnimation {
+                                    viewModel.didShowOptionsMenu.toggle()
+                                }
+                            } label: {
+                                Image(systemName: "ellipsis")
+                                    .resizable()
+                                    .frame(width: 24, height: 6)
+                                    .foregroundStyle(viewModel.sellerIsBlocked ? Constants.Colors.white : Constants.Colors.black)
+                            }
                         }
                     }
-                }
-
-                ToolbarItem(placement: .topBarLeading) {
-                    Image(systemName: "chevron.left")
-                        .resizable()
-                        .frame(width: 18, height: 24)
-                        .foregroundStyle(Constants.Colors.white)
-                        .offset(x: -20)
-                }
-            }
-            .onAppear {
-                viewModel.getExternalUser(id: userID)
-            }
-
-            if viewModel.sellerIsBlocked {
-                ZStack {
-                    Constants.Colors.black
-                        .opacity(0.75)
-                        .ignoresSafeArea()
-
-                    Text("This profile is blocked")
-                        .font(Constants.Fonts.title1)
-                        .foregroundStyle(Constants.Colors.white)
-                }
-                .animation(.easeInOut, value: viewModel.sellerIsBlocked)
-            }
-
-            if viewModel.didShowOptionsMenu {
-                OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowBlockView: $viewModel.didShowBlockView, options: {
-                    var options: [Option] = [
-                        .report(type: "User", id: userID),
-                    ]
-                    if viewModel.sellerIsBlocked {
-                        options.append(.unblock)
-                    } else {
-                        options.append(.block)
+                    
+                    ToolbarItem(placement: .topBarLeading) {
+                        Image(systemName: "chevron.left")
+                            .resizable()
+                            .frame(width: 18, height: 24)
+                            .foregroundStyle(Constants.Colors.white)
+                            .offset(x: -20)
                     }
-                    return options
-                }())
-                .zIndex(1)
+                }
+                .onAppear {
+                    viewModel.loadExternalUser(id: userID)
+                }
+                
+                if viewModel.sellerIsBlocked {
+                    ZStack {
+                        Constants.Colors.black
+                            .opacity(0.75)
+                            .ignoresSafeArea()
+                        
+                        Text("This profile is blocked")
+                            .font(Constants.Fonts.title1)
+                            .foregroundStyle(Constants.Colors.white)
+                    }
+                    .animation(.easeInOut, value: viewModel.sellerIsBlocked)
+                }
+                
+                if viewModel.didShowOptionsMenu {
+                    OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowBlockView: $viewModel.didShowBlockView, options: {
+                        var options: [Option] = [
+                            .report(type: "User", id: userID),
+                        ]
+                        if viewModel.sellerIsBlocked {
+                            options.append(.unblock)
+                        } else {
+                            options.append(.block)
+                        }
+                        return options
+                    }())
+                    .zIndex(1)
+                }
             }
-        }
-        .popupModal(isPresented: $viewModel.didShowBlockView) {
-            popupModalContent
-        }
-        .onChange(of: viewModel.isLoading) { newValue in
-            if !newValue {
-                router.popToRoot()
+            .popupModal(isPresented: $viewModel.didShowBlockView) {
+                popupModalContent
             }
+            // MARK: We should not be able to click into our own posts...
         }
     }
 
     private var profileImageView: some View {
-        KFImage(viewModel.user?.photoUrl)
+        KFImage(viewModel.externalUser?.photoUrl)
             .cacheOriginalImage()
             .placeholder {
                 ShimmerView()
@@ -144,9 +148,13 @@ struct ExternalProfileView: View {
 
             PurpleButton(isLoading: viewModel.isLoading,text: viewModel.sellerIsBlocked ? "Unblock" : "Block", horizontalPadding: 100) {
                 if viewModel.sellerIsBlocked {
-                    viewModel.unblockUser(id: userID)
+                    Task {
+                        try await viewModel.unblockUser(id: userID)
+                    }
                 } else {
-                    viewModel.blockUser(id: userID)
+                    Task{
+                        try await viewModel.blockUser(id: userID)
+                    }
                 }
             }
 

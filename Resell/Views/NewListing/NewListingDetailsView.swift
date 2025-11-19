@@ -42,6 +42,7 @@ struct NewListingDetailsView: View {
             Spacer()
 
             PurpleButton(isLoading: viewModel.isLoading, isActive: viewModel.checkInputIsValid(), text: "Continue") {
+                // Create New Listing
                 viewModel.createNewListing()
 
                 withAnimation {
@@ -111,22 +112,43 @@ struct NewListingDetailsView: View {
 
     private var filtersView: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Select Categories")
-                .font(Constants.Fonts.title1)
-                .foregroundStyle(Constants.Colors.black)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack {
-                    ForEach(Constants.filters, id: \.id) { filter in
-                        if filter.title != "Recent" {
-                            FilterButton(filter: filter, isSelected: viewModel.selectedFilter == filter.title) {
-                                viewModel.selectedFilter = filter.title
+            VStack {
+                Text("Select Categories")
+                    .font(Constants.Fonts.title1)
+                    .foregroundStyle(Constants.Colors.black)
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack {
+                        ForEach(Constants.filters, id: \.id) { filter in
+                            if filter.title != "Recent" {
+                                FilterButton(filter: filter, isSelected: viewModel.selectedFilter == filter.title) {
+                                    viewModel.selectedFilter = filter.title
+                                }
                             }
                         }
                     }
+                    .padding(.vertical, 1)
+                    .padding(.horizontal, 1)
                 }
-                .padding(.vertical, 1)
-                .padding(.horizontal, 1)
+            }
+            // Condition Filters
+            VStack {
+                Text("Select Conditions")
+                    .font(Constants.Fonts.title1)
+                    .foregroundStyle(Constants.Colors.black)
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack {
+                        ForEach(Constants.conditions, id: \.id) { condition in
+                            FilterButton(filter: condition, isSelected: viewModel.selectedCondition == condition.title) {
+                                viewModel.selectedCondition = condition.title
+                                }
+                        }
+                    }
+                    .padding(.vertical, 1)
+                    .padding(.horizontal, 1)
+                }
+                
             }
         }
     }

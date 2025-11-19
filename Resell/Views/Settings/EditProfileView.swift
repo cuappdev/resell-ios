@@ -5,6 +5,7 @@
 //  Created by Richie Sun on 11/8/24.
 //
 
+import PhotosUI
 import SwiftUI
 
 struct EditProfileView: View {
@@ -12,7 +13,15 @@ struct EditProfileView: View {
     // MARK: - Properties
 
     @EnvironmentObject var router: Router
-    @StateObject private var viewModel = EditProfileViewModel()
+    @ObservedObject private var profileManager = CurrentUserProfileManager.shared
+    
+    @State private var editedUsername: String = ""
+    @State private var editedBio: String = ""
+    @State private var editedVenmo: String = ""
+    @State private var editedProfilePic: UIImage = UIImage(named: "emptyProfile")!
+    
+    @State private var selectedItem: PhotosPickerItem? = nil
+    @State private var didShowPhotosPicker: Bool = false
 
     // MARK: - UI
 
@@ -38,7 +47,7 @@ struct EditProfileView: View {
 
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    viewModel.updateProfile()
+                    saveProfile()
                 } label: {
                     Text("Save")
                         .font(Constants.Fonts.title1)
@@ -46,11 +55,11 @@ struct EditProfileView: View {
                 }
             }
         }
-        .loadingView(isLoading: viewModel.isLoading)
+        .loadingView(isLoading: profileManager.isLoading)
         .onAppear {
-            viewModel.getUser()
+            loadCurrentValues()
         }
-        .onChange(of: viewModel.isLoading) { newValue in
+        .onChange(of: profileManager.isLoading) { newValue in
             if !newValue {
                 router.popToRoot()
             }
@@ -60,24 +69,24 @@ struct EditProfileView: View {
 
     private var profileImageView: some View {
         ZStack(alignment: .bottomTrailing) {
-            Image(uiImage: viewModel.selectedImage)
+            Image(uiImage: editedProfilePic)
                 .resizable()
                 .frame(width: 132, height: 132)
                 .background(Constants.Colors.stroke)
                 .clipShape(.circle)
 
             Button {
-                viewModel.didShowPhotosPicker = true
+                didShowPhotosPicker = true
             } label: {
                 Image("pencil.circle")
                     .shadow(radius: 2)
             }
             .buttonStyle(.borderless)
         }
-        .photosPicker(isPresented: $viewModel.didShowPhotosPicker, selection: $viewModel.selectedItem, matching: .images, photoLibrary: .shared())
-        .onChange(of: viewModel.selectedItem) { newItem in
+        .photosPicker(isPresented: $didShowPhotosPicker, selection: $selectedItem, matching: .images, photoLibrary: .shared())
+        .onChange(of: selectedItem) { newItem in
             Task {
-                await viewModel.updateUserProfile(newItem: newItem)
+                await updateProfileImage(newItem: newItem)
             }
         }
     }
@@ -91,7 +100,7 @@ struct EditProfileView: View {
 
                 Spacer()
 
-                Text("\(viewModel.user?.givenName ?? "") \(viewModel.user?.familyName ?? "")")
+                Text("\(profileManager.givenName) \(GoogleAuthManager.shared.user?.familyName ?? "")")
                     .font(Constants.Fonts.body1)
                     .foregroundStyle(Constants.Colors.black)
             }
@@ -103,7 +112,7 @@ struct EditProfileView: View {
 
                 Spacer()
 
-                Text(viewModel.user?.netid ?? "")
+                Text(GoogleAuthManager.shared.user?.netid ?? "")
                     .font(Constants.Fonts.body1)
                     .foregroundStyle(Constants.Colors.black)
             }
@@ -118,7 +127,7 @@ struct EditProfileView: View {
                     .font(Constants.Fonts.title1)
                     .foregroundStyle(Constants.Colors.black)
 
-                TextField("", text: $viewModel.username)
+                TextField("", text: $editedUsername)
                     .font(Constants.Fonts.body1)
                     .foregroundStyle(Constants.Colors.black)
                     .multilineTextAlignment(.trailing)
@@ -133,7 +142,7 @@ struct EditProfileView: View {
                     .font(Constants.Fonts.title1)
                     .foregroundStyle(Constants.Colors.black)
 
-                TextField("", text: $viewModel.venmoLink)
+                TextField("", text: $editedVenmo)
                     .font(Constants.Fonts.body1)
                     .foregroundStyle(Constants.Colors.black)
                     .multilineTextAlignment(.trailing)
@@ -148,7 +157,7 @@ struct EditProfileView: View {
                     .font(Constants.Fonts.title1)
                     .foregroundStyle(Constants.Colors.black)
 
-                TextEditor(text: $viewModel.bio)
+                TextEditor(text: $editedBio)
                     .font(Constants.Fonts.body1)
                     .foregroundColor(Constants.Colors.black)
                     .padding(.horizontal, 16)
@@ -157,15 +166,49 @@ struct EditProfileView: View {
                     .background(Constants.Colors.wash)
                     .cornerRadius(10)
                     .frame(height: 100)
-                    .onChange(of: viewModel.bio) { newText in
+                    .onChange(of: editedBio) { newText in
                         if newText.count > 1000 {
-                            viewModel.bio = String(newText.prefix(1000))
+                            editedBio = String(newText.prefix(1000))
                         }
                     }
             }
         }
         .padding(.top, 40)
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
+    }
+    
+    // MARK: - Functions
+    
+    private func loadCurrentValues() {
+        // Load current profile data into editable state
+        editedUsername = profileManager.username
+        editedBio = profileManager.bio
+        editedVenmo = profileManager.venmoHandle
+        editedProfilePic = profileManager.profilePic
+    }
+    
+    private func saveProfile() {
+        Task {
+            do {
+                try await profileManager.updateProfile(
+                    username: editedUsername,
+                    bio: editedBio,
+                    venmoHandle: editedVenmo,
+                    profileImage: editedProfilePic
+                )
+            } catch {
+                NetworkManager.shared.logger.error("Error in EditProfileView.saveProfile: \(error)")
+            }
+        }
+    }
+    
+    private func updateProfileImage(newItem: PhotosPickerItem?) async {
+        guard let newItem = newItem else { return }
+        
+        if let data = try? await newItem.loadTransferable(type: Data.self),
+           let image = UIImage(data: data) {
+            editedProfilePic = image
+        }
     }
 }
 

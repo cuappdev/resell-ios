@@ -5,6 +5,7 @@
 //  Created by Richie Sun on 9/11/24.
 //
 
+import FirebaseMessaging
 import Kingfisher
 import SwiftUI
 
@@ -15,8 +16,9 @@ class MainViewModel: ObservableObject {
 
     @Published var hidesTabBar: Bool = false
     @Published var userDidLogin: Bool = false
-
     @Published var selection = 0
+
+    var hidesSignInButton = true
 
     // MARK: - Persistent Storage
 
@@ -33,6 +35,17 @@ class MainViewModel: ObservableObject {
         set {
             storedHistoryData = encodeHistory(newValue)
         }
+    }
+
+    // MARK: - Init
+
+    init() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(logout),
+            name: Constants.Notifications.LogoutUser,
+            object: nil
+        )
     }
 
     // MARK: - Functions
@@ -84,35 +97,56 @@ class MainViewModel: ObservableObject {
         UINavigationBar.appearance().standardAppearance = appearance
     }
 
+    @objc func logout() {
+        // Clear any cached data
+        clearUserData()
+        
+        // Sign out from auth manager
+        GoogleAuthManager.shared.signOut()
+        
+        // Update UI state
+        withAnimation { userDidLogin = false }
+        
+        // Reset to home tab
+        selection = 0
+    }
+    
+    /// Clear user-specific cached data when logging out
+    private func clearUserData() {
+        clearImageCaches()
+        HomeViewModel.shared.clearCache()
+        SearchViewModel.shared.clearCache()
+        CurrentUserProfileManager.shared.clearCache()
+    }
+    
+    private func clearImageCaches() {
+        // Clear Kingfisher cache if using it
+        ImageCache.default.clearMemoryCache()
+        ImageCache.default.clearDiskCache()
+    }
+
     func restoreSignIn() {
         Task {
+            hidesSignInButton = true
             do {
-                if let _ = UserSessionManager.shared.accessToken,
-                   let _ = UserSessionManager.shared.userID {
-                    // Verify that the accessToken is valid by attempting to prefetch post URLs
-                    let urls = try await NetworkManager.shared.getSavedPosts().posts.compactMap { $0.images.first }
-                    let prefetcher = ImagePrefetcher(urls: urls)
-                    prefetcher.start()
+                try await GoogleAuthManager.shared.refreshSignInIfNeeded()
 
+                await MainActor.run {
+                    withAnimation { hidesSignInButton = true }
                     withAnimation { userDidLogin = true }
-                } else if let googleID = UserSessionManager.shared.googleID {
-                    // If accessToken is not available, try to re-authenticate using googleID
-                    let user = try await NetworkManager.shared.getUserByGoogleID(googleID: googleID).user
-                    let userSession = try await NetworkManager.shared.getUserSession(id: user.id).sessions.first
-
-                    UserSessionManager.shared.accessToken = userSession?.accessToken
-                    UserSessionManager.shared.googleID = googleID
-                    UserSessionManager.shared.userID = user.id
-
-                    withAnimation { userDidLogin = true }
-                } else {
-                    withAnimation { userDidLogin = false }
                 }
             } catch {
-                // Session Token has expired
-                withAnimation { userDidLogin = false }
-                NetworkManager.shared.logger.log("User Session Has Expired")
+                // Session token has expired and Google Sign-In retrieval has failed
+                await MainActor.run {
+                    clearUserData()
+                    GoogleAuthManager.shared.signOut()
+                    
+                    withAnimation { hidesSignInButton = false }
+                    withAnimation { userDidLogin = false }
+                }
+                GoogleAuthManager.shared.logger.log("User Session Has Expired or Google Sign-In Failed: \(error)")
             }
         }
     }
+
 }

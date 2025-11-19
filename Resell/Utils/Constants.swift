@@ -23,6 +23,15 @@ struct Constants {
         static let tint = Color(red: 0/255, green: 0/255, blue: 0/255, opacity: 20/100)
         static let wash = Color(red: 244/255, green: 244/255, blue: 244/255)
         static let white = Color(red: 255/255, green: 255/255, blue: 255/255)
+        
+        // filter colors
+        static let filterGray = Color(red: 214/255, green: 214/255, blue: 214/255)
+        static let filterPink = Color(red: 202/255, green: 149/255, blue: 163/255)
+        static let filterGreen = Color(red: 49/255, green: 96/255, blue: 84/255)
+        static let filterLightGreen = Color(red: 164/255, green: 183/255, blue: 171/255)
+        static let filterYellow = Color(red: 227/255, green: 181/255, blue: 112/255)
+        static let filterBlue = Color(red: 115/255, green: 162/255, blue: 171/255)
+        
 
         // Gradients
         static let resellGradient = LinearGradient(stops: [
@@ -75,23 +84,50 @@ struct Constants {
         static let horizontalPadding: CGFloat = 24.0
     }
 
+    /// Notifications for pub/sub
+    enum Notifications {
+        static let LogoutUser = Notification.Name("LogoutUser")
+    }
+
     /// Chat  categories used in Resell's design system
     static let chats = [
-        FilterCategory(id: 0, title: "Purchases"),
-        FilterCategory(id: 1, title: "Offers")
+        FilterCategory(id: 0, title: ChatTab.purchases.rawValue),
+        FilterCategory(id: 1, title: ChatTab.offers.rawValue)
+    ]
+    
+    // TODO: Use this whenever working with conditions
+    static let conditions = [
+        FilterCategory(id: 0, title: "Never Used"),
+        FilterCategory(id: 1, title: "Gently Used"),
+        FilterCategory(id: 2, title: "Worn")
     ]
 
     /// Product filter categories used in Resell's design system
     static let filters = [
         FilterCategory(id: 0, title: "Recent"),
-        FilterCategory(id: 1, title: "Clothing"),
-        FilterCategory(id: 2, title: "Books"),
-        FilterCategory(id: 3, title: "School"),
-        FilterCategory(id: 4, title: "Electronics"),
+        FilterCategory(id: 1, title: "Clothing", color: Constants.Colors.filterPink),
+        FilterCategory(id: 2, title: "Books", color: Constants.Colors.filterGreen) ,
+        FilterCategory(id: 3, title: "School", color: Constants.Colors.filterLightGreen),
+        FilterCategory(id: 4, title: "Electronics", color: Constants.Colors.filterPink),
         FilterCategory(id: 5, title: "Household"),
-        FilterCategory(id: 6, title: "Handmade"),
-        FilterCategory(id: 7, title: "Sports & Outdoors"),
+        FilterCategory(id: 6, title: "Handmade", color: Constants.Colors.filterYellow),
+        FilterCategory(id: 7, title: "Sports & Outdoors", color: Constants.Colors.filterBlue),
         FilterCategory(id: 8, title: "Other")
+    ]
+    
+    static let notificationFilters = [
+        FilterCategory(id: 0, title: "All"),
+        FilterCategory(id: 1, title: "Messages"),
+        FilterCategory(id: 2, title: "Requests"),
+        FilterCategory(id: 3, title: "Bookmarks"),
+        FilterCategory(id: 4, title: "Your Listings")
+    ]
+
+    static let chatMessageOptions: [ChatMessageOption] = [
+        .negotiate,
+//        .sendAvailability,
+        .venmo
+//        .viewAvailability
     ]
 
     static let dummyItemsData: [Item] = [
@@ -108,9 +144,24 @@ struct Constants {
         Item(id: UUID(), title: "Justin", image: "justin_long", price: "100", category: "School"),
         Item(id: UUID(), title: "Justin", image: "justin", price: "100", category: "School"),
     ]
+
 }
 
 struct FilterCategory: Hashable {
     let id: Int
     let title: String
+    let color: Color?
+    
+    init(id: Int, title: String, color: Color? = nil) {
+         self.id = id
+         self.title = title
+         self.color = color
+     }
+}
+
+enum ChatMessageOption: String {
+    case negotiate = "Negotiate"
+//    case sendAvailability = "Send Availability"
+    case venmo = "Pay with Venmo"
+//    case viewAvailability = "View Availability"
 }
