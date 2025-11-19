@@ -54,8 +54,13 @@ class EditProfileViewModel: ObservableObject {
             defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
-                let edit = EditUserBody(username: username, bio: bio, venmoHandle: venmoLink, photoUrlBase64: selectedImage.resizedToMaxDimension(256).toBase64() ?? "")
-                let _ = try await NetworkManager.shared.updateUserProfile(edit: edit)
+                // Delegate update to the singleton manager so it updates the UI immediately
+                try await CurrentUserProfileManager.shared.updateProfile(
+                    username: username,
+                    bio: bio,
+                    venmoHandle: venmoLink,
+                    profileImage: selectedImage
+                )
             } catch {
                 NetworkManager.shared.logger.error("Error in EditProfileViewModel.updateProfile: \(error)")
             }

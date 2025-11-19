@@ -36,7 +36,6 @@ struct FilterView: View {
     
     var body: some View {
         ZStack {
-            // ✅ Full background that extends to safe areas
             Color.white
                 .ignoresSafeArea()
             

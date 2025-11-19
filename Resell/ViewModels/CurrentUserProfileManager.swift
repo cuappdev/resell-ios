@@ -128,6 +128,13 @@ class CurrentUserProfileManager: ObservableObject {
         userPosts = []
         archivedPosts = []
         requests = []
+        
+        // Clear profile data
+        profilePic = UIImage(named: "emptyProfile")!
+        username = ""
+        givenName = ""
+        bio = ""
+        venmoHandle = ""
     }
     
     // MARK: - Private Methods

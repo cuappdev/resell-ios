@@ -36,6 +36,10 @@ class SearchViewModel: ObservableObject {
         
         static let shared = SearchViewModel()
     
+    private var cachedRecentlySearchedPosts: [Post] = []
+    private var lastRecentlySearchedFetchTime: Date?
+    private let cacheValidityDuration: TimeInterval = 300 // 5 minutes
+    
     
     func searchItems(with searchText: String, userID: String?, saveQuery: Bool = false, mainViewModel: MainViewModel? = nil, completion: @escaping () -> Void) {
         guard !searchText.isEmpty else {
@@ -122,6 +126,13 @@ class SearchViewModel: ObservableObject {
     
     /// Load posts for recently searched card (fetch just enough to display)
     func loadRecentlySearchedPosts() async -> [Post] {
+        if let lastFetch = lastRecentlySearchedFetchTime,
+           Date().timeIntervalSince(lastFetch) < cacheValidityDuration,
+           !cachedRecentlySearchedPosts.isEmpty {
+            print("Using cached recently searched posts")
+            return cachedRecentlySearchedPosts
+        }
+        
         print("🔍 Loading recently searched posts...")
         print("📋 Recent searches count: \(recentlySearched.count)")
         print("📋 Recent searchIds: \(recentlySearched)")
@@ -147,13 +158,18 @@ class SearchViewModel: ObservableObject {
                     
                     if allPosts.count >= 4 {
                         print("✅ Loaded 4 posts, returning early")
-                        return Array(allPosts.prefix(4))
+                        let result = Array(allPosts.prefix(4))
+                        cachedRecentlySearchedPosts = result
+                        lastRecentlySearchedFetchTime = Date()
+                        return result
                     }
                 }
             }
         }
         
         print("✅ Loaded \(allPosts.count) total posts")
+        cachedRecentlySearchedPosts = allPosts
+        lastRecentlySearchedFetchTime = Date()
         return allPosts
     }
     
@@ -190,5 +206,10 @@ class SearchViewModel: ObservableObject {
         }
         
         return allPosts
+    }
+    
+    func clearCache() {
+        cachedRecentlySearchedPosts = []
+        lastRecentlySearchedFetchTime = nil
     }
 }

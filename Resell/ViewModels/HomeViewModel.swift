@@ -49,6 +49,7 @@ class HomeViewModel: ObservableObject {
     // MARK: - Caching Properties
     private var hasLoadedInitialData = false
     private var lastFetchTime: Date?
+    private var lastSavedFetchTime: Date?
     private let cacheValidityDuration: TimeInterval = 180 // 3 minutes for home feed
 
     @AppStorage("blockedUsers") private var blockedUsersStorage: String = "[]"
@@ -93,6 +94,10 @@ class HomeViewModel: ObservableObject {
                 
                 allItems = Post.sortPostsByDate(postsResponse.posts)
                 filteredItems = allItems
+                
+                // Update cache state
+                hasLoadedInitialData = true
+                lastFetchTime = Date()
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.getAllPosts: \(error)")
             }
@@ -137,6 +142,12 @@ class HomeViewModel: ObservableObject {
     }
 
     func getSavedPosts() async  {
+        if let lastFetch = lastSavedFetchTime,
+           Date().timeIntervalSince(lastFetch) < cacheValidityDuration,
+           !savedItems.isEmpty {
+            return
+        }
+        
         isLoading = true
 
         Task {
@@ -145,6 +156,7 @@ class HomeViewModel: ObservableObject {
             do {
                 let postsResponse = try await NetworkManager.shared.getSavedPosts()
                 savedItems = Post.sortPostsByDate(postsResponse.posts)
+                lastSavedFetchTime = Date()
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.getSavedPosts: \(error)")
             }
@@ -192,8 +204,10 @@ class HomeViewModel: ObservableObject {
     func clearCache() {
         hasLoadedInitialData = false
         lastFetchTime = nil
+        lastSavedFetchTime = nil
         allItems = []
         filteredItems = []
+        savedItems = []
         page = 1
         hasMorePages = true
         

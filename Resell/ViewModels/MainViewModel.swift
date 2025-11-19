@@ -114,6 +114,9 @@ class MainViewModel: ObservableObject {
     /// Clear user-specific cached data when logging out
     private func clearUserData() {
         clearImageCaches()
+        HomeViewModel.shared.clearCache()
+        SearchViewModel.shared.clearCache()
+        CurrentUserProfileManager.shared.clearCache()
     }
     
     private func clearImageCaches() {

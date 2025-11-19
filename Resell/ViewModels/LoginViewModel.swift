@@ -22,6 +22,12 @@ class LoginViewModel: ObservableObject {
     func googleSignIn() async -> LoginResponse {
         do {
             try await GoogleAuthManager.shared.signIn()
+            
+            // Force refresh profile data for the new user
+            await MainActor.run {
+                CurrentUserProfileManager.shared.loadProfile(forceRefresh: true)
+            }
+            
             return .success
         } catch {
             switch error {
