@@ -119,7 +119,7 @@ struct ExternalProfileView: View {
                 popupModalContent
             }
             // MARK: We should not be able to click into our own posts...
-        }
+        }.background(Constants.Colors.white)
     }
 
     private var profileImageView: some View {
