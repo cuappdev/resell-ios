@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "mage_message-round.png",
+      "filename" : "add_user 1.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "mage_message-round 1.png",
+      "filename" : "add_user 2.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "mage_message-round 2.png",
+      "filename" : "add_user 3.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

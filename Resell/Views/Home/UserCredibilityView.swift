@@ -47,9 +47,7 @@ struct UserCredibilityView: View {
                     .frame(width: 24, height: 6)
                     .foregroundStyle(Constants.Colors.black)
                     .padding(.trailing, 16)
-                
             }
-            
             Divider()
         }
         .padding(.bottom, 25)
@@ -58,7 +56,6 @@ struct UserCredibilityView: View {
     var usernameView: some View {
         VStack{
             HStack(spacing: 16){
-                // pfp view
                 ZStack {
                     Image("pfp")
                         .resizable()
@@ -84,6 +81,7 @@ struct UserCredibilityView: View {
                                 .foregroundStyle(.gray)
                                 .frame(width: 12, height: 12)
                         }
+                        
                         Text("(0)")
                             .underline()
                     }
@@ -93,11 +91,9 @@ struct UserCredibilityView: View {
             .padding(.trailing, 92)
             .padding(.bottom, 24)
             
-            
             Text("I wish I had something to say but I wish I had Kapital Jeans even more...")
                 .font(Constants.Fonts.body2)
                 .frame(width: 364)
-                
         }
         .padding(.bottom, 24)
     }
@@ -105,20 +101,30 @@ struct UserCredibilityView: View {
     var userAnalyticsView: some View {
         HStack{
             Spacer()
+            
             (Text("0").fontWeight(.medium) + Text(" sold"))
                 .font(Constants.Fonts.body2)
+            
             Spacer()
+            
             Divider()
                 .frame(height: 14)
+            
             Spacer()
+            
             (Text("0").fontWeight(.medium) + Text(" followers"))
                 .font(Constants.Fonts.body2)
+            
             Spacer()
+            
             Divider()
                 .frame(height: 14)
+            
             Spacer()
+            
             (Text("0").fontWeight(.medium) + Text(" following"))
                 .font(Constants.Fonts.body2)
+            
             Spacer()
         }
         .padding(.bottom, 24)
@@ -130,6 +136,7 @@ struct UserCredibilityView: View {
                 RoundedRectangle(cornerRadius: 90)
                     .frame(width: 304, height: 39)
                     .foregroundStyle(Constants.Colors.resellPurple)
+                
                 HStack{
                     Image("follow-button")
                         .resizable()
@@ -140,8 +147,6 @@ struct UserCredibilityView: View {
                         .fontWeight(.medium)
                         .font(Constants.Fonts.body2)
                         .foregroundStyle(Color.white)
-                    
-                   
                 }
             }
             ZStack{
@@ -153,7 +158,6 @@ struct UserCredibilityView: View {
                     .resizable()
                     .foregroundStyle(Constants.Colors.resellPurple)
                     .frame(width: 20, height: 15)
-                
             }
         }
     }

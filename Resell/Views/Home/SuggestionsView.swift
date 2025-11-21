@@ -32,13 +32,16 @@ struct SuggestionsView: View {
                 if isLoading {
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    
                 } else if suggestedPosts.isEmpty {
                     VStack(spacing: 16) {
                         Image(systemName: "magnifyingglass")
                             .font(.system(size: 48))
                             .foregroundStyle(.gray)
+                        
                         Text("No suggestions yet")
                             .font(Constants.Fonts.title2)
+                        
                         Text("Search for items to get personalized suggestions")
                             .font(Constants.Fonts.body1)
                             .foregroundStyle(Constants.Colors.secondaryGray)
@@ -62,8 +65,6 @@ struct SuggestionsView: View {
         .background(Constants.Colors.white)
     }
       
-    
-    
     private func loadSuggestions() {
            guard suggestedPosts.isEmpty else { return }
            

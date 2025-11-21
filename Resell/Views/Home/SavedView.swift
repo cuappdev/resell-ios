@@ -35,14 +35,11 @@ struct SavedView: View {
         }
     }
     
-    
     private var headerView: some View {
         VStack {
             Text("Saved By You")
                 .font(Constants.Fonts.h1)
                 .foregroundStyle(Constants.Colors.black)
-            
-            
         }
         .padding(.horizontal, 25)
     }

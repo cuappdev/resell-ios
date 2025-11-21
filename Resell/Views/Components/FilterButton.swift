@@ -63,6 +63,7 @@ struct CircularFilterButton: View {
                 Circle()
                     .frame(width: 80, height: 80)
                     .foregroundStyle((filter.color?.opacity(0.5)) ?? Constants.Colors.filterGray)
+                
                 Image(filter.title)
                     .resizable()
                     .scaledToFit()  // ✅ Maintains aspect ratio

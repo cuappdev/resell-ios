@@ -16,20 +16,14 @@ class NewListingViewModel: ObservableObject {
     @Published var didShowActionSheet: Bool = false
     @Published var didShowCamera: Bool = false
     @Published var didShowPhotosPicker: Bool = false
-
     @Published var isLoading: Bool = false
-
     @Published var selectedImages: [UIImage] = []
     @Published var selectedItem: PhotosPickerItem? = nil
-
     @Published var didShowPriceInput: Bool = false
-
     @Published var descriptionText: String = ""
     @Published var priceText: String = ""
     @Published var selectedFilter: String = "Clothing"
     @Published var selectedCondition: String = "Never Used"
-
-    
     @Published var titleText: String = ""
 
     // MARK: - Functions

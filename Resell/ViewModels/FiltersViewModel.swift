@@ -86,19 +86,18 @@ class FiltersViewModel: ObservableObject {
             condition: conditionFiltersList
         )
 
-        Task {
-            do {
-                let postsResponse = try await NetworkManager.shared.getUnifiedFilteredPosts(filters: unifiedFilter)
-                if isHome {
-                    homeViewModel.filteredItems = postsResponse.posts
-                } else {
-                    detailedFilterItems = postsResponse.posts
-                    clearFilterSearch()
-                }
-            } catch {
-                NetworkManager.shared.logger.error("Error in FiltersViewModel.applyFilters: \(error)")
+        do {
+            let postsResponse = try await NetworkManager.shared.getUnifiedFilteredPosts(filters: unifiedFilter)
+            if isHome {
+                homeViewModel.filteredItems = postsResponse.posts
+            } else {
+                detailedFilterItems = postsResponse.posts
+                clearFilterSearch()
             }
+        } catch {
+            NetworkManager.shared.logger.error("Error in FiltersViewModel.applyFilters: \(error)")
         }
+    
     }
     
     func resetFilters(homeViewModel: HomeViewModel) {
