@@ -15,6 +15,7 @@ struct ExternalProfileView: View {
     @EnvironmentObject var router: Router
     @StateObject private var viewModel = ProfileViewModel()
     @State var listingViewIsPresented: Bool = true
+    @State private var didShowUnfollowPopup: Bool = false
 
     var userID: String
 
@@ -83,6 +84,11 @@ struct ExternalProfileView: View {
                 .popupModal(isPresented: $viewModel.didShowBlockView) {
                     popupModalContent
                 }
+                .sheet(isPresented: $didShowUnfollowPopup) {
+                    unfollowSheetContent
+                        .presentationDetents([.height(375)])
+                        .presentationDragIndicator(.visible)
+                }
                 // MARK: We should not be able to click into our own posts...
            
         }
@@ -122,9 +128,7 @@ struct ExternalProfileView: View {
             
             // metrics bar
             HStack {
-                
-                // TODO: Add items sold to user model
-                Text("38")
+                Text("\(viewModel.externalUser?.soldPosts ?? 0)")
                 .font(Constants.Fonts.body2)
                 .fontWeight(.medium)
                 .foregroundColor(.black)
@@ -136,8 +140,7 @@ struct ExternalProfileView: View {
                     .frame(height: 14)
                     .padding(.horizontal, 28.75)
 
-                // TODO: Add followers to user model
-                Text("3")
+                Text("\(viewModel.followerCount)")
                 .font(Constants.Fonts.body2)
                 .fontWeight(.medium)
                 .foregroundColor(.black)
@@ -149,8 +152,7 @@ struct ExternalProfileView: View {
                     .frame(height: 14)
                     .padding(.horizontal, 28.75)
                 
-                // TODO: Add following to user model
-                Text("23")
+                Text("\(viewModel.externalUser?.following?.count ?? 0)")
                 .font(Constants.Fonts.body2)
                 .fontWeight(.medium)
                 .foregroundColor(.black)
@@ -160,22 +162,49 @@ struct ExternalProfileView: View {
             }
             
             HStack {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 90.79)
-                        .foregroundStyle(Constants.Colors.resellPurple)
-                        .frame(width: 313, height: 38.79)
-                    
-                    HStack {
-                        Image("following")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 13, height: 13)
+                Button {
+                    if viewModel.isFollowing {
+                        withAnimation {
+                            didShowUnfollowPopup = true
+                        }
+                    } else {
+                        Task {
+                            do {
+                                try await viewModel.followUser(id: userID)
+                            } catch {
+                                NetworkManager.shared.logger.error("Error following user: \(error)")
+                            }
+                        }
+                    }
+                } label: {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 90.79)
+                            .foregroundStyle(viewModel.isFollowing ? Constants.Colors.white : Constants.Colors.resellPurple)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 90.79)
+                                    .stroke(Constants.Colors.resellPurple, lineWidth: viewModel.isFollowing ? 1.5 : 0)
+                            )
+                            .frame(width: 313, height: 38.79)
                         
-                        Text("Follow")
-                            .font(Constants.Fonts.title3)
-                            .foregroundColor(.white)
+                        if viewModel.isFollowLoading {
+                            ProgressView()
+                                .tint(viewModel.isFollowing ? Constants.Colors.resellPurple : .white)
+                        } else {
+                            HStack {
+                                Image(viewModel.isFollowing ? "following" : "following")
+                                    .renderingMode(.template)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 13, height: 13)
+                                
+                                Text(viewModel.isFollowing ? "Following" : "Follow")
+                                    .font(Constants.Fonts.title3)
+                            }
+                            .foregroundColor(viewModel.isFollowing ? Constants.Colors.resellPurple : .white)
+                        }
                     }
                 }
+                .disabled(viewModel.isFollowLoading)
                 
                 ZStack {
                     Image(systemName: "envelope")
@@ -342,6 +371,87 @@ struct ExternalProfileView: View {
             }
         }
         .padding(Constants.Spacing.horizontalPadding)
+    }
+
+    private var unfollowSheetContent: some View {
+        VStack(spacing: 24) {
+            Spacer()
+
+            ZStack(alignment: .bottomTrailing) {
+                KFImage(viewModel.externalUser?.photoUrl)
+                    .cacheOriginalImage()
+                    .placeholder {
+                        ShimmerView()
+                            .frame(width: 100, height: 100)
+                    }
+                    .resizable()
+                    .frame(width: 100, height: 100)
+                    .clipShape(.circle)
+                
+                ZStack {
+                    Circle()
+                        .fill(Constants.Colors.resellPurple)
+                        .frame(width: 32, height: 32)
+                    
+                    Image(systemName: "minus")
+                        .foregroundColor(.white)
+                        .font(.system(size: 16, weight: .bold))
+                }
+                .offset(x: 4, y: 4)
+            }
+            .padding(.top, 16)
+            
+            Text("Unfollow @\(viewModel.externalUser?.username ?? "user")")
+                .font(Constants.Fonts.h3)
+                .foregroundStyle(Constants.Colors.black)
+            
+            VStack(spacing: 16) {
+                Button {
+                    Task {
+                        do {
+                            try await viewModel.unfollowUser(id: userID)
+                            didShowUnfollowPopup = false
+                        } catch {
+                            NetworkManager.shared.logger.error("Error unfollowing user: \(error)")
+                        }
+                    }
+                } label: {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 36)
+                            .foregroundStyle(Constants.Colors.resellPurple)
+                            .frame(height: 56)
+                        
+                        if viewModel.isFollowLoading {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Text("Yes, Unfollow")
+                                .font(Constants.Fonts.title1)
+                                .foregroundColor(.white)
+                        }
+                    }
+                }
+                .disabled(viewModel.isFollowLoading)
+                
+                Button {
+                    didShowUnfollowPopup = false
+                } label: {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 25)
+                            .foregroundStyle(Constants.Colors.wash)
+                            .frame(height: 56)
+                        
+                        Text("No, Keep Following")
+                            .font(Constants.Fonts.title1)
+                            .foregroundColor(Constants.Colors.black)
+                    }
+                }
+            }
+            .padding(.horizontal, 40)
+            
+        }
+        .frame(maxWidth: .infinity)
+        .background(Constants.Colors.white)
     }
 
 }

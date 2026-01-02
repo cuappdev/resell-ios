@@ -20,6 +20,10 @@ class ProfileViewModel: ObservableObject {
     @Published var isLoadingExternalUser: Bool = false
     @Published var externalUser: User? = nil
     @Published var externalUserPosts: [Post] = []
+    
+    @Published var isFollowing: Bool = false
+    @Published var isFollowLoading: Bool = false
+    @Published var followerCount: Int = 0
 
     enum Tab: String {
         case listing, archive, wishlist
@@ -60,6 +64,8 @@ class ProfileViewModel: ObservableObject {
     func loadExternalUser(id: String) {
         externalUser = nil
         externalUserPosts = []
+        isFollowing = false
+        followerCount = 0
         
         Task {
             isLoadingExternalUser = true
@@ -67,12 +73,47 @@ class ProfileViewModel: ObservableObject {
 
             do {
                 externalUser = try await NetworkManager.shared.getUserByID(id: id).user
+                followerCount = externalUser?.followers?.count ?? 0
                 checkUserIsBlocked(userId: id)
+                checkUserIsFollowing(userId: id)
                 externalUserPosts = try await NetworkManager.shared.getPostsByUserID(id: externalUser?.firebaseUid ?? "").posts
             } catch {
                 NetworkManager.shared.logger.error("Error in ProfileViewModel.loadExternalUser: \(error)")
             }
         }
+    }
+    
+    func checkUserIsFollowing(userId: String) {
+        Task {
+            do {
+                if let currentUserId = GoogleAuthManager.shared.user?.firebaseUid {
+                    let followingUsers = try await NetworkManager.shared.getFollowing(id: currentUserId).users.map { $0.firebaseUid }
+                    isFollowing = followingUsers.contains(userId)
+                }
+            } catch {
+                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error)")
+            }
+        }
+    }
+    
+    func followUser(id: String) async throws {
+        isFollowLoading = true
+        defer { isFollowLoading = false }
+        
+        let follow = FollowUserBody(userId: id)
+        _ = try await NetworkManager.shared.followUser(follow: follow)
+        isFollowing = true
+        followerCount += 1
+    }
+    
+    func unfollowUser(id: String) async throws {
+        isFollowLoading = true
+        defer { isFollowLoading = false }
+        
+        let unfollow = UnfollowUserBody(userId: id)
+        _ = try await NetworkManager.shared.unfollowUser(unfollow: unfollow)
+        isFollowing = false
+        followerCount = max(0, followerCount - 1)
     }
 
     func checkUserIsBlocked(userId: String) {

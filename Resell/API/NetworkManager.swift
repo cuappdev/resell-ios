@@ -21,7 +21,7 @@ class NetworkManager {
     
     // MARK: - Properties
     
-    private let hostURL: String = Keys.devServerURL
+    private let hostURL: String = Keys.localServerURL
     private let maxAttempts = 2
     
     // MARK: - Init
@@ -270,6 +270,30 @@ class NetworkManager {
         let url = try constructURL(endpoint: "/user/unblock/")
         
         try await post(url: url, body: unblocked)
+    }
+    
+    func followUser(follow: FollowUserBody) async throws -> UserResponse {
+        let url = try constructURL(endpoint: "/user/follow/")
+        
+        return try await post(url: url, body: follow)
+    }
+    
+    func unfollowUser(unfollow: UnfollowUserBody) async throws -> UserResponse {
+        let url = try constructURL(endpoint: "/user/unfollow/")
+        
+        return try await post(url: url, body: unfollow)
+    }
+    
+    func getFollowers(id: String) async throws -> UsersResponse {
+        let url = try constructURL(endpoint: "/user/followers/id/\(id)/")
+        
+        return try await get(url: url)
+    }
+    
+    func getFollowing(id: String) async throws -> UsersResponse {
+        let url = try constructURL(endpoint: "/user/following/id/\(id)/")
+        
+        return try await get(url: url)
     }
     
     // MARK: - Post Networking Functions

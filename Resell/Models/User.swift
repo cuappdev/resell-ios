@@ -19,6 +19,9 @@ struct User: Codable, Equatable, Hashable {
     let isActive: Bool
     let stars: String
     let numReviews: Int
+    let following: [User]?
+    let followers: [User]?
+    let soldPosts: Int?
     let photoUrl: URL
     let venmoHandle: String?
     let email: String
@@ -64,6 +67,9 @@ struct User: Codable, Equatable, Hashable {
             isActive: true,
             stars: "0.0",
             numReviews: 0,
+            following: [],
+            followers: [],
+            soldPosts: 0,
             photoUrl: user.profile?.imageURL(withDimension: 512) ?? defaultImageUrl,
             venmoHandle: "",
             email: user.profile?.email ?? "",
@@ -131,4 +137,12 @@ struct LogoutResponse: Codable {
 
 struct AuthorizeBody: Codable {
     let token: String?
+}
+
+struct FollowUserBody: Codable {
+    let userId: String
+}
+
+struct UnfollowUserBody: Codable {
+    let userId: String
 }
