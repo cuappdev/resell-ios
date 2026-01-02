@@ -90,11 +90,20 @@ class MainViewModel: ObservableObject {
             .resized(to: CGSize(width: 38, height: 24))
             .withRenderingMode(.alwaysOriginal)
             .withTintColor(.black)
+            
         let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .white
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.black]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.black]
+        
         appearance.backButtonAppearance.normal.titlePositionAdjustment = UIOffset(horizontal: -100, vertical: 0)
         appearance.backButtonAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.clear]
         appearance.setBackIndicatorImage(backButtonImage, transitionMaskImage: backButtonImage)
+        
         UINavigationBar.appearance().standardAppearance = appearance
+        UINavigationBar.appearance().compactAppearance = appearance
+        UINavigationBar.appearance().scrollEdgeAppearance = appearance
     }
 
     @objc func logout() {

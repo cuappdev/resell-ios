@@ -62,7 +62,7 @@ struct User: Codable, Equatable, Hashable {
             familyName: user.profile?.familyName ?? "",
             admin: false,
             isActive: true,
-            stars: "0",
+            stars: "0.0",
             numReviews: 0,
             photoUrl: user.profile?.imageURL(withDimension: 512) ?? defaultImageUrl,
             venmoHandle: "",
