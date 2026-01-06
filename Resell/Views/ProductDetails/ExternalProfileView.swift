@@ -140,25 +140,41 @@ struct ExternalProfileView: View {
                     .frame(height: 14)
                     .padding(.horizontal, 28.75)
 
-                Text("\(viewModel.followerCount)")
-                .font(Constants.Fonts.body2)
-                .fontWeight(.medium)
-                .foregroundColor(.black)
-                + Text(" followers")
-                .font(Constants.Fonts.body2)
-                .foregroundColor(.gray)
+                Button {
+                    router.push(.followList(
+                        userID: userID,
+                        username: viewModel.externalUser?.username ?? "",
+                        initialTab: .followers
+                    ))
+                } label: {
+                    Text("\(viewModel.followerCount)")
+                    .font(Constants.Fonts.body2)
+                    .fontWeight(.medium)
+                    .foregroundColor(.black)
+                    + Text(" followers")
+                    .font(Constants.Fonts.body2)
+                    .foregroundColor(.gray)
+                }
                 
                 Divider()
                     .frame(height: 14)
                     .padding(.horizontal, 28.75)
                 
-                Text("\(viewModel.externalUser?.following?.count ?? 0)")
-                .font(Constants.Fonts.body2)
-                .fontWeight(.medium)
-                .foregroundColor(.black)
-                + Text(" following")
-                .font(Constants.Fonts.body2)
-                .foregroundColor(.gray)
+                Button {
+                    router.push(.followList(
+                        userID: userID,
+                        username: viewModel.externalUser?.username ?? "",
+                        initialTab: .following
+                    ))
+                } label: {
+                    Text("\(viewModel.externalUser?.following?.count ?? 0)")
+                    .font(Constants.Fonts.body2)
+                    .fontWeight(.medium)
+                    .foregroundColor(.black)
+                    + Text(" following")
+                    .font(Constants.Fonts.body2)
+                    .foregroundColor(.gray)
+                }
             }
             
             HStack {

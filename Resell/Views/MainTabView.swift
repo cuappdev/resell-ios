@@ -94,6 +94,8 @@ struct MainTabView: View {
                         .environmentObject(onboardingViewModel)
                 case .profile(let id):
                     ExternalProfileView(userID: id)
+                case .followList(let userID, let username, let initialTab):
+                    FollowListView(userID: userID, username: username, initialTab: initialTab)
                 case .setupProfile:
                     SetupProfileView(userDidLogin: $mainViewModel.userDidLogin, user: GoogleAuthManager.shared.user)
                         .environmentObject(onboardingViewModel)

@@ -7,6 +7,11 @@
 
 import SwiftUI
 
+enum FollowListType {
+    case followers
+    case following
+}
+
 class Router: ObservableObject {
     @Published var path: [Route] = []
 
@@ -36,6 +41,7 @@ class Router: ObservableObject {
         case feedback
         case setupProfile
         case venmo
+        case followList(userID: String, username: String, initialTab: FollowListType)
     }
 
     func push(_ route: Route) {
