@@ -83,22 +83,29 @@ struct MessagesView: View {
     }
 
     private var optionsMenuOverlay: some View {
-        OptionsMenuView(showMenu: $didShowOptionsMenu, options: [.report(type: "User", id: viewModel.chatInfo.buyer.firebaseUid)])
+        OptionsMenuView(showMenu: $didShowOptionsMenu, options: [.report(type: "User", id: otherUser.firebaseUid)])
             .zIndex(100)
     }
     
+    private var otherUser: User {
+        guard let user = GoogleAuthManager.shared.user else {
+            return viewModel.chatInfo.buyer
+        }
+        return viewModel.chatInfo.buyer.firebaseUid == user.firebaseUid ? viewModel.chatInfo.seller : viewModel.chatInfo.buyer
+    }
+
     private var headerButton: some View {
         Button {
             navigateToProductDetails()
         } label: {
             VStack(spacing: 0) {
-                Text(viewModel.chatInfo.listing.title)
+                Text("\(otherUser.givenName) \(otherUser.familyName)")
                     .font(Constants.Fonts.title1)
                     .foregroundStyle(Constants.Colors.black)
                     .lineLimit(1)
                     .truncationMode(.tail)
 
-                Text("\(viewModel.chatInfo.listing.user?.givenName ?? "") \(viewModel.chatInfo.listing.user?.familyName ?? "")")
+                Text(viewModel.chatInfo.listing.title)
                     .font(Constants.Fonts.title3)
                     .foregroundStyle(Constants.Colors.secondaryGray)
                     .lineLimit(1)
