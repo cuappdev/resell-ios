@@ -24,6 +24,7 @@ class ProfileViewModel: ObservableObject {
     @Published var isFollowing: Bool = false
     @Published var isFollowLoading: Bool = false
     @Published var followerCount: Int = 0
+    @Published var followingCount: Int = 0
 
     enum Tab: String {
         case listing, archive, wishlist
@@ -66,6 +67,7 @@ class ProfileViewModel: ObservableObject {
         externalUserPosts = []
         isFollowing = false
         followerCount = 0
+        followingCount = 0
         
         Task {
             isLoadingExternalUser = true
@@ -73,7 +75,17 @@ class ProfileViewModel: ObservableObject {
 
             do {
                 externalUser = try await NetworkManager.shared.getUserByID(id: id).user
-                followerCount = externalUser?.followers?.count ?? 0
+                
+                // Fetch actual follower/following counts from dedicated endpoints
+                async let fetchedFollowers = NetworkManager.shared.getFollowers(id: id).users
+                async let fetchedFollowing = NetworkManager.shared.getFollowing(id: id).users
+                
+                let followers = try await fetchedFollowers
+                let following = try await fetchedFollowing
+                
+                followerCount = followers.count
+                followingCount = following.count
+                
                 checkUserIsBlocked(userId: id)
                 checkUserIsFollowing(userId: id)
                 externalUserPosts = try await NetworkManager.shared.getPostsByUserID(id: externalUser?.firebaseUid ?? "").posts

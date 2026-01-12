@@ -167,7 +167,7 @@ struct ExternalProfileView: View {
                         initialTab: .following
                     ))
                 } label: {
-                    Text("\(viewModel.externalUser?.following?.count ?? 0)")
+                    Text("\(viewModel.followingCount)")
                     .font(Constants.Fonts.body2)
                     .fontWeight(.medium)
                     .foregroundColor(.black)
