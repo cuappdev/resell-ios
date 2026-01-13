@@ -74,6 +74,14 @@ struct ProfileView: View {
                     Icon(image: "settings")
                 }
             }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    router.push(.availability)
+                } label: {
+                    Icon(image: "calendar-internal")
+                }
+            }
         }
         .overlay(alignment: .bottomTrailing) {
             ExpandableAddButton()

@@ -87,6 +87,8 @@ struct MainTabView: View {
                     DetailedFilterView(filter: filter)
                 case .saved:
                     SavedView()
+                case .availability:
+                    AvailabilitySettingsView()
 //                case .notifications:
 //                    NotificationsSettingsView()
                 case .login:

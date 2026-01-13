@@ -232,7 +232,6 @@ struct MessagesView: View {
             selectedDates: $viewModel.availability,
             didSubmit: $didSubmitAvailabilities,
             isEditing: $isEditing
-            // set isEditing
         )
         .presentationCornerRadius(25)
         .presentationDragIndicator(.hidden)

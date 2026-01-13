@@ -164,6 +164,7 @@
 		2ECB2F652E749ADD00CAACA2 /* (null) in Sources */ = {isa = PBXBuildFile; };
 		2ECB2F672E74E03700CAACA2 /* (null) in Sources */ = {isa = PBXBuildFile; };
 		2EEAAB1E2F142C460006FF5C /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 2EEAAB1D2F142C460006FF5C /* Flow */; };
+		2EEAAB222F15F8FD0006FF5C /* AvailabilitySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEAAB212F15F8F70006FF5C /* AvailabilitySettingsView.swift */; };
 		2EEB57262F03C704008D2DF3 /* ReviewSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E02D3802F03C48200CCABE6 /* ReviewSection.swift */; };
 /* End PBXBuildFile section */
 
@@ -308,6 +309,7 @@
 		2E9F75992EB6DC93003FE0E0 /* EmptyStateModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateModifier.swift; sourceTree = "<group>"; };
 		2E9F759B2EB6DCBD003FE0E0 /* RangeSlider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RangeSlider.swift; sourceTree = "<group>"; };
 		2EBB64172D8B783600CCAC48 /* Filter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Filter.swift; sourceTree = "<group>"; };
+		2EEAAB212F15F8F70006FF5C /* AvailabilitySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailabilitySettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -400,6 +402,7 @@
 		2C18FFEB2CA1E51400564577 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				2EEAAB212F15F8F70006FF5C /* AvailabilitySettingsView.swift */,
 				2CBC6B642CB7A5A000C842A4 /* BlockedUsersView.swift */,
 				2CF3561C2CDE91170045A173 /* EditProfileView.swift */,
 				2C525B7C2CB1DE55007D5B8E /* NotificationsSettingsView.swift */,
@@ -952,6 +955,7 @@
 				2CE473952CC2204500BD7E2C /* DraggableSheetView.swift in Sources */,
 				2ECB2F672E74E03700CAACA2 /* (null) in Sources */,
 				2C41BB852CD8811400EFF69E /* Post.swift in Sources */,
+				2EEAAB222F15F8FD0006FF5C /* AvailabilitySettingsView.swift in Sources */,
 				2C525B812CB1F195007D5B8E /* SendFeedbackViewModel.swift in Sources */,
 				2C9337562C935CB600818C8E /* ProfileView.swift in Sources */,
 				2E9F758B2EB6D680003FE0E0 /* SearchViewModel.swift in Sources */,

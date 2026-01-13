@@ -41,6 +41,7 @@ class Router: ObservableObject {
         case feedback
         case setupProfile
         case venmo
+        case availability
         case followList(userID: String, username: String, initialTab: FollowListType)
     }
 
