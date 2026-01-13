@@ -100,7 +100,7 @@ struct MessagesView: View {
     
     private var calendarButton: some View {
         Button {
-            
+            didShowAvailabilityView.toggle()
         } label: {
             Image("calendar")
                 .resizable()

@@ -17,6 +17,8 @@ struct AvailabilitySelectorView: View {
     @State private var toggleSelectionMode: Bool? = nil
     @State private var currentPage: Int = 0
     @State private var isMovingForward: Bool = true
+    @State private var isDraggingCells: Bool = false
+    @State private var dragStartLocation: CGPoint = .zero
 
     @Binding var isPresented: Bool
     @Binding var selectedDates: [Availability]
@@ -39,129 +41,92 @@ struct AvailabilitySelectorView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            HStack {
-                Button(action: goToPreviousPage) {
-                    Image(systemName: "chevron.left")
-                        .font(Constants.Fonts.h1)
-                        .foregroundColor(currentPage > 0 ? Constants.Colors.black : Constants.Colors.white)
-                }
-                .disabled(currentPage == 0)
+            VStack {
+                Text(isEditing ? "When are you free to meet?" : "\(proposerName ?? "")'s Availability")
+                    .font(Constants.Fonts.title1)
+                    .foregroundColor(Constants.Colors.black)
+                    .padding(.top)
 
-                Spacer()
-
-                VStack {
-                    Text(isEditing ? "When are you free to meet?" : "\(proposerName ?? "")'s Availability")
-                        .font(Constants.Fonts.title1)
-                        .foregroundColor(Constants.Colors.black)
-                        .padding(.top)
-
-                    Text(isEditing ? "Click and drag cells to select meeting times" : "Select a 30-minute block to propose a meeting.")
-                        .font(Constants.Fonts.body2)
-                        .foregroundColor(Constants.Colors.secondaryGray)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                }
-
-                Spacer()
-
-                Button(action: goToNextPage) {
-                    Image(systemName: "chevron.right")
-                        .font(Constants.Fonts.h1)
-                        .foregroundColor(currentPage < paginatedDates.count - 1 ? Constants.Colors.black : Constants.Colors.secondaryGray)
-                }
-                .disabled(currentPage >= paginatedDates.count - 1)
+                Text(isEditing ? "Click and drag cells to select meeting times" : "Select a 30-minute block to propose a meeting.")
+                    .font(Constants.Fonts.body2)
+                    .foregroundColor(Constants.Colors.secondaryGray)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
             }
 
             ZStack {
                 ForEach(Array(paginatedDates.indices), id: \.self) { index in
-                    HStack(spacing: 0) {
-                        VStack(spacing: 0) {
-                            ForEach(times, id: \.self) { time in
-                                VStack {
-                                    Text(time)
-                                        .font(Constants.Fonts.title2)
-                                        .foregroundStyle(Constants.Colors.black)
-                                        .multilineTextAlignment(.trailing)
-                                    
-                                    Spacer()
-                                }
-                                .frame(width: 80, height: cellHeight)
-                            }
-                        }
-                        .padding(.top, 36)
-
-                        //title 1, body 1
-
-                        HStack(spacing: 0) {
-                            ForEach(Array(paginatedDates[index]), id: \.self) { date in
-                                VStack(spacing: 0) {
-                                    Text(date.partBeforeComma)
-                                        .font(Constants.Fonts.title4)
-                                        .foregroundStyle(Constants.Colors.black)
-                                        .multilineTextAlignment(.center)
-                                        .frame(height: 35)
-                                        .padding(.bottom, 8)
-
-                                    ForEach(times, id: \.self) { time in
-                                            CellView(
-                                                isSelectedTop: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
-                                                isSelectedBottom: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom")),
-                                                isHighlightedTop: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
-                                                isHighlightedBottom: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom"))
-                                            )
-                                        .frame(width: UIScreen.width / 5 + 10, height: cellHeight)
-                                    }
-                                }
-                            }
-                        }
-                        // TODO: Slow down scroll speed and fix functionality for removing cells from availability
-                        .background(
-                            GeometryReader { geo in
-                                Color.clear
-                                    .contentShape(Rectangle())
-                                    .gesture(
-                                        DragGesture(minimumDistance: 0)
-                                            .onChanged { value in
-                                                if isEditing {
-                                                    if let identifier = mapDragLocationToCell(
-                                                        location: value.location,
-                                                        in: geo.frame(in: .local),
-                                                        dates: Array(paginatedDates[index]),
-                                                        times: times,
-                                                        cellHeight: cellHeight
-                                                    ) {
-                                                        if toggleSelectionMode == nil {
-                                                            toggleSelectionMode = selectedCells.contains(identifier) ? false : true
-                                                        }
-                                                        draggedCells.insert(identifier)
-                                                    }
-                                                }
-                                            }
-                                            .onEnded { _ in
-                                                if let toggleSelectionMode = toggleSelectionMode {
-                                                    if toggleSelectionMode {
-                                                        selectedCells.formUnion(draggedCells)
-                                                    } else {
-                                                        selectedCells.subtract(draggedCells)
-                                                    }
-                                                }
-                                                draggedCells.removeAll()
-                                                toggleSelectionMode = nil
-                                            }
-//                                            .onTapGesture {
-//                                                if isEditing {
-//                                                    let isTopHalf = geometry.frame(in: .local).midY < cellHeight / 2
-//                                                    toggleCellSelection(date: date, time: time, isTopHalf: isTopHalf)
-//                                                }
-//                                            }
-                                    )
-                            }
-                        )
-                    }
-                    .offset(x: index < currentPage ? -UIScreen.main.bounds.width : index > currentPage ? UIScreen.main.bounds.width : 0)
-                    .animation(.easeInOut(duration: 0.3), value: currentPage)
+                    pageView(for: index)
+                        .offset(x: CGFloat(index - currentPage) * UIScreen.width)
                 }
             }
+            .animation(.easeInOut(duration: 0.3), value: currentPage)
+            .gesture(
+                DragGesture(minimumDistance: 5)
+                    .onChanged { value in
+                        if dragStartLocation == .zero {
+                            dragStartLocation = value.startLocation
+                        }
+                        
+                        let horizontalDrag = abs(value.translation.width)
+                        let verticalDrag = abs(value.translation.height)
+                        
+                        // Determine drag direction at the start
+                        if !isDraggingCells && horizontalDrag < 30 && verticalDrag > 10 {
+                            // This is a vertical drag for cell selection
+                            isDraggingCells = true
+                        }
+                        
+                        if isDraggingCells && isEditing {
+                            // Handle cell selection
+                            if let identifier = mapDragLocationToCell(
+                                location: value.location,
+                                dates: Array(paginatedDates[currentPage]),
+                                times: times,
+                                cellHeight: cellHeight
+                            ) {
+                                if toggleSelectionMode == nil {
+                                    toggleSelectionMode = selectedCells.contains(identifier) ? false : true
+                                }
+                                draggedCells.insert(identifier)
+                            }
+                        }
+                    }
+                    .onEnded { value in
+                        if isDraggingCells {
+                            // Finalize cell selection
+                            if let toggleSelectionMode = toggleSelectionMode {
+                                if toggleSelectionMode {
+                                    selectedCells.formUnion(draggedCells)
+                                } else {
+                                    selectedCells.subtract(draggedCells)
+                                }
+                            }
+                        } else {
+                            // Handle horizontal swipe for page navigation
+                            let horizontalDrag = value.translation.width
+                            let velocity = value.predictedEndTranslation.width - value.translation.width
+                            
+                            if horizontalDrag < -50 || velocity < -100 {
+                                // Swipe left - go to next page
+                                if currentPage < paginatedDates.count - 1 {
+                                    currentPage += 1
+                                }
+                            } else if horizontalDrag > 50 || velocity > 100 {
+                                // Swipe right - go to previous page
+                                if currentPage > 0 {
+                                    currentPage -= 1
+                                }
+                            }
+                        }
+                        
+                        // Reset state
+                        draggedCells.removeAll()
+                        toggleSelectionMode = nil
+                        isDraggingCells = false
+                        dragStartLocation = .zero
+                    }
+            )
 
             Spacer()
 
@@ -175,26 +140,81 @@ struct AvailabilitySelectorView: View {
         .onAppear(perform: initializeSelectedCells)
     }
 
+    // MARK: - Helper Views
+    
+    private func pageView(for index: Int) -> some View {
+        HStack(spacing: 0) {
+            VStack(spacing: 0) {
+                ForEach(times, id: \.self) { time in
+                    VStack {
+                        Text(time)
+                            .font(Constants.Fonts.title2)
+                            .foregroundStyle(Constants.Colors.black)
+                            .multilineTextAlignment(.trailing)
+                        
+                        Spacer()
+                    }
+                    .frame(width: 80, height: cellHeight)
+                }
+            }
+            .padding(.top, 36)
+
+            HStack(spacing: 0) {
+                ForEach(Array(paginatedDates[index]), id: \.self) { date in
+                    VStack(spacing: 0) {
+                        Text(date.partBeforeComma)
+                            .font(Constants.Fonts.title4)
+                            .foregroundStyle(Constants.Colors.black)
+                            .multilineTextAlignment(.center)
+                            .frame(height: 35)
+                            .padding(.bottom, 8)
+
+                        ForEach(times, id: \.self) { time in
+                            CellView(
+                                isSelectedTop: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
+                                isSelectedBottom: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom")),
+                                isHighlightedTop: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
+                                isHighlightedBottom: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom"))
+                            )
+                            .frame(width: UIScreen.width / 5 + 10, height: cellHeight)
+                        }
+                    }
+                }
+            }
+        }
+        .frame(width: UIScreen.width - 32) // Account for horizontal padding
+        .contentShape(Rectangle())
+    }
+
     // MARK: - Functions
+    
     private func mapDragLocationToCell(
             location: CGPoint,
-            in frame: CGRect,
             dates: [String],
             times: [String],
             cellHeight: CGFloat
         ) -> CellIdentifier? {
-        let columnWidth = (UIScreen.width / 5 + 10)
+        // Offset for the time labels column (80 width) and header row (36 + 35 height)
+        let timeColumnWidth: CGFloat = 80
+        let headerHeight: CGFloat = 36 + 35 + 8 // padding.top + date header + padding
+        
+        let adjustedX = location.x - timeColumnWidth
+        let adjustedY = location.y - headerHeight
+        
+        guard adjustedX >= 0, adjustedY >= 0 else { return nil }
+        
+        let columnWidth = UIScreen.width / 5 + 10
         let rowHeight = cellHeight
 
         // Column index: which date
-        let col = Int(location.x / columnWidth)
+        let col = Int(adjustedX / columnWidth)
         guard col >= 0, col < dates.count else { return nil }
 
         // Row index: which time slot
-        let row = Int((location.y - 35) / rowHeight) // adjust for header height
+        let row = Int(adjustedY / rowHeight)
         guard row >= 0, row < times.count else { return nil }
 
-        let isTopHalf = (location.y.truncatingRemainder(dividingBy: rowHeight)) < rowHeight / 2
+        let isTopHalf = adjustedY.truncatingRemainder(dividingBy: rowHeight) < rowHeight / 2
         let date = dates[col]
         let time = times[row]
 
