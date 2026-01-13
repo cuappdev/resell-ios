@@ -40,14 +40,18 @@ struct MessagesView: View {
             }
         }
         .background(Constants.Colors.white)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Constants.Colors.white, for: .automatic)
         .toolbar {
             ToolbarItem(placement: .principal) {
                 headerButton
             }
-
+            
             ToolbarItem(placement: .topBarTrailing) {
-                optionsButton
+                HStack(spacing: 8) {
+                    calendarButton
+                    optionsButton
+                }
             }
         }
         .sheet(isPresented: $didShowNegotiationView, onDismiss: setNegotiationText) {
@@ -93,12 +97,22 @@ struct MessagesView: View {
         }
         return viewModel.chatInfo.buyer.firebaseUid == user.firebaseUid ? viewModel.chatInfo.seller : viewModel.chatInfo.buyer
     }
-
+    
+    private var calendarButton: some View {
+        Button {
+            
+        } label: {
+            Image("calendar")
+                .resizable()
+                .frame(width: 24, height: 24)
+        }
+    }
+    
     private var headerButton: some View {
         Button {
             navigateToProductDetails()
         } label: {
-            VStack(spacing: 0) {
+            VStack(alignment: .center, spacing: 0) {
                 Text("\(otherUser.givenName) \(otherUser.familyName)")
                     .font(Constants.Fonts.title1)
                     .foregroundStyle(Constants.Colors.black)
@@ -125,7 +139,6 @@ struct MessagesView: View {
                 .frame(width: 24, height: 6)
                 .foregroundStyle(Constants.Colors.black)
         }
-        .padding()
     }
     
     private var messageListView: some View {
