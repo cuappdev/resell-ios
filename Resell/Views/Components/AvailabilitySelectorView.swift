@@ -68,39 +68,45 @@ struct AvailabilitySelectorView: View {
                 }
             }
             .animation(.easeInOut(duration: 0.3), value: currentPage)
-            .gesture(
+            .simultaneousGesture(
                 DragGesture(minimumDistance: 5)
                     .onChanged { value in
                         if dragStartLocation == .zero {
                             dragStartLocation = value.startLocation
                         }
                         
-                        let horizontalDrag = abs(value.translation.width)
-                        let verticalDrag = abs(value.translation.height)
+                        // Only handle cell selection if drag started in the cell area (after timeColumnWidth)
+                        let startedInCellArea = dragStartLocation.x > timeColumnWidth
                         
-                        // Determine drag direction at the start
-                        if !isDraggingCells && horizontalDrag < 30 && verticalDrag > 10 {
-                            // This is a vertical drag for cell selection
-                            isDraggingCells = true
-                        }
-                        
-                        if isDraggingCells && isEditing {
-                            // Handle cell selection
-                            if let identifier = mapDragLocationToCell(
-                                location: value.location,
-                                dates: Array(paginatedDates[currentPage]),
-                                times: times,
-                                cellHeight: cellHeight
-                            ) {
-                                if toggleSelectionMode == nil {
-                                    toggleSelectionMode = selectedCells.contains(identifier) ? false : true
+                        if startedInCellArea && isEditing {
+                            let horizontalDrag = abs(value.translation.width)
+                            let verticalDrag = abs(value.translation.height)
+                            
+                            // Determine drag direction at the start - prefer vertical for cell selection
+                            if !isDraggingCells && verticalDrag > 10 && horizontalDrag < 50 {
+                                isDraggingCells = true
+                            }
+                            
+                            if isDraggingCells {
+                                // Handle cell selection
+                                if let identifier = mapDragLocationToCell(
+                                    location: value.location,
+                                    dates: Array(paginatedDates[currentPage]),
+                                    times: times,
+                                    cellHeight: cellHeight
+                                ) {
+                                    if toggleSelectionMode == nil {
+                                        toggleSelectionMode = selectedCells.contains(identifier) ? false : true
+                                    }
+                                    draggedCells.insert(identifier)
                                 }
-                                draggedCells.insert(identifier)
                             }
                         }
                     }
                     .onEnded { value in
-                        if isDraggingCells {
+                        let startedInCellArea = dragStartLocation.x > timeColumnWidth
+                        
+                        if isDraggingCells && startedInCellArea {
                             // Finalize cell selection
                             if let toggleSelectionMode = toggleSelectionMode {
                                 if toggleSelectionMode {
@@ -109,7 +115,7 @@ struct AvailabilitySelectorView: View {
                                     selectedCells.subtract(draggedCells)
                                 }
                             }
-                        } else {
+                        } else if !isDraggingCells {
                             // Handle horizontal swipe for page navigation
                             let horizontalDrag = value.translation.width
                             let velocity = value.predictedEndTranslation.width - value.translation.width
@@ -163,29 +169,32 @@ struct AvailabilitySelectorView: View {
         CGFloat(times.count) * cellHeight + verticalLineHeaderExtension
     }
     
+    private let scrollableGridHeight: CGFloat = UIScreen.height * 0.55
+    
     private func pageView(for index: Int) -> some View {
-        ZStack(alignment: .topLeading) {
-            // Vertical grid lines (extending through header)
-            HStack(spacing: 0) {
-                Rectangle()
-                    .fill(Color.clear)
-                    .frame(width: timeColumnWidth)
-                
-                ForEach(0..<4, id: \.self) { colIndex in
+        VStack(alignment: .leading, spacing: 0) {
+            // Sticky header row with EST and dates + vertical lines
+            ZStack(alignment: .topLeading) {
+                // Vertical lines in header
+                HStack(spacing: 0) {
                     Rectangle()
-                        .fill(Color.gray.opacity(0.3))
-                        .frame(width: 0.5, height: headerHeight + CGFloat(times.count) * cellHeight)
+                        .fill(Color.clear)
+                        .frame(width: timeColumnWidth, height: headerHeight)
                     
-                    if colIndex < 3 {
-                        Spacer()
-                            .frame(width: gridColumnWidth - 0.5)
+                    ForEach(0..<4, id: \.self) { colIndex in
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 0.5, height: headerHeight)
+                        
+                        if colIndex < 3 {
+                            Rectangle()
+                                .fill(Color.clear)
+                                .frame(width: gridColumnWidth - 0.5, height: headerHeight)
+                        }
                     }
                 }
-            }
-            
-            // Content (header + grid)
-            VStack(alignment: .leading, spacing: 0) {
-                // Header row with EST and dates
+                
+                // Header text
                 HStack(spacing: 0) {
                     Text("EST")
                         .font(Constants.Fonts.title2)
@@ -199,54 +208,97 @@ struct AvailabilitySelectorView: View {
                             .frame(width: gridColumnWidth, height: headerHeight)
                     }
                 }
-                
-                // Grid area
-                ZStack(alignment: .topLeading) {
-                    // Horizontal grid lines (spanning full width)
-                    VStack(spacing: 0) {
-                        ForEach(0..<times.count + 1, id: \.self) { rowIndex in
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.3))
-                                .frame(width: totalGridWidth, height: 0.5)
-                            
-                            if rowIndex < times.count {
-                                Spacer()
-                                    .frame(height: cellHeight - 0.5)
-                            }
-                        }
-                    }
-                    
-                    // Time labels and cells
-                    HStack(spacing: 0) {
-                        VStack(spacing: 0) {
-                            ForEach(times, id: \.self) { time in
-                                Text(time)
-                                    .font(Constants.Fonts.title2)
-                                    .foregroundStyle(Constants.Colors.secondaryGray)
-                                    .frame(width: timeColumnWidth, height: cellHeight)
-                            }
-                        }
-
+            }
+            .background(Constants.Colors.white)
+            
+            // Scrollable grid area with fade effect
+            ZStack(alignment: .bottom) {
+                ScrollView(.vertical, showsIndicators: false) {
+                    ZStack(alignment: .topLeading) {
+                        // Vertical grid lines in scroll area
                         HStack(spacing: 0) {
-                            ForEach(Array(zip(paginatedDates[index], paginatedShortDates[index])), id: \.0) { date, _ in
-                                VStack(spacing: 0) {
-                                    ForEach(times, id: \.self) { time in
-                                        CellView(
-                                            isSelectedTop: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
-                                            isSelectedBottom: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom")),
-                                            isHighlightedTop: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
-                                            isHighlightedBottom: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom"))
-                                        )
-                                        .frame(width: gridColumnWidth, height: cellHeight)
-                                    }
+                            Rectangle()
+                                .fill(Color.clear)
+                                .frame(width: timeColumnWidth)
+                            
+                            ForEach(0..<4, id: \.self) { colIndex in
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.3))
+                                    .frame(width: 0.5, height: CGFloat(times.count) * cellHeight)
+                                
+                                if colIndex < 3 {
+                                    Rectangle()
+                                        .fill(Color.clear)
+                                        .frame(width: gridColumnWidth - 0.5)
                                 }
                             }
                         }
+                        
+                        // Horizontal grid lines
+                        VStack(spacing: 0) {
+                            ForEach(0..<times.count + 1, id: \.self) { rowIndex in
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.3))
+                                    .frame(width: totalGridWidth, height: 0.5)
+                                
+                                if rowIndex < times.count {
+                                    Spacer()
+                                        .frame(height: cellHeight - 0.5)
+                                }
+                            }
+                        }
+                        
+                        // Time labels and cells
+                        HStack(spacing: 0) {
+                            // Time labels column (scrollable area for vertical scroll)
+                            VStack(spacing: 0) {
+                                ForEach(times, id: \.self) { time in
+                                    Text(time)
+                                        .font(Constants.Fonts.title2)
+                                        .foregroundStyle(Constants.Colors.secondaryGray)
+                                        .frame(width: timeColumnWidth, height: cellHeight)
+                                }
+                            }
+
+                            // Cells area - with scroll blocking overlay
+                            HStack(spacing: 0) {
+                                ForEach(Array(zip(paginatedDates[index], paginatedShortDates[index])), id: \.0) { date, _ in
+                                    VStack(spacing: 0) {
+                                        ForEach(times, id: \.self) { time in
+                                            CellView(
+                                                isSelectedTop: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
+                                                isSelectedBottom: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom")),
+                                                isHighlightedTop: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
+                                                isHighlightedBottom: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom"))
+                                            )
+                                            .frame(width: gridColumnWidth, height: cellHeight)
+                                        }
+                                    }
+                                }
+                            }
+                            .contentShape(Rectangle())
+                            .gesture(
+                                DragGesture(minimumDistance: 0)
+                                    .onChanged { _ in }
+                                    .onEnded { _ in }
+                            )
+                        }
                     }
                 }
+                .frame(height: scrollableGridHeight)
+                .clipped()
+                
+                // Fade effect at bottom
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.white.opacity(0), Color.white]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 35)
+                .allowsHitTesting(false)
             }
         }
-        .frame(width: UIScreen.width - 32) // Account for horizontal padding
+        .frame(width: UIScreen.width - 32)
         .contentShape(Rectangle())
     }
 
@@ -433,8 +485,8 @@ func generateTimes() -> [String] {
     let formatter = DateFormatter()
     formatter.dateFormat = "h:mm a"
 
-    let startHour = 9
-    let endHour = 20
+    let startHour = 8
+    let endHour = 22
     return (startHour...endHour).map { hour in
         let date = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date())!
         return formatter.string(from: date)
