@@ -27,11 +27,18 @@ struct AvailabilitySelectorView: View {
 
     var proposerName: String? = nil
     let dates: [String] = generateDates()
+    let shortDates: [String] = generateShortDates()
     let times: [String] = generateTimes()
 
     private var paginatedDates: [ArraySlice<String>] {
         stride(from: 0, to: dates.count, by: 3).map {
             dates[$0..<min($0 + 3, dates.count)]
+        }
+    }
+    
+    private var paginatedShortDates: [ArraySlice<String>] {
+        stride(from: 0, to: shortDates.count, by: 3).map {
+            shortDates[$0..<min($0 + 3, shortDates.count)]
         }
     }
 
@@ -145,93 +152,93 @@ struct AvailabilitySelectorView: View {
     private let timeColumnWidth: CGFloat = 90
     private let gridColumnWidth: CGFloat = UIScreen.width / 5 + 10
     private let lineExtension: CGFloat = 12 // Extra pixels beyond the grid
+    private let headerHeight: CGFloat = 44
+    private let verticalLineHeaderExtension: CGFloat = 42 // How far vertical lines extend into header
     
     private var totalGridWidth: CGFloat {
         timeColumnWidth + gridColumnWidth * 3 + lineExtension
     }
     
+    private var totalVerticalLineHeight: CGFloat {
+        CGFloat(times.count) * cellHeight + verticalLineHeaderExtension
+    }
+    
     private func pageView(for index: Int) -> some View {
-        VStack(spacing: 0) {
-            // Header row with EST and dates
+        ZStack(alignment: .topLeading) {
+            // Vertical grid lines (extending through header)
             HStack(spacing: 0) {
-                Text("EST")
-                    .font(Constants.Fonts.title2)
-                    .foregroundStyle(Constants.Colors.secondaryGray)
-                    .frame(width: timeColumnWidth, height: 44)
+                Rectangle()
+                    .fill(Color.clear)
+                    .frame(width: timeColumnWidth)
                 
-                ForEach(Array(paginatedDates[index]), id: \.self) { date in
-                    Text(date.partBeforeComma)
-                        .font(Constants.Fonts.title4)
-                        .foregroundStyle(Constants.Colors.black)
-                        .multilineTextAlignment(.center)
-                        .frame(width: gridColumnWidth, height: 44)
+                ForEach(0..<4, id: \.self) { colIndex in
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 0.5, height: headerHeight + CGFloat(times.count) * cellHeight)
+                    
+                    if colIndex < 3 {
+                        Spacer()
+                            .frame(width: gridColumnWidth - 0.5)
+                    }
                 }
             }
             
-            // Grid with extended horizontal lines
-            ZStack(alignment: .topLeading) {
-                // Horizontal grid lines (spanning full width)
-                VStack(spacing: 0) {
-                    ForEach(0..<times.count + 1, id: \.self) { rowIndex in
-                        HStack(spacing: 0) {
-                            // Start line from the beginning of the view
+            // Content (header + grid)
+            VStack(alignment: .leading, spacing: 0) {
+                // Header row with EST and dates
+                HStack(spacing: 0) {
+                    Text("EST")
+                        .font(Constants.Fonts.title2)
+                        .foregroundStyle(Constants.Colors.secondaryGray)
+                        .frame(width: timeColumnWidth, height: headerHeight)
+                    
+                    ForEach(Array(paginatedShortDates[index]), id: \.self) { shortDate in
+                        Text(shortDate)
+                            .font(Constants.Fonts.title2)
+                            .foregroundStyle(Constants.Colors.secondaryGray)
+                            .frame(width: gridColumnWidth, height: headerHeight)
+                    }
+                }
+                
+                // Grid area
+                ZStack(alignment: .topLeading) {
+                    // Horizontal grid lines (spanning full width)
+                    VStack(spacing: 0) {
+                        ForEach(0..<times.count + 1, id: \.self) { rowIndex in
                             Rectangle()
                                 .fill(Color.gray.opacity(0.3))
                                 .frame(width: totalGridWidth, height: 0.5)
-                        }
-                        
-                        if rowIndex < times.count {
-                            Spacer()
-                                .frame(height: cellHeight - 0.5)
-                        }
-                    }
-                }
-                
-                // Vertical grid lines
-                HStack(spacing: 0) {
-                    Rectangle()
-                        .fill(Color.clear)
-                        .frame(width: timeColumnWidth)
-                    
-                    ForEach(0..<4, id: \.self) { colIndex in
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(width: 0.5, height: CGFloat(times.count) * cellHeight)
-                        
-                        if colIndex < 3 {
-                            Spacer()
-                                .frame(width: gridColumnWidth - 0.5)
-                        }
-                    }
-                }
-                
-                // Time labels and cells
-                HStack(spacing: 0) {
-                    VStack(spacing: 0) {
-                        ForEach(times, id: \.self) { time in
-                            HStack {
+                            
+                            if rowIndex < times.count {
                                 Spacer()
+                                    .frame(height: cellHeight - 0.5)
+                            }
+                        }
+                    }
+                    
+                    // Time labels and cells
+                    HStack(spacing: 0) {
+                        VStack(spacing: 0) {
+                            ForEach(times, id: \.self) { time in
                                 Text(time)
                                     .font(Constants.Fonts.title2)
                                     .foregroundStyle(Constants.Colors.secondaryGray)
-                                Spacer()
-                                    .frame(width: 8)
+                                    .frame(width: timeColumnWidth, height: cellHeight)
                             }
-                            .frame(width: timeColumnWidth, height: cellHeight)
                         }
-                    }
 
-                    HStack(spacing: 0) {
-                        ForEach(Array(paginatedDates[index]), id: \.self) { date in
-                            VStack(spacing: 0) {
-                                ForEach(times, id: \.self) { time in
-                                    CellView(
-                                        isSelectedTop: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
-                                        isSelectedBottom: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom")),
-                                        isHighlightedTop: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
-                                        isHighlightedBottom: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom"))
-                                    )
-                                    .frame(width: gridColumnWidth, height: cellHeight)
+                        HStack(spacing: 0) {
+                            ForEach(Array(zip(paginatedDates[index], paginatedShortDates[index])), id: \.0) { date, _ in
+                                VStack(spacing: 0) {
+                                    ForEach(times, id: \.self) { time in
+                                        CellView(
+                                            isSelectedTop: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
+                                            isSelectedBottom: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom")),
+                                            isHighlightedTop: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
+                                            isHighlightedBottom: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom"))
+                                        )
+                                        .frame(width: gridColumnWidth, height: cellHeight)
+                                    }
                                 }
                             }
                         }
@@ -407,6 +414,15 @@ struct StrokeDashedLine: Shape {
 func generateDates() -> [String] {
     let formatter = DateFormatter()
     formatter.dateFormat = "E \nMMM d, yyyy"
+
+    return (0..<30).compactMap {
+        Calendar.current.date(byAdding: .day, value: $0, to: Date())
+    }.map { formatter.string(from: $0) }
+}
+
+func generateShortDates() -> [String] {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "EEE d"
 
     return (0..<30).compactMap {
         Calendar.current.date(byAdding: .day, value: $0, to: Date())
