@@ -142,41 +142,98 @@ struct AvailabilitySelectorView: View {
 
     // MARK: - Helper Views
     
+    private let timeColumnWidth: CGFloat = 90
+    private let gridColumnWidth: CGFloat = UIScreen.width / 5 + 10
+    private let lineExtension: CGFloat = 12 // Extra pixels beyond the grid
+    
+    private var totalGridWidth: CGFloat {
+        timeColumnWidth + gridColumnWidth * 3 + lineExtension
+    }
+    
     private func pageView(for index: Int) -> some View {
-        HStack(spacing: 0) {
-            VStack(spacing: 0) {
-                ForEach(times, id: \.self) { time in
-                    VStack {
-                        Text(time)
-                            .font(Constants.Fonts.title2)
-                            .foregroundStyle(Constants.Colors.black)
-                            .multilineTextAlignment(.trailing)
-                        
-                        Spacer()
-                    }
-                    .frame(width: 80, height: cellHeight)
+        VStack(spacing: 0) {
+            // Header row with EST and dates
+            HStack(spacing: 0) {
+                Text("EST")
+                    .font(Constants.Fonts.title2)
+                    .foregroundStyle(Constants.Colors.secondaryGray)
+                    .frame(width: timeColumnWidth, height: 44)
+                
+                ForEach(Array(paginatedDates[index]), id: \.self) { date in
+                    Text(date.partBeforeComma)
+                        .font(Constants.Fonts.title4)
+                        .foregroundStyle(Constants.Colors.black)
+                        .multilineTextAlignment(.center)
+                        .frame(width: gridColumnWidth, height: 44)
                 }
             }
-            .padding(.top, 36)
-
-            HStack(spacing: 0) {
-                ForEach(Array(paginatedDates[index]), id: \.self) { date in
+            
+            // Grid with extended horizontal lines
+            ZStack(alignment: .topLeading) {
+                // Horizontal grid lines (spanning full width)
+                VStack(spacing: 0) {
+                    ForEach(0..<times.count + 1, id: \.self) { rowIndex in
+                        HStack(spacing: 0) {
+                            // Start line from the beginning of the view
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(width: totalGridWidth, height: 0.5)
+                        }
+                        
+                        if rowIndex < times.count {
+                            Spacer()
+                                .frame(height: cellHeight - 0.5)
+                        }
+                    }
+                }
+                
+                // Vertical grid lines
+                HStack(spacing: 0) {
+                    Rectangle()
+                        .fill(Color.clear)
+                        .frame(width: timeColumnWidth)
+                    
+                    ForEach(0..<4, id: \.self) { colIndex in
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 0.5, height: CGFloat(times.count) * cellHeight)
+                        
+                        if colIndex < 3 {
+                            Spacer()
+                                .frame(width: gridColumnWidth - 0.5)
+                        }
+                    }
+                }
+                
+                // Time labels and cells
+                HStack(spacing: 0) {
                     VStack(spacing: 0) {
-                        Text(date.partBeforeComma)
-                            .font(Constants.Fonts.title4)
-                            .foregroundStyle(Constants.Colors.black)
-                            .multilineTextAlignment(.center)
-                            .frame(height: 35)
-                            .padding(.bottom, 8)
-
                         ForEach(times, id: \.self) { time in
-                            CellView(
-                                isSelectedTop: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
-                                isSelectedBottom: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom")),
-                                isHighlightedTop: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
-                                isHighlightedBottom: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom"))
-                            )
-                            .frame(width: UIScreen.width / 5 + 10, height: cellHeight)
+                            HStack {
+                                Spacer()
+                                Text(time)
+                                    .font(Constants.Fonts.title2)
+                                    .foregroundStyle(Constants.Colors.secondaryGray)
+                                Spacer()
+                                    .frame(width: 8)
+                            }
+                            .frame(width: timeColumnWidth, height: cellHeight)
+                        }
+                    }
+
+                    HStack(spacing: 0) {
+                        ForEach(Array(paginatedDates[index]), id: \.self) { date in
+                            VStack(spacing: 0) {
+                                ForEach(times, id: \.self) { time in
+                                    CellView(
+                                        isSelectedTop: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
+                                        isSelectedBottom: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom")),
+                                        isHighlightedTop: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
+                                        isHighlightedBottom: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom"))
+                                    )
+                                    .frame(width: gridColumnWidth, height: cellHeight)
+                                }
+                            }
                         }
                     }
                 }
@@ -194,20 +251,18 @@ struct AvailabilitySelectorView: View {
             times: [String],
             cellHeight: CGFloat
         ) -> CellIdentifier? {
-        // Offset for the time labels column (80 width) and header row (36 + 35 height)
-        let timeColumnWidth: CGFloat = 80
-        let headerHeight: CGFloat = 36 + 35 + 8 // padding.top + date header + padding
+        // Offset for the time labels column (80 width) and header row (44 height)
+        let headerHeight: CGFloat = 44 // header row only
         
         let adjustedX = location.x - timeColumnWidth
         let adjustedY = location.y - headerHeight
         
         guard adjustedX >= 0, adjustedY >= 0 else { return nil }
         
-        let columnWidth = UIScreen.width / 5 + 10
         let rowHeight = cellHeight
 
         // Column index: which date
-        let col = Int(adjustedX / columnWidth)
+        let col = Int(adjustedX / gridColumnWidth)
         guard col >= 0, col < dates.count else { return nil }
 
         // Row index: which time slot
@@ -311,26 +366,21 @@ struct CellView: View {
     let isHighlightedBottom: Bool
 
     private let cellHeight = UIScreen.height / 12 - 25
+    private let cellWidth = UIScreen.width / 5 + 10
 
     var body: some View {
-        ZStack {
+        VStack(spacing: 0) {
             Rectangle()
                 .fill(isHighlightedTop
                       ? (isSelectedTop ? Constants.Colors.resellPurple.opacity(0.3) : Constants.Colors.resellPurple.opacity(0.5))
                       : (isSelectedTop ? Constants.Colors.resellPurple : Color.clear))
-                .frame(width: UIScreen.width / 5 + 10, height: cellHeight / 2)
-                .offset(y: -cellHeight / 4)
+                .frame(height: cellHeight / 2)
 
             Rectangle()
                 .fill(isHighlightedBottom
                       ? (isSelectedBottom ? Constants.Colors.resellPurple.opacity(0.3) : Constants.Colors.resellPurple.opacity(0.5))
                       : (isSelectedBottom ? Constants.Colors.resellPurple : Color.clear))
-                .frame(width: UIScreen.width / 5 + 10, height: cellHeight / 2)
-                .offset(y: cellHeight / 4)
-
-            Rectangle()
-                .stroke(Color.gray.opacity(0.5), lineWidth: 0.5)
-                .frame(width: UIScreen.width / 5 + 10, height: cellHeight)
+                .frame(height: cellHeight / 2)
         }
     }
 }
@@ -340,6 +390,17 @@ struct CellView: View {
 struct CellIdentifier: Hashable {
     let date: String
     let time: String
+}
+
+// MARK: - StrokeDashedLine
+
+struct StrokeDashedLine: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.midY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
+        return path
+    }
 }
 
 // MARK: - Helper Functions
