@@ -45,6 +45,8 @@ struct AvailabilitySettingsView: View {
                     onDateSelected: { selectedDate in
                         // Reset page to 0 when user taps a date
                         gridCurrentPage = 0
+                        // Explicitly set the start date (binding should handle this but being explicit)
+                        gridStartDate = selectedDate
                         // Update visible dates immediately
                         updateVisibleDates(from: selectedDate, page: 0)
                     }
@@ -74,6 +76,7 @@ struct AvailabilitySettingsView: View {
                     }
                 }
             )
+            .id(gridStartDate) // Force rebuild when start date changes
             
             // Save button
             if !showCalendar {
@@ -95,6 +98,33 @@ struct AvailabilitySettingsView: View {
         .onAppear {
             // Initialize visible dates
             updateVisibleDates(from: gridStartDate, page: 0)
+        }
+        .onChange(of: currentMonthOffset) { newOffset in
+            // When user swipes to change month on calendar, update grid to first day of that month
+            let calendar = Calendar.current
+            let today = Date()
+            
+            // Calculate the first day of the target month
+            if let targetMonth = calendar.date(byAdding: .month, value: newOffset, to: today),
+               let firstOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: targetMonth)) {
+                
+                // If it's the current month, start from today; otherwise start from 1st of month
+                let startOfToday = calendar.startOfDay(for: today)
+                let newStartDate = (newOffset == 0 && firstOfMonth < startOfToday) ? startOfToday : firstOfMonth
+                
+                // Only update if the change came from calendar swipe (not from grid scroll)
+                // We detect this by checking if current gridStartDate is NOT in the new month
+                let gridMonth = calendar.component(.month, from: gridStartDate)
+                let gridYear = calendar.component(.year, from: gridStartDate)
+                let targetMonthComponent = calendar.component(.month, from: firstOfMonth)
+                let targetYearComponent = calendar.component(.year, from: firstOfMonth)
+                
+                if gridMonth != targetMonthComponent || gridYear != targetYearComponent {
+                    gridStartDate = newStartDate
+                    gridCurrentPage = 0
+                    updateVisibleDates(from: newStartDate, page: 0)
+                }
+            }
         }
     }
     

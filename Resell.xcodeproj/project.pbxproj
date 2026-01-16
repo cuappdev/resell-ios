@@ -166,6 +166,7 @@
 		2EEAAB222F15F8FD0006FF5C /* AvailabilitySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEAAB212F15F8F70006FF5C /* AvailabilitySettingsView.swift */; };
 		2EEAAB242F18C92C0006FF5C /* AvailabilityGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEAAB232F18C92C0006FF5C /* AvailabilityGridView.swift */; };
 		2EEAAB262F18CF6A0006FF5C /* MonthCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEAAB252F18CF6A0006FF5C /* MonthCalendarView.swift */; };
+		2EEAAB282F1ADA380006FF5C /* AvailabilitySettingsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEAAB272F1ADA1B0006FF5C /* AvailabilitySettingsMenu.swift */; };
 		2EEB57262F03C704008D2DF3 /* ReviewSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E02D3802F03C48200CCABE6 /* ReviewSection.swift */; };
 /* End PBXBuildFile section */
 
@@ -312,6 +313,7 @@
 		2EEAAB212F15F8F70006FF5C /* AvailabilitySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailabilitySettingsView.swift; sourceTree = "<group>"; };
 		2EEAAB232F18C92C0006FF5C /* AvailabilityGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailabilityGridView.swift; sourceTree = "<group>"; };
 		2EEAAB252F18CF6A0006FF5C /* MonthCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthCalendarView.swift; sourceTree = "<group>"; };
+		2EEAAB272F1ADA1B0006FF5C /* AvailabilitySettingsMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailabilitySettingsMenu.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -600,6 +602,7 @@
 		2C9B4D052C8FCAF20029DF61 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				2EEAAB272F1ADA1B0006FF5C /* AvailabilitySettingsMenu.swift */,
 				2E02D3802F03C48200CCABE6 /* ReviewSection.swift */,
 				2E9F759B2EB6DCBD003FE0E0 /* RangeSlider.swift */,
 				2EEAAB252F18CF6A0006FF5C /* MonthCalendarView.swift */,
@@ -980,6 +983,7 @@
 				2C16928F2CE43409009D2291 /* Feedback.swift in Sources */,
 				2CBC6B632CB772E300C842A4 /* NewRequestView.swift in Sources */,
 				2C6FB17E2CFADD5200B35FF8 /* ChatDocument.swift in Sources */,
+				2EEAAB282F1ADA380006FF5C /* AvailabilitySettingsMenu.swift in Sources */,
 				2C02B3A52CC097AB0020DF90 /* OptionsMenuView.swift in Sources */,
 				2CE473A02CC4576B00BD7E2C /* ReportDetailsView.swift in Sources */,
 				2CBC6B5B2CB72ED200C842A4 /* ExpandableAddButton.swift in Sources */,
