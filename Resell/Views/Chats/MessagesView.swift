@@ -436,57 +436,121 @@ struct NegotiationSheetView: View {
 
 
 // MARK: - Messages Availability Sheet
+// Replace the existing MessagesAvailabilitySheet in MessagesView.swift with this
 
 struct MessagesAvailabilitySheet: View {
     @Binding var isPresented: Bool
     @Binding var selectedCells: Set<CellIdentifier>
+    @EnvironmentObject var router: Router
+    
     @State private var gridCurrentPage: Int = 0
+    @State private var currentMonthOffset: Int = 0
+    @State private var gridStartDate: Date = Calendar.current.startOfDay(for: Date())
+    @State private var showCalendar: Bool = false
+    @State private var visibleGridDates: [Date] = []
+    
+    /// Maximum month offset allowed (1 = can only go one month ahead)
+    private let maxMonthOffset: Int = 1
 
     let isEditing: Bool
     let proposerName: String
     let onSubmit: () -> Void
     
-    private var title: String {
-        isEditing ? "When are you free to meet?" : "\(proposerName)'s Availability"
+    private var monthName: String {
+        CalendarHelper.monthName(for: currentMonthOffset)
     }
-    
-    private var subtitle: String {
-        isEditing ? "Click and drag cells to select meeting times" : "Select a 30-minute block to propose a meeting."
-    }
-    
-    private var buttonText: String {
-        isEditing ? "Send" : "Propose"
-    }
-    
+
     var body: some View {
         VStack(spacing: 16) {
             // Header
-            VStack {
-                Text(title)
-                    .font(Constants.Fonts.title1)
-                    .foregroundColor(Constants.Colors.black)
+            VStack(alignment: .leading, spacing: 8) {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        showCalendar.toggle()
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Text(monthName)
+                            .font(Constants.Fonts.title1)
+                            .foregroundColor(Constants.Colors.black)
+                        
+                        Image(systemName: showCalendar ? "chevron.up" : "chevron.down")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 12, height: 8)
+                            .foregroundColor(Constants.Colors.black)
+                    }
                     .padding(.top)
+                }
 
-                Text(subtitle)
-                    .font(Constants.Fonts.body2)
-                    .foregroundColor(Constants.Colors.secondaryGray)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
+                HStack {
+                    Text("Propose a time to meet")
+                        .font(Constants.Fonts.body2)
+                        .foregroundColor(Constants.Colors.secondaryGray)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                    
+                    Divider()
+                        .frame(height: 16)
+                    
+                    Button {
+                        isPresented = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            router.push(.availability)
+                        }
+                    } label: {
+                        Text("Edit Availability")
+                            .font(Constants.Fonts.title2)
+                            .foregroundColor(Constants.Colors.resellPurple)
+                    }
+                }
+            }
+            
+            // Month calendar - collapsible
+            if showCalendar {
+                MessagesMonthCalendarView(
+                    currentMonthOffset: $currentMonthOffset,
+                    gridStartDate: $gridStartDate,
+                    visibleGridDates: visibleGridDates,
+                    maxMonthOffset: maxMonthOffset,
+                    onDateSelected: { selectedDate in
+                        gridCurrentPage = 0
+                        gridStartDate = selectedDate
+                        updateVisibleDates(from: selectedDate, page: 0)
+                    }
+                )
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
             
             // Grid
-            // TODO: update
             AvailabilityGridView(
                 selectedCells: $selectedCells,
                 currentPage: $gridCurrentPage,
-                isEditing: isEditing
+                isEditing: isEditing,
+                startDate: gridStartDate,
+                gridHeight: showCalendar ? UIScreen.height * 0.35 : UIScreen.height * 0.55,
+                onVisibleDatesChanged: { dates in
+                    visibleGridDates = dates
+                    if let firstDate = dates.first {
+                        let newMonthOffset = CalendarHelper.monthOffset(for: firstDate)
+                        // Clamp to max offset
+                        let clampedOffset = min(max(newMonthOffset, 0), maxMonthOffset)
+                        if clampedOffset != currentMonthOffset {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                currentMonthOffset = clampedOffset
+                            }
+                        }
+                    }
+                }
             )
-
+            .id(gridStartDate)
             
             Spacer()
             
             // Action Button
-            PurpleButton(text: buttonText) {
+            PurpleButton(text: "Propose") {
                 onSubmit()
                 isPresented = false
             }
@@ -496,6 +560,197 @@ struct MessagesAvailabilitySheet: View {
         .padding(.horizontal)
         .padding(.top, 32)
         .background(Constants.Colors.white)
+        .onAppear {
+            updateVisibleDates(from: gridStartDate, page: 0)
+        }
+        .onChange(of: currentMonthOffset) { newOffset in
+            let calendar = Calendar.current
+            let today = Date()
+            
+            if let targetMonth = calendar.date(byAdding: .month, value: newOffset, to: today),
+               let firstOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: targetMonth)) {
+                
+                let startOfToday = calendar.startOfDay(for: today)
+                let newStartDate = (newOffset == 0 && firstOfMonth < startOfToday) ? startOfToday : firstOfMonth
+                
+                let gridMonth = calendar.component(.month, from: gridStartDate)
+                let gridYear = calendar.component(.year, from: gridStartDate)
+                let targetMonthComponent = calendar.component(.month, from: firstOfMonth)
+                let targetYearComponent = calendar.component(.year, from: firstOfMonth)
+                
+                if gridMonth != targetMonthComponent || gridYear != targetYearComponent {
+                    gridStartDate = newStartDate
+                    gridCurrentPage = 0
+                    updateVisibleDates(from: newStartDate, page: 0)
+                }
+            }
+        }
+    }
+    
+    private func updateVisibleDates(from startDate: Date, page: Int) {
+        let calendar = Calendar.current
+        let startIndex = page * 3
+        visibleGridDates = (0..<3).compactMap { offset in
+            calendar.date(byAdding: .day, value: startIndex + offset, to: startDate)
+        }
+    }
+}
+
+// MARK: - Messages Month Calendar View (with max offset restriction)
+
+struct MessagesMonthCalendarView: View {
+    @Binding var currentMonthOffset: Int
+    @Binding var gridStartDate: Date
+    
+    var visibleGridDates: [Date] = []
+    var maxMonthOffset: Int = 1
+    var onDateSelected: ((Date) -> Void)?
+    
+    private var monthData: CalendarMonthData {
+        CalendarHelper.generateMonthData(monthOffset: currentMonthOffset)
+    }
+    
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)
+    private let cellHeight: CGFloat = 36
+    private let rowSpacing: CGFloat = 6
+    
+    var body: some View {
+        VStack(spacing: 10) {
+            weekdayHeader
+            
+            GeometryReader { geometry in
+                let cellWidth = geometry.size.width / 7
+                
+                ZStack(alignment: .topLeading) {
+                    selectionBackgroundLayer(cellWidth: cellWidth)
+                    
+                    LazyVGrid(columns: columns, spacing: rowSpacing) {
+                        ForEach(monthData.days) { day in
+                            dayCell(for: day)
+                        }
+                    }
+                }
+            }
+            .frame(height: CGFloat(5) * cellHeight + CGFloat(4) * rowSpacing)
+        }
+        .contentShape(Rectangle())
+        .gesture(
+            DragGesture(minimumDistance: 20)
+                .onEnded { value in
+                    let verticalDrag = value.translation.height
+                    let horizontalDrag = abs(value.translation.width)
+                    
+                    if abs(verticalDrag) > horizontalDrag {
+                        if verticalDrag < -50 {
+                            // Swipe up - next month (respect max offset)
+                            if currentMonthOffset < maxMonthOffset {
+                                withAnimation(.easeInOut(duration: 0.25)) {
+                                    currentMonthOffset += 1
+                                }
+                            }
+                        } else if verticalDrag > 50 {
+                            // Swipe down - previous month (don't go before current)
+                            if currentMonthOffset > 0 {
+                                withAnimation(.easeInOut(duration: 0.25)) {
+                                    currentMonthOffset -= 1
+                                }
+                            }
+                        }
+                    }
+                }
+        )
+    }
+    
+    private var weekdayHeader: some View {
+        HStack(spacing: 0) {
+            ForEach(CalendarMonthData.weekdaySymbols, id: \.self) { symbol in
+                Text(symbol)
+                    .font(Constants.Fonts.body2)
+                    .foregroundStyle(Constants.Colors.secondaryGray)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+    }
+    
+    private func selectionBackgroundLayer(cellWidth: CGFloat) -> some View {
+        let visibleDaysInMonth = monthData.days.filter { day in
+            visibleGridDates.contains { Calendar.current.isDate($0, inSameDayAs: day.date) }
+        }
+        
+        let rowGroups = Dictionary(grouping: visibleDaysInMonth) { $0.rowIndex }
+        let sortedRowIndices = rowGroups.keys.sorted()
+        
+        return ZStack(alignment: .topLeading) {
+            ForEach(sortedRowIndices, id: \.self) { rowIndex in
+                if let daysInRow = rowGroups[rowIndex] {
+                    let sortedDays = daysInRow.sorted { $0.weekdayIndex < $1.weekdayIndex }
+                    if let firstDay = sortedDays.first, let lastDay = sortedDays.last {
+                        let startX = CGFloat(firstDay.weekdayIndex) * cellWidth
+                        let width = CGFloat(lastDay.weekdayIndex - firstDay.weekdayIndex + 1) * cellWidth
+                        let y = CGFloat(rowIndex) * (cellHeight + rowSpacing)
+                        
+                        let isFirstRow = rowIndex == sortedRowIndices.first
+                        let isLastRow = rowIndex == sortedRowIndices.last
+                        let continuesFromAbove = sortedRowIndices.contains(rowIndex - 1)
+                        let continuesToBelow = sortedRowIndices.contains(rowIndex + 1)
+                        
+                        let rowAboveEndedAtSaturday: Bool = {
+                            if let aboveRow = rowGroups[rowIndex - 1] {
+                                return aboveRow.contains { $0.weekdayIndex == 6 }
+                            }
+                            return false
+                        }()
+                        
+                        let startsAtSunday = firstDay.weekdayIndex == 0
+                        let endsAtSaturday = lastDay.weekdayIndex == 6
+                        
+                        SelectionRowShape(
+                            cornerRadius: 10,
+                            roundTopLeft: isFirstRow || (startsAtSunday && !rowAboveEndedAtSaturday),
+                            roundTopRight: isFirstRow || !endsAtSaturday,
+                            roundBottomLeft: isLastRow || !startsAtSunday,
+                            roundBottomRight: isLastRow || !continuesToBelow
+                        )
+                        .fill(Constants.Colors.wash)
+                        .frame(width: width, height: cellHeight)
+                        .offset(x: startX, y: y)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func dayCell(for day: CalendarDay) -> some View {
+        Text("\(day.dayNumber)")
+            .font(Constants.Fonts.body2)
+            .foregroundStyle(dayTextColor(for: day))
+            .frame(maxWidth: .infinity)
+            .frame(height: cellHeight)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                guard day.isSelectable else { return }
+                // Check if the date is within allowed range (current month or next month)
+                let dateMonthOffset = CalendarHelper.monthOffset(for: day.date)
+                guard dateMonthOffset <= maxMonthOffset else { return }
+                
+                let selectedDate = Calendar.current.startOfDay(for: day.date)
+                gridStartDate = selectedDate
+                onDateSelected?(selectedDate)
+            }
+    }
+    
+    private func dayTextColor(for day: CalendarDay) -> Color {
+        if day.isToday && day.isCurrentMonth {
+            return Constants.Colors.errorRed
+        }
+        
+        if !day.isCurrentMonth {
+            return Constants.Colors.secondaryGray.opacity(0.5)
+        } else if day.isPast {
+            return Constants.Colors.secondaryGray.opacity(0.5)
+        } else {
+            return Constants.Colors.black
+        }
     }
 }
 
