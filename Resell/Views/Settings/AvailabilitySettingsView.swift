@@ -14,6 +14,7 @@ struct AvailabilitySettingsView: View {
     @State private var currentMonthOffset: Int = 0
     @State private var gridStartDate: Date = Calendar.current.startOfDay(for: Date())
     @State private var showCalendar: Bool = false
+    @State private var showSettings: Bool = false
     @State private var gridCurrentPage: Int = 0
     @State private var visibleGridDates: [Date] = []
     
@@ -28,11 +29,8 @@ struct AvailabilitySettingsView: View {
             // Month picker header with hamburger menu - stays fixed at top
             MonthPickerHeader(
                 currentMonthOffset: $currentMonthOffset,
-                onMenuTap: {
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        showCalendar.toggle()
-                    }
-                }
+                showCalendar: $showCalendar,
+                showSettings: $showSettings
             )
             .padding(.top, 8)
             
@@ -54,7 +52,10 @@ struct AvailabilitySettingsView: View {
                 .padding(.horizontal)
                 .padding(.vertical, 12)
                 .transition(.opacity.combined(with: .move(edge: .top)))
+            } else if showSettings {
+                AvailabilitySettingsMenu()
             }
+        
             
             // Availability grid - synced with calendar selection
             AvailabilityGridView(

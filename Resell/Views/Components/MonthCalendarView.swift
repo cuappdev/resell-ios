@@ -434,7 +434,8 @@ struct SelectionRowShape: Shape {
 
 struct MonthPickerHeader: View {
     @Binding var currentMonthOffset: Int
-    var onMenuTap: (() -> Void)?
+    @Binding var showCalendar: Bool
+    @Binding var showSettings: Bool
     
     private var monthName: String {
         CalendarHelper.monthName(for: currentMonthOffset)
@@ -443,69 +444,47 @@ struct MonthPickerHeader: View {
     var body: some View {
         HStack(spacing: 16) {
             Button {
-                onMenuTap?()
+                showSettings.toggle()
+                $showCalendar.wrappedValue = false
             } label: {
                 Image(systemName: "line.3.horizontal")
                     .font(.title2)
                     .foregroundStyle(Constants.Colors.black)
             }
             
-            Text(monthName)
-                .font(Constants.Fonts.h2)
-                .foregroundStyle(Constants.Colors.black)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(
-                    Capsule()
-                        .fill(Constants.Colors.wash)
-                )
-                .gesture(
-                    DragGesture()
-                        .onEnded { value in
-                            if value.translation.width < -50 {
-                                withAnimation { currentMonthOffset += 1 }
-                            } else if value.translation.width > 50 {
-                                if currentMonthOffset > 0 {
-                                    withAnimation { currentMonthOffset -= 1 }
+            Button {
+                showCalendar.toggle()
+                $showSettings.wrappedValue = false
+            } label: {
+                ZStack {
+                    if showCalendar {
+                        RoundedRectangle(cornerRadius: 8)
+                            .frame(width: 116, height: 28)
+                            .foregroundStyle(Constants.Colors.secondaryGray.opacity(0.25))
+                    }
+                    
+                    Text(monthName)
+                        .font(Constants.Fonts.h2)
+                        .foregroundStyle(Constants.Colors.black)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .gesture(
+                            DragGesture()
+                                .onEnded { value in
+                                    if value.translation.width < -50 {
+                                        withAnimation { currentMonthOffset += 1 }
+                                    } else if value.translation.width > 50 {
+                                        if currentMonthOffset > 0 {
+                                            withAnimation { currentMonthOffset -= 1 }
+                                        }
+                                    }
                                 }
-                            }
-                        }
-                )
+                        )
+                }
+            }
             
             Spacer()
         }
         .padding(.horizontal)
     }
-}
-
-// MARK: - Preview
-
-#Preview {
-    struct PreviewWrapper: View {
-        @State private var monthOffset: Int = 0
-        @State private var startDate: Date = Date()
-        
-        var visibleDates: [Date] {
-            (0..<3).compactMap {
-                Calendar.current.date(byAdding: .day, value: $0, to: startDate)
-            }
-        }
-        
-        var body: some View {
-            VStack {
-                MonthPickerHeader(currentMonthOffset: $monthOffset)
-                
-                MonthCalendarView(
-                    currentMonthOffset: $monthOffset,
-                    gridStartDate: $startDate,
-                    visibleGridDates: visibleDates
-                )
-                .padding()
-                
-                Spacer()
-            }
-        }
-    }
-    
-    return PreviewWrapper()
 }

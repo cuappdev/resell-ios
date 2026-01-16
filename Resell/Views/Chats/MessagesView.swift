@@ -24,6 +24,7 @@ struct MessagesView: View {
     @State private var selectedCells: Set<CellIdentifier> = []
     @State private var priceText: String = ""
     @StateObject private var viewModel: ViewModel
+    
 
     // MARK: - Init
 
@@ -439,7 +440,8 @@ struct NegotiationSheetView: View {
 struct MessagesAvailabilitySheet: View {
     @Binding var isPresented: Bool
     @Binding var selectedCells: Set<CellIdentifier>
-    
+    @State private var gridCurrentPage: Int = 0
+
     let isEditing: Bool
     let proposerName: String
     let onSubmit: () -> Void
@@ -473,10 +475,13 @@ struct MessagesAvailabilitySheet: View {
             }
             
             // Grid
-//            AvailabilityGridView(
-//                selectedCells: $selectedCells, currentPage: <#Binding<Int>#>,
-//                isEditing: isEditing
-//            )
+            // TODO: update
+            AvailabilityGridView(
+                selectedCells: $selectedCells,
+                currentPage: $gridCurrentPage,
+                isEditing: isEditing
+            )
+
             
             Spacer()
             

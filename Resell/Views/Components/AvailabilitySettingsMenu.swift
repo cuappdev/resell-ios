@@ -22,17 +22,11 @@ struct AvailabilitySettingsMenu: View {
                 Text("Availability Sharing")
                 
                 Spacer()
-                
-                
             }
             
             Divider()
             
             Text("Sub-Calendars") // TODO: Implement GCal support
-            
-            
-            
-
         }
     }
 }
