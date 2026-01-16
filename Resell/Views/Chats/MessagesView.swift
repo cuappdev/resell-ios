@@ -20,6 +20,8 @@ struct MessagesView: View {
     @State private var didShowWebView: Bool = false
     @State private var didSubmitAvailabilities: Bool = false
     @State private var isEditing: Bool = true
+    @State private var availabilityProposerName: String = ""
+    @State private var selectedCells: Set<CellIdentifier> = []
     @State private var priceText: String = ""
     @StateObject private var viewModel: ViewModel
 
@@ -58,8 +60,7 @@ struct MessagesView: View {
             negotiationView
         }
         .sheet(isPresented: $didShowAvailabilityView) {
-            // func that takes in isEditing
-            availabilityView(isEditing: $isEditing)
+            availabilityView
         }
         .sheet(isPresented: $didShowWebView) {
             webView
@@ -196,7 +197,8 @@ struct MessagesView: View {
             ForEach(cluster.messages, id: \.hashValue) { message in
                 MessageBubbleView(
                     didShowAvailabilityView: $didShowAvailabilityView,
-                    isEditing: $isEditing, 
+                    isEditing: $isEditing,
+                    availabilityProposerName: $availabilityProposerName,
                     selectedAvailabilities: $viewModel.availability, 
                     message: message,
                     chatInfo: viewModel.chatInfo
@@ -226,15 +228,29 @@ struct MessagesView: View {
         )
     }
     
-    private func availabilityView(isEditing: Binding<Bool>) -> some View {
-        AvailabilitySelectorView(
+    private var availabilityView: some View {
+        MessagesAvailabilitySheet(
             isPresented: $didShowAvailabilityView,
-            selectedDates: $viewModel.availability,
-            didSubmit: $didSubmitAvailabilities,
-            isEditing: $isEditing
-        )
+            selectedCells: $selectedCells,
+            isEditing: isEditing,
+            proposerName: availabilityProposerName
+        ) {
+            // On submit: convert cells to availability and trigger send
+            viewModel.availability = AvailabilityGridView.cellsToAvailabilities(selectedCells)
+            didSubmitAvailabilities = true
+        }
         .presentationCornerRadius(25)
         .presentationDragIndicator(.hidden)
+        .onAppear {
+            // Initialize cells from viewModel.availability when viewing someone's availability
+            if !isEditing {
+                selectedCells = AvailabilityGridView.availabilitiesToCells(viewModel.availability)
+            }
+        }
+        .onDisappear {
+            // Reset for next time
+            selectedCells = []
+        }
     }
 
     private var webView: some View {
@@ -418,12 +434,73 @@ struct NegotiationSheetView: View {
 
 
 
+// MARK: - Messages Availability Sheet
+
+struct MessagesAvailabilitySheet: View {
+    @Binding var isPresented: Bool
+    @Binding var selectedCells: Set<CellIdentifier>
+    
+    let isEditing: Bool
+    let proposerName: String
+    let onSubmit: () -> Void
+    
+    private var title: String {
+        isEditing ? "When are you free to meet?" : "\(proposerName)'s Availability"
+    }
+    
+    private var subtitle: String {
+        isEditing ? "Click and drag cells to select meeting times" : "Select a 30-minute block to propose a meeting."
+    }
+    
+    private var buttonText: String {
+        isEditing ? "Send" : "Propose"
+    }
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            // Header
+            VStack {
+                Text(title)
+                    .font(Constants.Fonts.title1)
+                    .foregroundColor(Constants.Colors.black)
+                    .padding(.top)
+
+                Text(subtitle)
+                    .font(Constants.Fonts.body2)
+                    .foregroundColor(Constants.Colors.secondaryGray)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+            }
+            
+            // Grid
+//            AvailabilityGridView(
+//                selectedCells: $selectedCells, currentPage: <#Binding<Int>#>,
+//                isEditing: isEditing
+//            )
+            
+            Spacer()
+            
+            // Action Button
+            PurpleButton(text: buttonText) {
+                onSubmit()
+                isPresented = false
+            }
+            
+            Spacer()
+        }
+        .padding(.horizontal)
+        .padding(.top, 32)
+        .background(Constants.Colors.white)
+    }
+}
+
 // MARK: - MessageBubbleView
 
 struct MessageBubbleView: View {
 
     @Binding var didShowAvailabilityView: Bool
     @Binding var isEditing: Bool
+    @Binding var availabilityProposerName: String
     @Binding var selectedAvailabilities: [Availability]
 
     let message: any Message
@@ -524,6 +601,7 @@ struct MessageBubbleView: View {
         if let message = message as? AvailabilityMessage {
             Button {
                 selectedAvailabilities = message.availabilities
+                availabilityProposerName = message.from.givenName
                 didShowAvailabilityView = true
                 isEditing = false
             } label: {

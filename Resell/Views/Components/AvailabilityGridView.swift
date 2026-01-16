@@ -1,33 +1,52 @@
 //
-//  AvailabilitySelectorView.swift
+//  AvailabilityGridView.swift
 //  Resell
 //
 //  Created by Richie Sun on 11/30/24.
 //
 
-import FirebaseFirestore
 import SwiftUI
 
-struct AvailabilitySelectorView: View {
+struct AvailabilityGridView: View {
 
     // MARK: - Properties
 
-    @State private var selectedCells: Set<CellIdentifier> = []
+    @Binding var selectedCells: Set<CellIdentifier>
+    
+    /// Binding for current page - allows parent to track which dates are visible
+    @Binding var currentPage: Int
+    
     @State private var draggedCells: Set<CellIdentifier> = []
     @State private var toggleSelectionMode: Bool? = nil
-    @State private var currentPage: Int = 0
-    @State private var isMovingForward: Bool = true
     @State private var isDraggingCells: Bool = false
     @State private var dragStartLocation: CGPoint = .zero
 
-    @Binding var isPresented: Bool
-    @Binding var selectedDates: [Availability]
-    @Binding var didSubmit: Bool
-    @Binding var isEditing: Bool
-
-    var proposerName: String? = nil
-    let dates: [String] = generateDates()
-    let shortDates: [String] = generateShortDates()
+    /// Whether the user can edit (drag to select) cells
+    var isEditing: Bool = true
+    
+    /// Optional start date for the grid. If nil, starts from today.
+    var startDate: Date? = nil
+    
+    /// Optional custom height for the scrollable grid area. If nil, uses default (65% of screen).
+    var gridHeight: CGFloat? = nil
+    
+    /// Called when the visible dates change (page swipe)
+    var onVisibleDatesChanged: (([Date]) -> Void)?
+    
+    private var dates: [String] {
+        if let start = startDate {
+            return CalendarHelper.generateGridDates(startingFrom: start)
+        }
+        return generateDates()
+    }
+    
+    private var shortDates: [String] {
+        if let start = startDate {
+            return CalendarHelper.generateShortGridDates(startingFrom: start)
+        }
+        return generateShortDates()
+    }
+    
     let times: [String] = generateTimes()
 
     private var paginatedDates: [ArraySlice<String>] {
@@ -43,133 +62,124 @@ struct AvailabilitySelectorView: View {
     }
 
     private let cellHeight = UIScreen.height / 12 - 25
+    
+    /// Returns the Date objects for the currently visible 3 columns
+    var visibleDates: [Date] {
+        guard currentPage >= 0 && currentPage < paginatedDates.count else { return [] }
+        return Array(paginatedDates[currentPage]).compactMap { CalendarHelper.gridDateStringToDate($0) }
+    }
 
     // MARK: - UI
 
     var body: some View {
-        VStack(spacing: 16) {
-            VStack {
-                Text(isEditing ? "When are you free to meet?" : "\(proposerName ?? "")'s Availability")
-                    .font(Constants.Fonts.title1)
-                    .foregroundColor(Constants.Colors.black)
-                    .padding(.top)
-
-                Text(isEditing ? "Click and drag cells to select meeting times" : "Select a 30-minute block to propose a meeting.")
-                    .font(Constants.Fonts.body2)
-                    .foregroundColor(Constants.Colors.secondaryGray)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
+        ZStack {
+            ForEach(Array(paginatedDates.indices), id: \.self) { index in
+                pageView(for: index)
+                    .offset(x: CGFloat(index - currentPage) * UIScreen.width)
             }
-
-            ZStack {
-                ForEach(Array(paginatedDates.indices), id: \.self) { index in
-                    pageView(for: index)
-                        .offset(x: CGFloat(index - currentPage) * UIScreen.width)
-                }
-            }
-            .animation(.easeInOut(duration: 0.3), value: currentPage)
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 5)
-                    .onChanged { value in
-                        if dragStartLocation == .zero {
-                            dragStartLocation = value.startLocation
-                        }
-                        
-                        // Only handle cell selection if drag started in the cell area (after timeColumnWidth)
-                        let startedInCellArea = dragStartLocation.x > timeColumnWidth
-                        
-                        if startedInCellArea && isEditing {
-                            let horizontalDrag = abs(value.translation.width)
-                            let verticalDrag = abs(value.translation.height)
-                            
-                            // Determine drag direction at the start - prefer vertical for cell selection
-                            if !isDraggingCells && verticalDrag > 10 && horizontalDrag < 50 {
-                                isDraggingCells = true
-                            }
-                            
-                            if isDraggingCells {
-                                // Handle cell selection
-                                if let identifier = mapDragLocationToCell(
-                                    location: value.location,
-                                    dates: Array(paginatedDates[currentPage]),
-                                    times: times,
-                                    cellHeight: cellHeight
-                                ) {
-                                    if toggleSelectionMode == nil {
-                                        toggleSelectionMode = selectedCells.contains(identifier) ? false : true
-                                    }
-                                    draggedCells.insert(identifier)
-                                }
-                            }
-                        }
-                    }
-                    .onEnded { value in
-                        let startedInCellArea = dragStartLocation.x > timeColumnWidth
-                        
-                        if isDraggingCells && startedInCellArea {
-                            // Finalize cell selection
-                            if let toggleSelectionMode = toggleSelectionMode {
-                                if toggleSelectionMode {
-                                    selectedCells.formUnion(draggedCells)
-                                } else {
-                                    selectedCells.subtract(draggedCells)
-                                }
-                            }
-                        } else if !isDraggingCells {
-                            // Handle horizontal swipe for page navigation
-                            let horizontalDrag = value.translation.width
-                            let velocity = value.predictedEndTranslation.width - value.translation.width
-                            
-                            if horizontalDrag < -50 || velocity < -100 {
-                                // Swipe left - go to next page
-                                if currentPage < paginatedDates.count - 1 {
-                                    currentPage += 1
-                                }
-                            } else if horizontalDrag > 50 || velocity > 100 {
-                                // Swipe right - go to previous page
-                                if currentPage > 0 {
-                                    currentPage -= 1
-                                }
-                            }
-                        }
-                        
-                        // Reset state
-                        draggedCells.removeAll()
-                        toggleSelectionMode = nil
-                        isDraggingCells = false
-                        dragStartLocation = .zero
-                    }
-            )
-
-            Spacer()
-
-            PurpleButton(text: isEditing ? "Send" : "Propose", action: saveAvailability)
-
-            Spacer()
         }
-        .padding(.horizontal)
-        .padding(.top, 32)
-        .background(Constants.Colors.white)
-        .onAppear(perform: initializeSelectedCells)
+        .animation(.easeInOut(duration: 0.3), value: currentPage)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 5)
+                .onChanged { value in
+                    if dragStartLocation == .zero {
+                        dragStartLocation = value.startLocation
+                    }
+                    
+                    // Only handle cell selection if drag started in the cell area (after timeColumnWidth)
+                    let startedInCellArea = dragStartLocation.x > timeColumnWidth
+                    
+                    if startedInCellArea && isEditing {
+                        let horizontalDrag = abs(value.translation.width)
+                        let verticalDrag = abs(value.translation.height)
+                        
+                        // Determine drag direction at the start - prefer vertical for cell selection
+                        if !isDraggingCells && verticalDrag > 10 && horizontalDrag < 50 {
+                            isDraggingCells = true
+                        }
+                        
+                        if isDraggingCells {
+                            // Handle cell selection
+                            if let identifier = mapDragLocationToCell(
+                                location: value.location,
+                                dates: Array(paginatedDates[currentPage]),
+                                times: times,
+                                cellHeight: cellHeight
+                            ) {
+                                if toggleSelectionMode == nil {
+                                    toggleSelectionMode = selectedCells.contains(identifier) ? false : true
+                                }
+                                draggedCells.insert(identifier)
+                            }
+                        }
+                    }
+                }
+                .onEnded { value in
+                    let startedInCellArea = dragStartLocation.x > timeColumnWidth
+                    
+                    if isDraggingCells && startedInCellArea {
+                        // Finalize cell selection
+                        if let toggleSelectionMode = toggleSelectionMode {
+                            if toggleSelectionMode {
+                                selectedCells.formUnion(draggedCells)
+                            } else {
+                                selectedCells.subtract(draggedCells)
+                            }
+                        }
+                    } else if !isDraggingCells {
+                        // Handle horizontal swipe for page navigation
+                        let horizontalDrag = value.translation.width
+                        let velocity = value.predictedEndTranslation.width - value.translation.width
+                        
+                        if horizontalDrag < -50 || velocity < -100 {
+                            // Swipe left - go to next page
+                            if currentPage < paginatedDates.count - 1 {
+                                currentPage += 1
+                                notifyVisibleDatesChanged()
+                            }
+                        } else if horizontalDrag > 50 || velocity > 100 {
+                            // Swipe right - go to previous page
+                            if currentPage > 0 {
+                                currentPage -= 1
+                                notifyVisibleDatesChanged()
+                            }
+                        }
+                    }
+                    
+                    // Reset state
+                    draggedCells.removeAll()
+                    toggleSelectionMode = nil
+                    isDraggingCells = false
+                    dragStartLocation = .zero
+                }
+        )
+        .onAppear {
+            notifyVisibleDatesChanged()
+        }
+        .onChange(of: startDate) { _ in
+            notifyVisibleDatesChanged()
+        }
+    }
+    
+    private func notifyVisibleDatesChanged() {
+        let dates = visibleDates
+        onVisibleDatesChanged?(dates)
     }
 
     // MARK: - Helper Views
     
     private let timeColumnWidth: CGFloat = 90
     private let gridColumnWidth: CGFloat = UIScreen.width / 5 + 10
-    private let lineExtension: CGFloat = 12 // Extra pixels beyond the grid
+    private let lineExtension: CGFloat = 12
     private let headerHeight: CGFloat = 44
-    private let verticalLineHeaderExtension: CGFloat = 42 // How far vertical lines extend into header
     
     private var totalGridWidth: CGFloat {
         timeColumnWidth + gridColumnWidth * 3 + lineExtension
     }
     
-    private var totalVerticalLineHeight: CGFloat {
-        CGFloat(times.count) * cellHeight + verticalLineHeaderExtension
+    private var scrollableGridHeight: CGFloat {
+        gridHeight ?? UIScreen.height * 0.65
     }
-    
-    private let scrollableGridHeight: CGFloat = UIScreen.height * 0.55
     
     private func pageView(for index: Int) -> some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -250,7 +260,7 @@ struct AvailabilitySelectorView: View {
                         
                         // Time labels and cells
                         HStack(spacing: 0) {
-                            // Time labels column (scrollable area for vertical scroll)
+                            // Time labels column
                             VStack(spacing: 0) {
                                 ForEach(times, id: \.self) { time in
                                     Text(time)
@@ -260,7 +270,7 @@ struct AvailabilitySelectorView: View {
                                 }
                             }
 
-                            // Cells area - with scroll blocking overlay
+                            // Cells area
                             HStack(spacing: 0) {
                                 ForEach(Array(zip(paginatedDates[index], paginatedShortDates[index])), id: \.0) { date, _ in
                                     VStack(spacing: 0) {
@@ -294,7 +304,7 @@ struct AvailabilitySelectorView: View {
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                .frame(height: 35)
+                .frame(height: 25)
                 .allowsHitTesting(false)
             }
         }
@@ -305,13 +315,12 @@ struct AvailabilitySelectorView: View {
     // MARK: - Functions
     
     private func mapDragLocationToCell(
-            location: CGPoint,
-            dates: [String],
-            times: [String],
-            cellHeight: CGFloat
-        ) -> CellIdentifier? {
-        // Offset for the time labels column (80 width) and header row (44 height)
-        let headerHeight: CGFloat = 44 // header row only
+        location: CGPoint,
+        dates: [String],
+        times: [String],
+        cellHeight: CGFloat
+    ) -> CellIdentifier? {
+        let headerHeight: CGFloat = 44
         
         let adjustedX = location.x - timeColumnWidth
         let adjustedY = location.y - headerHeight
@@ -320,11 +329,9 @@ struct AvailabilitySelectorView: View {
         
         let rowHeight = cellHeight
 
-        // Column index: which date
         let col = Int(adjustedX / gridColumnWidth)
         guard col >= 0, col < dates.count else { return nil }
 
-        // Row index: which time slot
         let row = Int(adjustedY / rowHeight)
         guard row >= 0, row < times.count else { return nil }
 
@@ -333,85 +340,6 @@ struct AvailabilitySelectorView: View {
         let time = times[row]
 
         return CellIdentifier(date: date, time: isTopHalf ? "\(time) Top" : "\(time) Bottom")
-    }
-
-
-    private func initializeSelectedCells() {
-        for block in selectedDates {
-            let startDate = block.startDate
-
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "E \nMMM d, yyyy"
-            let dateString = dateFormatter.string(from: startDate)
-
-            let timeFormatter = DateFormatter()
-            timeFormatter.dateFormat = "h:mm a"
-
-            let calendar = Calendar.current
-            let minute = calendar.component(.minute, from: startDate)
-            let isTopHalf = (minute != 30)
-
-            let adjustedTime = isTopHalf ? startDate : startDate.adding(minutes: -30)
-            let timeString = timeFormatter.string(from: adjustedTime)
-
-            let halfIdentifier = isTopHalf ? "\(timeString) Top" : "\(timeString) Bottom"
-            let identifier = CellIdentifier(date: dateString, time: halfIdentifier)
-            selectedCells.insert(identifier)
-        }
-    }
-
-    private func goToPreviousPage() {
-        if currentPage > 0 {
-            isMovingForward = false
-            currentPage -= 1
-        }
-    }
-
-    private func goToNextPage() {
-        if currentPage < paginatedDates.count - 1 {
-            isMovingForward = true
-            currentPage += 1
-        }
-    }
-
-    private func toggleCellSelection(date: String, time: String, isTopHalf: Bool) {
-        let halfIdentifier = isTopHalf ? "\(time) Top" : "\(time) Bottom"
-        let identifier = CellIdentifier(date: date, time: halfIdentifier)
-
-        if selectedCells.contains(identifier) {
-            selectedCells.remove(identifier)
-        } else {
-            selectedCells.insert(identifier)
-        }
-    }
-
-    private func saveAvailability() {
-        selectedDates = selectedCells.compactMap { createDate(from: $0.date, timeString: $0.time) }
-
-        didSubmit = true
-        isPresented = false
-    }
-
-    private func createDate(from dateString: String, timeString: String) -> Availability? {
-        let cleanDateString = dateString.replacingOccurrences(of: "\n", with: " ")
-        let cleanTimeString = timeString.replacingOccurrences(of: " Top", with: "").replacingOccurrences(of: " Bottom", with: "")
-
-        let combinedString = "\(cleanDateString) \(cleanTimeString)"
-
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E MMM d, yyyy h:mm a"
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone.current
-
-        if var parsedDate = formatter.date(from: combinedString) {
-            if timeString.contains("Bottom") {
-                parsedDate = parsedDate.adding(minutes: 30)
-            }
-
-            return Availability(startDate: parsedDate, endDate: parsedDate.adding(minutes: 30))
-        } else {
-            return nil
-        }
     }
 }
 
@@ -425,7 +353,6 @@ struct CellView: View {
     let isHighlightedBottom: Bool
 
     private let cellHeight = UIScreen.height / 12 - 25
-    private let cellWidth = UIScreen.width / 5 + 10
 
     var body: some View {
         VStack(spacing: 0) {
@@ -444,25 +371,15 @@ struct CellView: View {
     }
 }
 
-
 // MARK: - CellIdentifier
+
 struct CellIdentifier: Hashable {
     let date: String
     let time: String
 }
 
-// MARK: - StrokeDashedLine
-
-struct StrokeDashedLine: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: rect.minX, y: rect.midY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
-        return path
-    }
-}
-
 // MARK: - Helper Functions
+
 func generateDates() -> [String] {
     let formatter = DateFormatter()
     formatter.dateFormat = "E \nMMM d, yyyy"
@@ -490,5 +407,66 @@ func generateTimes() -> [String] {
     return (startHour...endHour).map { hour in
         let date = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date())!
         return formatter.string(from: date)
+    }
+}
+
+// MARK: - Availability Conversion Helpers
+
+extension AvailabilityGridView {
+    
+    /// Converts selected cells to Availability objects
+    static func cellsToAvailabilities(_ cells: Set<CellIdentifier>) -> [Availability] {
+        cells.compactMap { createAvailability(from: $0.date, timeString: $0.time) }
+    }
+    
+    /// Converts Availability objects to cell identifiers
+    static func availabilitiesToCells(_ availabilities: [Availability]) -> Set<CellIdentifier> {
+        var cells = Set<CellIdentifier>()
+        
+        for block in availabilities {
+            let startDate = block.startDate
+
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "E \nMMM d, yyyy"
+            let dateString = dateFormatter.string(from: startDate)
+
+            let timeFormatter = DateFormatter()
+            timeFormatter.dateFormat = "h:mm a"
+
+            let calendar = Calendar.current
+            let minute = calendar.component(.minute, from: startDate)
+            let isTopHalf = (minute != 30)
+
+            let adjustedTime = isTopHalf ? startDate : startDate.adding(minutes: -30)
+            let timeString = timeFormatter.string(from: adjustedTime)
+
+            let halfIdentifier = isTopHalf ? "\(timeString) Top" : "\(timeString) Bottom"
+            let identifier = CellIdentifier(date: dateString, time: halfIdentifier)
+            cells.insert(identifier)
+        }
+        
+        return cells
+    }
+    
+    private static func createAvailability(from dateString: String, timeString: String) -> Availability? {
+        let cleanDateString = dateString.replacingOccurrences(of: "\n", with: " ")
+        let cleanTimeString = timeString.replacingOccurrences(of: " Top", with: "").replacingOccurrences(of: " Bottom", with: "")
+
+        let combinedString = "\(cleanDateString) \(cleanTimeString)"
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E MMM d, yyyy h:mm a"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
+
+        if var parsedDate = formatter.date(from: combinedString) {
+            if timeString.contains("Bottom") {
+                parsedDate = parsedDate.adding(minutes: 30)
+            }
+
+            return Availability(startDate: parsedDate, endDate: parsedDate.adding(minutes: 30))
+        } else {
+            return nil
+        }
     }
 }

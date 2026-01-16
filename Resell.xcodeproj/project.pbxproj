@@ -43,7 +43,6 @@
 		2C6410982C9DFD8B00E4B390 /* UIApplication + Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6410972C9DFD8B00E4B390 /* UIApplication + Extensions.swift */; };
 		2C6FB1772CFACB2500B35FF8 /* FirestoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6FB1762CFACB2500B35FF8 /* FirestoreManager.swift */; };
 		2C6FB17E2CFADD5200B35FF8 /* ChatDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6FB17D2CFADD5200B35FF8 /* ChatDocument.swift */; };
-		2C6FB1862CFC08D000B35FF8 /* AvailabilitySelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6FB1852CFC08D000B35FF8 /* AvailabilitySelectorView.swift */; };
 		2C6FB1882CFF8ECD00B35FF8 /* FirebaseNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6FB1872CFF8ECD00B35FF8 /* FirebaseNotificationService.swift */; };
 		2C6FB18C2CFFBE7C00B35FF8 /* GoogleAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6FB18B2CFFBE7C00B35FF8 /* GoogleAuthManager.swift */; };
 		2C7460892CEEE054004832F5 /* Report.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C7460882CEEE054004832F5 /* Report.swift */; };
@@ -165,6 +164,8 @@
 		2ECB2F672E74E03700CAACA2 /* (null) in Sources */ = {isa = PBXBuildFile; };
 		2EEAAB1E2F142C460006FF5C /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 2EEAAB1D2F142C460006FF5C /* Flow */; };
 		2EEAAB222F15F8FD0006FF5C /* AvailabilitySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEAAB212F15F8F70006FF5C /* AvailabilitySettingsView.swift */; };
+		2EEAAB242F18C92C0006FF5C /* AvailabilityGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEAAB232F18C92C0006FF5C /* AvailabilityGridView.swift */; };
+		2EEAAB262F18CF6A0006FF5C /* MonthCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEAAB252F18CF6A0006FF5C /* MonthCalendarView.swift */; };
 		2EEB57262F03C704008D2DF3 /* ReviewSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E02D3802F03C48200CCABE6 /* ReviewSection.swift */; };
 /* End PBXBuildFile section */
 
@@ -224,7 +225,6 @@
 		2C6FB1762CFACB2500B35FF8 /* FirestoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirestoreManager.swift; sourceTree = "<group>"; };
 		2C6FB17D2CFADD5200B35FF8 /* ChatDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatDocument.swift; sourceTree = "<group>"; };
 		2C6FB1832CFAEC9400B35FF8 /* Resell.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Resell.entitlements; sourceTree = "<group>"; };
-		2C6FB1852CFC08D000B35FF8 /* AvailabilitySelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailabilitySelectorView.swift; sourceTree = "<group>"; };
 		2C6FB1872CFF8ECD00B35FF8 /* FirebaseNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseNotificationService.swift; sourceTree = "<group>"; };
 		2C6FB18B2CFFBE7C00B35FF8 /* GoogleAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleAuthManager.swift; sourceTree = "<group>"; };
 		2C7460882CEEE054004832F5 /* Report.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Report.swift; sourceTree = "<group>"; };
@@ -310,6 +310,8 @@
 		2E9F759B2EB6DCBD003FE0E0 /* RangeSlider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RangeSlider.swift; sourceTree = "<group>"; };
 		2EBB64172D8B783600CCAC48 /* Filter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Filter.swift; sourceTree = "<group>"; };
 		2EEAAB212F15F8F70006FF5C /* AvailabilitySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailabilitySettingsView.swift; sourceTree = "<group>"; };
+		2EEAAB232F18C92C0006FF5C /* AvailabilityGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailabilityGridView.swift; sourceTree = "<group>"; };
+		2EEAAB252F18CF6A0006FF5C /* MonthCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthCalendarView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -600,9 +602,10 @@
 			children = (
 				2E02D3802F03C48200CCABE6 /* ReviewSection.swift */,
 				2E9F759B2EB6DCBD003FE0E0 /* RangeSlider.swift */,
+				2EEAAB252F18CF6A0006FF5C /* MonthCalendarView.swift */,
 				2E8C3D9C2DBEE3590074BFAB /* SearchBar.swift */,
+				2EEAAB232F18C92C0006FF5C /* AvailabilityGridView.swift */,
 				2E8A5AB42DBD5B3200B1F281 /* SavedRow.swift */,
-				2C6FB1852CFC08D000B35FF8 /* AvailabilitySelectorView.swift */,
 				2C41BB872CD90DF800EFF69E /* CachedImageView.swift */,
 				2CBC6B682CBDDC8100C842A4 /* CustomPageControlIndicatorView.swift */,
 				2C1692922CE43737009D2291 /* CustomProgressView.swift */,
@@ -920,11 +923,11 @@
 				2C41BB8E2CD97E3E00EFF69E /* SearchView.swift in Sources */,
 				2C6FB1882CFF8ECD00B35FF8 /* FirebaseNotificationService.swift in Sources */,
 				2C9337502C92BF4400818C8E /* Array + Extensions.swift in Sources */,
-				2C6FB1862CFC08D000B35FF8 /* AvailabilitySelectorView.swift in Sources */,
 				2C6410942C9A70B400E4B390 /* String + Extensions.swift in Sources */,
 				2E9F75982EB6DA89003FE0E0 /* Message.swift in Sources */,
 				2CF3561D2CDE91170045A173 /* EditProfileView.swift in Sources */,
 				2CE473932CC2148B00BD7E2C /* ProductDetailsViewModel.swift in Sources */,
+				2EEAAB242F18C92C0006FF5C /* AvailabilityGridView.swift in Sources */,
 				2C93374E2C92BE3000818C8E /* Item.swift in Sources */,
 				2C6FB18C2CFFBE7C00B35FF8 /* GoogleAuthManager.swift in Sources */,
 				2C9337542C935C9500818C8E /* ChatsView.swift in Sources */,
@@ -990,6 +993,7 @@
 				2CBC6B672CBDDB6400C842A4 /* PaginatedImageView.swift in Sources */,
 				2CE473A22CC4577500BD7E2C /* ReportConfirmationView.swift in Sources */,
 				2C18FFEA2CA1E4C900564577 /* SettingsViewModel.swift in Sources */,
+				2EEAAB262F18CF6A0006FF5C /* MonthCalendarView.swift in Sources */,
 				2E2DBF4D2E9AE20C00FC0225 /* UserCredibilityView.swift in Sources */,
 				2C41BB8C2CD9276E00EFF69E /* ShimmerView.swift in Sources */,
 				2C1692912CE4361C009D2291 /* LoadingView.swift in Sources */,

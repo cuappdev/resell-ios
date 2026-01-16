@@ -21,7 +21,7 @@ protocol Message: Codable, Hashable {
 }
 
 struct ChatMessage: Message {
-
+    
     var messageId: String
     var messageType: MessageType = .chat
     var timestamp: Date

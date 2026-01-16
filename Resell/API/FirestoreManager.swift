@@ -82,7 +82,7 @@ class FirestoreManager {
 
                     do {
                         let messagesSnapshot = try await messagesQuery.getDocuments()
-//                        let messageDocuments = try messagesSnapshot.documents.compactMap({ try $0.data(as: MessageDocument.self) })
+//                      let messageDocuments = try messagesSnapshot.documents.compactMap({ try $0.data(as: MessageDocument.self) })
                         let messageDocuments = try messagesSnapshot.documents.compactMap({ doc in
                             return try doc.data(as: MessageDocument.self)
                         })
