@@ -20,6 +20,8 @@ struct AvailabilityGridView: View {
     @State private var toggleSelectionMode: Bool? = nil
     @State private var isDraggingCells: Bool = false
     @State private var dragStartLocation: CGPoint = .zero
+    @State private var dragStartDate: String? = nil  // Track which day the drag started on
+    @State private var lastDraggedCell: CellIdentifier? = nil  // Track last cell to fill gaps
 
     /// Whether the user can edit (drag to select) cells
     var isEditing: Bool = true
@@ -106,10 +108,29 @@ struct AvailabilityGridView: View {
                                 times: times,
                                 cellHeight: cellHeight
                             ) {
+                                // Set drag start date on first cell
+                                if dragStartDate == nil {
+                                    dragStartDate = identifier.date
+                                }
+                                
+                                // Only allow selection within the same day
+                                guard identifier.date == dragStartDate else { return }
+                                
+                                // Set toggle mode on first cell
                                 if toggleSelectionMode == nil {
                                     toggleSelectionMode = selectedCells.contains(identifier) ? false : true
                                 }
+                                
+                                // Fill in any gaps between last cell and current cell
+                                if let lastCell = lastDraggedCell, lastCell.date == identifier.date {
+                                    let filledCells = fillCellGap(from: lastCell, to: identifier, date: identifier.date)
+                                    for cell in filledCells {
+                                        draggedCells.insert(cell)
+                                    }
+                                }
+                                
                                 draggedCells.insert(identifier)
+                                lastDraggedCell = identifier
                             }
                         }
                     }
@@ -151,6 +172,8 @@ struct AvailabilityGridView: View {
                     toggleSelectionMode = nil
                     isDraggingCells = false
                     dragStartLocation = .zero
+                    dragStartDate = nil
+                    lastDraggedCell = nil
                 }
         )
         .onAppear {
@@ -325,6 +348,40 @@ struct AvailabilityGridView: View {
     }
 
     // MARK: - Functions
+    
+    /// Fills in the cells between two cells in the same column to prevent gaps when dragging quickly
+    private func fillCellGap(from startCell: CellIdentifier, to endCell: CellIdentifier, date: String) -> [CellIdentifier] {
+        guard startCell.date == endCell.date else { return [] }
+        
+        // Find indices of the start and end cells
+        guard let startTimeIndex = findTimeIndex(for: startCell.time),
+              let endTimeIndex = findTimeIndex(for: endCell.time) else {
+            return []
+        }
+        
+        var filledCells: [CellIdentifier] = []
+        
+        // Determine direction (up or down)
+        let minIndex = min(startTimeIndex, endTimeIndex)
+        let maxIndex = max(startTimeIndex, endTimeIndex)
+        
+        // Fill in all cells between min and max
+        for index in minIndex...maxIndex {
+            let time = times[index]
+            filledCells.append(CellIdentifier(date: date, time: "\(time) Top"))
+            filledCells.append(CellIdentifier(date: date, time: "\(time) Bottom"))
+        }
+        
+        return filledCells
+    }
+    
+    /// Finds the time index for a given time string (handles "Top" and "Bottom" suffixes)
+    private func findTimeIndex(for timeString: String) -> Int? {
+        let cleanTime = timeString
+            .replacingOccurrences(of: " Top", with: "")
+            .replacingOccurrences(of: " Bottom", with: "")
+        return times.firstIndex(of: cleanTime)
+    }
     
     // Optimized adjacency checking functions - vertical adjacency only
     private func checkTopAdjacent(date: String, time: String, rowIndex: Int, combinedCells: Set<CellIdentifier>) -> Bool {
