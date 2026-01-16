@@ -272,14 +272,26 @@ struct AvailabilityGridView: View {
 
                             // Cells area
                             HStack(spacing: 0) {
-                                ForEach(Array(zip(paginatedDates[index], paginatedShortDates[index])), id: \.0) { date, _ in
+                                let dates = Array(paginatedDates[index])
+                                let combinedCells = selectedCells.union(draggedCells)
+                                
+                                ForEach(Array(zip(dates, paginatedShortDates[index]).enumerated()), id: \.offset) { colIndex, dateInfo in
+                                    let date = dateInfo.0
                                     VStack(spacing: 0) {
-                                        ForEach(times, id: \.self) { time in
+                                        ForEach(Array(times.enumerated()), id: \.offset) { rowIndex, time in
+                                            let topIdentifier = CellIdentifier(date: date, time: "\(time) Top")
+                                            let bottomIdentifier = CellIdentifier(date: date, time: "\(time) Bottom")
+                                            
+                                            let isSelectedTop = selectedCells.contains(topIdentifier)
+                                            let isSelectedBottom = selectedCells.contains(bottomIdentifier)
+                                            
                                             CellView(
-                                                isSelectedTop: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
-                                                isSelectedBottom: selectedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom")),
-                                                isHighlightedTop: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Top")),
-                                                isHighlightedBottom: draggedCells.contains(CellIdentifier(date: date, time: "\(time) Bottom"))
+                                                isSelectedTop: isSelectedTop,
+                                                isSelectedBottom: isSelectedBottom,
+                                                isHighlightedTop: draggedCells.contains(topIdentifier),
+                                                isHighlightedBottom: draggedCells.contains(bottomIdentifier),
+                                                isTopAdjacentSelected: checkTopAdjacent(date: date, time: time, rowIndex: rowIndex, combinedCells: combinedCells),
+                                                isBottomAdjacentSelected: checkBottomAdjacent(date: date, time: time, rowIndex: rowIndex, combinedCells: combinedCells)
                                             )
                                             .frame(width: gridColumnWidth, height: cellHeight)
                                         }
@@ -313,6 +325,21 @@ struct AvailabilityGridView: View {
     }
 
     // MARK: - Functions
+    
+    // Optimized adjacency checking functions - vertical adjacency only
+    private func checkTopAdjacent(date: String, time: String, rowIndex: Int, combinedCells: Set<CellIdentifier>) -> Bool {
+        guard rowIndex > 0 else { return false }
+        let adjacentTime = times[rowIndex - 1]
+        let adjacentIdentifier = CellIdentifier(date: date, time: "\(adjacentTime) Bottom")
+        return combinedCells.contains(adjacentIdentifier)
+    }
+    
+    private func checkBottomAdjacent(date: String, time: String, rowIndex: Int, combinedCells: Set<CellIdentifier>) -> Bool {
+        guard rowIndex < times.count - 1 else { return false }
+        let adjacentTime = times[rowIndex + 1]
+        let adjacentIdentifier = CellIdentifier(date: date, time: "\(adjacentTime) Top")
+        return combinedCells.contains(adjacentIdentifier)
+    }
     
     private func mapDragLocationToCell(
         location: CGPoint,
@@ -351,31 +378,152 @@ struct CellView: View {
     let isSelectedBottom: Bool
     let isHighlightedTop: Bool
     let isHighlightedBottom: Bool
+    
+    // Adjacency information for smart borders (vertical only)
+    let isTopAdjacentSelected: Bool
+    let isBottomAdjacentSelected: Bool
 
     private let cellHeight = UIScreen.height / 12 - 25
+    
+    // Opacity constants
+    private let dragOpacity: CGFloat = 0.4
+    private let selectedOpacity: CGFloat = 0.6
+    
+    // Border constants
+    private let borderWidth: CGFloat = 2
+    private let dashPattern: [CGFloat] = [4, 4]
 
     var body: some View {
         VStack(spacing: 0) {
-            Rectangle()
-                .fill(isHighlightedTop
-                      ? (isSelectedTop ? Constants.Colors.resellPurple.opacity(0.3) : Constants.Colors.resellPurple.opacity(0.5))
-                      : (isSelectedTop ? Constants.Colors.resellPurple : Color.clear))
-                .frame(height: cellHeight / 2)
+            // Top half
+            HalfCellView(
+                isSelected: isSelectedTop,
+                isHighlighted: isHighlightedTop,
+                showTopBorder: isSelectedTop && !isTopAdjacentSelected,
+                showBottomBorder: isSelectedTop && !isSelectedBottom,
+                showLeftBorder: isSelectedTop,  // Always show left border
+                showRightBorder: isSelectedTop,  // Always show right border
+                fillColor: fillColor(isSelected: isSelectedTop, isHighlighted: isHighlightedTop),
+                borderWidth: borderWidth,
+                dashPattern: dashPattern
+            )
+            .frame(height: cellHeight / 2)
 
-            Rectangle()
-                .fill(isHighlightedBottom
-                      ? (isSelectedBottom ? Constants.Colors.resellPurple.opacity(0.3) : Constants.Colors.resellPurple.opacity(0.5))
-                      : (isSelectedBottom ? Constants.Colors.resellPurple : Color.clear))
-                .frame(height: cellHeight / 2)
+            // Bottom half
+            HalfCellView(
+                isSelected: isSelectedBottom,
+                isHighlighted: isHighlightedBottom,
+                showTopBorder: isSelectedBottom && !isSelectedTop,
+                showBottomBorder: isSelectedBottom && !isBottomAdjacentSelected,
+                showLeftBorder: isSelectedBottom,  // Always show left border
+                showRightBorder: isSelectedBottom,  // Always show right border
+                fillColor: fillColor(isSelected: isSelectedBottom, isHighlighted: isHighlightedBottom),
+                borderWidth: borderWidth,
+                dashPattern: dashPattern
+            )
+            .frame(height: cellHeight / 2)
         }
+    }
+    
+    private func fillColor(isSelected: Bool, isHighlighted: Bool) -> Color {
+        if isHighlighted {
+            // Currently being dragged - use lighter opacity
+            return Constants.Colors.resellPurple.opacity(dragOpacity)
+        } else if isSelected {
+            // Finally selected - use darker opacity
+            return Constants.Colors.resellPurple.opacity(selectedOpacity)
+        } else {
+            // Not selected
+            return .clear
+        }
+    }
+}
+
+// MARK: - HalfCellView
+
+struct HalfCellView: View {
+    let isSelected: Bool
+    let isHighlighted: Bool
+    let showTopBorder: Bool
+    let showBottomBorder: Bool
+    let showLeftBorder: Bool
+    let showRightBorder: Bool
+    let fillColor: Color
+    let borderWidth: CGFloat
+    let dashPattern: [CGFloat]
+    
+    var body: some View {
+        ZStack {
+            // Fill
+            Rectangle()
+                .fill(fillColor)
+            
+            // Dotted borders (only show if cell is selected or highlighted)
+            if isSelected || isHighlighted {
+                DottedBorderShape(
+                    showTop: showTopBorder,
+                    showBottom: showBottomBorder,
+                    showLeft: showLeftBorder,
+                    showRight: showRightBorder,
+                    dashPattern: dashPattern
+                )
+                .stroke(Constants.Colors.resellPurple, style: StrokeStyle(lineWidth: borderWidth, dash: dashPattern))
+            }
+        }
+    }
+}
+
+// MARK: - DottedBorderShape
+
+struct DottedBorderShape: Shape {
+    let showTop: Bool
+    let showBottom: Bool
+    let showLeft: Bool
+    let showRight: Bool
+    let dashPattern: [CGFloat]
+    
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        
+        if showTop {
+            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        }
+        
+        if showBottom {
+            path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        }
+        
+        if showLeft {
+            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        }
+        
+        if showRight {
+            path.move(to: CGPoint(x: rect.maxX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        }
+        
+        return path
     }
 }
 
 // MARK: - CellIdentifier
 
-struct CellIdentifier: Hashable {
+struct CellIdentifier: Hashable, Equatable {
     let date: String
     let time: String
+    
+    // Custom hash function for better performance
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(date)
+        hasher.combine(time)
+    }
+    
+    static func == (lhs: CellIdentifier, rhs: CellIdentifier) -> Bool {
+        lhs.date == rhs.date && lhs.time == rhs.time
+    }
 }
 
 // MARK: - Helper Functions
