@@ -133,8 +133,9 @@ struct NotificationsView: View {
         }
         .padding(12)
         .padding(.horizontal, 12)
-        .contentShape(Rectangle())
-        .background(notification.isRead ? Color.white : Constants.Colors.resellPurple.opacity(0.1))
+        .listRowBackground(
+            (notification.isRead ? Color.white : Constants.Colors.resellPurple.opacity(0.1))
+        )
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
             Button(action: {
                 viewModel.markAsRead(notification: notification)
