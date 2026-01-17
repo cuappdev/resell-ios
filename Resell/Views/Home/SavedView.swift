@@ -14,11 +14,7 @@ struct SavedView: View {
     
     var body: some View {
         ScrollView(.vertical){
-            VStack(spacing: 12) {
-                headerView
-                
-                ProductsGalleryView(items: viewModel.savedItems)
-            }
+            ProductsGalleryView(items: viewModel.savedItems)
         }
         .background(Constants.Colors.white)
         .loadingView(isLoading: viewModel.isLoading)
@@ -33,6 +29,14 @@ struct SavedView: View {
                 await viewModel.getSavedPosts()
             }
         }
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("Saved By You")
+                    .font(Constants.Fonts.h1)
+                    .foregroundStyle(Constants.Colors.black)
+            }
+        }
+        .toolbarBackground(.hidden, for: .navigationBar)
     }
     
     private var headerView: some View {
