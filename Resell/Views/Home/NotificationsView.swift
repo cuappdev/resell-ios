@@ -143,6 +143,15 @@ struct NotificationsView: View {
             }
             .tint(Constants.Colors.resellPurple.opacity(0.7))
         }
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            Button(role: .destructive, action: {
+                viewModel.removeNotification(notification: notification)
+            }) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 20, weight: .medium))
+            }
+            .tint(.red)
+        }
     }
     
     private func notifText(for notification: Notifications) -> some View {

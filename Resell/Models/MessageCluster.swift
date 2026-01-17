@@ -5,7 +5,7 @@
 //  Created by Peter Bidoshi on 2/26/25.
 //
 
-import SwiftUICore
+import SwiftUI
 
 struct MessageCluster: Equatable {
 

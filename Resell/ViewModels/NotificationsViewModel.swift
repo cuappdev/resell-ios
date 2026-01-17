@@ -83,6 +83,21 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
+    /// Remove a notification
+    func removeNotification(notification: Notifications) {
+        withAnimation {
+            notifications.removeAll(where: { $0.data.messageId == notification.data.messageId })
+        }
+        // TODO: Add backend call to delete notification when backend is ready
+        // Task {
+        //     do {
+        //         try await NetworkManager.shared.deleteNotification(id: notification.data.messageId)
+        //     } catch {
+        //         NetworkManager.shared.logger.error("Error deleting notification: \(error.localizedDescription)")
+        //     }
+        // }
+    }
+    
     func fetchNotifications() {
         Task {
             loadState = .loading
