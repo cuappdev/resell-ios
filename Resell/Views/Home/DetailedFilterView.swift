@@ -67,7 +67,7 @@ struct DetailedFilterView: View {
                 Button(action: {
                     presentPopup = true
                 }, label: {
-                    Image("filters")
+                    Image("filters") // consider replacing as it doesn't seem to render that well?
                         .resizable()
                         .frame(width: 40, height: 40)
                 })

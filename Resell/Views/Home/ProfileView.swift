@@ -83,6 +83,7 @@ struct ProfileView: View {
                 }
             }
         }
+        .toolbarBackground(.hidden, for: .navigationBar)
         .overlay(alignment: .bottomTrailing) {
             ExpandableAddButton()
                 .padding(.bottom, 40)
