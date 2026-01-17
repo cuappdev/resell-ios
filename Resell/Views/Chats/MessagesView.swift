@@ -462,6 +462,10 @@ struct MessagesAvailabilitySheet: View {
 
     var body: some View {
         VStack(spacing: 16) {
+            RoundedRectangle(cornerRadius: 10)
+                .frame(width: 66, height: 6)
+                .foregroundStyle(Constants.Colors.filterGray)
+            
             // Header
             VStack(alignment: .leading, spacing: 8) {
                 Button {
@@ -530,7 +534,7 @@ struct MessagesAvailabilitySheet: View {
                 currentPage: $gridCurrentPage,
                 isEditing: isEditing,
                 startDate: gridStartDate,
-                gridHeight: showCalendar ? UIScreen.height * 0.35 : UIScreen.height * 0.55,
+                gridHeight: showCalendar ? UIScreen.height * 0.35 : UIScreen.height * 0.625,
                 onVisibleDatesChanged: { dates in
                     visibleGridDates = dates
                     if let firstDate = dates.first {
@@ -554,8 +558,6 @@ struct MessagesAvailabilitySheet: View {
                 onSubmit()
                 isPresented = false
             }
-            
-            Spacer()
         }
         .padding(.horizontal)
         .padding(.top, 32)
