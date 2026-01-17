@@ -23,13 +23,11 @@ struct DetailedFilterView: View {
     }
 
     var body: some View {
-        ZStack {
             VStack(spacing: 0) {
                 headerView
                 ScrollView(.vertical) {
                     ProductsGalleryView(items: displayedItems)
                 }
-            }
         }
         .background(Constants.Colors.white)
         .loadingView(isLoading: viewModel.isLoading)
@@ -45,6 +43,14 @@ struct DetailedFilterView: View {
                 filtersViewModel.clearFilterSearch()
             }
         }
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text(filter.title)
+                    .font(Constants.Fonts.h1)
+                    .foregroundStyle(Constants.Colors.black)
+            }
+        }
+        .toolbarBackground(.hidden, for: .navigationBar)
         .sheet(isPresented: $presentPopup) {
             FilterView(home: false, isPresented: $presentPopup)
                 .environmentObject(filtersViewModel)
@@ -52,24 +58,6 @@ struct DetailedFilterView: View {
     }
 
     private var headerView: some View {
-        VStack {
-            HStack(spacing: 64) {
-                Button {
-                    router.pop()
-                } label: {
-                    Image("chevron.left.white")
-                        .resizable()
-                        .frame(width: 36, height: 24)
-                }
-                
-                Text(filter.title)
-                    .font(Constants.Fonts.h1)
-                    .foregroundStyle(Constants.Colors.black)
-                
-                Spacer()
-            }
-            .padding(.horizontal, 25)
-            
             HStack {
                 SearchBar(text: $searchText, placeholder: "Search in \(filter.title)", isEditable: true)
                     .onChange(of: searchText) { newValue in
@@ -86,6 +74,6 @@ struct DetailedFilterView: View {
             }
             .padding(.bottom, 12)
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
-        }
+        
     }
 }
