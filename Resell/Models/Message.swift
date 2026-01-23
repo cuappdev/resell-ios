@@ -8,6 +8,7 @@
 import Foundation
 
 protocol Message: Codable, Hashable {
+    
     var messageId: String { get set }
     var messageType: MessageType { get }
     var timestamp: Date { get set }
@@ -63,6 +64,7 @@ struct AvailabilityMessage: Message {
 }
 
 struct ProposalMessage: Message {
+    
     var messageId: String
     var messageType: MessageType = .proposal
     var timestamp: Date
@@ -85,17 +87,20 @@ struct ProposalMessage: Message {
 }
 
 struct Availability: Codable, Hashable {
+    
     let startDate: Date
     let endDate: Date
 }
 
 enum MessageType: String, Codable {
+    
     case chat = "message"
     case availability = "availability"
     case proposal = "proposal"
 }
 
 struct MessageBody: Codable {
+    
     let type: MessageType
     let listingId: String
     let buyerId: String
@@ -109,5 +114,6 @@ struct MessageBody: Codable {
 }
 
 struct ReadMessageRepsonse: Codable {
+    
     let read: Bool
 }

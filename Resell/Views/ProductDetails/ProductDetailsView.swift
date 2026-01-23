@@ -24,11 +24,10 @@ struct ProductDetailsView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            VStack {
+            VStack(spacing: 0) {
                 if viewModel.isLoading {
                     ShimmerView()
                         .frame(height: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio))
-                        .ignoresSafeArea()
                 } else {
                     imageGallery
                         .frame(height: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio))
@@ -38,6 +37,7 @@ struct ProductDetailsView: View {
                     Spacer()
                 }
             }
+            .ignoresSafeArea(edges: .top)
 
             DraggableSheetView(maxDrag: viewModel.maxDrag) {
                 detailsView
@@ -62,35 +62,42 @@ struct ProductDetailsView: View {
                 .padding(.top, (UIApplication.shared.keyWindow?.safeAreaInsets.top ?? 0) + 30)
                 .zIndex(1)
             }
+            
+            // Custom navigation buttons overlay
+            VStack {
+                HStack {
+                    Button {
+                        router.pop()
+                    } label: {
+                        Image("chevron.left.white")
+                            .resizable()
+                            .frame(width: 36, height: 24)
+                    }
+                    .padding(.leading, 16)
+                    
+                    Spacer()
+                    
+                    Button {
+                        withAnimation {
+                            viewModel.didShowOptionsMenu.toggle()
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .resizable()
+                            .frame(width: 24, height: 6)
+                            .foregroundStyle(Constants.Colors.white)
+                    }
+                    .padding(.trailing, 16)
+                }
+                .padding(.top, (UIApplication.shared.keyWindow?.safeAreaInsets.top ?? 0) + 8)
+                
+                Spacer()
+            }
         }
         .background(Constants.Colors.white)
-        .ignoresSafeArea()
+        .ignoresSafeArea(edges: .top)
         .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    router.pop()
-                } label: {
-                    Image("chevron.left.white")
-                        .resizable()
-                        .frame(width: 36, height: 24)
-                }
-            }
-
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    withAnimation {
-                        viewModel.didShowOptionsMenu.toggle()
-                    }
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .resizable()
-                        .frame(width: 24, height: 6)
-                        .foregroundStyle(Constants.Colors.white)
-                }
-                .padding()
-            }
-        }
+        .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $viewModel.didShowDeleteView) {
             deletePostView
                 .background(Constants.Colors.white)

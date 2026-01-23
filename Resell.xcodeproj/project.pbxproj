@@ -167,6 +167,7 @@
 		2EEAAB242F18C92C0006FF5C /* AvailabilityGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEAAB232F18C92C0006FF5C /* AvailabilityGridView.swift */; };
 		2EEAAB262F18CF6A0006FF5C /* MonthCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEAAB252F18CF6A0006FF5C /* MonthCalendarView.swift */; };
 		2EEAAB282F1ADA380006FF5C /* AvailabilitySettingsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEAAB272F1ADA1B0006FF5C /* AvailabilitySettingsMenu.swift */; };
+		2EEAAB2D2F2311620006FF5C /* Availability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEAAB2C2F23115E0006FF5C /* Availability.swift */; };
 		2EEB57262F03C704008D2DF3 /* ReviewSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E02D3802F03C48200CCABE6 /* ReviewSection.swift */; };
 /* End PBXBuildFile section */
 
@@ -314,6 +315,7 @@
 		2EEAAB232F18C92C0006FF5C /* AvailabilityGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailabilityGridView.swift; sourceTree = "<group>"; };
 		2EEAAB252F18CF6A0006FF5C /* MonthCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthCalendarView.swift; sourceTree = "<group>"; };
 		2EEAAB272F1ADA1B0006FF5C /* AvailabilitySettingsMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailabilitySettingsMenu.swift; sourceTree = "<group>"; };
+		2EEAAB2C2F23115E0006FF5C /* Availability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Availability.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -454,6 +456,7 @@
 		2C9337442C929B0600818C8E /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				2EEAAB2C2F23115E0006FF5C /* Availability.swift */,
 				2E9F75972EB6DA89003FE0E0 /* Message.swift */,
 				2E9F758F2EB6D95E003FE0E0 /* Chat.swift */,
 				2E9F75902EB6D95E003FE0E0 /* MessageCluster.swift */,
@@ -1013,6 +1016,7 @@
 				2C02B3A32CC074150020DF90 /* ProductDetailsView.swift in Sources */,
 				2C93374A2C92AD2D00818C8E /* ProductsGalleryView.swift in Sources */,
 				2C02B39F2CC06D760020DF90 /* NewRequestViewModel.swift in Sources */,
+				2EEAAB2D2F2311620006FF5C /* Availability.swift in Sources */,
 				2C1692932CE43737009D2291 /* CustomProgressView.swift in Sources */,
 				2C41BB832CD8718600EFF69E /* KeychainManager.swift in Sources */,
 				2CD7CABC2CE94ECB0056209E /* ExternalProfileView.swift in Sources */,

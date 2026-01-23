@@ -18,6 +18,10 @@ struct AvailabilitySettingsView: View {
     @State private var gridCurrentPage: Int = 0
     @State private var visibleGridDates: [Date] = []
     
+    @State private var isLoading: Bool = false
+    @State private var isSaving: Bool = false
+    @State private var errorMessage: String? = nil
+    
     private var monthName: String {
         CalendarHelper.monthName(for: currentMonthOffset)
     }
@@ -55,7 +59,6 @@ struct AvailabilitySettingsView: View {
             } else if showSettings {
                 AvailabilitySettingsMenu()
             }
-        
             
             // Availability grid - synced with calendar selection
             AvailabilityGridView(
@@ -81,14 +84,25 @@ struct AvailabilitySettingsView: View {
             
             // Save button
             if !showCalendar {
-                PurpleButton(text: "Save") {
-                    saveAvailability()
+                PurpleButton(isLoading: isSaving, text: isSaving ? "Saving..." : "Save") {
+                    Task {
+                        await saveAvailability()
+                    }
                 }
+                .disabled(isSaving)
                 .padding(.horizontal)
                 .padding(.bottom, 24)
             }
         }
         .background(Constants.Colors.white)
+        .overlay {
+            if isLoading {
+                ProgressView()
+                    .scaleEffect(1.5)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.white.opacity(0.7))
+            }
+        }
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text("Availability")
@@ -96,9 +110,20 @@ struct AvailabilitySettingsView: View {
                     .foregroundStyle(Constants.Colors.black)
             }
         }
+        .alert("Error", isPresented: .constant(errorMessage != nil)) {
+            Button("OK") {
+                errorMessage = nil
+            }
+        } message: {
+            Text(errorMessage ?? "")
+        }
         .onAppear {
             // Initialize visible dates
             updateVisibleDates(from: gridStartDate, page: 0)
+            // Load availability from backend
+            Task {
+                await loadAvailability()
+            }
         }
         .onChange(of: currentMonthOffset) { newOffset in
             // When user swipes to change month on calendar, update grid to first day of that month
@@ -139,10 +164,77 @@ struct AvailabilitySettingsView: View {
         }
     }
     
-    private func saveAvailability() {
-        let availabilities = AvailabilityGridView.cellsToAvailabilities(selectedCells)
-        // TODO: Save availabilities to backend/user profile
-        print("Saving \(availabilities.count) availability slots")
+    private func loadAvailability() async {
+        isLoading = true
+        defer { isLoading = false }
+        
+        do {
+            let response = try await NetworkManager.shared.getAvailability()
+            let cells = scheduleToSelectedCells(response.availability.schedule)
+            await MainActor.run {
+                selectedCells = cells
+            }
+        } catch {
+            // If no availability exists yet, that's okay - just start with empty grid
+            print("Failed to load availability: \(error)")
+        }
+    }
+    
+    private func saveAvailability() async {
+        isSaving = true
+        defer { isSaving = false }
+        
+        let schedule = selectedCellsToSchedule(selectedCells)
+        
+        do {
+            _ = try await NetworkManager.shared.updateAvailability(schedule: schedule)
+            print("Successfully saved availability with \(schedule.count) days")
+        } catch {
+            await MainActor.run {
+                errorMessage = "Failed to save availability: \(error.localizedDescription)"
+            }
+        }
+    }
+    
+    // MARK: - Conversion Helpers
+    
+    /// Converts selected cells to API schedule format [DateKey: [AvailabilitySlot]]
+    private func selectedCellsToSchedule(_ cells: Set<CellIdentifier>) -> [String: [AvailabilitySlot]] {
+        let availabilities = AvailabilityGridView.cellsToAvailabilities(cells)
+        
+        // Group availabilities by date
+        var schedule: [String: [AvailabilitySlot]] = [:]
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        
+        for availability in availabilities {
+            let dateKey = dateFormatter.string(from: availability.startDate)
+            let slot = AvailabilitySlot(startDate: availability.startDate, endDate: availability.endDate)
+            
+            if schedule[dateKey] != nil {
+                schedule[dateKey]?.append(slot)
+            } else {
+                schedule[dateKey] = [slot]
+            }
+        }
+        
+        return schedule
+    }
+    
+    /// Converts API schedule format to selected cells
+    private func scheduleToSelectedCells(_ schedule: [String: [AvailabilitySlot]]) -> Set<CellIdentifier> {
+        var cells = Set<CellIdentifier>()
+        
+        for (_, slots) in schedule {
+            for slot in slots {
+                // Convert AvailabilitySlot to local Availability and then to cells
+                let availability = Availability(startDate: slot.startDate, endDate: slot.endDate)
+                let cellsForSlot = AvailabilityGridView.availabilitiesToCells([availability])
+                cells.formUnion(cellsForSlot)
+            }
+        }
+        
+        return cells
     }
 }
 

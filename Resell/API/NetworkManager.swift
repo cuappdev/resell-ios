@@ -481,23 +481,64 @@ class NetworkManager {
     
     // MARK: - Chat Networking Functions
 
-        func sendChatMessage(chatId: String, messageBody: MessageBody) async throws {
-            let url = try constructURL(endpoint: "/chat/message/\(chatId)/")
+    func sendChatMessage(chatId: String, messageBody: MessageBody) async throws {
+        let url = try constructURL(endpoint: "/chat/message/\(chatId)/")
 
-            return try await post(url: url, body: messageBody)
-        }
+        return try await post(url: url, body: messageBody)
+    }
 
-        func sendChatAvailability(chatId: String, messageBody: MessageBody) async throws {
-            let url = try constructURL(endpoint: "/chat/availability/\(chatId)/")
+    func sendChatAvailability(chatId: String, messageBody: MessageBody) async throws {
+        let url = try constructURL(endpoint: "/chat/availability/\(chatId)/")
 
-            return try await post(url: url, body: messageBody)
-        }
+        return try await post(url: url, body: messageBody)
+    }
 
-        func markMessageRead(chatId: String, messageId: String) async throws -> ReadMessageRepsonse {
-            let url = try constructURL(endpoint: "/chat/\(chatId)/message/\(messageId)/")
+    func markMessageRead(chatId: String, messageId: String) async throws -> ReadMessageRepsonse {
+        let url = try constructURL(endpoint: "/chat/\(chatId)/message/\(messageId)/")
 
-            return try await post(url: url)
-        }
+        return try await post(url: url)
+    }
+
+    // MARK: - Availability Networking Functions
+    
+    /// ISO8601 decoder for availability endpoints (dates come as strings like "2026-01-23T16:00:00Z")
+    private var iso8601Decoder: JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
+    }
+    
+    /// ISO8601 encoder for availability endpoints
+    private var iso8601Encoder: JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        return encoder
+    }
+
+    func getAvailability() async throws -> AvailabilityResponse {
+        let url = try constructURL(endpoint: "/availability/")
+        let request = try await createRequest(url: url, method: "GET")
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try handleResponse(data: data, response: response)
+        return try iso8601Decoder.decode(AvailabilityResponse.self, from: data)
+    }
+
+    func getAvailabilityByUserID(id: String) async throws -> AvailabilityResponse {
+        let url = try constructURL(endpoint: "/availability/user/\(id)")
+        let request = try await createRequest(url: url, method: "GET")
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try handleResponse(data: data, response: response)
+        return try iso8601Decoder.decode(AvailabilityResponse.self, from: data)
+    }
+
+    func updateAvailability(schedule: [String: [AvailabilitySlot]]) async throws -> AvailabilityResponse {
+        let url = try constructURL(endpoint: "/availability/update/")
+        let requestData = try iso8601Encoder.encode(UpdateAvailabilityBody(schedule: schedule))
+        let request = try await createRequest(url: url, method: "POST", body: requestData)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try handleResponse(data: data, response: response)
+        return try iso8601Decoder.decode(AvailabilityResponse.self, from: data)
+    }
     
     // MARK: - Other Networking Functions
     
