@@ -22,6 +22,8 @@ struct MessagesView: View {
     @State private var availabilityProposerName: String = ""
     @State private var selectedCells: Set<CellIdentifier> = []
     @State private var priceText: String = ""
+    @State private var locallyRespondedProposals: Set<Int> = []  // Track proposals we've responded to locally
+    @State private var locallyAcceptedMeeting: Bool = false  // Track if we just accepted a meeting (immediate UI feedback)
     @StateObject private var viewModel: ViewModel
     
 
@@ -185,6 +187,60 @@ struct MessagesView: View {
         )
     }
 
+    /// Get all proposal times that have been responded to (accepted != nil)
+    /// Combines local tracking (immediate) with Firestore messages
+    private var respondedProposalTimeIntervals: Set<Int> {
+        var times = locallyRespondedProposals  // Start with locally tracked responses
+        for cluster in viewModel.messageClusters {
+            for message in cluster.messages {
+                if let proposal = message as? ProposalMessage,
+                   proposal.accepted != nil {
+                    // Round to nearest minute for reliable comparison
+                    let roundedTime = Int(proposal.startDate.timeIntervalSince1970 / 60)
+                    times.insert(roundedTime)
+                }
+            }
+        }
+        return times
+    }
+    
+    /// Check if there's an active confirmed meeting (accepted=true, not cancelled)
+    /// If true, no other proposals can be accepted until this one is cancelled
+    private var hasActiveConfirmedMeeting: Bool {
+        // Check local state first
+        if locallyAcceptedMeeting {
+            return true
+        }
+        
+        // Track which meeting times have been accepted vs cancelled
+        var acceptedTimes = Set<Int>()
+        var cancelledTimes = Set<Int>()
+        
+        for cluster in viewModel.messageClusters {
+            for message in cluster.messages {
+                if let proposal = message as? ProposalMessage {
+                    let roundedTime = Int(proposal.startDate.timeIntervalSince1970 / 60)
+                    
+                    if proposal.accepted == true {
+                        acceptedTimes.insert(roundedTime)
+                    }
+                    if proposal.cancellation == true {
+                        cancelledTimes.insert(roundedTime)
+                    }
+                }
+            }
+        }
+        
+        // There's an active meeting if any accepted time hasn't been cancelled
+        for acceptedTime in acceptedTimes {
+            if !cancelledTimes.contains(acceptedTime) {
+                return true
+            }
+        }
+        
+        return false
+    }
+    
     private func messageCluster(cluster: MessageCluster) -> some View {
         return VStack(spacing: 2) {
             if let first = cluster.messages.first {
@@ -200,7 +256,34 @@ struct MessagesView: View {
                     availabilityProposerName: $availabilityProposerName,
                     selectedAvailabilities: $viewModel.availability, 
                     message: message,
-                    chatInfo: viewModel.chatInfo
+                    chatInfo: viewModel.chatInfo,
+                    onProposalResponse: { startDate, endDate, accepted in
+                        // Immediately track this proposal as responded to hide Accept/Decline
+                        let roundedTime = Int(startDate.timeIntervalSince1970 / 60)
+                        locallyRespondedProposals.insert(roundedTime)
+                        
+                        // If accepting, mark that we have an active meeting
+                        if accepted {
+                            locallyAcceptedMeeting = true
+                        }
+                        
+                        Task {
+                            do {
+                                let transactionId = try await viewModel.respondToProposal(
+                                    startDate: startDate,
+                                    endDate: endDate,
+                                    accepted: accepted
+                                )
+                                if accepted, let txId = transactionId {
+                                    print("Transaction created: \(txId)")
+                                }
+                            } catch {
+                                NetworkManager.shared.logger.error("Error responding to proposal: \(error)")
+                            }
+                        }
+                    },
+                    respondedProposalTimeIntervals: respondedProposalTimeIntervals,
+                    hasActiveConfirmedMeeting: hasActiveConfirmedMeeting
                 )
             }
         }
@@ -849,22 +932,37 @@ struct MessageBubbleView: View {
 
     let message: any Message
     let chatInfo: ChatInfo
+    
+    /// Callback for responding to proposals (startDate, endDate, accepted)
+    var onProposalResponse: ((Date, Date, Bool) -> Void)?
+    
+    /// Set of proposal times that have already been responded to (startDate as minutes since epoch)
+    var respondedProposalTimeIntervals: Set<Int> = []
+    
+    /// Whether there's an active confirmed meeting in this chat (blocks accepting other proposals)
+    var hasActiveConfirmedMeeting: Bool = false
 
     var body: some View {
-        HStack {
-            if message.mine {
-                Spacer()
-            }
+        // Proposals are centered, other messages are aligned left/right
+        if message.messageType == .proposal {
+            proposalMessageView
+                .padding(.horizontal, 24)
+        } else {
+            HStack {
+                if message.mine {
+                    Spacer()
+                }
 
-            messageContentView
-                .padding(.leading, message.mine ? 64 : 0)
-                .padding(.trailing, message.mine ? 0 : 64)
+                messageContentView
+                    .padding(.leading, message.mine ? 64 : 0)
+                    .padding(.trailing, message.mine ? 0 : 64)
 
-            if !message.mine {
-                Spacer()
+                if !message.mine {
+                    Spacer()
+                }
             }
+            .padding(.horizontal, 12)
         }
-        .padding(.horizontal, 12)
     }
 
     @ViewBuilder
@@ -875,7 +973,7 @@ struct MessageBubbleView: View {
         case .availability:
             availabilityMessageView
         case .proposal:
-            proposalMessageView
+            EmptyView() // Handled separately in body
         }
     }
 
@@ -950,7 +1048,6 @@ struct MessageBubbleView: View {
                 isEditing = false
             } label: {
                 HStack {
-//                    Text("\(message.from.givenName)'s Availability")
                     // TODO: FIX
                     Text("\(message.from.givenName)'s Availability")
                         .font(Constants.Fonts.title2)
@@ -974,12 +1071,94 @@ struct MessageBubbleView: View {
     @ViewBuilder
     private var proposalMessageView: some View {
         if let message = message as? ProposalMessage {
-            Text("Proposal!")
-                .font(Constants.Fonts.subtitle1)
-                .foregroundColor(Constants.Colors.secondaryGray)
+            VStack(spacing: 8) {
+                // Icon and title
+                HStack(spacing: 8) {
+                    Image(systemName: message.messageType == .proposal ? "" : "calendar")
+                        .font(.system(size: 18))
+                        .foregroundColor(Constants.Colors.black)
+                    
+                    Text(proposalTitle(for: message))
+                        .font(Constants.Fonts.body1)
+                        .foregroundColor(Constants.Colors.black)
+                        .multilineTextAlignment(.center)
+                }
+                
+                // Action buttons (only show if pending, not cancelled, I'm not the proposer, not already responded, and no active confirmed meeting)
+                let roundedTime = Int(message.startDate.timeIntervalSince1970 / 60)
+                let alreadyResponded = respondedProposalTimeIntervals.contains(roundedTime)
+                // Can't accept/decline if there's already an active confirmed meeting
+                let canShowActions = message.accepted == nil && message.cancellation != true && !message.mine && !alreadyResponded && !hasActiveConfirmedMeeting
+                if canShowActions {
+                    HStack(spacing: 32) {
+                        Button {
+                            onProposalResponse?(message.startDate, message.endDate, true)
+                        } label: {
+                            Text("Accept")
+                                .font(Constants.Fonts.title2)
+                                .foregroundColor(Constants.Colors.resellPurple)
+                        }
+                        
+                        Button {
+                            onProposalResponse?(message.startDate, message.endDate, false)
+                        } label: {
+                            Text("Decline")
+                                .font(Constants.Fonts.title2)
+                                .foregroundColor(Constants.Colors.errorRed)
+                        }
+                    }
+                }
+                
+                // View Details button for confirmed meetings
+                if message.accepted == true {
+                    Button {
+                        // TODO: Show meeting details
+                    } label: {
+                        Text("View Details")
+                            .font(Constants.Fonts.title2)
+                            .foregroundColor(Constants.Colors.resellPurple)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
         } else {
             EmptyView()
         }
+    }
+    
+    // MARK: - Proposal Helpers
+    
+    private func proposalTitle(for message: ProposalMessage) -> String {
+        let proposerName = message.from.givenName
+        let timeString = formatProposalTime(start: message.startDate, end: message.endDate)
+        
+        if message.cancellation == true {
+            if message.mine {
+                return "You cancelled the meeting"
+            } else {
+                return "\(proposerName) cancelled the meeting"
+            }
+        }
+        
+        switch message.accepted {
+        case nil:
+            if message.mine {
+                return "You proposed to meet at:\n\(timeString)"
+            } else {
+                return "\(proposerName) wants to meet at:\n\(timeString)"
+            }
+        case true:
+            return "The meeting has been confirmed"
+        case false:
+            return "The meeting was declined"
+        }
+    }
+    
+    private func formatProposalTime(start: Date, end: Date) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMM d, h:mm a"
+        return dateFormatter.string(from: start)
     }
 
 }

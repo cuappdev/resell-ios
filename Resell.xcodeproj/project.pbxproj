@@ -168,6 +168,7 @@
 		2EEAAB262F18CF6A0006FF5C /* MonthCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEAAB252F18CF6A0006FF5C /* MonthCalendarView.swift */; };
 		2EEAAB282F1ADA380006FF5C /* AvailabilitySettingsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEAAB272F1ADA1B0006FF5C /* AvailabilitySettingsMenu.swift */; };
 		2EEAAB2D2F2311620006FF5C /* Availability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEAAB2C2F23115E0006FF5C /* Availability.swift */; };
+		2EEAAB2F2F26C7120006FF5C /* Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEAAB2E2F26C7120006FF5C /* Transaction.swift */; };
 		2EEB57262F03C704008D2DF3 /* ReviewSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E02D3802F03C48200CCABE6 /* ReviewSection.swift */; };
 /* End PBXBuildFile section */
 
@@ -316,6 +317,7 @@
 		2EEAAB252F18CF6A0006FF5C /* MonthCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthCalendarView.swift; sourceTree = "<group>"; };
 		2EEAAB272F1ADA1B0006FF5C /* AvailabilitySettingsMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailabilitySettingsMenu.swift; sourceTree = "<group>"; };
 		2EEAAB2C2F23115E0006FF5C /* Availability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Availability.swift; sourceTree = "<group>"; };
+		2EEAAB2E2F26C7120006FF5C /* Transaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transaction.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -457,6 +459,7 @@
 			isa = PBXGroup;
 			children = (
 				2EEAAB2C2F23115E0006FF5C /* Availability.swift */,
+				2EEAAB2E2F26C7120006FF5C /* Transaction.swift */,
 				2E9F75972EB6DA89003FE0E0 /* Message.swift */,
 				2E9F758F2EB6D95E003FE0E0 /* Chat.swift */,
 				2E9F75902EB6D95E003FE0E0 /* MessageCluster.swift */,
@@ -952,6 +955,7 @@
 				2E0A38872F0CBDE000362083 /* FollowListView.swift in Sources */,
 				2E3034B72D6D4E4900C1FDA9 /* FilterView.swift in Sources */,
 				2C18FFE42CA1322300564577 /* ProfileViewModel.swift in Sources */,
+				2EEAAB2F2F26C7120006FF5C /* Transaction.swift in Sources */,
 				2CDDF30E2CCD915E0061A564 /* MessagesView.swift in Sources */,
 				2E8A5A682DBCCB3400B1F281 /* (null) in Sources */,
 				2C9B4CCB2C8FB7B70029DF61 /* ResellApp.swift in Sources */,

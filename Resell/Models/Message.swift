@@ -76,6 +76,10 @@ struct ProposalMessage: Message {
     var endDate: Date
     /// Has this proposal been accepted? `nil` if no action has been taken
     var accepted: Bool?
+    /// Transaction ID (present when proposal is accepted)
+    var transactionId: String?
+    /// Has this proposal been cancelled?
+    var cancellation: Bool?
 
     func isEqual(to other: any Message) -> Bool {
         guard let otherMessage = other as? ProposalMessage else {
