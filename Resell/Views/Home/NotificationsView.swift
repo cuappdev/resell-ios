@@ -13,6 +13,7 @@ struct NotificationsView: View {
     
     @EnvironmentObject var router: Router
     @StateObject private var viewModel = NotificationsViewModel()
+    @State private var showTestMenu = false
     
     private let relativeFormatter: RelativeDateTimeFormatter = {
         let f = RelativeDateTimeFormatter()
@@ -32,9 +33,14 @@ struct NotificationsView: View {
             
             switch viewModel.loadState {
             case .idle:
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                    .offset(y: -60)
+                VStack(spacing: 16) {
+                    ProgressView()
+                    Text("Loading notifications...")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                .offset(y: -60)
             case .loading:
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
@@ -50,7 +56,7 @@ struct NotificationsView: View {
                                 .padding(.leading, 8)
                                 .padding(.top, 5)
                                 .listRowSeparator(.hidden)
-                            ForEach(items, id: \.data.messageId) { notification in
+                            ForEach(items) { notification in
                                 notificationView(for: notification)
                                     .listRowInsets(EdgeInsets())
                                     .listRowSeparator(.hidden)
@@ -60,6 +66,9 @@ struct NotificationsView: View {
                 }
                 .listStyle(.plain)
                 .listRowSeparator(.hidden)
+                .refreshable {
+                    viewModel.fetchNotifications()
+                }
             case .empty:
                 VStack (alignment: .center, spacing: 16) {
                     Text("You're all caught up!")
@@ -79,6 +88,12 @@ struct NotificationsView: View {
                     Text("Please try again. If this problem persists, feel free to let us know")
                         .font(.custom("Rubik", size: 18))
                         .foregroundStyle(.gray)
+                    
+                    Button("Retry") {
+                        viewModel.fetchNotifications()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Constants.Colors.resellPurple)
                 }
                 .frame(maxWidth: 312, maxHeight: .infinity, alignment: .center)
                 .offset(y: -60)
@@ -87,10 +102,44 @@ struct NotificationsView: View {
         .padding(.top, 5)
         .padding(.vertical, 1)
         .navigationTitle("Notifications")
-        // MARK: - Uncomment when confirm notification data in backend
-//        .onAppear {
-//            viewModel.fetchNotifications()
-//        }
+        .toolbar {
+            // Test notification button (for development)
+            #if DEBUG
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Menu {
+                    Section("Test Notifications") {
+                        Button("📬 Test Messages") {
+                            viewModel.createTestNotification(type: "messages")
+                        }
+                        Button("📋 Test Requests") {
+                            viewModel.createTestNotification(type: "requests")
+                        }
+                        Button("🔖 Test Bookmarks") {
+                            viewModel.createTestNotification(type: "bookmarks")
+                        }
+                        Button("💰 Test Transactions") {
+                            viewModel.createTestNotification(type: "transactions")
+                        }
+                    }
+                    
+                    Divider()
+                    
+                    Button("🧪 Load Dummy Data") {
+                        viewModel.loadDummyData()
+                    }
+                    
+                    Button("🔄 Refresh from Server") {
+                        viewModel.fetchNotifications()
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+            }
+            #endif
+        }
+        .onAppear {
+            viewModel.fetchNotifications()
+        }
     }
     
     // Creates the filter for notifications sorting
@@ -114,10 +163,21 @@ struct NotificationsView: View {
     // Creates individual notification rows / components
     private func notificationView(for notification: Notifications) -> some View {
         HStack(alignment: .top) {
-            Image("justin_long")
-                .resizable()
-                .frame(width: 56, height: 56)
-                .cornerRadius(5)
+            // Use notification image if available, otherwise placeholder
+            AsyncImage(url: URL(string: notification.data.imageUrl ?? notification.data.sellerPhotoUrl ?? "")) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                Image(systemName: notificationIcon(for: notification.data.resolvedType))
+                    .font(.system(size: 24))
+                    .foregroundColor(Constants.Colors.resellPurple)
+                    .frame(width: 56, height: 56)
+                    .background(Constants.Colors.wash)
+            }
+            .frame(width: 56, height: 56)
+            .cornerRadius(5)
+            .clipped()
             
             VStack(alignment: .leading) {
                 Spacer()
@@ -133,8 +193,14 @@ struct NotificationsView: View {
         }
         .padding(12)
         .padding(.horizontal, 12)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            viewModel.markAsRead(notification: notification)
+            // Navigate based on notification type
+            handleNotificationTap(notification)
+        }
         .listRowBackground(
-            (notification.isRead ? Color.white : Constants.Colors.resellPurple.opacity(0.1))
+            (notification.read ? Color.white : Constants.Colors.resellPurple.opacity(0.1))
         )
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
             Button(action: {
@@ -155,22 +221,63 @@ struct NotificationsView: View {
         }
     }
     
-    private func notifText(for notification: Notifications) -> some View {
-        switch notification.data.type {
+    private func notificationIcon(for type: String) -> String {
+        switch type.lowercased() {
+        case "messages": return "message.fill"
+        case "requests": return "list.bullet.rectangle"
+        case "bookmarks": return "bookmark.fill"
+        case "transactions": return "creditcard.fill"
+        default: return "bell.fill"
+        }
+    }
+    
+    private func handleNotificationTap(_ notification: Notifications) {
+        // TODO: Navigate to appropriate screen based on notification type
+        // For now, just mark as read
+        switch notification.data.resolvedType.lowercased() {
         case "messages":
-            return Text(notification.userID).bold() + Text(" sent you a message")
-        case "requests":
-            return Text("Your request for ")
-                + Text(notification.data.messageId).bold()
-                + Text(" has been met")
-        case "bookmarks":
-            return Text("\(notification.userID) discounted ")
-                + Text(notification.data.messageId).bold()
-        case "your listings":
-            return Text("\(notification.userID) bookmarked ")
-                + Text(notification.data.messageId).bold()
+            if let chatId = notification.data.chatId {
+                print("Navigate to chat: \(chatId)")
+                // router.push(.chat(id: chatId))
+            }
+        case "bookmarks", "transactions":
+            if let postId = notification.data.postId {
+                print("Navigate to post: \(postId)")
+                // router.push(.product(id: postId))
+            }
         default:
-            return Text(notification.title)
+            break
+        }
+    }
+    
+    private func notifText(for notification: Notifications) -> some View {
+        // Use the notification body directly from the API
+        // The backend already formats nice messages like "Test User sent you a message about 'iPhone 13 Pro'"
+        switch notification.data.resolvedType.lowercased() {
+        case "messages":
+            if let sellerUsername = notification.data.sellerUsername,
+               let postTitle = notification.data.postTitle {
+                return Text(sellerUsername).bold() + Text(" sent you a message about ") + Text("'\(postTitle)'").bold()
+            }
+            return Text(notification.body)
+        case "requests":
+            if let postTitle = notification.data.postTitle {
+                return Text("Your request for ") + Text(postTitle).bold() + Text(" has been met")
+            }
+            return Text(notification.body)
+        case "bookmarks":
+            if let sellerUsername = notification.data.sellerUsername,
+               let postTitle = notification.data.postTitle {
+                return Text(sellerUsername).bold() + Text(" discounted ") + Text(postTitle).bold()
+            }
+            return Text(notification.body)
+        case "transactions":
+            if let postTitle = notification.data.postTitle {
+                return Text("Transaction update for ") + Text(postTitle).bold()
+            }
+            return Text(notification.body)
+        default:
+            return Text(notification.body)
         }
     }
 }

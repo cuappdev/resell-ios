@@ -9,6 +9,9 @@ import Combine
 import Foundation
 import os
 
+/// Empty body for POST requests that don't require a body
+struct EmptyBody: Codable {}
+
 class NetworkManager: APIClient {
     
     // MARK: - Singleton Instance
@@ -21,8 +24,22 @@ class NetworkManager: APIClient {
     
     // MARK: - Properties
     
-    private let hostURL: String = Keys.devServerURL
+    private let hostURL: String = Keys.localServerURL
     private let maxAttempts = 2
+    
+    /// ISO8601 decoder for date parsing
+    private lazy var iso8601Decoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
+    }()
+    
+    /// ISO8601 encoder for date formatting
+    private lazy var iso8601Encoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        return encoder
+    }()
     
     // MARK: - Init
     
@@ -483,18 +500,103 @@ class NetworkManager: APIClient {
     
     // MARK: - Notifications Networking Functions
     
-    func getNotifications() async throws -> [Notifications] {
-        let url = try constructURL(endpoint: "/notif/recent/")
+    /// Custom GET for notifications with ISO8601 date decoding
+    private func getNotifications(url: URL, attempt: Int = 1) async throws -> [Notifications] {
+        let request = try createRequest(url: url, method: "GET")
         
-        return try await get(url: url)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        do {
+            try handleResponse(data: data, response: response)
+        } catch {
+            return try await handleNetworkError(error, attempt: attempt) {
+                try await getNotifications(url: url, attempt: attempt + 1)
+            }
+        }
+        
+        // Debug: print raw response
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("📥 Notification response: \(jsonString.prefix(1000))")
+        }
+        
+        // Try decoding as array first (direct response)
+        if let notifications = try? iso8601Decoder.decode([Notifications].self, from: data) {
+            return notifications
+        }
+        
+        // Try decoding as wrapped response { "notifications": [...] }
+        if let wrapped = try? iso8601Decoder.decode(NotificationsResponse.self, from: data) {
+            return wrapped.notifications
+        }
+        
+        // If both fail, throw the actual decoding error for debugging
+        return try iso8601Decoder.decode([Notifications].self, from: data)
     }
     
-    //    func createNotif(notifBody: Notification) async throws -> ListingResponse {
-    //        let url = try constructURL(endpoint: "/notif/")
-    //
-    //        return try await post(url: url, body: notifBody)
-    //        }
+    /// Custom POST for notifications with ISO8601 date decoding
+    private func postNotification<T: Decodable>(url: URL, body: some Encodable, attempt: Int = 1) async throws -> T {
+        var request = try createRequest(url: url, method: "POST")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try iso8601Encoder.encode(body)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        do {
+            try handleResponse(data: data, response: response)
+        } catch {
+            return try await handleNetworkError(error, attempt: attempt) {
+                try await postNotification(url: url, body: body, attempt: attempt + 1)
+            }
+        }
+        
+        // Debug: print raw response
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("📥 Notification POST response: \(jsonString.prefix(1000))")
+        }
+        
+        return try iso8601Decoder.decode(T.self, from: data)
     }
+    
+    /// Get unread notifications
+    func getNewNotifications() async throws -> [Notifications] {
+        let url = try constructURL(endpoint: "/notif/new")
+        return try await getNotifications(url: url)
+    }
+    
+    /// Get recent notifications (last 10)
+    func getRecentNotifications() async throws -> [Notifications] {
+        let url = try constructURL(endpoint: "/notif/recent")
+        return try await getNotifications(url: url)
+    }
+    
+    /// Get notifications from last 7 days
+    func getLast7DaysNotifications() async throws -> [Notifications] {
+        let url = try constructURL(endpoint: "/notif/last7days")
+        return try await getNotifications(url: url)
+    }
+    
+    /// Get notifications from last 30 days
+    func getLast30DaysNotifications() async throws -> [Notifications] {
+        let url = try constructURL(endpoint: "/notif/last30days")
+        return try await getNotifications(url: url)
+    }
+    
+    /// Mark a notification as read
+    func markNotificationAsRead(notificationId: String) async throws -> MarkReadResponse {
+        let url = try constructURL(endpoint: "/notif/read/\(notificationId)")
+        return try await postNotification(url: url, body: EmptyBody())
+    }
+    
+    // MARK: - Test Notification Endpoints
+    
+    /// Create a test notification (for development/testing)
+    /// - Parameter type: One of "messages", "requests", "bookmarks", "transactions"
+    func createTestNotification(type: String) async throws -> TestNotificationResponse {
+        let url = try constructURL(endpoint: "/notif/test/\(type)")
+        print("📤 POST to: \(url.absoluteString)")
+        return try await postNotification(url: url, body: EmptyBody())
+    }
+}
 
     
 

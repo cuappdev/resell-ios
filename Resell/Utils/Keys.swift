@@ -8,7 +8,7 @@
 import Foundation
 
 struct Keys {
-
+    static let localServerURL = Keys.mainKeyDict(key: "RESELL_LOCAL_URL")
     static let devServerURL = Keys.mainKeyDict(key: "RESELL_DEV_URL")
     static let prodServerURL = Keys.mainKeyDict(key: "RESELL_PROD_URL")
     static let firebaseURL = Keys.mainKeyDict(key: "FIREBASE_URL")

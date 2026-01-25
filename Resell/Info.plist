@@ -40,6 +40,8 @@
 	<string>$(RESELL_DEV_URL)</string>
 	<key>RESELL_PROD_URL</key>
 	<string>$(RESELL_PROD_URL)</string>
+	<key>RESELL_LOCAL_URL</key>
+	<string>$(RESELL_LOCAL_URL)</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Rubik-Regular.ttf</string>
