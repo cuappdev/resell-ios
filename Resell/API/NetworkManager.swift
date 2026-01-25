@@ -493,6 +493,24 @@ class NetworkManager {
         return try await post(url: url, body: messageBody)
     }
 
+    /// Send initial proposal (buyer proposes a meeting time)
+    func sendInitialProposal(chatId: String, messageBody: MessageBody) async throws {
+        let url = try constructURL(endpoint: "/chat/proposal/initial/\(chatId)/")
+        return try await post(url: url, body: messageBody)
+    }
+    
+    /// Respond to a proposal (seller accepts or declines)
+    func respondToProposal(chatId: String, messageBody: ProposalResponseBody) async throws -> ProposalResponseResult {
+        let url = try constructURL(endpoint: "/chat/proposal/\(chatId)/")
+        return try await post(url: url, body: messageBody)
+    }
+    
+    /// Cancel a proposal
+    func cancelProposal(chatId: String, messageBody: MessageBody) async throws {
+        let url = try constructURL(endpoint: "/chat/proposal/cancel/\(chatId)/")
+        return try await post(url: url, body: messageBody)
+    }
+
     func markMessageRead(chatId: String, messageId: String) async throws -> ReadMessageRepsonse {
         let url = try constructURL(endpoint: "/chat/\(chatId)/message/\(messageId)/")
 
@@ -538,6 +556,28 @@ class NetworkManager {
         let (data, response) = try await URLSession.shared.data(for: request)
         try handleResponse(data: data, response: response)
         return try iso8601Decoder.decode(AvailabilityResponse.self, from: data)
+    }
+    
+    // MARK: - Transaction Networking Functions
+    
+    func getTransactionsByBuyerId(userId: String) async throws -> TransactionsResponse {
+        let url = try constructURL(endpoint: "/transaction/buyerId/\(userId)/")
+        return try await get(url: url)
+    }
+    
+    func getTransactionsBySellerId(userId: String) async throws -> TransactionsResponse {
+        let url = try constructURL(endpoint: "/transaction/sellerId/\(userId)/")
+        return try await get(url: url)
+    }
+    
+    func getTransactionById(transactionId: String) async throws -> TransactionResponse {
+        let url = try constructURL(endpoint: "/transaction/id/\(transactionId)/")
+        return try await get(url: url)
+    }
+    
+    func completeTransaction(transactionId: String) async throws -> TransactionResponse {
+        let url = try constructURL(endpoint: "/transaction/complete/id/\(transactionId)/")
+        return try await post(url: url, body: CompleteTransactionBody(completed: true))
     }
     
     // MARK: - Other Networking Functions

@@ -26,6 +26,9 @@ struct AvailabilityGridView: View {
     /// Whether the user can edit (drag to select) cells
     var isEditing: Bool = true
     
+    /// When true, only one cell can be selected at a time (tapping a new cell deselects the previous one)
+    var singleSelectionMode: Bool = false
+    
     /// Optional start date for the grid. If nil, starts from today.
     var startDate: Date? = nil
     
@@ -34,6 +37,12 @@ struct AvailabilityGridView: View {
     
     /// Called when the visible dates change (page swipe)
     var onVisibleDatesChanged: (([Date]) -> Void)?
+    
+    /// Cells where the buyer is unavailable (shown as light gray)
+    var buyerUnavailableCells: Set<CellIdentifier> = []
+    
+    /// Cells where the seller is unavailable (shown as darker gray)
+    var sellerUnavailableCells: Set<CellIdentifier> = []
     
     private var dates: [String] {
         if let start = startDate {
@@ -82,7 +91,7 @@ struct AvailabilityGridView: View {
         }
         .animation(.easeInOut(duration: 0.3), value: currentPage)
         .simultaneousGesture(
-            DragGesture(minimumDistance: 5)
+            DragGesture(minimumDistance: singleSelectionMode ? 0 : 5)
                 .onChanged { value in
                     if dragStartLocation == .zero {
                         dragStartLocation = value.startLocation
@@ -92,6 +101,26 @@ struct AvailabilityGridView: View {
                     let startedInCellArea = dragStartLocation.x > timeColumnWidth
                     
                     if startedInCellArea && isEditing {
+                        // In single selection mode, handle tap immediately
+                        if singleSelectionMode {
+                            if let identifier = mapDragLocationToCell(
+                                location: value.startLocation,
+                                dates: Array(paginatedDates[currentPage]),
+                                times: times,
+                                cellHeight: cellHeight
+                            ) {
+                                // Toggle selection for this single cell
+                                if selectedCells.contains(identifier) {
+                                    selectedCells.remove(identifier)
+                                } else {
+                                    // Clear previous selection and select new cell
+                                    selectedCells.removeAll()
+                                    selectedCells.insert(identifier)
+                                }
+                            }
+                            return
+                        }
+                        
                         let horizontalDrag = abs(value.translation.width)
                         let verticalDrag = abs(value.translation.height)
                         
@@ -136,6 +165,12 @@ struct AvailabilityGridView: View {
                     }
                 }
                 .onEnded { value in
+                    // Skip normal processing in single selection mode (handled in onChanged)
+                    if singleSelectionMode {
+                        dragStartLocation = .zero
+                        return
+                    }
+                    
                     let startedInCellArea = dragStartLocation.x > timeColumnWidth
                     
                     if isDraggingCells && startedInCellArea {
@@ -314,7 +349,11 @@ struct AvailabilityGridView: View {
                                                 isHighlightedTop: draggedCells.contains(topIdentifier),
                                                 isHighlightedBottom: draggedCells.contains(bottomIdentifier),
                                                 isTopAdjacentSelected: checkTopAdjacent(date: date, time: time, rowIndex: rowIndex, combinedCells: combinedCells),
-                                                isBottomAdjacentSelected: checkBottomAdjacent(date: date, time: time, rowIndex: rowIndex, combinedCells: combinedCells)
+                                                isBottomAdjacentSelected: checkBottomAdjacent(date: date, time: time, rowIndex: rowIndex, combinedCells: combinedCells),
+                                                isBuyerUnavailableTop: buyerUnavailableCells.contains(topIdentifier),
+                                                isBuyerUnavailableBottom: buyerUnavailableCells.contains(bottomIdentifier),
+                                                isSellerUnavailableTop: sellerUnavailableCells.contains(topIdentifier),
+                                                isSellerUnavailableBottom: sellerUnavailableCells.contains(bottomIdentifier)
                                             )
                                             .frame(width: gridColumnWidth, height: cellHeight)
                                         }
@@ -439,12 +478,22 @@ struct CellView: View {
     // Adjacency information for smart borders (vertical only)
     let isTopAdjacentSelected: Bool
     let isBottomAdjacentSelected: Bool
+    
+    // Unavailability information
+    var isBuyerUnavailableTop: Bool = false
+    var isBuyerUnavailableBottom: Bool = false
+    var isSellerUnavailableTop: Bool = false
+    var isSellerUnavailableBottom: Bool = false
 
     private let cellHeight = UIScreen.height / 12 - 25
     
     // Opacity constants
     private let dragOpacity: CGFloat = 0.4
     private let selectedOpacity: CGFloat = 0.6
+    
+    // Unavailability colors
+    private let buyerUnavailableColor = Color.gray.opacity(0.25)
+    private let sellerUnavailableColor = Color.gray.opacity(0.45)
     
     // Border constants
     private let borderWidth: CGFloat = 2
@@ -460,7 +509,7 @@ struct CellView: View {
                 showBottomBorder: isSelectedTop && !isSelectedBottom,
                 showLeftBorder: isSelectedTop,  // Always show left border
                 showRightBorder: isSelectedTop,  // Always show right border
-                fillColor: fillColor(isSelected: isSelectedTop, isHighlighted: isHighlightedTop),
+                fillColor: fillColor(isSelected: isSelectedTop, isHighlighted: isHighlightedTop, isBuyerUnavailable: isBuyerUnavailableTop, isSellerUnavailable: isSellerUnavailableTop),
                 borderWidth: borderWidth,
                 dashPattern: dashPattern
             )
@@ -474,7 +523,7 @@ struct CellView: View {
                 showBottomBorder: isSelectedBottom && !isBottomAdjacentSelected,
                 showLeftBorder: isSelectedBottom,  // Always show left border
                 showRightBorder: isSelectedBottom,  // Always show right border
-                fillColor: fillColor(isSelected: isSelectedBottom, isHighlighted: isHighlightedBottom),
+                fillColor: fillColor(isSelected: isSelectedBottom, isHighlighted: isHighlightedBottom, isBuyerUnavailable: isBuyerUnavailableBottom, isSellerUnavailable: isSellerUnavailableBottom),
                 borderWidth: borderWidth,
                 dashPattern: dashPattern
             )
@@ -482,15 +531,21 @@ struct CellView: View {
         }
     }
     
-    private func fillColor(isSelected: Bool, isHighlighted: Bool) -> Color {
+    private func fillColor(isSelected: Bool, isHighlighted: Bool, isBuyerUnavailable: Bool, isSellerUnavailable: Bool) -> Color {
         if isHighlighted {
             // Currently being dragged - use lighter opacity
             return Constants.Colors.resellPurple.opacity(dragOpacity)
         } else if isSelected {
             // Finally selected - use darker opacity
             return Constants.Colors.resellPurple.opacity(selectedOpacity)
+        } else if isSellerUnavailable {
+            // Seller unavailable - darker gray (takes priority)
+            return sellerUnavailableColor
+        } else if isBuyerUnavailable {
+            // Buyer unavailable - lighter gray
+            return buyerUnavailableColor
         } else {
-            // Not selected
+            // Not selected and available
             return .clear
         }
     }

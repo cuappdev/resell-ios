@@ -60,6 +60,12 @@ struct AvailabilitySettingsView: View {
                 AvailabilitySettingsMenu()
             }
             
+            Text("Mark when you're free")
+                .font(Constants.Fonts.body2)
+                .foregroundColor(Constants.Colors.secondaryGray)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+            
             // Availability grid - synced with calendar selection
             AvailabilityGridView(
                 selectedCells: $selectedCells,

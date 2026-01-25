@@ -113,6 +113,29 @@ struct MessageBody: Codable {
     let endDate: Date?
 }
 
+/// Body for responding to a proposal (accept/decline)
+struct ProposalResponseBody: Codable {
+    let senderId: String
+    let listingId: String
+    let buyerId: String
+    let sellerId: String
+    let startDate: Date
+    let endDate: Date
+    let accepted: Bool
+}
+
+/// Response from server when responding to a proposal
+struct ProposalResponseResult: Codable {
+    let type: String
+    let senderID: String
+    let timestamp: Date
+    let accepted: Bool
+    let startDate: Date
+    let endDate: Date
+    /// Transaction ID (only present when accepted = true)
+    let transactionId: String?
+}
+
 struct ReadMessageRepsonse: Codable {
     
     let read: Bool

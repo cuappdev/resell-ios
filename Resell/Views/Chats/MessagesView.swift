@@ -18,7 +18,6 @@ struct MessagesView: View {
     @State private var didShowNegotiationView: Bool = false
     @State private var didShowAvailabilityView: Bool = false
     @State private var didShowWebView: Bool = false
-    @State private var didSubmitAvailabilities: Bool = false
     @State private var isEditing: Bool = true
     @State private var availabilityProposerName: String = ""
     @State private var selectedCells: Set<CellIdentifier> = []
@@ -70,7 +69,6 @@ struct MessagesView: View {
         .onDisappear {
             FirestoreManager.shared.stopListeningToChat()
         }
-        .onChange(of: didSubmitAvailabilities, perform: handleAvailabilitySubmit)
         .endEditingOnTap()
     }
 
@@ -234,11 +232,18 @@ struct MessagesView: View {
             isPresented: $didShowAvailabilityView,
             selectedCells: $selectedCells,
             isEditing: isEditing,
-            proposerName: availabilityProposerName
-        ) {
-            // On submit: convert cells to availability and trigger send
-            viewModel.availability = AvailabilityGridView.cellsToAvailabilities(selectedCells)
-            didSubmitAvailabilities = true
+            proposerName: availabilityProposerName,
+            buyerId: viewModel.chatInfo.buyer.firebaseUid,
+            sellerId: viewModel.chatInfo.seller.firebaseUid
+        ) { startDate, endDate in
+            // On propose: send a proposal message with the selected time slot
+            Task {
+                do {
+                    try await viewModel.sendMessage(startDate: startDate, endDate: endDate)
+                } catch {
+                    NetworkManager.shared.logger.error("Error sending proposal in \(#file) \(#function): \(error)")
+                }
+            }
         }
         .presentationCornerRadius(25)
         .presentationDragIndicator(.hidden)
@@ -281,20 +286,6 @@ struct MessagesView: View {
         }
     }
     
-    private func handleAvailabilitySubmit(_ didSubmit: Bool) {
-        if didSubmit {
-            Task {
-                do {
-                    try await viewModel.sendMessage(availability: viewModel.availability)
-                } catch {
-                    NetworkManager.shared.logger.error("Error sending availability in \(#file) \(#function): \(error)")
-                }
-                viewModel.availability = []
-                didSubmitAvailabilities = false
-            }
-        }
-    }
-
     private func navigateToProductDetails() {
         let post = viewModel.chatInfo.listing
         if let existingIndex = router.path.firstIndex(where: {
@@ -449,12 +440,20 @@ struct MessagesAvailabilitySheet: View {
     @State private var showCalendar: Bool = false
     @State private var visibleGridDates: [Date] = []
     
+    // Unavailability states
+    @State private var buyerUnavailableCells: Set<CellIdentifier> = []
+    @State private var sellerUnavailableCells: Set<CellIdentifier> = []
+    @State private var isLoadingAvailability: Bool = false
+    
     /// Maximum month offset allowed (1 = can only go one month ahead)
     private let maxMonthOffset: Int = 1
 
     let isEditing: Bool
     let proposerName: String
-    let onSubmit: () -> Void
+    let buyerId: String
+    let sellerId: String
+    /// Called when user proposes a meeting time with (startDate, endDate)
+    let onPropose: (Date, Date) -> Void
     
     private var monthName: String {
         CalendarHelper.monthName(for: currentMonthOffset)
@@ -528,11 +527,12 @@ struct MessagesAvailabilitySheet: View {
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
             
-            // Grid
+            // Grid - single selection mode for proposing a 30-min meeting slot
             AvailabilityGridView(
                 selectedCells: $selectedCells,
                 currentPage: $gridCurrentPage,
                 isEditing: isEditing,
+                singleSelectionMode: true,
                 startDate: gridStartDate,
                 gridHeight: showCalendar ? UIScreen.height * 0.35 : UIScreen.height * 0.625,
                 onVisibleDatesChanged: { dates in
@@ -547,16 +547,21 @@ struct MessagesAvailabilitySheet: View {
                             }
                         }
                     }
-                }
+                },
+                buyerUnavailableCells: buyerUnavailableCells,
+                sellerUnavailableCells: sellerUnavailableCells
             )
             .id(gridStartDate)
             
             Spacer()
             
-            // Action Button
-            PurpleButton(text: "Propose") {
-                onSubmit()
-                isPresented = false
+            // Action Button - only enabled when a time slot is selected
+            PurpleButton(isActive: !selectedCells.isEmpty, text: "Propose") {
+                if let selectedCell = selectedCells.first,
+                   let availability = AvailabilityGridView.cellsToAvailabilities([selectedCell]).first {
+                    onPropose(availability.startDate, availability.endDate)
+                    isPresented = false
+                }
             }
         }
         .padding(.horizontal)
@@ -564,6 +569,9 @@ struct MessagesAvailabilitySheet: View {
         .background(Constants.Colors.white)
         .onAppear {
             updateVisibleDates(from: gridStartDate, page: 0)
+            Task {
+                await loadUnavailability()
+            }
         }
         .onChange(of: currentMonthOffset) { newOffset in
             let calendar = Calendar.current
@@ -595,6 +603,80 @@ struct MessagesAvailabilitySheet: View {
         visibleGridDates = (0..<3).compactMap { offset in
             calendar.date(byAdding: .day, value: startIndex + offset, to: startDate)
         }
+    }
+    
+    // MARK: - Availability Loading
+    
+    private func loadUnavailability() async {
+        isLoadingAvailability = true
+        defer { isLoadingAvailability = false }
+        
+        // Fetch buyer and seller availability in parallel
+        async let buyerAvailabilityResult = fetchAvailability(for: buyerId)
+        async let sellerAvailabilityResult = fetchAvailability(for: sellerId)
+        
+        let (buyerAvailable, sellerAvailable) = await (buyerAvailabilityResult, sellerAvailabilityResult)
+        
+        // Convert availability to unavailability (cells NOT in their available set are unavailable)
+        let buyerUnavailable = computeUnavailableCells(from: buyerAvailable)
+        let sellerUnavailable = computeUnavailableCells(from: sellerAvailable)
+        
+        await MainActor.run {
+            buyerUnavailableCells = buyerUnavailable
+            sellerUnavailableCells = sellerUnavailable
+        }
+    }
+    
+    private func fetchAvailability(for userId: String) async -> Set<CellIdentifier> {
+        do {
+            let response = try await NetworkManager.shared.getAvailabilityByUserID(id: userId)
+            return scheduleToAvailableCells(response.availability.schedule)
+        } catch {
+            print("Failed to fetch availability for user \(userId): \(error)")
+            return []
+        }
+    }
+    
+    /// Converts API schedule format to available cell identifiers
+    private func scheduleToAvailableCells(_ schedule: [String: [AvailabilitySlot]]) -> Set<CellIdentifier> {
+        var cells = Set<CellIdentifier>()
+        
+        for (_, slots) in schedule {
+            for slot in slots {
+                let availability = Availability(startDate: slot.startDate, endDate: slot.endDate)
+                let cellsForSlot = AvailabilityGridView.availabilitiesToCells([availability])
+                cells.formUnion(cellsForSlot)
+            }
+        }
+        
+        return cells
+    }
+    
+    /// Computes unavailable cells by finding all cells NOT in the available set
+    /// Only considers dates within the grid's range (next 30 days from today)
+    private func computeUnavailableCells(from availableCells: Set<CellIdentifier>) -> Set<CellIdentifier> {
+        var unavailableCells = Set<CellIdentifier>()
+        
+        // Generate all possible cells for the grid's date range
+        let allDates = CalendarHelper.generateGridDates(startingFrom: Calendar.current.startOfDay(for: Date()))
+        let times = generateTimes()
+        
+        for date in allDates {
+            for time in times {
+                let topIdentifier = CellIdentifier(date: date, time: "\(time) Top")
+                let bottomIdentifier = CellIdentifier(date: date, time: "\(time) Bottom")
+                
+                // If not in available cells, it's unavailable
+                if !availableCells.contains(topIdentifier) {
+                    unavailableCells.insert(topIdentifier)
+                }
+                if !availableCells.contains(bottomIdentifier) {
+                    unavailableCells.insert(bottomIdentifier)
+                }
+            }
+        }
+        
+        return unavailableCells
     }
 }
 

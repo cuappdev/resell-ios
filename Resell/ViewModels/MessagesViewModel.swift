@@ -113,9 +113,8 @@ extension MessagesView {
                 try await NetworkManager.shared.sendChatMessage(chatId: chatId, messageBody: messageBody)
             case .availability:
                 try await NetworkManager.shared.sendChatAvailability(chatId: chatId, messageBody: messageBody)
-            default:
-                // TODO: bad type
-                break
+            case .proposal:
+                try await NetworkManager.shared.sendInitialProposal(chatId: chatId, messageBody: messageBody)
             }
         }
 
@@ -175,9 +174,49 @@ extension MessagesView {
             try await self.sendGenericMessage(availabilities: availability)
         }
 
-        /// Send a proposal message
+        /// Send a proposal message (initial proposal from buyer)
         func sendMessage(startDate: Date, endDate: Date) async throws {
             try await self.sendGenericMessage(startDate: startDate, endDate: endDate)
+        }
+        
+        /// Respond to a proposal (accept or decline) - typically called by seller
+        /// Returns the transactionId if accepted
+        @discardableResult
+        func respondToProposal(startDate: Date, endDate: Date, accepted: Bool) async throws -> String? {
+            guard let user = GoogleAuthManager.shared.user, let chatId = self.chatId else { return nil }
+            
+            let responseBody = ProposalResponseBody(
+                senderId: user.firebaseUid,
+                listingId: chatInfo.listing.id,
+                buyerId: chatInfo.buyer.firebaseUid,
+                sellerId: chatInfo.seller.firebaseUid,
+                startDate: startDate,
+                endDate: endDate,
+                accepted: accepted
+            )
+            
+            let result = try await NetworkManager.shared.respondToProposal(chatId: chatId, messageBody: responseBody)
+            return result.transactionId
+        }
+        
+        /// Cancel a proposal
+        func cancelProposal(startDate: Date, endDate: Date) async throws {
+            guard let user = GoogleAuthManager.shared.user, let chatId = self.chatId else { return }
+            
+            let messageBody = MessageBody(
+                type: .proposal,
+                listingId: chatInfo.listing.id,
+                buyerId: chatInfo.buyer.firebaseUid,
+                sellerId: chatInfo.seller.firebaseUid,
+                senderId: user.firebaseUid,
+                text: nil,
+                images: nil,
+                availabilities: nil,
+                startDate: startDate,
+                endDate: endDate
+            )
+            
+            try await NetworkManager.shared.cancelProposal(chatId: chatId, messageBody: messageBody)
         }
 
         // MARK: - Helper Functions
