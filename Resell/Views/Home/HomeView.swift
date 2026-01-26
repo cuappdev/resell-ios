@@ -79,54 +79,6 @@ struct HomeView: View {
                 .environmentObject(filtersViewModel)
         }
     }
-    
-    private var savedByYou: some View {
-            VStack{
-                HStack(spacing: 220) {
-                    Text("For You")
-                        .font(.custom("Rubik-Medium", size: 22))
-                        .foregroundStyle(.black)
-                    
-                    // TODO: Add new for you ...
-                    Button {
-                        router.push(.saved)
-                    } label: {
-                        Text("See all")
-                            .font(Constants.Fonts.body1)
-                            .underline()
-                            .multilineTextAlignment(.center)
-                            .foregroundStyle(Constants.Colors.secondaryGray)
-                    }
-                }
-                if viewModel.savedItems.isEmpty {
-                    ZStack{
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.white)
-                            .frame(width: 366, height: 110)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(Constants.Colors.stroke, lineWidth: 2)
-                            )
-                        
-                        VStack{
-                            Text("You haven't saved any listings yet.")
-                                .foregroundStyle(Constants.Colors.secondaryGray)
-                            HStack{
-                                Text("Tap")
-                                    .foregroundStyle(Constants.Colors.secondaryGray)
-                                
-                                Image("saved")
-                                
-                                Text("on a listing to save.")
-                                    .foregroundStyle(Constants.Colors.secondaryGray)
-                            }
-                        }
-                    }
-                } else {
-                    SavedRow(row: viewModel.savedItems)
-                }
-        }
-    }
 
     private var headerView: some View {
             HStack {
@@ -140,6 +92,14 @@ struct HomeView: View {
                         router.push(.search(nil))
                     }, label: {
                         Icon(image: "search")
+                    })
+
+                    Spacer()
+            
+                    Button(action: {
+                        router.push(.notifications)
+                    }, label: {
+                        Icon(image: "bell")
                     })
                 }
                 .padding(.horizontal, Constants.Spacing.horizontalPadding)

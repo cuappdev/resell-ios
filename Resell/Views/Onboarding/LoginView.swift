@@ -58,6 +58,7 @@ struct LoginView: View {
         }
     }
 
+
     private var loginSheetView: some View {
         VStack {
             Text(viewModel.errorText)

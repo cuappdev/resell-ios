@@ -368,14 +368,8 @@ struct ProductDetailsView: View {
         if isNotificationAuthorized {
             Button {
                 viewModel.isSaved.toggle()
-                if viewModel.isSaved {
-                    // items saved += 1
-                } else {
-                    // items saved -= 1
-                }
                 viewModel.updateItemSaved()
                 sendNotification()
-                //viewModel.createNewNotif()
             } label: {
                 ZStack {
                     Circle()
@@ -410,6 +404,7 @@ struct ProductDetailsView: View {
             }
         }
     }
+
 
     private var deletePostView: some View {
         VStack(spacing: 24) {

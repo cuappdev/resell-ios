@@ -47,37 +47,37 @@ class NewListingViewModel: ObservableObject {
     }
 
     func createNewListing() {
-        isLoading = true
-        
-        Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+            isLoading = true
+            
+            Task {
+                defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
-            do {
-                if let user = GoogleAuthManager.shared.user {
-                    
-                    let imagesToProcess = selectedImages
+                do {
+                    if let user = GoogleAuthManager.shared.user {
+                        
+                        let imagesToProcess = selectedImages
 
-                    let imagesBase64: [String] = await Task.detached {
-                        return imagesToProcess.map { image in
-                            image.resizedToMaxDimension(512).toBase64() ?? ""
-                        }
-                    }.value
-                    
-                    
-                    let postBody = PostBody(title: titleText, description: descriptionText, categories: [selectedFilter], condition: selectedCondition, original_price: Double(priceText) ?? 0, imagesBase64: imagesBase64, userId: user.firebaseUid)
-                    
-                    let _ = try await NetworkManager.shared.createPost(postBody: postBody)
-                    clear()
-                } else {
-                    GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User not available.")
+                        let imagesBase64: [String] = await Task.detached {
+                            return imagesToProcess.map { image in
+                                image.resizedToMaxDimension(512).toBase64() ?? ""
+                            }
+                        }.value
+                        
+                        
+                        let postBody = PostBody(title: titleText, description: descriptionText, categories: [selectedFilter], condition: selectedCondition, original_price: Double(priceText) ?? 0, imagesBase64: imagesBase64, userId: user.firebaseUid)
+                        
+                        let _ = try await NetworkManager.shared.createPost(postBody: postBody)
+                        clear()
+                    } else {
+                        GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User not available.")
+                        clear()
+                    }
+                } catch {
+                    NetworkManager.shared.logger.error("Error in NewListingViewModel.createNewListing: \(error)")
                     clear()
                 }
-            } catch {
-                NetworkManager.shared.logger.error("Error in NewListingViewModel.createNewListing: \(error)")
-                clear()
             }
         }
-    }
 
     func clear() {
         didShowActionSheet = false

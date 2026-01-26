@@ -13,7 +13,9 @@ class NetworkManager {
     
     // MARK: - Singleton Instance
     
+    
     static let shared = NetworkManager()
+    
     
     // MARK: - Error Logger for Networking
     
@@ -26,11 +28,13 @@ class NetworkManager {
     
     // MARK: - Init
     
+    
     private init() { }
+    
     
     // MARK: - Template Helper Functions
     
-    /// Centralized network error handling that determines whether to retry or force logout
+        /// Centralized network error handling that determines whether to retry or force logout
         private func handleNetworkError<T>(_ error: Error, attempt: Int, retryOperation: () async throws -> T) async throws -> T {
             // If we've hit max attempts, force logout and throw max retries error
             if attempt >= maxAttempts {
@@ -60,8 +64,8 @@ class NetworkManager {
             // For non-401 errors, don't retry and just throw the original error
             throw error
         }
-    
-    /// Template function to FETCH data from URL and decodes it into a specified type `T`,
+        
+        /// Template function to FETCH data from URL and decodes it into a specified type `T`,
         ///
         /// The function fetches data from the network, verifies the
         /// HTTP status code, caches the response, decodes the data, and then returns it as a decoded model.
@@ -71,9 +75,9 @@ class NetworkManager {
         ///
         func get<T: Decodable>(url: URL, attempt: Int = 1) async throws -> T {
             let request = try await createRequest(url: url, method: "GET")
-
+            
             let (data, response) = try await URLSession.shared.data(for: request)
-
+            
             do {
                 try handleResponse(data: data, response: response)
             } catch {
@@ -81,510 +85,667 @@ class NetworkManager {
                     try await get(url: url, attempt: attempt + 1)
                 }
             }
-
+            
             return try JSONDecoder().decode(T.self, from: data)
         }
     
-    /// Template function to POST data to a specified URL with an encodable body and decodes the response into a specified type `T`.
-    ///
-    /// This function takes a URL and a request body, encodes the body as JSON, and sends it as part of
-    /// a POST request to the given URL. It then receives the response, checks the HTTP status code, and
-    /// decodes the response data into a specified type. This function is useful for sending data to a server
-    /// and processing the server's JSON response.
-    ///
-    /// - Parameters:
-    ///   - url: The URL to which the POST request will be sent.
-    ///   - body: The data to be sent in the request body, which must conform to `Encodable`.
-    /// - Returns: A publisher that emits a decoded instance of type `T` or an error if the decoding or network request fails.
-    ///
-    func post<T: Decodable, U: Encodable>(url: URL, body: U, attempt: Int = 1) async throws -> T {
-        let requestData = try JSONEncoder().encode(body)
-        let request = try await createRequest(url: url, method: "POST", body: requestData)
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        do {
+        /// Template function to POST data to a specified URL with an encodable body and decodes the response into a specified type `T`.
+        ///
+        /// This function takes a URL and a request body, encodes the body as JSON, and sends it as part of
+        /// a POST request to the given URL. It then receives the response, checks the HTTP status code, and
+        /// decodes the response data into a specified type. This function is useful for sending data to a server
+        /// and processing the server's JSON response.
+        ///
+        /// - Parameters:
+        ///   - url: The URL to which the POST request will be sent.
+        ///   - body: The data to be sent in the request body, which must conform to `Encodable`.
+        /// - Returns: A publisher that emits a decoded instance of type `T` or an error if the decoding or network request fails.
+        ///
+        func post<T: Decodable, U: Encodable>(url: URL, body: U, attempt: Int = 1) async throws -> T {
+            let requestData = try JSONEncoder().encode(body)
+            let request = try await createRequest(url: url, method: "POST", body: requestData)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            do {
+                try handleResponse(data: data, response: response)
+            } catch {
+                return try await handleNetworkError(error, attempt: attempt) {
+                    try await post(url: url, body: body, attempt: attempt + 1)
+                }
+            }
+            
+            return try JSONDecoder().decode(T.self, from: data)
+        }
+        
+        /// Overloaded post function for requests without a return
+        func post<U: Encodable>(url: URL, body: U, attempt: Int = 1) async throws {
+            let requestData = try JSONEncoder().encode(body)
+            let request = try await createRequest(url: url, method: "POST", body: requestData)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            do {
+                try handleResponse(data: data, response: response)
+            } catch {
+                try await handleNetworkError(error, attempt: attempt) {
+                    try await post(url: url, body: body, attempt: attempt + 1)
+                }
+            }
+        }
+            
+        /// Overloaded post function for requests without a body
+        func post<T: Decodable>(url: URL, attempt: Int = 1) async throws -> T {
+            let request = try await createRequest(url: url, method: "POST")
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            do {
+                try handleResponse(data: data, response: response)
+            } catch {
+                return try await handleNetworkError(error, attempt: attempt) {
+                    try await post(url: url, attempt: attempt + 1)
+                }
+            }
+            
+            return try JSONDecoder().decode(T.self, from: data)
+        }
+            
+        /// Template function to DELETE data to a specified URL with an encodable body and decodes the response into a specified type `T`.
+        func delete(url: URL, attempt: Int = 1) async throws {
+            let request = try await createRequest(url: url, method: "DELETE")
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            do {
+                try handleResponse(data: data, response: response)
+            } catch {
+                try await handleNetworkError(error, attempt: attempt) {
+                    try await delete(url: url, attempt: attempt + 1)
+                }
+            }
+        }
+            
+        private func createRequest(url: URL, method: String, body: Data? = nil) async throws -> URLRequest {
+            var request = URLRequest(url: url)
+            request.httpMethod = method
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            
+            // refactor to use cached token if valid...
+            let accessToken = try await GoogleAuthManager.shared.getValidToken()
+            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+            
+            //           if let accessToken = GoogleAuthManager.shared.accessToken {
+            //               request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+            //           }
+            
+            request.httpBody = body
+            return request
+        }
+            
+            
+        private func constructURL(endpoint: String) throws -> URL {
+            guard let url = URL(string: "\(hostURL)\(endpoint)") else {
+                logger.error("Failed to construct URL for endpoint: \(endpoint)")
+                throw URLError(.badURL)
+            }
+            
+            
+            return url
+        }
+            
+            
+        private func handleResponse(data: Data, response: URLResponse) throws {
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw URLError(.badServerResponse)
+            }
+            
+            
+            if httpResponse.statusCode != 200 {
+                if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
+                    throw errorResponse
+                } else {
+                    throw URLError(.init(rawValue: httpResponse.statusCode))
+                }
+            }
+        }
+            
+            
+        // MARK: - Auth Networking Functions
+        
+        func authorize(authorizeBody: AuthorizeBody) async throws -> User? {
+            let url = try constructURL(endpoint: "/auth/")
+            
+            return try await post(url: url, body: authorizeBody)
+        }
+        
+        func getUser() async throws -> UserResponse {
+            let url = try constructURL(endpoint: "/auth/")
+            
+            
+            return try await get(url: url)
+        }
+        
+        
+        func createUser(user: CreateUserBody) async throws {
+            let url = try constructURL(endpoint: "/user/create")
+                        
+            try await post(url: url, body: user)
+        }
+        
+        
+        func logout() async throws -> LogoutResponse {
+            let url = try constructURL(endpoint: "/auth/logout/")
+            
+            
+            return try await post(url: url)
+        }
+        
+        
+        func deleteAccount(userID: String) async throws {
+            let url = try constructURL(endpoint: "/auth/id/\(userID)/")
+            
+            
+            try await delete(url: url)
+        }
+        
+        
+        // MARK: - User Networking Functions
+        
+        
+        func getUserByGoogleID(googleID: String) async throws -> UserResponse {
+            let url = try constructURL(endpoint: "/user/googleId/\(googleID)/")
+            
+            
+            return try await get(url: url)
+        }
+        
+        
+        func getUserByID(id: String) async throws -> UserResponse {
+            let url = try constructURL(endpoint: "/user/id/\(id)/")
+            
+            
+            return try await get(url: url)
+        }
+        
+        func updateUserProfile(edit: EditUserBody) async throws -> UserResponse {
+            let url = try constructURL(endpoint: "/user/")
+            
+            
+            return try await post(url: url, body: edit)
+        }
+        
+        
+        func getBlockedUsers(id: String) async throws -> UsersResponse {
+            let url = try constructURL(endpoint: "/user/blocked/id/\(id)")
+            
+            
+            return try await get(url: url)
+        }
+        
+        
+        func blockUser(blocked: BlockUserBody) async throws {
+            let url = try constructURL(endpoint: "/user/block/")
+            
+            
+            try await post(url: url, body: blocked)
+        }
+        
+        
+        func unblockUser(unblocked: UnblockUserBody) async throws {
+            let url = try constructURL(endpoint: "/user/unblock/")
+            
+            
+            try await post(url: url, body: unblocked)
+        }
+        
+        func followUser(follow: FollowUserBody) async throws -> UserResponse {
+            let url = try constructURL(endpoint: "/user/follow/")
+            
+            return try await post(url: url, body: follow)
+        }
+        
+        func unfollowUser(unfollow: UnfollowUserBody) async throws -> UserResponse {
+            let url = try constructURL(endpoint: "/user/unfollow/")
+            
+            return try await post(url: url, body: unfollow)
+        }
+        
+        func getFollowers(id: String) async throws -> UsersResponse {
+            let url = try constructURL(endpoint: "/user/followers/id/\(id)/")
+            
+            return try await get(url: url)
+        }
+        
+        func getFollowing(id: String) async throws -> UsersResponse {
+            let url = try constructURL(endpoint: "/user/following/id/\(id)/")
+            
+            return try await get(url: url)
+        }
+        
+        // MARK: - Post Networking Functions
+        
+        func getAllPosts(page: Int = 1) async throws -> PostsResponse {
+            let url = try constructURL(endpoint: "/post?page=\(page)")
+            
+            return try await get(url: url)
+        }
+        
+        func getUnifiedFilteredPosts(filters: FilterPostsUnifiedRequest) async throws -> PostsResponse {
+            let url = try constructURL(endpoint: "/post/filter/")
+            
+            return try await post(url: url, body: filters)
+        }
+        
+        func getSavedPosts() async throws -> PostsResponse {
+            let url = try constructURL(endpoint: "/post/save/")
+            
+            
+            return try await get(url: url)
+        }
+        
+        func getFilteredPostsByCategory(for filters: [String]) async throws -> PostsResponse {
+            let url = try constructURL(endpoint: "/post/filterByCategories")
+            
+            return try await post(url: url, body: FilterRequest(categories: filters))
+        }
+        
+        // this can prob go bye bye
+        func getFilteredPosts(by filter: String) async throws -> PostsResponse {
+            let url = try constructURL(endpoint: "/post/filter/")
+            
+            return try await post(url: url, body: FilterRequest(categories: [filter]))
+        }
+        
+        func getSearchedPosts(with keywords: String) async throws -> SearchedPostResponse {
+            let url = try constructURL(endpoint: "/post/search/")
+            
+            
+            return try await post(url: url, body: SearchRequest(keywords: keywords))
+        }
+        
+        func getSearchSuggestions(searchIndex: String) async throws -> SuggestionsWrapper {
+            let url = try constructURL(endpoint: "/post/searchSuggestions/\(searchIndex)")
+            
+            return try await get(url: url)
+        }
+        
+        func getPostsByUserID(id: String) async throws -> PostsResponse {
+            let url = try constructURL(endpoint: "/post/userId/\(id)/")
+            
+            
+            return try await get(url: url)
+        }
+        
+        
+        func getArchivedPostsByUserID(id: String) async throws -> PostsResponse {
+            let url = try constructURL(endpoint: "/post/archive/userId/\(id)/")
+            
+            
+            return try await get(url: url)
+        }
+        
+        
+        func getPostByID(id: String) async throws -> PostResponse {
+            let url = try constructURL(endpoint: "/post/id/\(id)/")
+            
+            
+            return try await get(url: url)
+        }
+        
+        
+        func getSimilarPostsByID(id: String) async throws -> PostsResponse {
+            let url = try constructURL(endpoint: "/post/similar/postId/\(id)/")
+            
+            
+            return try await get(url: url)
+        }
+        
+        
+        func savePostByID(id: String) async throws -> PostResponse {
+            let url = try constructURL(endpoint: "/post/save/postId/\(id)/")
+            
+            
+            return try await post(url: url)
+        }
+        
+        
+        func unsavePostByID(id: String) async throws -> PostResponse {
+            let url = try constructURL(endpoint: "/post/unsave/postId/\(id)/")
+            
+            
+            return try await post(url: url)
+        }
+        
+        
+        func postIsSaved(id: String) async throws -> SavedResponse {
+            let url = try constructURL(endpoint: "/post/isSaved/postId/\(id)/")
+            
+            
+            return try await get(url: url)
+        }
+        
+        func filterByPrice(prices: PriceBody) async throws -> PostsResponse {
+            let url = try constructURL(endpoint: "/post/filterByPrice/")
+            
+            return try await post(url: url, body: prices)
+        }
+        
+        func filterByCondition(conditions: [String]) async throws -> PostsResponse {
+            let url = try constructURL(endpoint: "/post/filterByCondition/")
+            
+            return try await post(url: url, body: ConditionBody(conditions: conditions))
+        }
+        
+        func filterPriceLowtoHigh() async throws -> PostsResponse {
+            let url = try constructURL(endpoint: "/post/priceLowtoHigh/")
+            
+            return try await get(url: url)
+        }
+        
+        func filterPriceHightoLow() async throws -> PostsResponse {
+            let url = try constructURL(endpoint: "/post/priceHightoLow/")
+            
+            return try await get(url: url)
+        }
+        
+        func filterNewlyListed() async throws -> PostsResponse {
+            let url = try constructURL(endpoint: "/post/filterNewlyListed/")
+            
+            return try await get(url: url)
+        }
+        
+        func createPost(postBody: PostBody) async throws -> ListingResponse {
+            let url = try constructURL(endpoint: "/post/")
+            
+            return try await post(url: url, body: postBody)
+        }
+        
+        
+        func archivePost(id: String) async throws -> PostResponse {
+            let url = try constructURL(endpoint: "/post/archive/postId/\(id)/")
+            
+            
+            return try await post(url: url)
+        }
+        
+        
+        func deletePost(id: String) async throws {
+            let url = try constructURL(endpoint: "/post/id/\(id)/")
+            
+            
+            try await delete(url: url)
+        }
+        
+        
+        // MARK: - Request Networking Functions
+        
+        
+        func getRequestsByUserID(id: String) async throws -> RequestsResponse {
+            let url = try constructURL(endpoint: "/request/userId/\(id)/")
+            
+            
+            return try await get(url: url)
+        }
+        
+        
+        func postRequest(request: RequestBody) async throws -> RequestResponse {
+            let url = try constructURL(endpoint: "/request/")
+            
+            
+            return try await post(url: url, body: request)
+        }
+        
+        
+        func deleteRequest(id: String) async throws {
+            let url = try constructURL(endpoint: "/request/id/\(id)/")
+            
+            
+            try await delete(url: url)
+        }
+        
+        
+        // MARK: - Feedback Networking Functions
+        
+        
+        func postFeedback(feedback: FeedbackBody) async throws {
+            let url = try constructURL(endpoint: "/feedback/")
+            
+            
+            try await post(url: url, body: feedback)
+        }
+        
+        
+        // MARK: - Reporting Networking Functions
+        
+        func reportPost(reportBody: ReportPostBody) async throws {
+            let url = try constructURL(endpoint: "/report/post/")
+            
+            try await post(url: url, body: reportBody)
+        }
+        
+        func reportUser(reportBody: ReportUserBody) async throws {
+            let url = try constructURL(endpoint: "/report/user/")
+            
+            try await post(url: url, body: reportBody)
+        }
+        
+        func reportMessage(reportBody: ReportMessageBody) async throws {
+            let url = try constructURL(endpoint: "/report/message/")
+            
+            try await post(url: url, body: reportBody)
+        }
+        
+        // MARK: - Chat Networking Functions
+        
+        func sendChatMessage(chatId: String, messageBody: MessageBody) async throws {
+            let url = try constructURL(endpoint: "/chat/message/\(chatId)/")
+            
+            return try await post(url: url, body: messageBody)
+        }
+        
+        func sendChatAvailability(chatId: String, messageBody: MessageBody) async throws {
+            let url = try constructURL(endpoint: "/chat/availability/\(chatId)/")
+            
+            return try await post(url: url, body: messageBody)
+        }
+        
+        /// Send initial proposal (buyer proposes a meeting time)
+        func sendInitialProposal(chatId: String, messageBody: MessageBody) async throws {
+            let url = try constructURL(endpoint: "/chat/proposal/initial/\(chatId)/")
+            return try await post(url: url, body: messageBody)
+        }
+        
+        /// Respond to a proposal (seller accepts or declines)
+        func respondToProposal(chatId: String, messageBody: ProposalResponseBody) async throws -> ProposalResponseResult {
+            let url = try constructURL(endpoint: "/chat/proposal/\(chatId)/")
+            return try await post(url: url, body: messageBody)
+        }
+        
+        /// Cancel a proposal
+        func cancelProposal(chatId: String, messageBody: MessageBody) async throws {
+            let url = try constructURL(endpoint: "/chat/proposal/cancel/\(chatId)/")
+            return try await post(url: url, body: messageBody)
+        }
+        
+        func markMessageRead(chatId: String, messageId: String) async throws -> ReadMessageRepsonse {
+            let url = try constructURL(endpoint: "/chat/\(chatId)/message/\(messageId)/")
+            
+            return try await post(url: url)
+        }
+        
+        // MARK: - Availability Networking Functions
+        
+        /// ISO8601 decoder for availability endpoints (dates come as strings like "2026-01-23T16:00:00Z")
+        private var iso8601Decoder: JSONDecoder {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            return decoder
+        }
+        
+        /// ISO8601 encoder for availability endpoints
+        private var iso8601Encoder: JSONEncoder {
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            return encoder
+        }
+        
+        func getAvailability() async throws -> AvailabilityResponse {
+            let url = try constructURL(endpoint: "/availability/")
+            let request = try await createRequest(url: url, method: "GET")
+            let (data, response) = try await URLSession.shared.data(for: request)
             try handleResponse(data: data, response: response)
-        } catch {
-            return try await handleNetworkError(error, attempt: attempt) {
-                try await post(url: url, body: body, attempt: attempt + 1)
-            }
+            return try iso8601Decoder.decode(AvailabilityResponse.self, from: data)
         }
-
-        return try JSONDecoder().decode(T.self, from: data)
-    }
-
-    /// Overloaded post function for requests without a return
-    func post<U: Encodable>(url: URL, body: U, attempt: Int = 1) async throws {
-        let requestData = try JSONEncoder().encode(body)
-        let request = try await createRequest(url: url, method: "POST", body: requestData)
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        do {
+        
+        func getAvailabilityByUserID(id: String) async throws -> AvailabilityResponse {
+            let url = try constructURL(endpoint: "/availability/user/\(id)")
+            let request = try await createRequest(url: url, method: "GET")
+            let (data, response) = try await URLSession.shared.data(for: request)
             try handleResponse(data: data, response: response)
-        } catch {
-            try await handleNetworkError(error, attempt: attempt) {
-                try await post(url: url, body: body, attempt: attempt + 1)
-            }
+            return try iso8601Decoder.decode(AvailabilityResponse.self, from: data)
         }
-    }
-
-    /// Overloaded post function for requests without a body
-    func post<T: Decodable>(url: URL, attempt: Int = 1) async throws -> T {
-        let request = try await createRequest(url: url, method: "POST")
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        do {
+        
+        func updateAvailability(schedule: [String: [AvailabilitySlot]]) async throws -> AvailabilityResponse {
+            let url = try constructURL(endpoint: "/availability/update/")
+            let requestData = try iso8601Encoder.encode(UpdateAvailabilityBody(schedule: schedule))
+            let request = try await createRequest(url: url, method: "POST", body: requestData)
+            let (data, response) = try await URLSession.shared.data(for: request)
             try handleResponse(data: data, response: response)
-        } catch {
-            return try await handleNetworkError(error, attempt: attempt) {
-                try await post(url: url, attempt: attempt + 1)
+            return try iso8601Decoder.decode(AvailabilityResponse.self, from: data)
+        }
+        
+        // MARK: - Transaction Networking Functions
+        
+        func getTransactionsByBuyerId(userId: String) async throws -> TransactionsResponse {
+            let url = try constructURL(endpoint: "/transaction/buyerId/\(userId)/")
+            return try await get(url: url)
+        }
+        
+        func getTransactionsBySellerId(userId: String) async throws -> TransactionsResponse {
+            let url = try constructURL(endpoint: "/transaction/sellerId/\(userId)/")
+            return try await get(url: url)
+        }
+        
+        func getTransactionById(transactionId: String) async throws -> TransactionResponse {
+            let url = try constructURL(endpoint: "/transaction/id/\(transactionId)/")
+            return try await get(url: url)
+        }
+        
+        func completeTransaction(transactionId: String) async throws -> TransactionResponse {
+            let url = try constructURL(endpoint: "/transaction/complete/id/\(transactionId)/")
+            return try await post(url: url, body: CompleteTransactionBody(completed: true))
+        }
+        
+        // MARK: - Other Networking Functions
+        
+        func uploadImage(image: ImageBody) async throws -> ImageResponse {
+            let url = try constructURL(endpoint: "/image/")
+            
+            return try await post(url: url, body: image)
+        }
+        
+        // MARK: - Notifications Networking Functions
+        
+        /// Custom GET for notifications with ISO8601 date decoding
+        private func getNotifications(url: URL, attempt: Int = 1) async throws -> [Notifications] {
+            let request = try await createRequest(url: url, method: "GET")
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            do {
+                try handleResponse(data: data, response: response)
+            } catch {
+                return try await handleNetworkError(error, attempt: attempt) {
+                    try await getNotifications(url: url, attempt: attempt + 1)
+                }
             }
-        }
-
-        return try JSONDecoder().decode(T.self, from: data)
-    }
-
-    /// Template function to DELETE data to a specified URL with an encodable body and decodes the response into a specified type `T`.
-    func delete(url: URL, attempt: Int = 1) async throws {
-        let request = try await createRequest(url: url, method: "DELETE")
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        do {
-            try handleResponse(data: data, response: response)
-        } catch {
-            try await handleNetworkError(error, attempt: attempt) {
-                try await delete(url: url, attempt: attempt + 1)
+            
+            
+            // Try decoding as array first (direct response)
+            if let notifications = try? iso8601Decoder.decode([Notifications].self, from: data) {
+                return notifications
             }
-        }
-    }
-    
-    private func createRequest(url: URL, method: String, body: Data? = nil) async throws -> URLRequest {
-           var request = URLRequest(url: url)
-           request.httpMethod = method
-           request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-           // refactor to use cached token if valid...
-           let accessToken = try await GoogleAuthManager.shared.getValidToken()
-           request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-
-//           if let accessToken = GoogleAuthManager.shared.accessToken {
-//               request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-//           }
-
-           request.httpBody = body
-           return request
-    }
-    
-    private func constructURL(endpoint: String) throws -> URL {
-        guard let url = URL(string: "\(hostURL)\(endpoint)") else {
-            logger.error("Failed to construct URL for endpoint: \(endpoint)")
-            throw URLError(.badURL)
-        }
-        
-        return url
-    }
-    
-    private func handleResponse(data: Data, response: URLResponse) throws {
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw URLError(.badServerResponse)
-        }
-        
-        if httpResponse.statusCode != 200 {
-            if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
-                throw errorResponse
-            } else {
-                throw URLError(.init(rawValue: httpResponse.statusCode))
+            
+            // Try decoding as wrapped response { "notifications": [...] }
+            if let wrapped = try? iso8601Decoder.decode(NotificationsResponse.self, from: data) {
+                return wrapped.notifications
             }
+            
+            // If both fail, throw the actual decoding error for debugging
+            return try iso8601Decoder.decode([Notifications].self, from: data)
+        }
+        
+        /// Custom POST for notifications with ISO8601 date decoding
+        private func postNotification<T: Decodable>(url: URL, body: some Encodable, attempt: Int = 1) async throws -> T {
+            var request = try await createRequest(url: url, method: "POST")
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try iso8601Encoder.encode(body)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            do {
+                try handleResponse(data: data, response: response)
+            } catch {
+                return try await handleNetworkError(error, attempt: attempt) {
+                    try await postNotification(url: url, body: body, attempt: attempt + 1)
+                }
+            }
+            
+            
+            return try iso8601Decoder.decode(T.self, from: data)
+        }
+        
+        /// Get unread notifications
+        func getNewNotifications() async throws -> [Notifications] {
+            let url = try constructURL(endpoint: "/notif/new")
+            return try await getNotifications(url: url)
+        }
+        
+        /// Get recent notifications (last 10)
+        func getRecentNotifications() async throws -> [Notifications] {
+            let url = try constructURL(endpoint: "/notif/recent")
+            return try await getNotifications(url: url)
+        }
+        
+        /// Get notifications from last 7 days
+        func getLast7DaysNotifications() async throws -> [Notifications] {
+            let url = try constructURL(endpoint: "/notif/last7days")
+            return try await getNotifications(url: url)
+        }
+        
+        /// Get notifications from last 30 days
+        func getLast30DaysNotifications() async throws -> [Notifications] {
+            let url = try constructURL(endpoint: "/notif/last30days")
+            return try await getNotifications(url: url)
+        }
+        
+        /// Mark a notification as read
+        func markNotificationAsRead(notificationId: String) async throws -> Notifications {
+            let url = try constructURL(endpoint: "/notif/read/\(notificationId)")
+            
+            var request = try await createRequest(url: url, method: "POST")
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            do {
+                try handleResponse(data: data, response: response)
+            } catch {
+                throw error
+            }
+            
+            
+            // Try different response formats
+            if let wrapped = try? iso8601Decoder.decode(MarkReadResponse.self, from: data) {
+                return wrapped.notification
+            }
+            
+            if let wrapped = try? iso8601Decoder.decode(SingleNotificationResponse.self, from: data) {
+                return wrapped.notification
+            }
+            
+            // Try direct notification
+            return try iso8601Decoder.decode(Notifications.self, from: data)
         }
     }
-    
-    // MARK: - Auth Networking Functions
-    
-    func authorize(authorizeBody: AuthorizeBody) async throws -> User? {
-        let url = try constructURL(endpoint: "/auth/")
-
-        return try await post(url: url, body: authorizeBody)
-    }
-
-    func getUser() async throws -> UserResponse {
-        let url = try constructURL(endpoint: "/auth/")
-        
-        return try await get(url: url)
-    }
-    
-    func createUser(user: CreateUserBody) async throws {
-        let url = try constructURL(endpoint: "/user/create")
-        
-        try await post(url: url, body: user)
-    }
-    
-    func logout() async throws -> LogoutResponse {
-        let url = try constructURL(endpoint: "/auth/logout/")
-        
-        return try await post(url: url)
-    }
-    
-    func deleteAccount(userID: String) async throws {
-        let url = try constructURL(endpoint: "/auth/id/\(userID)/")
-        
-        try await delete(url: url)
-    }
-    
-    // MARK: - User Networking Functions
-    
-    func getUserByGoogleID(googleID: String) async throws -> UserResponse {
-        let url = try constructURL(endpoint: "/user/googleId/\(googleID)/")
-        
-        return try await get(url: url)
-    }
-    
-    func getUserByID(id: String) async throws -> UserResponse {
-        let url = try constructURL(endpoint: "/user/id/\(id)/")
-        
-        return try await get(url: url)
-    }
-    
-    func updateUserProfile(edit: EditUserBody) async throws -> UserResponse {
-        let url = try constructURL(endpoint: "/user/")
-        
-        return try await post(url: url, body: edit)
-    }
-    
-    func getBlockedUsers(id: String) async throws -> UsersResponse {
-        let url = try constructURL(endpoint: "/user/blocked/id/\(id)")
-        
-        return try await get(url: url)
-    }
-    
-    func blockUser(blocked: BlockUserBody) async throws {
-        let url = try constructURL(endpoint: "/user/block/")
-        
-        try await post(url: url, body: blocked)
-    }
-    
-    func unblockUser(unblocked: UnblockUserBody) async throws {
-        let url = try constructURL(endpoint: "/user/unblock/")
-        
-        try await post(url: url, body: unblocked)
-    }
-    
-    func followUser(follow: FollowUserBody) async throws -> UserResponse {
-        let url = try constructURL(endpoint: "/user/follow/")
-        
-        return try await post(url: url, body: follow)
-    }
-    
-    func unfollowUser(unfollow: UnfollowUserBody) async throws -> UserResponse {
-        let url = try constructURL(endpoint: "/user/unfollow/")
-        
-        return try await post(url: url, body: unfollow)
-    }
-    
-    func getFollowers(id: String) async throws -> UsersResponse {
-        let url = try constructURL(endpoint: "/user/followers/id/\(id)/")
-        
-        return try await get(url: url)
-    }
-    
-    func getFollowing(id: String) async throws -> UsersResponse {
-        let url = try constructURL(endpoint: "/user/following/id/\(id)/")
-        
-        return try await get(url: url)
-    }
-    
-    // MARK: - Post Networking Functions
-    
-    func getAllPosts(page: Int = 1) async throws -> PostsResponse {
-           let url = try constructURL(endpoint: "/post?page=\(page)")
-
-           return try await get(url: url)
-    }
-    
-    func getUnifiedFilteredPosts(filters: FilterPostsUnifiedRequest) async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/filter/")
-        
-        return try await post(url: url, body: filters)
-    }
-    
-    func getSavedPosts() async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/save/")
-        
-        return try await get(url: url)
-    }
-    
-    func getFilteredPostsByCategory(for filters: [String]) async throws -> PostsResponse {
-           let url = try constructURL(endpoint: "/post/filterByCategories")
-
-           return try await post(url: url, body: FilterRequest(categories: filters))
-    }
-    
-    // this can prob go bye bye 
-    func getFilteredPosts(by filter: String) async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/filter/")
-        
-        return try await post(url: url, body: FilterRequest(categories: [filter]))
-    }
-    
-    func getSearchedPosts(with keywords: String) async throws -> SearchedPostResponse {
-        let url = try constructURL(endpoint: "/post/search/")
-        
-        return try await post(url: url, body: SearchRequest(keywords: keywords))
-    }
-    
-    func getSearchSuggestions(searchIndex: String) async throws -> SuggestionsWrapper {
-        let url = try constructURL(endpoint: "/post/searchSuggestions/\(searchIndex)")
-        
-        return try await get(url: url)
-    }
-    
-    func getPostsByUserID(id: String) async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/userId/\(id)/")
-        
-        return try await get(url: url)
-    }
-    
-    func getArchivedPostsByUserID(id: String) async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/archive/userId/\(id)/")
-        
-        return try await get(url: url)
-    }
-    
-    func getPostByID(id: String) async throws -> PostResponse {
-        let url = try constructURL(endpoint: "/post/id/\(id)/")
-        
-        return try await get(url: url)
-    }
-    
-    func getSimilarPostsByID(id: String) async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/similar/postId/\(id)/")
-        
-        return try await get(url: url)
-    }
-    
-    func savePostByID(id: String) async throws -> PostResponse {
-        let url = try constructURL(endpoint: "/post/save/postId/\(id)/")
-        
-        return try await post(url: url)
-    }
-    
-    func unsavePostByID(id: String) async throws -> PostResponse {
-        let url = try constructURL(endpoint: "/post/unsave/postId/\(id)/")
-        
-        return try await post(url: url)
-    }
-    
-    func postIsSaved(id: String) async throws -> SavedResponse {
-        let url = try constructURL(endpoint: "/post/isSaved/postId/\(id)/")
-        
-        return try await get(url: url)
-    }
-    
-    func filterByPrice(prices: PriceBody) async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/filterByPrice/")
-        
-        return try await post(url: url, body: prices)
-    }
-    
-    func filterByCondition(conditions: [String]) async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/filterByCondition/")
-        
-        return try await post(url: url, body: ConditionBody(conditions: conditions))
-    }
-    
-    func filterPriceLowtoHigh() async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/priceLowtoHigh/")
-        
-        return try await get(url: url)
-    }
-    
-    func filterPriceHightoLow() async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/priceHightoLow/")
-        
-        return try await get(url: url)
-    }
-    
-    func filterNewlyListed() async throws -> PostsResponse {
-        let url = try constructURL(endpoint: "/post/filterNewlyListed/")
-        
-        return try await get(url: url)
-    }
-    
-    func createPost(postBody: PostBody) async throws -> ListingResponse {
-        let url = try constructURL(endpoint: "/post/")
-
-        return try await post(url: url, body: postBody)
-    }
-    
-    func archivePost(id: String) async throws -> PostResponse {
-        let url = try constructURL(endpoint: "/post/archive/postId/\(id)/")
-        
-        return try await post(url: url)
-    }
-    
-    func deletePost(id: String) async throws {
-        let url = try constructURL(endpoint: "/post/id/\(id)/")
-        
-        try await delete(url: url)
-    }
-    
-    // MARK: - Request Networking Functions
-    
-    func getRequestsByUserID(id: String) async throws -> RequestsResponse {
-        let url = try constructURL(endpoint: "/request/userId/\(id)/")
-        
-        return try await get(url: url)
-    }
-    
-    func postRequest(request: RequestBody) async throws -> RequestResponse {
-        let url = try constructURL(endpoint: "/request/")
-        
-        return try await post(url: url, body: request)
-    }
-    
-    func deleteRequest(id: String) async throws {
-        let url = try constructURL(endpoint: "/request/id/\(id)/")
-        
-        try await delete(url: url)
-    }
-    
-    // MARK: - Feedback Networking Functions
-    
-    func postFeedback(feedback: FeedbackBody) async throws {
-        let url = try constructURL(endpoint: "/feedback/")
-        
-        try await post(url: url, body: feedback)
-    }
-    
-    // MARK: - Reporting Networking Functions
-    
-    func reportPost(reportBody: ReportPostBody) async throws {
-        let url = try constructURL(endpoint: "/report/post/")
-        
-        try await post(url: url, body: reportBody)
-    }
-    
-    func reportUser(reportBody: ReportUserBody) async throws {
-        let url = try constructURL(endpoint: "/report/user/")
-        
-        try await post(url: url, body: reportBody)
-    }
-    
-    func reportMessage(reportBody: ReportMessageBody) async throws {
-        let url = try constructURL(endpoint: "/report/message/")
-        
-        try await post(url: url, body: reportBody)
-    }
-    
-    // MARK: - Chat Networking Functions
-
-    func sendChatMessage(chatId: String, messageBody: MessageBody) async throws {
-        let url = try constructURL(endpoint: "/chat/message/\(chatId)/")
-
-        return try await post(url: url, body: messageBody)
-    }
-
-    func sendChatAvailability(chatId: String, messageBody: MessageBody) async throws {
-        let url = try constructURL(endpoint: "/chat/availability/\(chatId)/")
-
-        return try await post(url: url, body: messageBody)
-    }
-
-    /// Send initial proposal (buyer proposes a meeting time)
-    func sendInitialProposal(chatId: String, messageBody: MessageBody) async throws {
-        let url = try constructURL(endpoint: "/chat/proposal/initial/\(chatId)/")
-        return try await post(url: url, body: messageBody)
-    }
-    
-    /// Respond to a proposal (seller accepts or declines)
-    func respondToProposal(chatId: String, messageBody: ProposalResponseBody) async throws -> ProposalResponseResult {
-        let url = try constructURL(endpoint: "/chat/proposal/\(chatId)/")
-        return try await post(url: url, body: messageBody)
-    }
-    
-    /// Cancel a proposal
-    func cancelProposal(chatId: String, messageBody: MessageBody) async throws {
-        let url = try constructURL(endpoint: "/chat/proposal/cancel/\(chatId)/")
-        return try await post(url: url, body: messageBody)
-    }
-
-    func markMessageRead(chatId: String, messageId: String) async throws -> ReadMessageRepsonse {
-        let url = try constructURL(endpoint: "/chat/\(chatId)/message/\(messageId)/")
-
-        return try await post(url: url)
-    }
-
-    // MARK: - Availability Networking Functions
-    
-    /// ISO8601 decoder for availability endpoints (dates come as strings like "2026-01-23T16:00:00Z")
-    private var iso8601Decoder: JSONDecoder {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return decoder
-    }
-    
-    /// ISO8601 encoder for availability endpoints
-    private var iso8601Encoder: JSONEncoder {
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        return encoder
-    }
-
-    func getAvailability() async throws -> AvailabilityResponse {
-        let url = try constructURL(endpoint: "/availability/")
-        let request = try await createRequest(url: url, method: "GET")
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try handleResponse(data: data, response: response)
-        return try iso8601Decoder.decode(AvailabilityResponse.self, from: data)
-    }
-
-    func getAvailabilityByUserID(id: String) async throws -> AvailabilityResponse {
-        let url = try constructURL(endpoint: "/availability/user/\(id)")
-        let request = try await createRequest(url: url, method: "GET")
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try handleResponse(data: data, response: response)
-        return try iso8601Decoder.decode(AvailabilityResponse.self, from: data)
-    }
-
-    func updateAvailability(schedule: [String: [AvailabilitySlot]]) async throws -> AvailabilityResponse {
-        let url = try constructURL(endpoint: "/availability/update/")
-        let requestData = try iso8601Encoder.encode(UpdateAvailabilityBody(schedule: schedule))
-        let request = try await createRequest(url: url, method: "POST", body: requestData)
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try handleResponse(data: data, response: response)
-        return try iso8601Decoder.decode(AvailabilityResponse.self, from: data)
-    }
-    
-    // MARK: - Transaction Networking Functions
-    
-    func getTransactionsByBuyerId(userId: String) async throws -> TransactionsResponse {
-        let url = try constructURL(endpoint: "/transaction/buyerId/\(userId)/")
-        return try await get(url: url)
-    }
-    
-    func getTransactionsBySellerId(userId: String) async throws -> TransactionsResponse {
-        let url = try constructURL(endpoint: "/transaction/sellerId/\(userId)/")
-        return try await get(url: url)
-    }
-    
-    func getTransactionById(transactionId: String) async throws -> TransactionResponse {
-        let url = try constructURL(endpoint: "/transaction/id/\(transactionId)/")
-        return try await get(url: url)
-    }
-    
-    func completeTransaction(transactionId: String) async throws -> TransactionResponse {
-        let url = try constructURL(endpoint: "/transaction/complete/id/\(transactionId)/")
-        return try await post(url: url, body: CompleteTransactionBody(completed: true))
-    }
-    
-    // MARK: - Other Networking Functions
-    
-    func uploadImage(image: ImageBody) async throws -> ImageResponse {
-        let url = try constructURL(endpoint: "/image/")
-        
-        return try await post(url: url, body: image)
-    }
-}

@@ -99,7 +99,9 @@ class HomeViewModel: ObservableObject {
                 hasLoadedInitialData = true
                 lastFetchTime = Date()
             } catch {
+                // TODO: Add proper error handling
                 NetworkManager.shared.logger.error("Error in HomeViewModel.getAllPosts: \(error)")
+                isLoading = false
             }
         }
     }
@@ -154,6 +156,23 @@ class HomeViewModel: ObservableObject {
             defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
             do {
+                let postsResponse = try await NetworkManager.shared.getAllPosts(page: page)
+                allItems.append(contentsOf: Post.sortPostsByDate(postsResponse.posts))
+                filteredItems.append(contentsOf: Post.sortPostsByDate(postsResponse.posts))
+
+            } catch {
+                NetworkManager.shared.logger.error("Error in HomeViewModel.fetchMoreItems: \(error)")
+            }
+        }
+    }
+
+    func getSavedPosts(completion: @escaping () -> Void)  {
+        isLoading = true
+
+        Task {
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+
+            do {
                 let postsResponse = try await NetworkManager.shared.getSavedPosts()
                 savedItems = Post.sortPostsByDate(postsResponse.posts)
                 lastSavedFetchTime = Date()
@@ -178,6 +197,9 @@ class HomeViewModel: ObservableObject {
                 filteredItems = postsResponse.posts
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.filterPosts: \(error)")
+            }
+            await MainActor.run {
+                isLoading = false
             }
         }
     }

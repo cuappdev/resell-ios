@@ -89,8 +89,8 @@ struct MainTabView: View {
                     SavedView()
                 case .availability:
                     AvailabilitySettingsView()
-//                case .notifications:
-//                    NotificationsSettingsView()
+               case .notifications:
+                   NotificationsSettingsView()
                 case .login:
                     LoginView()
                         .environmentObject(onboardingViewModel)
