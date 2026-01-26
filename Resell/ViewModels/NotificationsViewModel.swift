@@ -100,18 +100,21 @@ class NotificationsViewModel: ObservableObject {
 
     /// Mark a notification as read (calls backend)
     func markAsRead(notification: Notifications) {
+        // Update locally immediately for responsive UI
+        if let index = notifications.firstIndex(where: { $0.id == notification.id }) {
+            notifications[index].read = true
+        }
+        
+        // Then sync with backend
         Task {
             do {
-                let response = try await NetworkManager.shared.markNotificationAsRead(notificationId: notification.id)
+                let updated = try await NetworkManager.shared.markNotificationAsRead(notificationId: notification.id)
                 if let index = notifications.firstIndex(where: { $0.id == notification.id }) {
-                    notifications[index] = response.notification
+                    notifications[index] = updated
                 }
             } catch {
                 NetworkManager.shared.logger.error("Error marking notification as read: \(error.localizedDescription)")
-                // Update locally as fallback
-                if let index = notifications.firstIndex(where: { $0.id == notification.id }) {
-                    notifications[index].read = true
-                }
+                // Local update already applied, so user still sees it as read
             }
         }
     }

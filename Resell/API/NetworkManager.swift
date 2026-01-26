@@ -582,9 +582,36 @@ class NetworkManager: APIClient {
     }
     
     /// Mark a notification as read
-    func markNotificationAsRead(notificationId: String) async throws -> MarkReadResponse {
+    func markNotificationAsRead(notificationId: String) async throws -> Notifications {
         let url = try constructURL(endpoint: "/notif/read/\(notificationId)")
-        return try await postNotification(url: url, body: EmptyBody())
+        
+        var request = try createRequest(url: url, method: "POST")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        do {
+            try handleResponse(data: data, response: response)
+        } catch {
+            throw error
+        }
+        
+        // Debug: print raw response
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("📥 Mark read response: \(jsonString.prefix(500))")
+        }
+        
+        // Try different response formats
+        if let wrapped = try? iso8601Decoder.decode(MarkReadResponse.self, from: data) {
+            return wrapped.notification
+        }
+        
+        if let wrapped = try? iso8601Decoder.decode(SingleNotificationResponse.self, from: data) {
+            return wrapped.notification
+        }
+        
+        // Try direct notification
+        return try iso8601Decoder.decode(Notifications.self, from: data)
     }
     
     // MARK: - Test Notification Endpoints
