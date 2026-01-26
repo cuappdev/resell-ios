@@ -133,10 +133,8 @@ class NotificationsViewModel: ObservableObject {
             do {
                 self.notifications = try await NetworkManager.shared.getLast30DaysNotifications()
                 loadState = notifications.isEmpty ? .empty : .success
-                print("✅ Fetched \(notifications.count) notifications")
             } catch {
                 NetworkManager.shared.logger.error("Error in NotificationsViewModel.fetchNotifications: \(error.localizedDescription)")
-                print("❌ Fetch notifications error: \(error)")
                 
                 // Fall back to empty state instead of error - notifications might just not exist yet
                 self.notifications = []
@@ -159,32 +157,6 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
-    // MARK: - Test Functions
-    
-    /// Create a test notification (for development only)
-    /// - Parameter type: One of "messages", "requests", "bookmarks", "transactions"
-    func createTestNotification(type: String) {
-        Task {
-            do {
-                let response = try await NetworkManager.shared.createTestNotification(type: type)
-                // Add to local list immediately
-                notifications.insert(response.notification, at: 0)
-                print("✅ Test notification created: \(response.notification.title)")
-            } catch let urlError as URLError where urlError.code.rawValue == 404 {
-                print("❌ Test endpoint not found (404). The /notif/test/\(type) endpoint may not be deployed yet.")
-                print("   Tip: Use 'Load Dummy Data' to test the UI, or create real notifications through app actions.")
-            } catch {
-                NetworkManager.shared.logger.error("Error creating test notification: \(error.localizedDescription)")
-                print("❌ Error creating test notification: \(error)")
-            }
-        }
-    }
-    
-    /// Load dummy data for preview/testing
-    func loadDummyData() {
-        notifications = Notifications.dummydata
-        loadState = .success
-    }
 }
 
 

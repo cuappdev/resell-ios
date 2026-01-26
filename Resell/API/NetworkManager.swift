@@ -514,10 +514,6 @@ class NetworkManager: APIClient {
             }
         }
         
-        // Debug: print raw response
-        if let jsonString = String(data: data, encoding: .utf8) {
-            print("📥 Notification response: \(jsonString.prefix(1000))")
-        }
         
         // Try decoding as array first (direct response)
         if let notifications = try? iso8601Decoder.decode([Notifications].self, from: data) {
@@ -549,10 +545,6 @@ class NetworkManager: APIClient {
             }
         }
         
-        // Debug: print raw response
-        if let jsonString = String(data: data, encoding: .utf8) {
-            print("📥 Notification POST response: \(jsonString.prefix(1000))")
-        }
         
         return try iso8601Decoder.decode(T.self, from: data)
     }
@@ -596,10 +588,6 @@ class NetworkManager: APIClient {
             throw error
         }
         
-        // Debug: print raw response
-        if let jsonString = String(data: data, encoding: .utf8) {
-            print("📥 Mark read response: \(jsonString.prefix(500))")
-        }
         
         // Try different response formats
         if let wrapped = try? iso8601Decoder.decode(MarkReadResponse.self, from: data) {
@@ -614,15 +602,6 @@ class NetworkManager: APIClient {
         return try iso8601Decoder.decode(Notifications.self, from: data)
     }
     
-    // MARK: - Test Notification Endpoints
-    
-    /// Create a test notification (for development/testing)
-    /// - Parameter type: One of "messages", "requests", "bookmarks", "transactions"
-    func createTestNotification(type: String) async throws -> TestNotificationResponse {
-        let url = try constructURL(endpoint: "/notif/test/\(type)")
-        print("📤 POST to: \(url.absoluteString)")
-        return try await postNotification(url: url, body: EmptyBody())
-    }
 }
 
     

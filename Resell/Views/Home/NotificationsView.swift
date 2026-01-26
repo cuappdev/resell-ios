@@ -13,7 +13,6 @@ struct NotificationsView: View {
     
     @EnvironmentObject var router: Router
     @StateObject private var viewModel = NotificationsViewModel()
-    @State private var showTestMenu = false
     @State private var isNavigating = false
     
     private let relativeFormatter: RelativeDateTimeFormatter = {
@@ -103,41 +102,6 @@ struct NotificationsView: View {
         .padding(.top, 5)
         .padding(.vertical, 1)
         .navigationTitle("Notifications")
-        .toolbar {
-            // Test notification button (for development)
-            #if DEBUG
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Menu {
-                    Section("Test Notifications") {
-                        Button("📬 Test Messages") {
-                            viewModel.createTestNotification(type: "messages")
-                        }
-                        Button("📋 Test Requests") {
-                            viewModel.createTestNotification(type: "requests")
-                        }
-                        Button("🔖 Test Bookmarks") {
-                            viewModel.createTestNotification(type: "bookmarks")
-                        }
-                        Button("💰 Test Transactions") {
-                            viewModel.createTestNotification(type: "transactions")
-                        }
-                    }
-                    
-                    Divider()
-                    
-                    Button("🧪 Load Dummy Data") {
-                        viewModel.loadDummyData()
-                    }
-                    
-                    Button("🔄 Refresh from Server") {
-                        viewModel.fetchNotifications()
-                    }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                }
-            }
-            #endif
-        }
         .onAppear {
             viewModel.fetchNotifications()
         }
