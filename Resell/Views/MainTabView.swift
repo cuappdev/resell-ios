@@ -90,7 +90,7 @@ struct MainTabView: View {
                 case .availability:
                     AvailabilitySettingsView()
                case .notifications:
-                   NotificationsSettingsView()
+                   NotificationsView()
                 case .login:
                     LoginView()
                         .environmentObject(onboardingViewModel)

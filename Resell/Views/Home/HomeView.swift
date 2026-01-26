@@ -93,14 +93,13 @@ struct HomeView: View {
                     }, label: {
                         Icon(image: "search")
                     })
-
-                    Spacer()
             
                     Button(action: {
                         router.push(.notifications)
                     }, label: {
                         Icon(image: "bell")
                     })
+                    .padding(.leading, 12)
                 }
                 .padding(.horizontal, Constants.Spacing.horizontalPadding)
 

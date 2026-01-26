@@ -152,17 +152,14 @@ class HomeViewModel: ObservableObject {
         
         isLoading = true
 
-        Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+        defer { Task { @MainActor in withAnimation { isLoading = false } } }
 
-            do {
-                let postsResponse = try await NetworkManager.shared.getAllPosts(page: page)
-                allItems.append(contentsOf: Post.sortPostsByDate(postsResponse.posts))
-                filteredItems.append(contentsOf: Post.sortPostsByDate(postsResponse.posts))
-
-            } catch {
-                NetworkManager.shared.logger.error("Error in HomeViewModel.fetchMoreItems: \(error)")
-            }
+        do {
+            let postsResponse = try await NetworkManager.shared.getSavedPosts()
+            savedItems = Post.sortPostsByDate(postsResponse.posts)
+            lastSavedFetchTime = Date()
+        } catch {
+            NetworkManager.shared.logger.error("Error in HomeViewModel.getSavedPosts: \(error)")
         }
     }
 

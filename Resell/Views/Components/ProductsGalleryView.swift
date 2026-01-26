@@ -115,7 +115,9 @@ struct ProductGalleryCell: View {
                 Text(post.title)
                     .font(Constants.Fonts.title3)
                     .foregroundStyle(Constants.Colors.black)
+                
                 Spacer()
+                
                 Text("$\(post.originalPrice)")
                     .font(Constants.Fonts.title4)
                     .foregroundStyle(Constants.Colors.black)
