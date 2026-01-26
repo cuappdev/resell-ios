@@ -135,11 +135,6 @@ struct SingleNotificationResponse: Codable {
     let message: String?
 }
 
-struct TestNotificationResponse: Codable {
-    let message: String
-    let notification: Notifications
-}
-
 struct MarkReadResponse: Codable {
     let message: String
     let notification: Notifications
@@ -162,68 +157,4 @@ enum LoadState {
     case error
 }
 
-extension Notifications {
-    /// Creates dummy notification data for testing/preview purposes
-    static func makeDummyData(
-        id: String = UUID().uuidString,
-        type: String,
-        title: String,
-        body: String,
-        createdAt: Date
-    ) -> Notifications {
-        Notifications(
-            id: id,
-            userId: "dummy-user",
-            title: title,
-            body: body,
-            data: NotificationData(
-                type: type,
-                imageUrl: nil,
-                postId: nil,
-                postTitle: nil,
-                chatId: nil,
-                sellerId: nil,
-                sellerUsername: nil,
-                sellerPhotoUrl: nil,
-                buyerId: nil,
-                buyerUsername: nil,
-                transactionId: nil,
-                price: nil,
-                messageId: id
-            ),
-            read: false,
-            createdAt: createdAt,
-            updatedAt: createdAt
-        )
-    }
-    
-    static let dummydata: [Notifications] = {
-        let now = Date()
-        let cal = Calendar.current
-
-        func hoursAgo(_ h: Int) -> Date {
-            now.addingTimeInterval(TimeInterval(-h * 3600))
-        }
-        func daysAgo(_ d: Int) -> Date {
-            cal.date(byAdding: .day, value: -d, to: now)!
-        }
-
-        return [
-            makeDummyData(id: "msg-0001", type: "messages", title: "New Message", body: "You have received a new message from Mateo", createdAt: hoursAgo(1)),
-            makeDummyData(id: "req-0001", type: "requests", title: "Request Received", body: "You have a new request from Angelina", createdAt: hoursAgo(5)),
-            makeDummyData(id: "bm-0001", type: "bookmarks", title: "Bookmarked Item", body: "Your bookmarked item is back in stock", createdAt: hoursAgo(12)),
-            makeDummyData(id: "msg-0002", type: "messages", title: "New Message", body: "Sam: Is this still available?", createdAt: daysAgo(1)),
-            makeDummyData(id: "req-0002", type: "requests", title: "Request Updated", body: "Zoe updated her request", createdAt: daysAgo(2)),
-            makeDummyData(id: "bm-0002", type: "bookmarks", title: "Discount Alert", body: "An item you bookmarked was discounted", createdAt: daysAgo(3)),
-            makeDummyData(id: "msg-0003", type: "messages", title: "New Message", body: "Ivy sent you a follow-up", createdAt: daysAgo(6)),
-            makeDummyData(id: "req-0003", type: "requests", title: "Request Accepted", body: "Ken accepted your offer", createdAt: daysAgo(7)),
-            makeDummyData(id: "bm-0003", type: "bookmarks", title: "Price Drop", body: "Bookmarked item dropped in price", createdAt: daysAgo(10)),
-            makeDummyData(id: "msg-0004", type: "messages", title: "New Message", body: "Omar sent a question about size", createdAt: daysAgo(20)),
-            makeDummyData(id: "req-0004", type: "requests", title: "Request Withdrawn", body: "Pia withdrew a request", createdAt: daysAgo(28)),
-            makeDummyData(id: "msg-0005", type: "messages", title: "Old Message", body: "Quinn asked about shipping", createdAt: daysAgo(31)),
-            makeDummyData(id: "req-0005", type: "requests", title: "Past Request", body: "Ryan's request expired", createdAt: daysAgo(45)),
-            makeDummyData(id: "bm-0004", type: "bookmarks", title: "Old Bookmark", body: "Sara bookmarked a while ago", createdAt: daysAgo(60)),
-        ]
-    }()
-}
 

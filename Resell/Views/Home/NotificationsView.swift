@@ -218,8 +218,8 @@ struct NotificationsView: View {
             case "bookmarks", "transactions":
                 await navigateToPost(notification: notification)
             case "requests":
-                // Navigate to requests tab or specific request
-                print("Navigate to requests")
+                // TODO: Navigate to requests tab when implemented
+                break
             default:
                 break
             }
@@ -231,7 +231,6 @@ struct NotificationsView: View {
         guard let postId = notification.data.postId,
               let sellerId = notification.data.sellerId,
               let buyerId = notification.data.buyerId else {
-            print("⚠️ Missing data for chat navigation: postId=\(notification.data.postId ?? "nil"), sellerId=\(notification.data.sellerId ?? "nil"), buyerId=\(notification.data.buyerId ?? "nil")")
             // Fallback: if we have postId, at least navigate to the post
             if notification.data.postId != nil {
                 await navigateToPost(notification: notification)
@@ -248,14 +247,12 @@ struct NotificationsView: View {
             let (postRes, buyerRes, sellerRes) = try await (postResponse, buyerResponse, sellerResponse)
             
             guard let post = postRes.post else {
-                print("❌ Post not found")
                 return
             }
             
             let chatInfo = ChatInfo(listing: post, buyer: buyerRes.user, seller: sellerRes.user)
             router.push(.messages(chatInfo: chatInfo))
         } catch {
-            print("❌ Error navigating to chat: \(error)")
             // Fallback to post details if available
             await navigateToPost(notification: notification)
         }
@@ -264,35 +261,23 @@ struct NotificationsView: View {
     @MainActor
     private func navigateToPost(notification: Notifications) async {
         guard let postId = notification.data.postId else {
-            print("⚠️ No postId in notification")
-            showNavigationError("This notification doesn't have a valid post reference.")
             return
         }
         
         // Check if it looks like a valid UUID (basic check)
         guard postId.count > 10 && !postId.hasPrefix("test-") else {
-            print("⚠️ Invalid postId format: \(postId)")
-            showNavigationError("This is a test notification with dummy data. Update your backend to use real post IDs.")
             return
         }
         
         do {
             let response = try await NetworkManager.shared.getPostByID(id: postId)
             guard let post = response.post else {
-                print("❌ Post not found for id: \(postId)")
-                showNavigationError("The post for this notification no longer exists.")
                 return
             }
             router.push(.productDetails(post))
         } catch {
-            print("❌ Error fetching post: \(error)")
-            showNavigationError("Couldn't load the post. It may have been deleted.")
+            // Silently fail - post may have been deleted
         }
-    }
-    
-    private func showNavigationError(_ message: String) {
-        // For now just print - you could show an alert instead
-        print("⚠️ Navigation error: \(message)")
     }
     
     private func notifText(for notification: Notifications) -> some View {
