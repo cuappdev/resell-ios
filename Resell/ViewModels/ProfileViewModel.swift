@@ -20,11 +20,23 @@ class ProfileViewModel: ObservableObject {
     @Published var isLoadingExternalUser: Bool = false
     @Published var externalUser: User? = nil
     @Published var externalUserPosts: [Post] = []
+    @Published var externalUserReviews: [TransactionReview] = []
     
     @Published var isFollowing: Bool = false
     @Published var isFollowLoading: Bool = false
     @Published var followerCount: Int = 0
     @Published var followingCount: Int = 0
+    
+    /// Computed average star rating for the external user
+    var averageStarRating: Double {
+        guard !externalUserReviews.isEmpty else { return 0 }
+        let total = externalUserReviews.reduce(0) { $0 + $1.stars }
+        return Double(total) / Double(externalUserReviews.count)
+    }
+    
+    var reviewCount: Int {
+        externalUserReviews.count
+    }
 
     enum Tab: String {
         case listing, archive, wishlist
@@ -65,6 +77,7 @@ class ProfileViewModel: ObservableObject {
     func loadExternalUser(id: String) {
         externalUser = nil
         externalUserPosts = []
+        externalUserReviews = []
         isFollowing = false
         followerCount = 0
         followingCount = 0
@@ -89,6 +102,14 @@ class ProfileViewModel: ObservableObject {
                 checkUserIsBlocked(userId: id)
                 checkUserIsFollowing(userId: id)
                 externalUserPosts = try await NetworkManager.shared.getPostsByUserID(id: externalUser?.firebaseUid ?? "").posts
+                
+                // Fetch transaction reviews for this seller
+                do {
+                    externalUserReviews = try await NetworkManager.shared.getReviewsForSeller(sellerId: id)
+                } catch {
+                    NetworkManager.shared.logger.error("Error fetching reviews: \(error)")
+                    externalUserReviews = []
+                }
             } catch {
                 NetworkManager.shared.logger.error("Error in ProfileViewModel.loadExternalUser: \(error)")
             }

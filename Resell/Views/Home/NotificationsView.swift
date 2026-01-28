@@ -123,10 +123,12 @@ struct NotificationsView: View {
                 TransactionConfirmationPopup(
                     isPresented: $showTransactionConfirmation,
                     notification: notification,
-                    onConfirm: { completed in
-                        viewModel.confirmTransaction(notification: notification, completed: completed)
+                    onConfirm: { completed, _ in
+                        // Remove the notification after handling
+                        viewModel.removeNotification(notification: notification)
                     }
                 )
+                .environmentObject(router)
                 .transition(.opacity)
                 .animation(.easeInOut(duration: 0.2), value: showTransactionConfirmation)
             }

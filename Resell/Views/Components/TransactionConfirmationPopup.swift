@@ -11,10 +11,11 @@ struct TransactionConfirmationPopup: View {
     
     // MARK: - Properties
     
+    @EnvironmentObject var router: Router
     @Binding var isPresented: Bool
     
     let notification: Notifications
-    let onConfirm: (Bool) -> Void
+    let onConfirm: (Bool, Transaction?) -> Void
     
     @State private var isLoading = false
     
@@ -131,14 +132,32 @@ struct TransactionConfirmationPopup: View {
         isLoading = true
         
         Task {
-            defer {
-                Task { @MainActor in
+            do {
+                var transaction: Transaction? = nil
+                
+                if completed {
+                    // Complete the transaction and get the updated transaction
+                    let response = try await NetworkManager.shared.completeTransaction(transactionId: transactionId)
+                    transaction = response.transaction
+                }
+                
+                await MainActor.run {
+                    isLoading = false
+                    isPresented = false
+                    onConfirm(completed, transaction)
+                    
+                    // Navigate to completed transaction view if confirmed
+                    if completed, let tx = transaction {
+                        router.push(.completedTransaction(tx))
+                    }
+                }
+            } catch {
+                await MainActor.run {
                     isLoading = false
                     isPresented = false
                 }
+                NetworkManager.shared.logger.error("Error confirming transaction: \(error.localizedDescription)")
             }
-            
-            onConfirm(completed)
         }
     }
 }
@@ -163,6 +182,7 @@ struct TransactionConfirmationPopup: View {
             createdAt: Date(),
             updatedAt: Date()
         ),
-        onConfirm: { _ in }
+        onConfirm: { _, _ in }
     )
+    .environmentObject(Router())
 }

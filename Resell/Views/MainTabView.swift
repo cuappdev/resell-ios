@@ -104,6 +104,8 @@ struct MainTabView: View {
                 case .venmo:
                     VenmoView(userDidLogin: $mainViewModel.userDidLogin)
                         .environmentObject(onboardingViewModel)
+                case .completedTransaction(let transaction):
+                    CompletedTransactionView(transaction: transaction)
                 default:
                     EmptyView()
                 }
