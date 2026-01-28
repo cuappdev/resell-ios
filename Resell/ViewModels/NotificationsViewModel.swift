@@ -119,10 +119,22 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
-    /// Remove a notification from local state
+    /// Delete a notification from backend and remove from local state
     func removeNotification(notification: Notifications) {
+        // Remove locally immediately for responsive UI
         withAnimation {
             notifications.removeAll(where: { $0.id == notification.id })
+        }
+        
+        // Then delete from backend
+        Task {
+            do {
+                try await NetworkManager.shared.deleteNotification(notificationId: notification.id)
+            } catch {
+                NetworkManager.shared.logger.error("Error deleting notification: \(error.localizedDescription)")
+                // Notification already removed locally - if backend fails, it will reappear on next fetch
+                // which is acceptable behavior
+            }
         }
     }
     

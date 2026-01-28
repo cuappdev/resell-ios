@@ -748,4 +748,10 @@ class NetworkManager {
             // Try direct notification
             return try iso8601Decoder.decode(Notifications.self, from: data)
         }
+        
+        /// Delete a notification
+        func deleteNotification(notificationId: String) async throws {
+            let url = try constructURL(endpoint: "/notif/id/\(notificationId)")
+            try await delete(url: url)
+        }
     }
