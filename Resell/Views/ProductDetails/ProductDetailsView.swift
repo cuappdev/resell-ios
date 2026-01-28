@@ -120,6 +120,10 @@ struct ProductDetailsView: View {
         }
     }
 
+    private var isSold: Bool {
+        viewModel.item?.sold == true
+    }
+    
     @ViewBuilder
     private var imageGallery: some View {
         ZStack(alignment: .bottom) {
@@ -130,6 +134,18 @@ struct ProductDetailsView: View {
             }
             .background(Constants.Colors.white)
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+            
+            // Sold overlay
+            if isSold {
+                Rectangle()
+                    .fill(Color.black.opacity(0.5))
+                    .ignoresSafeArea(edges: .top)
+                
+                Text("Item Sold")
+                    .font(.custom("Rubik-Medium", size: 24))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
 
             CustomPageControlIndicatorView(currentPage: $viewModel.currentPage, numberOfPages: $viewModel.images.count)
                 .frame(height: 20)

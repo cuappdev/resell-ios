@@ -104,23 +104,40 @@ struct ProductGalleryCell: View {
 
     // MARK: UI
 
+    private var isSold: Bool {
+        post.sold == true
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             let url = URL(string: post.images.first ?? "")
-            CachedImageView(isImageLoaded: $isImageLoaded, imageURL: url)
-                .frame(width: cellWidth, height: (savedCell ? cellWidth - 20 : cellWidth / 0.75))
-                .clipped()
+            ZStack {
+                CachedImageView(isImageLoaded: $isImageLoaded, imageURL: url)
+                    .frame(width: cellWidth, height: (savedCell ? cellWidth - 20 : cellWidth / 0.75))
+                    .clipped()
+                
+                // Sold overlay
+                if isSold {
+                    Rectangle()
+                        .fill(Color.black.opacity(0.5))
+                        .frame(width: cellWidth, height: (savedCell ? cellWidth - 20 : cellWidth / 0.75))
+                    
+                    Text("Item Sold")
+                        .font(.custom("Rubik-Medium", size: 16))
+                        .foregroundColor(.white)
+                }
+            }
 
             HStack {
                 Text(post.title)
                     .font(Constants.Fonts.title3)
-                    .foregroundStyle(Constants.Colors.black)
+                    .foregroundStyle(isSold ? Constants.Colors.secondaryGray : Constants.Colors.black)
                 
                 Spacer()
                 
                 Text("$\(post.originalPrice)")
                     .font(Constants.Fonts.title4)
-                    .foregroundStyle(Constants.Colors.black)
+                    .foregroundStyle(isSold ? Constants.Colors.secondaryGray : Constants.Colors.black)
             }
             .padding(8)
             .background(Constants.Colors.white)
