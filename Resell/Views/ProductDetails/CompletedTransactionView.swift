@@ -14,7 +14,7 @@ struct CompletedTransactionView: View {
     
     @EnvironmentObject var router: Router
     
-    let transaction: Transaction
+    let transaction: Transaction // should be renamed as this is part of a swift library already...
     
     @State private var stars: Int = 0
     @State private var reviewFeedback: String = ""

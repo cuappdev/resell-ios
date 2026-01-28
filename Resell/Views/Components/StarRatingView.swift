@@ -19,7 +19,7 @@ struct StarRatingView: View {
         rating: Double,
         maxRating: Int = 5,
         starSize: CGFloat = 12,
-        filledColor: Color = .yellow,
+        filledColor: Color = Constants.Colors.resellPurple,
         emptyColor: Color = Constants.Colors.inactiveGray
     ) {
         self.rating = rating

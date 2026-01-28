@@ -91,7 +91,7 @@ struct TransactionReviewCard: View {
                             Image(systemName: index <= review.stars ? "star.fill" : "star")
                                 .resizable()
                                 .frame(width: 12, height: 12)
-                                .foregroundColor(index <= review.stars ? .yellow : Constants.Colors.inactiveGray)
+                                .foregroundColor(index <= review.stars ? Constants.Colors.resellPurple : Constants.Colors.inactiveGray)
                         }
                     }
                 }

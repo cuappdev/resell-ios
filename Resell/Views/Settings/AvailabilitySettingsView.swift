@@ -111,11 +111,12 @@ struct AvailabilitySettingsView: View {
         }
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Text("Availability")
+                Text("Availability Settings")
                     .font(Constants.Fonts.h3)
                     .foregroundStyle(Constants.Colors.black)
             }
         }
+        .toolbarBackground(.hidden, for: .navigationBar)
         .alert("Error", isPresented: .constant(errorMessage != nil)) {
             Button("OK") {
                 errorMessage = nil
