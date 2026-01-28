@@ -22,6 +22,7 @@ struct AvailabilityGridView: View {
     @State private var dragStartLocation: CGPoint = .zero
     @State private var dragStartDate: String? = nil  // Track which day the drag started on
     @State private var lastDraggedCell: CellIdentifier? = nil  // Track last cell to fill gaps
+    @State private var scrollOffset: CGFloat = 0  // Track scroll position for accurate cell mapping
 
     /// Whether the user can edit (drag to select) cells
     var isEditing: Bool = true
@@ -283,6 +284,12 @@ struct AvailabilityGridView: View {
             ZStack(alignment: .bottom) {
                 ScrollView(.vertical, showsIndicators: false) {
                     ZStack(alignment: .topLeading) {
+                        // Invisible view to track scroll offset
+                        GeometryReader { geo in
+                            Color.clear
+                                .preference(key: ScrollOffsetPreferenceKey.self, value: -geo.frame(in: .named("scroll")).origin.y)
+                        }
+                        .frame(height: 0)
                         // Vertical grid lines in scroll area
                         HStack(spacing: 0) {
                             Rectangle()
@@ -329,37 +336,16 @@ struct AvailabilityGridView: View {
                             }
 
                             // Cells area
-                            HStack(spacing: 0) {
-                                let dates = Array(paginatedDates[index])
-                                let combinedCells = selectedCells.union(draggedCells)
-                                
-                                ForEach(Array(zip(dates, paginatedShortDates[index]).enumerated()), id: \.offset) { colIndex, dateInfo in
-                                    let date = dateInfo.0
-                                    VStack(spacing: 0) {
-                                        ForEach(Array(times.enumerated()), id: \.offset) { rowIndex, time in
-                                            let topIdentifier = CellIdentifier(date: date, time: "\(time) Top")
-                                            let bottomIdentifier = CellIdentifier(date: date, time: "\(time) Bottom")
-                                            
-                                            let isSelectedTop = selectedCells.contains(topIdentifier)
-                                            let isSelectedBottom = selectedCells.contains(bottomIdentifier)
-                                            
-                                            CellView(
-                                                isSelectedTop: isSelectedTop,
-                                                isSelectedBottom: isSelectedBottom,
-                                                isHighlightedTop: draggedCells.contains(topIdentifier),
-                                                isHighlightedBottom: draggedCells.contains(bottomIdentifier),
-                                                isTopAdjacentSelected: checkTopAdjacent(date: date, time: time, rowIndex: rowIndex, combinedCells: combinedCells),
-                                                isBottomAdjacentSelected: checkBottomAdjacent(date: date, time: time, rowIndex: rowIndex, combinedCells: combinedCells),
-                                                isBuyerUnavailableTop: buyerUnavailableCells.contains(topIdentifier),
-                                                isBuyerUnavailableBottom: buyerUnavailableCells.contains(bottomIdentifier),
-                                                isSellerUnavailableTop: sellerUnavailableCells.contains(topIdentifier),
-                                                isSellerUnavailableBottom: sellerUnavailableCells.contains(bottomIdentifier)
-                                            )
-                                            .frame(width: gridColumnWidth, height: cellHeight)
-                                        }
-                                    }
-                                }
-                            }
+                            CellsGridView(
+                                dates: Array(paginatedDates[index]),
+                                times: times,
+                                selectedCells: selectedCells,
+                                draggedCells: draggedCells,
+                                buyerUnavailableCells: buyerUnavailableCells,
+                                sellerUnavailableCells: sellerUnavailableCells,
+                                gridColumnWidth: gridColumnWidth,
+                                cellHeight: cellHeight
+                            )
                             .contentShape(Rectangle())
                             .gesture(
                                 DragGesture(minimumDistance: 0)
@@ -371,6 +357,10 @@ struct AvailabilityGridView: View {
                 }
                 .frame(height: scrollableGridHeight)
                 .clipped()
+                .coordinateSpace(name: "scroll")
+                .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
+                    scrollOffset = value
+                }
                 
                 // Fade effect at bottom
                 LinearGradient(
@@ -422,20 +412,6 @@ struct AvailabilityGridView: View {
         return times.firstIndex(of: cleanTime)
     }
     
-    // Optimized adjacency checking functions - vertical adjacency only
-    private func checkTopAdjacent(date: String, time: String, rowIndex: Int, combinedCells: Set<CellIdentifier>) -> Bool {
-        guard rowIndex > 0 else { return false }
-        let adjacentTime = times[rowIndex - 1]
-        let adjacentIdentifier = CellIdentifier(date: date, time: "\(adjacentTime) Bottom")
-        return combinedCells.contains(adjacentIdentifier)
-    }
-    
-    private func checkBottomAdjacent(date: String, time: String, rowIndex: Int, combinedCells: Set<CellIdentifier>) -> Bool {
-        guard rowIndex < times.count - 1 else { return false }
-        let adjacentTime = times[rowIndex + 1]
-        let adjacentIdentifier = CellIdentifier(date: date, time: "\(adjacentTime) Top")
-        return combinedCells.contains(adjacentIdentifier)
-    }
     
     private func mapDragLocationToCell(
         location: CGPoint,
@@ -446,7 +422,8 @@ struct AvailabilityGridView: View {
         let headerHeight: CGFloat = 44
         
         let adjustedX = location.x - timeColumnWidth
-        let adjustedY = location.y - headerHeight
+        // Account for scroll offset - add scrollOffset to get content-relative Y position
+        let adjustedY = location.y - headerHeight + scrollOffset
         
         guard adjustedX >= 0, adjustedY >= 0 else { return nil }
         
@@ -463,6 +440,76 @@ struct AvailabilityGridView: View {
         let time = times[row]
 
         return CellIdentifier(date: date, time: isTopHalf ? "\(time) Top" : "\(time) Bottom")
+    }
+}
+
+// MARK: - CellsGridView
+
+/// Optimized grid view that computes combinedCells once per render
+struct CellsGridView: View {
+    let dates: [String]
+    let times: [String]
+    let selectedCells: Set<CellIdentifier>
+    let draggedCells: Set<CellIdentifier>
+    let buyerUnavailableCells: Set<CellIdentifier>
+    let sellerUnavailableCells: Set<CellIdentifier>
+    let gridColumnWidth: CGFloat
+    let cellHeight: CGFloat
+    
+    // Compute combined cells once for the entire grid
+    private var combinedCells: Set<CellIdentifier> {
+        selectedCells.union(draggedCells)
+    }
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(dates.indices, id: \.self) { colIndex in
+                let date = dates[colIndex]
+                VStack(spacing: 0) {
+                    ForEach(times.indices, id: \.self) { rowIndex in
+                        let time = times[rowIndex]
+                        cellView(date: date, time: time, rowIndex: rowIndex)
+                            .frame(width: gridColumnWidth, height: cellHeight)
+                    }
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func cellView(date: String, time: String, rowIndex: Int) -> some View {
+        let topIdentifier = CellIdentifier(date: date, time: "\(time) Top")
+        let bottomIdentifier = CellIdentifier(date: date, time: "\(time) Bottom")
+        
+        let isSelectedTop = selectedCells.contains(topIdentifier)
+        let isSelectedBottom = selectedCells.contains(bottomIdentifier)
+        
+        CellView(
+            isSelectedTop: isSelectedTop,
+            isSelectedBottom: isSelectedBottom,
+            isHighlightedTop: draggedCells.contains(topIdentifier),
+            isHighlightedBottom: draggedCells.contains(bottomIdentifier),
+            isTopAdjacentSelected: checkTopAdjacent(date: date, rowIndex: rowIndex),
+            isBottomAdjacentSelected: checkBottomAdjacent(date: date, rowIndex: rowIndex),
+            isBuyerUnavailableTop: buyerUnavailableCells.contains(topIdentifier),
+            isBuyerUnavailableBottom: buyerUnavailableCells.contains(bottomIdentifier),
+            isSellerUnavailableTop: sellerUnavailableCells.contains(topIdentifier),
+            isSellerUnavailableBottom: sellerUnavailableCells.contains(bottomIdentifier)
+        )
+    }
+    
+    private func checkTopAdjacent(date: String, rowIndex: Int) -> Bool {
+        guard rowIndex > 0 else { return false }
+        let adjacentTime = times[rowIndex - 1]
+        let adjacentIdentifier = CellIdentifier(date: date, time: "\(adjacentTime) Bottom")
+        return combinedCells.contains(adjacentIdentifier)
+    }
+    
+    private func checkBottomAdjacent(date: String, rowIndex: Int) -> Bool {
+        guard rowIndex < times.count - 1 else { return false }
+        let adjacentTime = times[rowIndex + 1]
+        let adjacentIdentifier = CellIdentifier(date: date, time: "\(adjacentTime) Top")
+        return combinedCells.contains(adjacentIdentifier)
     }
 }
 
@@ -635,6 +682,15 @@ struct CellIdentifier: Hashable, Equatable {
     
     static func == (lhs: CellIdentifier, rhs: CellIdentifier) -> Bool {
         lhs.date == rhs.date && lhs.time == rhs.time
+    }
+}
+
+// MARK: - ScrollOffsetPreferenceKey
+
+struct ScrollOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
 

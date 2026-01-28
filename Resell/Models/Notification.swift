@@ -20,6 +20,62 @@ struct Notifications: Codable, Identifiable {
     enum CodingKeys: String, CodingKey {
         case id, userId, title, body, data, read, createdAt, updatedAt
     }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(String.self, forKey: .id)
+        userId = try container.decode(String.self, forKey: .userId)
+        title = try container.decode(String.self, forKey: .title)
+        body = try container.decode(String.self, forKey: .body)
+        data = try container.decode(NotificationData.self, forKey: .data)
+        read = try container.decode(Bool.self, forKey: .read)
+        
+        // Handle dates flexibly - try ISO8601, then Unix timestamp, then default to now
+        createdAt = Self.decodeDate(from: container, forKey: .createdAt) ?? Date()
+        updatedAt = Self.decodeDate(from: container, forKey: .updatedAt) ?? Date()
+    }
+    
+    /// Attempts to decode a date from various formats
+    private static func decodeDate(from container: KeyedDecodingContainer<CodingKeys>, forKey key: CodingKeys) -> Date? {
+        // Try as ISO8601 string
+        if let dateString = try? container.decode(String.self, forKey: key) {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let date = formatter.date(from: dateString) {
+                return date
+            }
+            // Try without fractional seconds
+            formatter.formatOptions = [.withInternetDateTime]
+            if let date = formatter.date(from: dateString) {
+                return date
+            }
+        }
+        
+        // Try as Unix timestamp (Double)
+        if let timestamp = try? container.decode(Double.self, forKey: key) {
+            return Date(timeIntervalSince1970: timestamp)
+        }
+        
+        // Try as Unix timestamp (Int)
+        if let timestamp = try? container.decode(Int.self, forKey: key) {
+            return Date(timeIntervalSince1970: Double(timestamp))
+        }
+        
+        return nil
+    }
+    
+    // For creating instances manually (previews, tests)
+    init(id: String, userId: String, title: String, body: String, data: NotificationData, read: Bool, createdAt: Date, updatedAt: Date) {
+        self.id = id
+        self.userId = userId
+        self.title = title
+        self.body = body
+        self.data = data
+        self.read = read
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
 }
 
 struct NotificationData: Codable {
@@ -46,6 +102,12 @@ struct NotificationData: Codable {
     /// Returns the notification type from whichever field contains it
     var resolvedType: String {
         type ?? notificationType ?? "general"
+    }
+    
+    /// Returns true if this is a transaction confirmation notification (buyer should confirm if meetup happened)
+    var isTransactionConfirmation: Bool {
+        let resolvedType = resolvedType.lowercased()
+        return resolvedType == "transaction_confirmation" || resolvedType == "transactionconfirmation"
     }
     
     /// Flexible decoding - handles any JSON object structure

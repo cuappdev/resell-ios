@@ -117,6 +117,8 @@
 		2E87F6FA2F270870007C228E /* Notification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E87F6F92F270870007C228E /* Notification.swift */; };
 		2E87F6FB2F270A0D007C228E /* NotificationsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9F75882EB6D680003FE0E0 /* NotificationsViewModel.swift */; };
 		2E87F6FC2F270A13007C228E /* NotificationsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C525B7C2CB1DE55007D5B8E /* NotificationsSettingsView.swift */; };
+		2E87F6FE2F29A651007C228E /* TransactionConfirmationPopup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E87F6FD2F29A651007C228E /* TransactionConfirmationPopup.swift */; };
+		2E87F7002F29AA8B007C228E /* CompletedTransactionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E87F6FF2F29AA71007C228E /* CompletedTransactionView.swift */; };
 		2E8A5A232DBCC82E00B1F281 /* OAuth1 in Frameworks */ = {isa = PBXBuildFile; productRef = 2E8A5A222DBCC82E00B1F281 /* OAuth1 */; };
 		2E8A5A252DBCC82E00B1F281 /* OAuth2 in Frameworks */ = {isa = PBXBuildFile; productRef = 2E8A5A242DBCC82E00B1F281 /* OAuth2 */; };
 		2E8A5A272DBCC82E00B1F281 /* SwiftyBase64 in Frameworks */ = {isa = PBXBuildFile; productRef = 2E8A5A262DBCC82E00B1F281 /* SwiftyBase64 */; };
@@ -282,6 +284,8 @@
 		2E79E5882E870F8E0004CEA6 /* FiltersViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FiltersViewModel.swift; sourceTree = "<group>"; };
 		2E87F6F72F2707F8007C228E /* Transaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transaction.swift; sourceTree = "<group>"; };
 		2E87F6F92F270870007C228E /* Notification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notification.swift; sourceTree = "<group>"; };
+		2E87F6FD2F29A651007C228E /* TransactionConfirmationPopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionConfirmationPopup.swift; sourceTree = "<group>"; };
+		2E87F6FF2F29AA71007C228E /* CompletedTransactionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletedTransactionView.swift; sourceTree = "<group>"; };
 		2E8A5AB42DBD5B3200B1F281 /* SavedRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedRow.swift; sourceTree = "<group>"; };
 		2E8C3D982DBEE06E0074BFAB /* DetailedFilterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailedFilterView.swift; sourceTree = "<group>"; };
 		2E8C3D9C2DBEE3590074BFAB /* SearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBar.swift; sourceTree = "<group>"; };
@@ -581,6 +585,7 @@
 			isa = PBXGroup;
 			children = (
 				2EEAAB272F1ADA1B0006FF5C /* AvailabilitySettingsMenu.swift */,
+				2E87F6FD2F29A651007C228E /* TransactionConfirmationPopup.swift */,
 				2E02D3802F03C48200CCABE6 /* ReviewSection.swift */,
 				2E9F759B2EB6DCBD003FE0E0 /* RangeSlider.swift */,
 				2EEAAB252F18CF6A0006FF5C /* MonthCalendarView.swift */,
@@ -656,6 +661,7 @@
 		2CD7CABA2CE94EAE0056209E /* ProductDetails */ = {
 			isa = PBXGroup;
 			children = (
+				2E87F6FF2F29AA71007C228E /* CompletedTransactionView.swift */,
 				2C02B3A22CC074150020DF90 /* ProductDetailsView.swift */,
 				2E0A38862F0CBDE000362083 /* FollowListView.swift */,
 				2CD7CABB2CE94ECB0056209E /* ExternalProfileView.swift */,
@@ -865,6 +871,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2E87F6FE2F29A651007C228E /* TransactionConfirmationPopup.swift in Sources */,
 				2E87F6FC2F270A13007C228E /* NotificationsSettingsView.swift in Sources */,
 				2E87F6FB2F270A0D007C228E /* NotificationsViewModel.swift in Sources */,
 				2EEB57262F03C704008D2DF3 /* ReviewSection.swift in Sources */,
@@ -926,6 +933,7 @@
 				2C41BB852CD8811400EFF69E /* Post.swift in Sources */,
 				2EEAAB222F15F8FD0006FF5C /* AvailabilitySettingsView.swift in Sources */,
 				2C525B812CB1F195007D5B8E /* SendFeedbackViewModel.swift in Sources */,
+				2E87F7002F29AA8B007C228E /* CompletedTransactionView.swift in Sources */,
 				2C9337562C935CB600818C8E /* ProfileView.swift in Sources */,
 				2E9F758B2EB6D680003FE0E0 /* SearchViewModel.swift in Sources */,
 				2E9F758C2EB6D680003FE0E0 /* EditProfileViewModel.swift in Sources */,

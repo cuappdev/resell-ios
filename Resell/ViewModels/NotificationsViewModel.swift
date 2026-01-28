@@ -143,7 +143,8 @@ class NotificationsViewModel: ObservableObject {
         Task {
             loadState = .loading
             do {
-                self.notifications = try await NetworkManager.shared.getLast30DaysNotifications()
+                let allNotifications = try await NetworkManager.shared.getLast30DaysNotifications()
+                self.notifications = deduplicateNotifications(allNotifications)
                 loadState = notifications.isEmpty ? .empty : .success
             } catch {
                 NetworkManager.shared.logger.error("Error in NotificationsViewModel.fetchNotifications: \(error.localizedDescription)")
@@ -160,11 +161,76 @@ class NotificationsViewModel: ObservableObject {
         Task {
             loadState = .loading
             do {
-                self.notifications = try await NetworkManager.shared.getNewNotifications()
+                let allNotifications = try await NetworkManager.shared.getNewNotifications()
+                self.notifications = deduplicateNotifications(allNotifications)
                 loadState = notifications.isEmpty ? .empty : .success
             } catch {
                 NetworkManager.shared.logger.error("Error fetching new notifications: \(error.localizedDescription)")
                 loadState = .error
+            }
+        }
+    }
+    
+    // MARK: - Deduplication
+    
+    /// Removes duplicate notifications based on content similarity within a time window
+    /// This is a frontend safeguard - backend should also prevent duplicate sends
+    private func deduplicateNotifications(_ notifications: [Notifications]) -> [Notifications] {
+        var seen = Set<String>()
+        var result: [Notifications] = []
+        
+        // Sort by createdAt descending so we keep the most recent one
+        let sorted = notifications.sorted { $0.createdAt > $1.createdAt }
+        
+        for notification in sorted {
+            let key = deduplicationKey(for: notification)
+            if !seen.contains(key) {
+                seen.insert(key)
+                result.append(notification)
+            }
+        }
+        
+        return result
+    }
+    
+    /// Creates a deduplication key based on notification content
+    /// Notifications with the same key within a short time window are considered duplicates
+    private func deduplicationKey(for notification: Notifications) -> String {
+        let type = notification.data.resolvedType.lowercased()
+        let postId = notification.data.postId ?? ""
+        let senderId = notification.data.buyerId ?? notification.data.sellerId ?? ""
+        
+        // Round timestamp to nearest minute to catch near-simultaneous duplicates
+        let timeWindow = Int(notification.createdAt.timeIntervalSince1970 / 60)
+        
+        return "\(type)_\(postId)_\(senderId)_\(timeWindow)"
+    }
+    
+    // MARK: - Transaction Confirmation
+    
+    /// Confirm or deny that a transaction happened
+    /// - Parameters:
+    ///   - notification: The transaction confirmation notification
+    ///   - completed: Whether the transaction actually happened
+    func confirmTransaction(notification: Notifications, completed: Bool) {
+        guard let transactionId = notification.data.transactionId else {
+            NetworkManager.shared.logger.error("No transactionId in notification for confirmation")
+            return
+        }
+        
+        // Mark notification as read
+        markAsRead(notification: notification)
+        
+        Task {
+            do {
+                if completed {
+                    // Mark transaction as completed in backend
+                    _ = try await NetworkManager.shared.completeTransaction(transactionId: transactionId)
+                }
+                // Remove the confirmation notification after handling
+                removeNotification(notification: notification)
+            } catch {
+                NetworkManager.shared.logger.error("Error confirming transaction: \(error.localizedDescription)")
             }
         }
     }

@@ -26,6 +26,13 @@ class NetworkManager {
     private let hostURL: String = Keys.localServerURL
     private let maxAttempts = 2
     
+    /// Shared JSON encoder configured for backend compatibility
+    private let jsonEncoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .secondsSince1970
+        return encoder
+    }()
+    
     // MARK: - Init
     
     
@@ -102,7 +109,7 @@ class NetworkManager {
         /// - Returns: A publisher that emits a decoded instance of type `T` or an error if the decoding or network request fails.
         ///
         func post<T: Decodable, U: Encodable>(url: URL, body: U, attempt: Int = 1) async throws -> T {
-            let requestData = try JSONEncoder().encode(body)
+            let requestData = try jsonEncoder.encode(body)
             let request = try await createRequest(url: url, method: "POST", body: requestData)
             
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -120,7 +127,7 @@ class NetworkManager {
         
         /// Overloaded post function for requests without a return
         func post<U: Encodable>(url: URL, body: U, attempt: Int = 1) async throws {
-            let requestData = try JSONEncoder().encode(body)
+            let requestData = try jsonEncoder.encode(body)
             let request = try await createRequest(url: url, method: "POST", body: requestData)
             
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -661,6 +668,10 @@ class NetworkManager {
                 }
             }
             
+            // Debug: Print raw JSON response
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("📬 Notifications raw response: \(jsonString.prefix(1000))")
+            }
             
             // Try decoding as array first (direct response)
             if let notifications = try? iso8601Decoder.decode([Notifications].self, from: data) {
@@ -672,8 +683,13 @@ class NetworkManager {
                 return wrapped.notifications
             }
             
-            // If both fail, throw the actual decoding error for debugging
-            return try iso8601Decoder.decode([Notifications].self, from: data)
+            // If both fail, print detailed error and throw
+            do {
+                return try iso8601Decoder.decode([Notifications].self, from: data)
+            } catch let decodingError as DecodingError {
+                print("❌ Notification decoding error: \(decodingError)")
+                throw decodingError
+            }
         }
         
         /// Custom POST for notifications with ISO8601 date decoding

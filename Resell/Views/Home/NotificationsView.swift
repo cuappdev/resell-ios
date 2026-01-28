@@ -14,6 +14,8 @@ struct NotificationsView: View {
     @EnvironmentObject var router: Router
     @StateObject private var viewModel = NotificationsViewModel()
     @State private var isNavigating = false
+    @State private var showTransactionConfirmation = false
+    @State private var selectedConfirmationNotification: Notifications? = nil
     
     private let relativeFormatter: RelativeDateTimeFormatter = {
         let f = RelativeDateTimeFormatter()
@@ -116,6 +118,19 @@ struct NotificationsView: View {
                     }
             }
         }
+        .overlay {
+            if showTransactionConfirmation, let notification = selectedConfirmationNotification {
+                TransactionConfirmationPopup(
+                    isPresented: $showTransactionConfirmation,
+                    notification: notification,
+                    onConfirm: { completed in
+                        viewModel.confirmTransaction(notification: notification, completed: completed)
+                    }
+                )
+                .transition(.opacity)
+                .animation(.easeInOut(duration: 0.2), value: showTransactionConfirmation)
+            }
+        }
     }
     
     // Creates the filter for notifications sorting
@@ -203,11 +218,20 @@ struct NotificationsView: View {
         case "requests": return "list.bullet.rectangle"
         case "bookmarks": return "bookmark.fill"
         case "transactions": return "creditcard.fill"
+        case "transaction_confirmation", "transactionconfirmation": return "checkmark.circle.fill"
         default: return "bell.fill"
         }
     }
     
     private func handleNotificationTap(_ notification: Notifications) {
+        // Check if this is a transaction confirmation notification
+        if notification.data.isTransactionConfirmation {
+            selectedConfirmationNotification = notification
+            showTransactionConfirmation = true
+            viewModel.markAsRead(notification: notification)
+            return
+        }
+        
         Task {
             isNavigating = true
             defer { isNavigating = false }
@@ -304,6 +328,12 @@ struct NotificationsView: View {
         case "transactions":
             if let postTitle = notification.data.postTitle {
                 return Text("Transaction update for ") + Text(postTitle).bold()
+            }
+            return Text(notification.body)
+        case "transaction_confirmation", "transactionconfirmation":
+            if let postTitle = notification.data.postTitle,
+               let sellerUsername = notification.data.sellerUsername {
+                return Text("Did your meetup for ") + Text(postTitle).bold() + Text(" with ") + Text(sellerUsername).bold() + Text(" happen?")
             }
             return Text(notification.body)
         default:
