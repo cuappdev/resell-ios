@@ -137,7 +137,3 @@ struct ForYouView: View {
         }
     }
 }
-
-#Preview {
-    ForYouView()
-}

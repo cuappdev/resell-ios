@@ -79,6 +79,4 @@ struct NavigationPurpleButton<Destination: View>: View {
             .foregroundColor(Constants.Colors.white)
             .clipShape(Capsule())
     }
-    
 }
-

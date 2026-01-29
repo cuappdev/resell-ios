@@ -58,7 +58,6 @@ struct TransactionReviewCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
-                // Reviewer (buyer) profile image
                 if let photoUrl = buyer?.photoUrl, let url = URL(string: photoUrl) {
                     KFImage(url)
                         .placeholder {
@@ -80,12 +79,10 @@ struct TransactionReviewCard: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    // Reviewer name
                     Text(buyer?.givenName ?? "Anonymous")
                         .font(Constants.Fonts.title3)
                         .foregroundColor(Constants.Colors.black)
                     
-                    // Star rating
                     HStack(spacing: 2) {
                         ForEach(1...5, id: \.self) { index in
                             Image(systemName: index <= review.stars ? "star.fill" : "star")
@@ -98,7 +95,6 @@ struct TransactionReviewCard: View {
                 
                 Spacer()
                 
-                // Date
                 if let createdAt = review.createdAt {
                     Text(formatDate(createdAt))
                         .font(Constants.Fonts.body2)
@@ -106,7 +102,6 @@ struct TransactionReviewCard: View {
                 }
             }
             
-            // Review comment
             if let comments = review.comments, !comments.isEmpty {
                 Text(comments)
                     .font(Constants.Fonts.body2)
@@ -114,7 +109,6 @@ struct TransactionReviewCard: View {
                     .lineLimit(3)
             }
             
-            // Post info (what was purchased)
             if let post = post {
                 HStack(spacing: 8) {
                     if let imageUrl = post.firstImageURL {

@@ -42,7 +42,7 @@ struct OptionsMenuView: View {
                     }
                 }
 
-            VStack(spacing: 0) {
+            VStack {
                 ForEach(options.indices, id: \.self) { index in
                     switch options[index] {
                     case .share(let url, let item):
@@ -89,7 +89,6 @@ struct OptionsMenuView: View {
                             .frame(height: 0.5)
                             .background(Constants.Colors.black.opacity(0.36))
                     }
-
                 }
             }
             .frame(width: 250)

@@ -244,9 +244,3 @@ struct AvailabilitySettingsView: View {
         return cells
     }
 }
-
-#Preview {
-    NavigationStack {
-        AvailabilitySettingsView()
-    }
-}

@@ -75,7 +75,3 @@ struct SuggestionsView: View {
            }
        }
 }
-
-#Preview {
-    SuggestionsView()
-}

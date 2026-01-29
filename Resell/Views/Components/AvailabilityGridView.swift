@@ -98,11 +98,9 @@ struct AvailabilityGridView: View {
                         dragStartLocation = value.startLocation
                     }
                     
-                    // Only handle cell selection if drag started in the cell area (after timeColumnWidth)
                     let startedInCellArea = dragStartLocation.x > timeColumnWidth
                     
                     if startedInCellArea && isEditing {
-                        // In single selection mode, handle tap immediately
                         if singleSelectionMode {
                             if let identifier = mapDragLocationToCell(
                                 location: value.startLocation,
@@ -110,11 +108,9 @@ struct AvailabilityGridView: View {
                                 times: times,
                                 cellHeight: cellHeight
                             ) {
-                                // Toggle selection for this single cell
                                 if selectedCells.contains(identifier) {
                                     selectedCells.remove(identifier)
                                 } else {
-                                    // Clear previous selection and select new cell
                                     selectedCells.removeAll()
                                     selectedCells.insert(identifier)
                                 }
@@ -125,33 +121,27 @@ struct AvailabilityGridView: View {
                         let horizontalDrag = abs(value.translation.width)
                         let verticalDrag = abs(value.translation.height)
                         
-                        // Determine drag direction at the start - prefer vertical for cell selection
                         if !isDraggingCells && verticalDrag > 10 && horizontalDrag < 50 {
                             isDraggingCells = true
                         }
                         
                         if isDraggingCells {
-                            // Handle cell selection
                             if let identifier = mapDragLocationToCell(
                                 location: value.location,
                                 dates: Array(paginatedDates[currentPage]),
                                 times: times,
                                 cellHeight: cellHeight
                             ) {
-                                // Set drag start date on first cell
                                 if dragStartDate == nil {
                                     dragStartDate = identifier.date
                                 }
                                 
-                                // Only allow selection within the same day
                                 guard identifier.date == dragStartDate else { return }
                                 
-                                // Set toggle mode on first cell
                                 if toggleSelectionMode == nil {
                                     toggleSelectionMode = selectedCells.contains(identifier) ? false : true
                                 }
                                 
-                                // Fill in any gaps between last cell and current cell
                                 if let lastCell = lastDraggedCell, lastCell.date == identifier.date {
                                     let filledCells = fillCellGap(from: lastCell, to: identifier, date: identifier.date)
                                     for cell in filledCells {
@@ -166,7 +156,6 @@ struct AvailabilityGridView: View {
                     }
                 }
                 .onEnded { value in
-                    // Skip normal processing in single selection mode (handled in onChanged)
                     if singleSelectionMode {
                         dragStartLocation = .zero
                         return
@@ -175,7 +164,6 @@ struct AvailabilityGridView: View {
                     let startedInCellArea = dragStartLocation.x > timeColumnWidth
                     
                     if isDraggingCells && startedInCellArea {
-                        // Finalize cell selection
                         if let toggleSelectionMode = toggleSelectionMode {
                             if toggleSelectionMode {
                                 selectedCells.formUnion(draggedCells)
@@ -184,18 +172,15 @@ struct AvailabilityGridView: View {
                             }
                         }
                     } else if !isDraggingCells {
-                        // Handle horizontal swipe for page navigation
                         let horizontalDrag = value.translation.width
                         let velocity = value.predictedEndTranslation.width - value.translation.width
                         
                         if horizontalDrag < -50 || velocity < -100 {
-                            // Swipe left - go to next page
                             if currentPage < paginatedDates.count - 1 {
                                 currentPage += 1
                                 notifyVisibleDatesChanged()
                             }
                         } else if horizontalDrag > 50 || velocity > 100 {
-                            // Swipe right - go to previous page
                             if currentPage > 0 {
                                 currentPage -= 1
                                 notifyVisibleDatesChanged()
@@ -242,9 +227,7 @@ struct AvailabilityGridView: View {
     
     private func pageView(for index: Int) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Sticky header row with EST and dates + vertical lines
             ZStack(alignment: .topLeading) {
-                // Vertical lines in header
                 HStack(spacing: 0) {
                     Rectangle()
                         .fill(Color.clear)

@@ -51,8 +51,8 @@ struct LabeledTextField: View {
                         .onChange(of: text) { newText in
                             if let maxCharacters = maxCharacters, newText.count > maxCharacters {
                                 text = String(newText.prefix(maxCharacters))
-                            }
                         }
+                    }
                 }
             } else {
                 TextField(placeholder, text: $text)
@@ -75,5 +75,4 @@ struct LabeledTextField: View {
             }
         }
     }
-
 }

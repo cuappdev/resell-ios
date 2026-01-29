@@ -191,7 +191,3 @@ struct SettingsView: View {
         .frame(width: 300)
     }
 }
-
-#Preview {
-    SettingsView(isAccountSettings: false)
-}

@@ -43,12 +43,10 @@ struct StarRatingView: View {
         
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
-                // Empty star background
                 Image(systemName: "star.fill")
                     .resizable()
                     .foregroundColor(emptyColor)
                 
-                // Filled star overlay (clipped based on fill amount)
                 Image(systemName: "star.fill")
                     .resizable()
                     .foregroundColor(filledColor)
@@ -61,18 +59,4 @@ struct StarRatingView: View {
         }
         .frame(width: starSize, height: starSize)
     }
-}
-
-#Preview {
-    VStack(spacing: 20) {
-        StarRatingView(rating: 0)
-        StarRatingView(rating: 2.5)
-        StarRatingView(rating: 3.7)
-        StarRatingView(rating: 4.2)
-        StarRatingView(rating: 5)
-        
-        // Larger version
-        StarRatingView(rating: 4.3, starSize: 24)
-    }
-    .padding()
 }

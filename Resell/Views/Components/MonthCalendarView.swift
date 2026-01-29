@@ -382,10 +382,8 @@ struct SelectionRowShape: Shape {
         let bl = roundBottomLeft ? cornerRadius : 0
         let br = roundBottomRight ? cornerRadius : 0
         
-        // Start from top-left
         path.move(to: CGPoint(x: rect.minX + tl, y: rect.minY))
         
-        // Top edge to top-right
         path.addLine(to: CGPoint(x: rect.maxX - tr, y: rect.minY))
         if tr > 0 {
             path.addArc(center: CGPoint(x: rect.maxX - tr, y: rect.minY + tr),
@@ -395,7 +393,6 @@ struct SelectionRowShape: Shape {
                        clockwise: false)
         }
         
-        // Right edge to bottom-right
         path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - br))
         if br > 0 {
             path.addArc(center: CGPoint(x: rect.maxX - br, y: rect.maxY - br),
@@ -405,7 +402,6 @@ struct SelectionRowShape: Shape {
                        clockwise: false)
         }
         
-        // Bottom edge to bottom-left
         path.addLine(to: CGPoint(x: rect.minX + bl, y: rect.maxY))
         if bl > 0 {
             path.addArc(center: CGPoint(x: rect.minX + bl, y: rect.maxY - bl),
@@ -415,7 +411,6 @@ struct SelectionRowShape: Shape {
                        clockwise: false)
         }
         
-        // Left edge to top-left
         path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + tl))
         if tl > 0 {
             path.addArc(center: CGPoint(x: rect.minX + tl, y: rect.minY + tl),

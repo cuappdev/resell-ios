@@ -13,33 +13,17 @@ struct RangeSlider: View {
     let range: ClosedRange<Double>
     let step: Double = 5 // Define the step value
     
-    // Track width constant
     private let trackWidth: CGFloat = 344
     private let handleDiameter: CGFloat = 14
-    
-    // Calculate position from value
-    private func position(for value: Double) -> CGFloat {
-        let percentage = (value - range.lowerBound) / (range.upperBound - range.lowerBound)
-        return CGFloat(percentage) * (trackWidth - handleDiameter)
-    }
-    
-    // Calculate value from position
-    private func value(for position: CGFloat) -> Double {
-        let percentage = Double(position) / Double(trackWidth - handleDiameter)
-        let value = percentage * (range.upperBound - range.lowerBound) + range.lowerBound
-        return round(value / step) * step
-    }
     
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
-                // Track
                 Rectangle()
                     .fill(Constants.Colors.resellPurple.opacity(0.2))
                     .frame(width: trackWidth, height: 4)
                     .cornerRadius(4)
                 
-                // Low handle
                 Circle()
                     .fill(Color.white)
                     .frame(width: handleDiameter, height: handleDiameter)
@@ -57,7 +41,6 @@ struct RangeSlider: View {
                             }
                     )
                 
-                // High handle
                 Circle()
                     .fill(Color.white)
                     .frame(width: handleDiameter, height: handleDiameter)
@@ -77,6 +60,17 @@ struct RangeSlider: View {
             }
         }
         .frame(height: 44)
+    }
+    
+    private func position(for value: Double) -> CGFloat {
+        let percentage = (value - range.lowerBound) / (range.upperBound - range.lowerBound)
+        return CGFloat(percentage) * (trackWidth - handleDiameter)
+    }
+    
+    private func value(for position: CGFloat) -> Double {
+        let percentage = Double(position) / Double(trackWidth - handleDiameter)
+        let value = percentage * (range.upperBound - range.lowerBound) + range.lowerBound
+        return round(value / step) * step
     }
 }
 

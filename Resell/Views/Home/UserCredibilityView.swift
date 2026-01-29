@@ -175,7 +175,3 @@ struct UserCredibilityView: View {
     }
     
 }
-
-#Preview {
-    UserCredibilityView()
-}

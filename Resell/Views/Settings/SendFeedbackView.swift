@@ -149,7 +149,3 @@ struct SendFeedbackView: View {
     }
 
 }
-
-#Preview {
-    SendFeedbackView()
-}

@@ -165,6 +165,3 @@ struct PriceFieldPositionKey: PreferenceKey {
     }
 }
 
-#Preview {
-    NewListingDetailsView()
-}

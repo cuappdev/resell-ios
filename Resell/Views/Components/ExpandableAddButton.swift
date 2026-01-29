@@ -26,8 +26,8 @@ struct ExpandableAddButton: View {
                     .onTapGesture {
                         withAnimation {
                             isExpanded.toggle()
-                        }
                     }
+                }
             }
 
             VStack(alignment: .trailing, spacing: 24) {
@@ -105,8 +105,4 @@ struct ExpandableAddButton: View {
                 .stroke(Constants.Colors.resellGradient, lineWidth: 3)
         }
     }
-}
-
-#Preview {
-    ExpandableAddButton()
 }

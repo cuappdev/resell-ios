@@ -52,9 +52,3 @@ struct ShimmerView: View {
         }
     }
 }
-
-#Preview {
-    ShimmerView()
-        .frame(width: 300, height: 100)
-}
-

@@ -46,7 +46,6 @@ struct FilterButton: View {
                     }
                 }
             }
-
         })
     }
 }
@@ -66,7 +65,7 @@ struct CircularFilterButton: View {
                 
                 Image(filter.title)
                     .resizable()
-                    .scaledToFit()  // ✅ Maintains aspect ratio
+                    .scaledToFit()
                     .frame(width: 56, height: 56)
             }
         })

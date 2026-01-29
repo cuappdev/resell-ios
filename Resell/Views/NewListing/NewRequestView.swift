@@ -145,7 +145,3 @@ struct NewRequestView: View {
         }
     }
 }
-
-#Preview {
-    NewRequestView()
-}
