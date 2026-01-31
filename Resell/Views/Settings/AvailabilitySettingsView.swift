@@ -11,6 +11,7 @@ struct AvailabilitySettingsView: View {
     
     // MARK: - Properties
     
+    @EnvironmentObject var router: Router
     @State private var selectedCells: Set<CellIdentifier> = []
     @State private var currentMonthOffset: Int = 0
     @State private var gridStartDate: Date = Calendar.current.startOfDay(for: Date())
@@ -103,7 +104,20 @@ struct AvailabilitySettingsView: View {
                     .background(Color.white.opacity(0.7))
             }
         }
+        .navigationBarBackButtonHidden(true)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    router.pop()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 12, height: 20)
+                        .foregroundStyle(Constants.Colors.black)
+                }
+            }
+            
             ToolbarItem(placement: .principal) {
                 Text("Availability Settings")
                     .font(Constants.Fonts.h3)
