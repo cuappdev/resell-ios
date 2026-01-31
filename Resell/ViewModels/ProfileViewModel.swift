@@ -37,6 +37,16 @@ class ProfileViewModel: ObservableObject {
     var reviewCount: Int {
         externalUserReviews.count
     }
+    
+    /// Number of items sold - uses backend value if available, otherwise falls back to review count
+    var soldCount: Int {
+        // If backend returns a valid soldPosts count, use it
+        if let backendCount = externalUser?.soldPosts, backendCount > 0 {
+            return backendCount
+        }
+        // Fallback: use review count since each review represents a completed transaction
+        return externalUserReviews.count
+    }
 
     enum Tab: String {
         case listing, archive, wishlist

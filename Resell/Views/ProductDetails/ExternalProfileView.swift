@@ -124,7 +124,7 @@ struct ExternalProfileView: View {
             
             // metrics bar
             HStack {
-                Text("\(viewModel.externalUser?.soldPosts ?? 0)")
+                Text("\(viewModel.soldCount)")
                 .font(Constants.Fonts.body2)
                 .fontWeight(.medium)
                 .foregroundColor(.black)
