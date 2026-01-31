@@ -101,8 +101,8 @@ struct NotificationsView: View {
                 .offset(y: -60)
             }
         }
-        .padding(.top, 5)
-        .padding(.vertical, 1)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Constants.Colors.white)
         .navigationTitle("Notifications")
         .onAppear {
             viewModel.fetchNotifications()
