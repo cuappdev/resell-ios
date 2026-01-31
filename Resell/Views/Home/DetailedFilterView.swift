@@ -43,7 +43,20 @@ struct DetailedFilterView: View {
                 filtersViewModel.clearFilterSearch()
             }
         }
+        .navigationBarBackButtonHidden(true)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    router.pop()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 12, height: 20)
+                        .foregroundStyle(Constants.Colors.black)
+                }
+            }
+            
             ToolbarItem(placement: .principal) {
                 Text(filter.title)
                     .font(Constants.Fonts.h1)
