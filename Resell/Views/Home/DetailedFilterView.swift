@@ -53,6 +53,7 @@ struct DetailedFilterView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 12, height: 20)
+                        .fontWeight(.medium)
                         .foregroundStyle(Constants.Colors.black)
                 }
             }

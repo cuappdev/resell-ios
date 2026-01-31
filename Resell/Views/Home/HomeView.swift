@@ -97,7 +97,9 @@ struct HomeView: View {
                     Button(action: {
                         router.push(.notifications)
                     }, label: {
-                        Icon(image: "bell")
+                        Image(systemName: "bell") // using the native sfsymbols bell is faster + prettier
+                            .font(.system(size: 20, weight: .medium)) // Increases thickness to bold
+                            .foregroundStyle(.black)
                     })
                     .padding(.leading, 12)
                 }
