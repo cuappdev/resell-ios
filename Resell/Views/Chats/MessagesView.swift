@@ -45,8 +45,21 @@ struct MessagesView: View {
         }
         .background(Constants.Colors.white)
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
         .toolbarBackground(Constants.Colors.white, for: .automatic)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    router.pop()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 12, height: 20)
+                        .foregroundStyle(Constants.Colors.black)
+                }
+            }
+                
             ToolbarItem(placement: .principal) {
                 headerButton
             }
