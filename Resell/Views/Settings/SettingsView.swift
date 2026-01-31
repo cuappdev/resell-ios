@@ -27,9 +27,6 @@ struct SettingsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Custom header
-            customHeader
-            
             ForEach(isAccountSettings ? viewModel.accountSettings : viewModel.settings, id: \.self) { setting in
                 switch setting {
                 case .accountSettings:
@@ -66,7 +63,20 @@ struct SettingsView: View {
             Spacer()
         }
         .background(Constants.Colors.white)
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationTitle(isAccountSettings ? "Account Settings" : "Settings")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    router.pop()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(Constants.Colors.black)
+                }
+            }
+        }
         .sheet(isPresented: $viewModel.didShowWebView) {
             WebView(url: URL(string: "https://www.cornellappdev.com/license/resell")!)
                 .edgesIgnoringSafeArea(.all)
@@ -78,41 +88,6 @@ struct SettingsView: View {
             popupModalContent
                 .padding(Constants.Spacing.horizontalPadding)
         }
-    }
-    
-    // MARK: - Custom Header
-    
-    private var customHeader: some View {
-        HStack {
-            Button {
-                router.pop()
-            } label: {
-                Image(systemName: "chevron.left")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 20)
-                    .foregroundStyle(Constants.Colors.black)
-            }
-            .frame(width: 24, alignment: .leading)
-            
-            Spacer()
-            
-            Text(isAccountSettings ? "Account Settings" : "Settings")
-                .font(Constants.Fonts.h3)
-                .foregroundStyle(Constants.Colors.black)
-            
-            Spacer()
-            
-            // Empty spacer for balance
-            Color.clear
-                .frame(width: 24)
-        }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 12)
-        .overlay(alignment: .bottom) {
-            Divider()
-        }
-        .background(Constants.Colors.white)
     }
 
     private func settingsRow(isRed: Bool = false, title: String, icon: String, action: @escaping () -> Void) -> some View {
