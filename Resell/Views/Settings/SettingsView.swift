@@ -26,7 +26,10 @@ struct SettingsView: View {
     // MARK: - UI
 
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
+            // Custom header
+            customHeader
+            
             ForEach(isAccountSettings ? viewModel.accountSettings : viewModel.settings, id: \.self) { setting in
                 switch setting {
                 case .accountSettings:
@@ -62,8 +65,8 @@ struct SettingsView: View {
 
             Spacer()
         }
-        .padding(.top, 24)
         .background(Constants.Colors.white)
+        .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $viewModel.didShowWebView) {
             WebView(url: URL(string: "https://www.cornellappdev.com/license/resell")!)
                 .edgesIgnoringSafeArea(.all)
@@ -75,13 +78,41 @@ struct SettingsView: View {
             popupModalContent
                 .padding(Constants.Spacing.horizontalPadding)
         }
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text(isAccountSettings ? "Account Settings" : "Settings")
-                    .font(Constants.Fonts.h3)
+    }
+    
+    // MARK: - Custom Header
+    
+    private var customHeader: some View {
+        HStack {
+            Button {
+                router.pop()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 20)
                     .foregroundStyle(Constants.Colors.black)
             }
+            .frame(width: 24, alignment: .leading)
+            
+            Spacer()
+            
+            Text(isAccountSettings ? "Account Settings" : "Settings")
+                .font(Constants.Fonts.h3)
+                .foregroundStyle(Constants.Colors.black)
+            
+            Spacer()
+            
+            // Empty spacer for balance
+            Color.clear
+                .frame(width: 24)
         }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 12)
+        .overlay(alignment: .bottom) {
+            Divider()
+        }
+        .background(Constants.Colors.white)
     }
 
     private func settingsRow(isRed: Bool = false, title: String, icon: String, action: @escaping () -> Void) -> some View {
