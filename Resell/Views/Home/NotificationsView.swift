@@ -53,11 +53,12 @@ struct NotificationsView: View {
                         if let items = viewModel.groupedFilteredNotifications[section], !items.isEmpty {
                             Text(section.rawValue)
                                 .font(.custom("Rubik-Medium", size: 18))
-                                .foregroundColor(.primary)
+                                .foregroundColor(Constants.Colors.black)
                                 .textCase(nil)
                                 .padding(.leading, 8)
                                 .padding(.top, 5)
                                 .listRowSeparator(.hidden)
+                                .listRowBackground(Constants.Colors.white)
                             ForEach(items) { notification in
                                 notificationView(for: notification)
                                     .listRowInsets(EdgeInsets())
@@ -68,6 +69,8 @@ struct NotificationsView: View {
                 }
                 .listStyle(.plain)
                 .listRowSeparator(.hidden)
+                .scrollContentBackground(.hidden)
+                .background(Constants.Colors.white)
                 .refreshable {
                     viewModel.fetchNotifications()
                 }
@@ -104,6 +107,7 @@ struct NotificationsView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Constants.Colors.white)
         .navigationTitle("Notifications")
+        .preferredColorScheme(.light)
         .onAppear {
             viewModel.fetchNotifications()
         }
@@ -193,7 +197,7 @@ struct NotificationsView: View {
             handleNotificationTap(notification)
         }
         .listRowBackground(
-            (notification.read ? Color.white : Constants.Colors.resellPurple.opacity(0.1))
+            (notification.read ? Constants.Colors.white : Constants.Colors.resellPurple.opacity(0.1))
         )
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
             Button(action: {
