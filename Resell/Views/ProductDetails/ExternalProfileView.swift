@@ -196,7 +196,7 @@ struct ExternalProfileView: View {
                                 RoundedRectangle(cornerRadius: 90.79)
                                     .stroke(Constants.Colors.resellPurple, lineWidth: viewModel.isFollowing ? 1.5 : 0)
                             )
-                            .frame(width: 313, height: 38.79)
+                            .frame(width: 366, height: 38.79)
                         
                         if viewModel.isFollowLoading {
                             ProgressView()
@@ -217,16 +217,6 @@ struct ExternalProfileView: View {
                     }
                 }
                 .disabled(viewModel.isFollowLoading)
-                
-                ZStack {
-                    Image(systemName: "envelope")
-                        .foregroundStyle(Constants.Colors.resellPurple)
-                        .frame(width: 20, height: 16)
-                    
-                    Circle()
-                        .stroke(Constants.Colors.resellPurple, lineWidth: 1.2)
-                        .frame(width: 39, height: 39)
-                }
             }
         }
         .padding(.trailing, 26)

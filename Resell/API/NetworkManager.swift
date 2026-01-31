@@ -954,7 +954,6 @@ class NetworkManager {
                 throw error
             }
             
-            
             // Try different response formats
             if let wrapped = try? iso8601Decoder.decode(MarkReadResponse.self, from: data) {
                 return wrapped.notification

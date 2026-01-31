@@ -92,7 +92,8 @@ struct Constants {
     /// Chat  categories used in Resell's design system
     static let chats = [
         FilterCategory(id: 0, title: ChatTab.purchases.rawValue),
-        FilterCategory(id: 1, title: ChatTab.offers.rawValue)
+        FilterCategory(id: 1, title: ChatTab.offers.rawValue),
+        FilterCategory(id: 2, title: ChatTab.archived.rawValue)
     ]
     
     // TODO: Use this whenever working with conditions
