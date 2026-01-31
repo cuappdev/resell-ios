@@ -47,12 +47,26 @@ struct Transaction: Codable, Identifiable, Hashable {
             amount = 0
         }
         
-        // Handle transactionDate with flexible parsing (ISO8601 with or without fractional seconds)
+        // Handle transactionDate - backend sends ISO8601 strings like "2026-01-28T03:12:55.810Z"
+        // Note: transactionDate can be null in database
         if let dateString = try? container.decode(String.self, forKey: .transactionDate) {
-            transactionDate = Transaction.parseDate(dateString) ?? Date()
-        } else if let date = try? container.decode(Date.self, forKey: .transactionDate) {
+            print("📅 Transaction date decoded as String: '\(dateString)'")
+            if let parsed = Transaction.parseDate(dateString) {
+                transactionDate = parsed
+                print("📅 Parsed to Date: \(transactionDate)")
+            } else {
+                print("📅 Failed to parse string '\(dateString)', using current date")
+                transactionDate = Date()
+            }
+        }
+        // Fallback: try decoder's date strategy (iso8601)
+        else if let date = try? container.decode(Date.self, forKey: .transactionDate) {
+            print("📅 Transaction date decoded via decoder strategy: \(date)")
             transactionDate = date
-        } else {
+        }
+        // Handle null or missing value
+        else {
+            print("📅 transactionDate is null or missing, using current date")
             transactionDate = Date()
         }
     }

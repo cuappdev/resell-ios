@@ -173,5 +173,4 @@ struct UserCredibilityView: View {
     var storefront_review_tab: some View {
         Text("Tab")
     }
-    
 }

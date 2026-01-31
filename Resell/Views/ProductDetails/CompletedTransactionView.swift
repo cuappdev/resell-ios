@@ -147,7 +147,6 @@ struct CompletedTransactionView: View {
             
             Spacer()
             
-            // Completed badge
             Label("Completed", systemImage: "checkmark.circle.fill")
                 .font(.custom("Rubik-Medium", size: 10))
                 .foregroundColor(.green)

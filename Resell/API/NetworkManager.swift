@@ -26,14 +26,15 @@ class NetworkManager {
     private let hostURL: String = Keys.localServerURL
     private let maxAttempts = 2
     
-    /// Shared JSON encoder configured for backend compatibility (sends dates as milliseconds)
+    /// Shared JSON encoder configured for backend compatibility (sends dates as ISO8601 strings)
     private let jsonEncoder: JSONEncoder = {
         let encoder = JSONEncoder()
-        // Backend expects milliseconds since 1970, not seconds
+        // Backend expects ISO8601 strings like "2026-01-28T03:12:55.810Z"
         encoder.dateEncodingStrategy = .custom { date, encoder in
             var container = encoder.singleValueContainer()
-            let milliseconds = Int64(date.timeIntervalSince1970 * 1000)
-            try container.encode(milliseconds)
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            try container.encode(formatter.string(from: date))
         }
         return encoder
     }()
@@ -619,14 +620,15 @@ class NetworkManager {
             return decoder
         }
         
-        /// ISO8601 encoder for availability endpoints (sends dates as milliseconds)
+        /// ISO8601 encoder for availability endpoints (sends dates as ISO8601 strings)
         private var iso8601Encoder: JSONEncoder {
             let encoder = JSONEncoder()
-            // Backend expects milliseconds since 1970
+            // Backend expects ISO8601 strings like "2026-01-28T03:12:55.810Z"
             encoder.dateEncodingStrategy = .custom { date, encoder in
                 var container = encoder.singleValueContainer()
-                let milliseconds = Int64(date.timeIntervalSince1970 * 1000)
-                try container.encode(milliseconds)
+                let formatter = ISO8601DateFormatter()
+                formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                try container.encode(formatter.string(from: date))
             }
             return encoder
         }
@@ -650,8 +652,24 @@ class NetworkManager {
         func updateAvailability(schedule: [String: [AvailabilitySlot]]) async throws -> AvailabilityResponse {
             let url = try constructURL(endpoint: "/availability/update/")
             let requestData = try iso8601Encoder.encode(UpdateAvailabilityBody(schedule: schedule))
+            
+            // Debug: Log full URL and request body
+            print("📅 Update availability URL: \(url.absoluteString)")
+            if let jsonString = String(data: requestData, encoding: .utf8) {
+                print("📅 Update availability body: \(jsonString)")
+            }
+            
             let request = try await createRequest(url: url, method: "POST", body: requestData)
             let (data, response) = try await URLSession.shared.data(for: request)
+            
+            // Debug: Log response
+            if let httpResponse = response as? HTTPURLResponse {
+                print("📅 Update availability status: \(httpResponse.statusCode)")
+            }
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("📅 Update availability response: \(responseString)")
+            }
+            
             try handleResponse(data: data, response: response)
             return try iso8601Decoder.decode(AvailabilityResponse.self, from: data)
         }

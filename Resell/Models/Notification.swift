@@ -131,6 +131,7 @@ struct NotificationData: Codable {
         messageId = container?.decodeIfPresentString(forKey: "messageId")
         
         // Try to decode price as Double or String
+        // TODO: We should know the data type...
         if let priceDouble = try? container?.decodeIfPresent(Double.self, forKey: DynamicCodingKeys(stringValue: "price")!) {
             price = priceDouble
         } else if let priceString = container?.decodeIfPresentString(forKey: "price"),
@@ -139,27 +140,6 @@ struct NotificationData: Codable {
         } else {
             price = nil
         }
-    }
-    
-    // For creating dummy data
-    init(type: String?, notificationType: String? = nil, imageUrl: String? = nil, postId: String? = nil, 
-         postTitle: String? = nil, chatId: String? = nil, sellerId: String? = nil, 
-         sellerUsername: String? = nil, sellerPhotoUrl: String? = nil, buyerId: String? = nil,
-         buyerUsername: String? = nil, transactionId: String? = nil, price: Double? = nil, messageId: String? = nil) {
-        self.type = type
-        self.notificationType = notificationType
-        self.imageUrl = imageUrl
-        self.postId = postId
-        self.postTitle = postTitle
-        self.chatId = chatId
-        self.sellerId = sellerId
-        self.sellerUsername = sellerUsername
-        self.sellerPhotoUrl = sellerPhotoUrl
-        self.buyerId = buyerId
-        self.buyerUsername = buyerUsername
-        self.transactionId = transactionId
-        self.price = price
-        self.messageId = messageId
     }
 }
 
@@ -218,5 +198,3 @@ enum LoadState {
     case empty
     case error
 }
-
-

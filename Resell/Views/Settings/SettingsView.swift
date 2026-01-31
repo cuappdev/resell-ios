@@ -58,7 +58,6 @@ struct SettingsView: View {
                         viewModel.didShowLogoutView = true
                     }
                 }
-
             }
 
             Spacer()
@@ -178,7 +177,6 @@ struct SettingsView: View {
                     .background(Constants.Colors.errorRed)
                     .clipShape(.capsule)
             }
-
 
             Button {
                 viewModel.togglePopup(isPresenting: false)

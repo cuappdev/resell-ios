@@ -943,7 +943,6 @@ struct MessageBubbleView: View {
     var hasActiveConfirmedMeeting: Bool = false
 
     var body: some View {
-        // Proposals are centered, other messages are aligned left/right
         if message.messageType == .proposal {
             proposalMessageView
                 .padding(.horizontal, 24)

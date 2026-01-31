@@ -3,7 +3,6 @@
 //  Resell
 //
 //  Created by Peter Bidoshi on 2/25/25.
-//  Created by Peter Bidoshi on 2/25/25.
 //
 
 import Foundation
@@ -41,7 +40,6 @@ struct ChatMessage: Message {
 
         return self.sent == otherMessage.sent && self.messageId == otherMessage.messageId
     }
-
 }
 
 struct AvailabilityMessage: Message {
