@@ -438,14 +438,14 @@ struct MonthPickerHeader: View {
     
     var body: some View {
         HStack(spacing: 16) {
-            Button {
-                showSettings.toggle()
-                $showCalendar.wrappedValue = false
-            } label: {
-                Image(systemName: "line.3.horizontal")
-                    .font(.title2)
-                    .foregroundStyle(Constants.Colors.black)
-            }
+//            Button {
+//                showSettings.toggle()
+//                $showCalendar.wrappedValue = false
+//            } label: {
+//                Image(systemName: "line.3.horizontal")
+//                    .font(.title2)
+//                    .foregroundStyle(Constants.Colors.black)
+//            }
             
             Button {
                 showCalendar.toggle()

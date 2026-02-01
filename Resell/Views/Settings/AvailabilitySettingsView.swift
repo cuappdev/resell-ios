@@ -63,7 +63,8 @@ struct AvailabilitySettingsView: View {
                 .font(Constants.Fonts.body2)
                 .foregroundColor(Constants.Colors.secondaryGray)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal)
+                .padding(.leading, 28)
+            
             
             AvailabilityGridView(
                 selectedCells: $selectedCells,
