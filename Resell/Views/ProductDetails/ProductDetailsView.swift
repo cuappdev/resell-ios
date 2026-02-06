@@ -17,25 +17,30 @@ struct ProductDetailsView: View {
     @EnvironmentObject var router: Router
 
     @StateObject private var viewModel = ProductDetailsViewModel()
+    @State private var topSafeAreaInset: CGFloat = 0
 
     var post: Post
+    
+    // Fixed image height for consistency across all product images
+    private var imageHeight: CGFloat {
+        UIScreen.main.bounds.width * 1.2 // You can adjust this ratio (1.2 = 6:5 ratio)
+    }
 
     // MARK: - UI
 
     var body: some View {
-        ZStack(alignment: .bottom) {
+        GeometryReader { geometry in
+            ZStack(alignment: .bottom) {
             VStack(spacing: 0) {
                 if viewModel.isLoading {
                     ShimmerView()
-                        .frame(height: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio))
+                        .frame(height: imageHeight)
                 } else {
                     imageGallery
-                        .frame(height: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio))
+                        .frame(height: imageHeight)
                 }
 
-                if viewModel.maxImgRatio > 0 {
-                    Spacer()
-                }
+                Spacer()
             }
             .ignoresSafeArea(edges: .top)
 
@@ -59,7 +64,7 @@ struct ProductDetailsView: View {
                     }
                     return options
                 }())
-                .padding(.top, (UIApplication.shared.keyWindow?.safeAreaInsets.top ?? 0) + 30)
+                .padding(.top, geometry.safeAreaInsets.top + 30)
                 .zIndex(1)
             }
             
@@ -89,7 +94,7 @@ struct ProductDetailsView: View {
                     }
                     .padding(.trailing, 16)
                 }
-                .padding(.top, (UIApplication.shared.keyWindow?.safeAreaInsets.top ?? 0) + 8)
+                .padding(.top, geometry.safeAreaInsets.top + 8)
                 
                 Spacer()
             }
@@ -97,11 +102,11 @@ struct ProductDetailsView: View {
         .background(Constants.Colors.white)
         .ignoresSafeArea(edges: .top)
         .navigationBarBackButtonHidden(true)
-        .toolbar(.hidden, for: .navigationBar)
-        .sheet(isPresented: $viewModel.didShowDeleteView) {
-            deletePostView
-                .background(Constants.Colors.white)
-        }
+//        .toolbar(.hidden, for: .navigationBar)
+//        .sheet(isPresented: $viewModel.didShowDeleteView) {
+//            deletePostView
+//                .background(Constants.Colors.white)
+//        }
         .onAppear {
             viewModel.setPost(post: post)
 
@@ -109,14 +114,15 @@ struct ProductDetailsView: View {
                 mainViewModel.hidesTabBar = true
             }
 
-            // Set the max drag when the image finishes downloading
-            viewModel.maxDrag = max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio)
+            // Set the max drag to the fixed image height
+            viewModel.maxDrag = imageHeight
         }
         .onDisappear {
             viewModel.didShowOptionsMenu = false
             withAnimation {
                 mainViewModel.hidesTabBar = false
             }
+        }
         }
     }
 
@@ -166,9 +172,8 @@ struct ProductDetailsView: View {
                 .backgroundDecode()
                 .resizable()
                 .scaledToFill()
-                .frame(width: geometry.size.width)
+                .frame(width: geometry.size.width, height: geometry.size.height)
                 .tag(index)
-                .aspectRatio(contentMode: .fill)
                 .clipped()
                 .ignoresSafeArea(edges: .top)
         }
@@ -201,11 +206,11 @@ struct ProductDetailsView: View {
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
             .background(Color.white)
             .cornerRadius(40)
-            .position(x: UIScreen.width / 2, y: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio - 50) + geometry.size.height / 2)
-            .overlay(alignment: .trailing) {
-                saveButton
-                    .position(x: UIScreen.width - 60, y: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio - 110))
-            }
+            .position(x: UIScreen.width / 2, y: imageHeight - 50 + geometry.size.height / 2)
+//            .overlay(alignment: .trailing) {
+//                saveButton
+//                    .position(x: UIScreen.width - 60, y: imageHeight - 110)
+//            }
         }
     }
 
@@ -300,7 +305,8 @@ struct ProductDetailsView: View {
             mainViewModel.hidesTabBar = true
         }
 
-        viewModel.maxDrag = max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio)
+        // Use the fixed image height
+        viewModel.maxDrag = imageHeight
 
         if let existingIndex = router.path.lastIndex(where: {
             if case .productDetails = $0 {
@@ -380,46 +386,46 @@ struct ProductDetailsView: View {
     
     @AppStorage("isNotificationAuthorized") var isNotificationAuthorized = false
     
-    private var saveButton: some View {
-        if isNotificationAuthorized {
-            Button {
-                viewModel.isSaved.toggle()
-                viewModel.updateItemSaved()
-                sendNotification()
-            } label: {
-                ZStack {
-                    Circle()
-                        .frame(width: 72, height: 72)
-                        .foregroundStyle(Constants.Colors.white)
-                        .opacity(viewModel.isSaved ? 1.0 : 0.9)
-                        .shadow(radius: 2)
-
-                    Image(viewModel.isSaved ? "saved.fill" : "saved")
-                        .resizable()
-                        .frame(width: 21, height: 27)
-                }
-            }
-        } else {
-            Button {
-                viewModel.isSaved.toggle()
-                viewModel.updateItemSaved()
-                requestNotificationAuthorization()
-                print("Test1")
-            } label: {
-                ZStack {
-                    Circle()
-                        .frame(width: 72, height: 72)
-                        .foregroundStyle(Constants.Colors.white)
-                        .opacity(viewModel.isSaved ? 1.0 : 0.9)
-                        .shadow(radius: 2)
-
-                    Image(viewModel.isSaved ? "saved.fill" : "saved")
-                        .resizable()
-                        .frame(width: 21, height: 27)
-                }
-            }
-        }
-    }
+//    private var saveButton: some View {
+//        if isNotificationAuthorized {
+//            Button {
+//                viewModel.isSaved.toggle()
+//                viewModel.updateItemSaved()
+//                sendNotification()
+//            } label: {
+//                ZStack {
+//                    Circle()
+//                        .frame(width: 72, height: 72)
+//                        .foregroundStyle(Constants.Colors.white)
+//                        .opacity(viewModel.isSaved ? 1.0 : 0.9)
+//                        .shadow(radius: 2)
+//
+//                    Image(viewModel.isSaved ? "saved.fill" : "saved")
+//                        .resizable()
+//                        .frame(width: 21, height: 27)
+//                }
+//            }
+//        } else {
+//            Button {
+//                viewModel.isSaved.toggle()
+//                viewModel.updateItemSaved()
+//                requestNotificationAuthorization()
+//                print("Test1")
+//            } label: {
+//                ZStack {
+//                    Circle()
+//                        .frame(width: 72, height: 72)
+//                        .foregroundStyle(Constants.Colors.white)
+//                        .opacity(viewModel.isSaved ? 1.0 : 0.9)
+//                        .shadow(radius: 2)
+//
+//                    Image(viewModel.isSaved ? "saved.fill" : "saved")
+//                        .resizable()
+//                        .frame(width: 21, height: 27)
+//                }
+//            }
+//        }
+//    }
 
 
     private var deletePostView: some View {

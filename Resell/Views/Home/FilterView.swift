@@ -16,14 +16,6 @@ struct FilterView: View {
 
     private var categories : [String] = ["Clothing", "Books", "School", "Electronics", "Handmade", "Sports & Outdoors", "Other"]
     private var conditions : [String] = ["Gently Used", "Worn", "Never Used"]
-    
-    let columns = [
-            GridItem(.flexible()),
-            GridItem(.flexible()),
-            GridItem(.flexible())
-        ]
-    
-    let gridItem = GridItem(.adaptive(minimum: 100), spacing: 10)
 
     let home : Bool
     
@@ -45,19 +37,21 @@ struct FilterView: View {
                     RoundedRectangle(cornerRadius: 10)
                         .frame(width: 66, height: 6)
                         .foregroundStyle(Constants.Colors.filterGray)
+                        .padding(.top, 12)
                         .padding(.bottom, 8)
-                        .padding(.top, home ? 0 : 8)
                     
                     // Title — centered
                     Text("Filters")
                         .font(.custom("Rubik-Medium", size: 22))
                         .foregroundStyle(.black)
+                        .padding(.bottom, 8)
                     
                     Divider()
-                        .padding(.top, 8)
                     
-                    // Left-aligned content sections
-                    VStack(alignment: .leading, spacing: 0) {
+                    // Scrollable content
+                    ScrollView {
+                        // Left-aligned content sections
+                        VStack(alignment: .leading, spacing: 0) {
                         
                         // MARK: - Sort By
                         
@@ -81,10 +75,9 @@ struct FilterView: View {
                                 }
                             }
                         }
-                        .padding(.top, 12)
+                        .padding(.vertical, 24)
                         
                         Divider()
-                            .padding(.top, 12)
                             .padding(.bottom, 16)
                         
                         // MARK: - Price Range
@@ -154,7 +147,7 @@ struct FilterView: View {
                                             }
                                         } label: {
                                             if filtersVM.categoryFilters.contains(category) {
-                                                HStack{
+                                                HStack {
                                                     Text(category)
                                                         .font(.custom("Rubik-Medium", size: 14))
                                                         .foregroundStyle(Constants.Colors.resellPurple)
@@ -206,7 +199,7 @@ struct FilterView: View {
                                     }
                                 } label: {
                                     if filtersVM.conditionFilters.contains(condition) {
-                                        HStack{
+                                        HStack {
                                             Text(condition)
                                                 .font(.custom("Rubik-Medium", size: 14))
                                                 .foregroundStyle(Constants.Colors.resellPurple)
@@ -235,12 +228,11 @@ struct FilterView: View {
                         }
                     }
                     .padding(.horizontal, 28)
+                    } // End of ScrollView
                     
-                    if !home {
-                        Spacer()
-                    }
+                    Spacer()
                     
-                    // MARK: - Reset / Apply Buttons
+                    // MARK: - Reset / Apply Buttons (Fixed at bottom)
                     
                     HStack{
                         Button {
@@ -270,20 +262,18 @@ struct FilterView: View {
                         }
                     }
                     .padding(.horizontal, 40)
-                    .padding(.top, 32)
+                    .padding(.vertical, 16)
                 }
                 
                 if presentPopup {
                     SortByView(selectedSort: $filtersVM.selectedSort)
-                        .offset(x: 88, y: home ? -142 : 0)
+                        .offset(x: 88, y: -142)
                         .onTapGesture {
                             presentPopup.toggle()
                         }
                 }
             }
         }
-//        .frame(width: 414, height: home ? 786 : 686)
-//        .background(Color.white)
 
         // TODO: Add border to filter view
     }
