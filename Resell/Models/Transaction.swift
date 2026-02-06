@@ -49,25 +49,36 @@ struct Transaction: Codable, Identifiable, Hashable {
         
         // Handle transactionDate - backend sends ISO8601 strings like "2026-01-28T03:12:55.810Z"
         // Note: transactionDate can be null in database
+        let rawDate: Date
         if let dateString = try? container.decode(String.self, forKey: .transactionDate) {
-            print("📅 Transaction date decoded as String: '\(dateString)'")
+            print("📅 Transaction \(id) date decoded as String: '\(dateString)'")
             if let parsed = Transaction.parseDate(dateString) {
-                transactionDate = parsed
-                print("📅 Parsed to Date: \(transactionDate)")
+                rawDate = parsed
+                print("📅 Parsed to Date: \(rawDate)")
             } else {
                 print("📅 Failed to parse string '\(dateString)', using current date")
-                transactionDate = Date()
+                rawDate = Date()
             }
         }
         // Fallback: try decoder's date strategy (iso8601)
         else if let date = try? container.decode(Date.self, forKey: .transactionDate) {
-            print("📅 Transaction date decoded via decoder strategy: \(date)")
-            transactionDate = date
+            print("📅 Transaction \(id) date decoded via decoder strategy: \(date)")
+            rawDate = date
         }
         // Handle null or missing value
         else {
-            print("📅 transactionDate is null or missing, using current date")
+            print("📅 Transaction \(id) transactionDate is null or missing, using current date")
+            rawDate = Date()
+        }
+        
+        // Sanity check: if the date is before 2020, the backend likely sent a null/zero value
+        // that serialized to an epoch-era date. Use current date instead.
+        let cutoffDate = Calendar.current.date(from: DateComponents(year: 2020, month: 1, day: 1))!
+        if rawDate < cutoffDate {
+            print("⚠️ Transaction \(id) date \(rawDate) is before 2020 — backend likely sent null/zero. Using current date.")
             transactionDate = Date()
+        } else {
+            transactionDate = rawDate
         }
     }
     
