@@ -8,6 +8,50 @@
 import Kingfisher
 import SwiftUI
 
+// MARK: - Flow Layout (wrapping horizontal layout)
+
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+    
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let maxWidth = proposal.width ?? .infinity
+        var currentX: CGFloat = 0
+        var currentY: CGFloat = 0
+        var rowHeight: CGFloat = 0
+        
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if currentX + size.width > maxWidth && currentX > 0 {
+                currentX = 0
+                currentY += rowHeight + spacing
+                rowHeight = 0
+            }
+            currentX += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
+        
+        return CGSize(width: maxWidth, height: currentY + rowHeight)
+    }
+    
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var currentX: CGFloat = bounds.minX
+        var currentY: CGFloat = bounds.minY
+        var rowHeight: CGFloat = 0
+        
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if currentX + size.width > bounds.maxX && currentX > bounds.minX {
+                currentX = bounds.minX
+                currentY += rowHeight + spacing
+                rowHeight = 0
+            }
+            subview.place(at: CGPoint(x: currentX, y: currentY), proposal: .unspecified)
+            currentX += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
+    }
+}
+
 struct CompletedTransactionView: View {
     
     // MARK: - Properties
@@ -18,16 +62,21 @@ struct CompletedTransactionView: View {
     
     @State private var stars: Int = 0
     @State private var reviewFeedback: String = ""
+    @State private var selectedTags: Set<String> = []
     @State private var isSubmitting: Bool = false
     @State private var showSuccessAlert: Bool = false
     @State private var showErrorAlert: Bool = false
     @State private var errorMessage: String = ""
+    
+    private let sellerTags = ["Friendly", "Punctual", "Responsive", "Slow response", "Fair pricing", "As described"]
     
     private var canSubmit: Bool {
         stars > 0
     }
     
     // MARK: - UI
+    
+    @FocusState private var isTextEditorFocused: Bool
     
     var body: some View {
         VStack(spacing: 0) {
@@ -64,13 +113,20 @@ struct CompletedTransactionView: View {
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 8)
                                 .scrollContentBackground(.hidden)
+                                .focused($isTextEditorFocused)
                         }
                         .background(Constants.Colors.wash)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
+                        
+                        // Seller tags
+                        sellerTagsView
                     }
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 24)
+            }
+            .onTapGesture {
+                isTextEditorFocused = false
             }
             
             // Submit button pinned to bottom
@@ -168,6 +224,37 @@ struct CompletedTransactionView: View {
                 Text(ratingText)
                     .font(.custom("Rubik-Medium", size: 14))
                     .foregroundColor(Constants.Colors.secondaryGray)
+            }
+        }
+    }
+    
+    private var sellerTagsView: some View {
+        FlowLayout(spacing: 8) {
+            ForEach(sellerTags, id: \.self) { tag in
+                let isSelected = selectedTags.contains(tag)
+                Button {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        if isSelected {
+                            selectedTags.remove(tag)
+                        } else {
+                            selectedTags.insert(tag)
+                        }
+                    }
+                } label: {
+                    Text(tag)
+                        .font(.custom("Rubik-Regular", size: 14))
+                        .foregroundColor(isSelected ? Constants.Colors.resellPurple : Constants.Colors.black)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule()
+                                .fill(isSelected ? Constants.Colors.resellPurple.opacity(0.25) : Color.clear)
+                        )
+                        .overlay(
+                            Capsule()
+                                .stroke(isSelected ? Constants.Colors.resellPurple : Constants.Colors.stroke, lineWidth: 1)
+                        )
+                }
             }
         }
     }

@@ -20,7 +20,7 @@ class ProfileViewModel: ObservableObject {
     @Published var isLoadingExternalUser: Bool = false
     @Published var externalUser: User? = nil
     @Published var externalUserPosts: [Post] = []
-    @Published var externalUserReviews: [TransactionReview] = []
+    @Published var externalUserReviews: [UserReview] = []
     
     @Published var isFollowing: Bool = false
     @Published var isFollowLoading: Bool = false
@@ -113,11 +113,17 @@ class ProfileViewModel: ObservableObject {
                 checkUserIsFollowing(userId: id)
                 externalUserPosts = try await NetworkManager.shared.getPostsByUserID(id: externalUser?.firebaseUid ?? "").posts
                 
-                // Fetch transaction reviews for this seller
-                do {
-                    externalUserReviews = try await NetworkManager.shared.getReviewsForSeller(sellerId: id)
-                } catch {
-                    NetworkManager.shared.logger.error("Error fetching reviews: \(error)")
+                // Fetch user reviews for this seller (UserReview has buyer info directly)
+                // Use firebaseUid for consistency with posts
+                if let firebaseUid = externalUser?.firebaseUid {
+                    do {
+                        externalUserReviews = try await NetworkManager.shared.getUserReviewsBySeller(sellerId: firebaseUid)
+                    } catch {
+                        NetworkManager.shared.logger.error("Error fetching user reviews: \(error)")
+                        externalUserReviews = []
+                    }
+                } else {
+                    NetworkManager.shared.logger.error("Cannot fetch reviews: externalUser has no firebaseUid")
                     externalUserReviews = []
                 }
             } catch {

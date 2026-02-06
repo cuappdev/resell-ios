@@ -9,7 +9,7 @@ import Kingfisher
 import SwiftUI
 
 struct ReviewSection: View {
-    let reviews: [TransactionReview]
+    let reviews: [UserReview]
     
     var body: some View {
         if reviews.isEmpty {
@@ -17,7 +17,7 @@ struct ReviewSection: View {
         } else {
             LazyVStack(spacing: 16) {
                 ForEach(reviews) { review in
-                    TransactionReviewCard(review: review)
+                    UserReviewCard(review: review)
                 }
             }
             .padding(.horizontal, 16)
@@ -44,61 +44,35 @@ struct ReviewSection: View {
     }
 }
 
-struct TransactionReviewCard: View {
-    let review: TransactionReview
-    
-    private var buyer: UserSummary? {
-        review.transaction?.buyer
-    }
-    
-    private var post: PostSummary? {
-        review.transaction?.post
-    }
+struct UserReviewCard: View {
+    let review: UserReview
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 12) {
-                if let photoUrl = buyer?.photoUrl, let url = URL(string: photoUrl) {
-                    KFImage(url)
-                        .placeholder {
-                            Circle()
-                                .fill(Color.gray.opacity(0.3))
-                        }
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 40, height: 40)
-                        .clipShape(Circle())
-                } else {
-                    Circle()
-                        .fill(Constants.Colors.wash)
-                        .frame(width: 40, height: 40)
-                        .overlay(
-                            Image(systemName: "person.fill")
-                                .foregroundColor(Constants.Colors.inactiveGray)
-                        )
-                }
+            HStack(spacing: 4) {
+                Text(review.buyer?.givenName ?? "Anonymous")
+                    .font(Constants.Fonts.title3)
+                    .foregroundColor(Constants.Colors.black)
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(buyer?.givenName ?? "Anonymous")
-                        .font(Constants.Fonts.title3)
-                        .foregroundColor(Constants.Colors.black)
-                    
-                    HStack(spacing: 2) {
-                        ForEach(1...5, id: \.self) { index in
-                            Image(systemName: index <= review.stars ? "star.fill" : "star")
-                                .resizable()
-                                .frame(width: 12, height: 12)
-                                .foregroundColor(index <= review.stars ? Constants.Colors.resellPurple : Constants.Colors.inactiveGray)
-                        }
-                    }
+                Text("•")
+                    .font(Constants.Fonts.body2)
+                    .foregroundColor(Constants.Colors.black)
+                
+                if let dateString = review.date, let date = parseDate(dateString) {
+                    Text(formatDate(date))
+                        .font(Constants.Fonts.body2)
+                        .foregroundColor(Constants.Colors.inactiveGray)
                 }
                 
                 Spacer()
                 
-                if let createdAt = review.createdAt {
-                    Text(formatDate(createdAt))
-                        .font(Constants.Fonts.body2)
-                        .foregroundColor(Constants.Colors.inactiveGray)
+                HStack(spacing: 2) {
+                    ForEach(1...5, id: \.self) { index in
+                        Image(systemName: index <= review.stars ? "star.fill" : "star")
+                            .resizable()
+                            .frame(width: 20, height: 20)
+                            .foregroundColor(index <= review.stars ? Constants.Colors.resellPurple : Constants.Colors.inactiveGray)
+                    }
                 }
             }
             
@@ -108,38 +82,21 @@ struct TransactionReviewCard: View {
                     .foregroundColor(Constants.Colors.black)
                     .lineLimit(3)
             }
-            
-            if let post = post {
-                HStack(spacing: 8) {
-                    if let imageUrl = post.firstImageURL {
-                        KFImage(imageUrl)
-                            .placeholder {
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.2))
-                            }
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 32, height: 32)
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
-                    }
-                    
-                    Text("Purchased: \(post.title)")
-                        .font(Constants.Fonts.body2)
-                        .foregroundColor(Constants.Colors.secondaryGray)
-                        .lineLimit(1)
-                }
-            }
         }
         .padding(16)
+        .frame(width: 366, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white)
-                .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 16)
                 .stroke(Constants.Colors.stroke, lineWidth: 1)
         )
+    }
+    
+    private func parseDate(_ dateString: String) -> Date? {
+        Transaction.parseDate(dateString)
     }
     
     private func formatDate(_ date: Date) -> String {

@@ -841,6 +841,114 @@ class NetworkManager {
             }
         }
         
+        func getUserReviewsBySeller(sellerId: String) async throws -> [UserReview] {
+            // Try with query parameter first
+            let endpoint = "/userReview/?sellerId=\(sellerId)"
+            let url = try constructURL(endpoint: endpoint)
+            let request = try await createRequest(url: url, method: "GET")
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            // Check if 404 - try without query parameter (fetch all)
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 404 {
+                print("⚠️ Query parameter endpoint returned 404, trying base endpoint...")
+                return try await getUserReviewsBySellerFallback(sellerId: sellerId)
+            }
+            
+            // Handle other errors
+            do {
+                try handleResponse(data: data, response: response)
+            } catch {
+                // If handleResponse throws, try fallback
+                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 404 {
+                    return try await getUserReviewsBySellerFallback(sellerId: sellerId)
+                }
+                throw error
+            }
+            
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("👤 User reviews raw response (with query): \(jsonString.prefix(1000))")
+            }
+            
+            var allReviews: [UserReview] = []
+            
+            // Try wrapped format first: { "reviews": [...] }
+            do {
+                let wrapped = try JSONDecoder().decode(UserReviewsResponse.self, from: data)
+                allReviews = wrapped.reviews
+            } catch {
+                // Try direct array
+                do {
+                    allReviews = try JSONDecoder().decode([UserReview].self, from: data)
+                } catch {
+                    print("❌ User reviews decode failed: \(error)")
+                    throw error
+                }
+            }
+            
+            print("✅ Found \(allReviews.count) user reviews for seller \(sellerId) (query parameter worked)")
+            return allReviews
+        }
+        
+        private func getUserReviewsBySellerFallback(sellerId: String) async throws -> [UserReview] {
+            // Fallback: fetch all and filter client-side (if seller info is available)
+            let url = try constructURL(endpoint: "/userReview/")
+            let request = try await createRequest(url: url, method: "GET")
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 404 {
+                print("⚠️ User reviews endpoint returned 404 - no reviews exist yet")
+                return []
+            }
+            
+            try handleResponse(data: data, response: response)
+            
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("👤 User reviews raw response (fallback): \(jsonString.prefix(1000))")
+            }
+            
+            var allReviews: [UserReview] = []
+            
+            // Try wrapped format first: { "reviews": [...] }
+            do {
+                let wrapped = try JSONDecoder().decode(UserReviewsResponse.self, from: data)
+                allReviews = wrapped.reviews
+            } catch {
+                // Try direct array
+                do {
+                    allReviews = try JSONDecoder().decode([UserReview].self, from: data)
+                } catch {
+                    print("❌ User reviews decode failed: \(error)")
+                    throw error
+                }
+            }
+            
+            // Debug: Check what seller info we have
+            print("🔍 Debugging reviews for sellerId: \(sellerId)")
+            var reviewsWithSeller = 0
+            for review in allReviews {
+                if review.seller != nil {
+                    reviewsWithSeller += 1
+                }
+            }
+            print("  Total reviews: \(allReviews.count), Reviews with seller info: \(reviewsWithSeller)")
+            
+            // Filter by sellerId (only works if backend returns seller info)
+            let filteredReviews = allReviews.filter { review in
+                guard let sellerUid = review.seller?.firebaseUid else {
+                    return false
+                }
+                return sellerUid == sellerId
+            }
+            
+            if filteredReviews.isEmpty && !allReviews.isEmpty {
+                print("⚠️ WARNING: Backend is not returning 'seller' field in UserReview response. Cannot filter reviews by seller.")
+                print("⚠️ This is a backend issue - the response should include seller info for each review.")
+            }
+            
+            print("✅ Found \(filteredReviews.count) user reviews for seller \(sellerId) out of \(allReviews.count) total")
+            return filteredReviews
+        }
+        
         // MARK: - Other Networking Functions
         
         func uploadImage(image: ImageBody) async throws -> ImageResponse {
