@@ -13,9 +13,7 @@ class NetworkManager {
     
     // MARK: - Singleton Instance
     
-    
     static let shared = NetworkManager()
-    
     
     // MARK: - Error Logger for Networking
     
@@ -187,10 +185,6 @@ class NetworkManager {
             // refactor to use cached token if valid...
             let accessToken = try await GoogleAuthManager.shared.getValidToken()
             request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-            
-            //           if let accessToken = GoogleAuthManager.shared.accessToken {
-            //               request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-            //           }
             
             request.httpBody = body
             return request

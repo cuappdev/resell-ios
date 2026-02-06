@@ -60,7 +60,6 @@ class SearchViewModel: ObservableObject {
             do {
                 let postsResponse = try await NetworkManager.shared.getSearchedPosts(with: searchText)
                 
-                // ✅ ALWAYS store the searchId for recommendations
                 if !recentlySearched.contains(postsResponse.searchId) {
                     recentlySearched.insert(postsResponse.searchId, at: 0)
                     // Keep only last 5 searches

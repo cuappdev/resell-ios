@@ -119,7 +119,7 @@ struct ChatsView: View {
 
             VStack(alignment: .leading) {
                 HStack {
-                    Text("\(chat.other.givenName) \(chat.other.familyName)")
+                    Text("\(chat.other.givenName)")
                         .font(Constants.Fonts.title1)
                         .foregroundStyle(isArchived ? Constants.Colors.secondaryGray : Constants.Colors.black)
                         .lineLimit(1)

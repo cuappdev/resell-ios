@@ -20,9 +20,11 @@ struct LoadingViewModifier: ViewModifier {
             Color.black.opacity(0.2)
                 .ignoresSafeArea()
                 .opacity(isLoading ? 1 : 0)
+                .allowsHitTesting(isLoading)
 
             CustomProgressView(size: size)
                 .opacity(isLoading ? 1 : 0)
+                .allowsHitTesting(false)
         }
     }
 

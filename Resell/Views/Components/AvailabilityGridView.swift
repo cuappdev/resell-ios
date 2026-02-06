@@ -22,7 +22,6 @@ struct AvailabilityGridView: View {
     @State private var dragStartLocation: CGPoint = .zero
     @State private var dragStartDate: String? = nil  // Track which day the drag started on
     @State private var lastDraggedCell: CellIdentifier? = nil  // Track last cell to fill gaps
-    @State private var scrollOffset: CGFloat = 0  // Track scroll position for accurate cell mapping
 
     /// Whether the user can edit (drag to select) cells
     var isEditing: Bool = true
@@ -33,8 +32,6 @@ struct AvailabilityGridView: View {
     /// Optional start date for the grid. If nil, starts from today.
     var startDate: Date? = nil
     
-    /// Optional custom height for the scrollable grid area. If nil, uses default (65% of screen).
-    var gridHeight: CGFloat? = nil
     
     /// Called when the visible dates change (page swipe)
     var onVisibleDatesChanged: (([Date]) -> Void)?
@@ -221,10 +218,6 @@ struct AvailabilityGridView: View {
         timeColumnWidth + gridColumnWidth * 3 + lineExtension
     }
     
-    private var scrollableGridHeight: CGFloat {
-        gridHeight ?? UIScreen.height * 0.65
-    }
-    
     private func pageView(for index: Int) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .topLeading) {
@@ -263,96 +256,66 @@ struct AvailabilityGridView: View {
             }
             .background(Constants.Colors.white)
             
-            // Scrollable grid area with fade effect
-            ZStack(alignment: .bottom) {
-                ScrollView(.vertical, showsIndicators: false) {
-                    ZStack(alignment: .topLeading) {
-                        // Invisible view to track scroll offset
-                        GeometryReader { geo in
-                            Color.clear
-                                .preference(key: ScrollOffsetPreferenceKey.self, value: -geo.frame(in: .named("scroll")).origin.y)
-                        }
-                        .frame(height: 0)
-                        // Vertical grid lines in scroll area
-                        HStack(spacing: 0) {
+            // Grid area (non-scrollable)
+            ZStack(alignment: .topLeading) {
+                // Vertical grid lines
+                HStack(spacing: 0) {
+                    Rectangle()
+                        .fill(Color.clear)
+                        .frame(width: timeColumnWidth)
+                    
+                    ForEach(0..<4, id: \.self) { colIndex in
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 0.5, height: CGFloat(times.count) * cellHeight)
+                        
+                        if colIndex < 3 {
                             Rectangle()
                                 .fill(Color.clear)
-                                .frame(width: timeColumnWidth)
-                            
-                            ForEach(0..<4, id: \.self) { colIndex in
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.3))
-                                    .frame(width: 0.5, height: CGFloat(times.count) * cellHeight)
-                                
-                                if colIndex < 3 {
-                                    Rectangle()
-                                        .fill(Color.clear)
-                                        .frame(width: gridColumnWidth - 0.5)
-                                }
-                            }
-                        }
-                        
-                        // Horizontal grid lines
-                        VStack(spacing: 0) {
-                            ForEach(0..<times.count + 1, id: \.self) { rowIndex in
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.3))
-                                    .frame(width: totalGridWidth, height: 0.5)
-                                
-                                if rowIndex < times.count {
-                                    Spacer()
-                                        .frame(height: cellHeight - 0.5)
-                                }
-                            }
-                        }
-                        
-                        // Time labels and cells
-                        HStack(spacing: 0) {
-                            // Time labels column
-                            VStack(spacing: 0) {
-                                ForEach(times, id: \.self) { time in
-                                    Text(time)
-                                        .font(Constants.Fonts.title2)
-                                        .foregroundStyle(Constants.Colors.secondaryGray)
-                                        .frame(width: timeColumnWidth, height: cellHeight)
-                                }
-                            }
-
-                            // Cells area
-                            CellsGridView(
-                                dates: Array(paginatedDates[index]),
-                                times: times,
-                                selectedCells: selectedCells,
-                                draggedCells: draggedCells,
-                                buyerUnavailableCells: buyerUnavailableCells,
-                                sellerUnavailableCells: sellerUnavailableCells,
-                                gridColumnWidth: gridColumnWidth,
-                                cellHeight: cellHeight
-                            )
-                            .contentShape(Rectangle())
-                            .gesture(
-                                DragGesture(minimumDistance: 0)
-                                    .onChanged { _ in }
-                                    .onEnded { _ in }
-                            )
+                                .frame(width: gridColumnWidth - 0.5)
                         }
                     }
                 }
-                .frame(height: scrollableGridHeight)
-                .clipped()
-                .coordinateSpace(name: "scroll")
-                .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
-                    scrollOffset = value
+                
+                // Horizontal grid lines
+                VStack(spacing: 0) {
+                    ForEach(0..<times.count + 1, id: \.self) { rowIndex in
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: totalGridWidth, height: 0.5)
+                        
+                        if rowIndex < times.count {
+                            Spacer()
+                                .frame(height: cellHeight - 0.5)
+                        }
+                    }
                 }
                 
-                // Fade effect at bottom
-                LinearGradient(
-                    gradient: Gradient(colors: [Color.white.opacity(0), Color.white]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(height: 25)
-                .allowsHitTesting(false)
+                // Time labels and cells
+                HStack(spacing: 0) {
+                    // Time labels column
+                    VStack(spacing: 0) {
+                        ForEach(times, id: \.self) { time in
+                            Text(time)
+                                .font(Constants.Fonts.title2)
+                                .foregroundStyle(Constants.Colors.secondaryGray)
+                                .frame(width: timeColumnWidth, height: cellHeight)
+                        }
+                    }
+
+                    // Cells area
+                    CellsGridView(
+                        dates: Array(paginatedDates[index]),
+                        times: times,
+                        selectedCells: selectedCells,
+                        draggedCells: draggedCells,
+                        buyerUnavailableCells: buyerUnavailableCells,
+                        sellerUnavailableCells: sellerUnavailableCells,
+                        gridColumnWidth: gridColumnWidth,
+                        cellHeight: cellHeight
+                    )
+                    .contentShape(Rectangle())
+                }
             }
         }
         .frame(width: UIScreen.width - 32)
@@ -405,8 +368,7 @@ struct AvailabilityGridView: View {
         let headerHeight: CGFloat = 44
         
         let adjustedX = location.x - timeColumnWidth
-        // Account for scroll offset - add scrollOffset to get content-relative Y position
-        let adjustedY = location.y - headerHeight + scrollOffset
+        let adjustedY = location.y - headerHeight
         
         guard adjustedX >= 0, adjustedY >= 0 else { return nil }
         
@@ -668,15 +630,6 @@ struct CellIdentifier: Hashable, Equatable {
     }
 }
 
-// MARK: - ScrollOffsetPreferenceKey
-
-struct ScrollOffsetPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
-    }
-}
-
 // MARK: - Helper Functions
 
 func generateDates() -> [String] {
@@ -701,8 +654,8 @@ func generateTimes() -> [String] {
     let formatter = DateFormatter()
     formatter.dateFormat = "h:mm a"
 
-    let startHour = 8
-    let endHour = 22
+    let startHour = 10
+    let endHour = 20
     return (startHour...endHour).map { hour in
         let date = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date())!
         return formatter.string(from: date)

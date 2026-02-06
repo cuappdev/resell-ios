@@ -31,10 +31,8 @@ struct AvailabilitySettingsView: View {
     // MARK: - Body
     
     var body: some View {
+        ScrollView(.vertical, showsIndicators: false) {
         VStack(spacing: 0) {
-            // Custom header
-            customHeader
-            
             MonthPickerHeader(
                 currentMonthOffset: $currentMonthOffset,
                 showCalendar: $showCalendar,
@@ -71,7 +69,6 @@ struct AvailabilitySettingsView: View {
                 currentPage: $gridCurrentPage,
                 isEditing: true,
                 startDate: gridStartDate,
-                gridHeight: showCalendar ? UIScreen.height * 0.4 : UIScreen.height * 0.65,
                 onVisibleDatesChanged: { dates in
                     visibleGridDates = dates
 
@@ -94,10 +91,13 @@ struct AvailabilitySettingsView: View {
                     }
                 }
                 .disabled(isSaving)
+                .padding(.top, 16)
                 .padding(.horizontal)
                 .padding(.bottom, 24)
             }
         }
+        }
+        .scrollDisabled(!showCalendar)
         .background(Constants.Colors.white)
         .overlay {
             if isLoading {
@@ -107,7 +107,24 @@ struct AvailabilitySettingsView: View {
                     .background(Color.white.opacity(0.7))
             }
         }
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("Availability Settings")
+                    .font(Constants.Fonts.h3)
+                    .foregroundStyle(Constants.Colors.black)
+            }
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    router.pop()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(Constants.Colors.black)
+                }
+            }
+        }
         .alert("Error", isPresented: .constant(errorMessage != nil)) {
             Button("OK") {
                 errorMessage = nil
@@ -150,41 +167,6 @@ struct AvailabilitySettingsView: View {
                 }
             }
         }
-    }
-    
-    // MARK: - Custom Header
-    
-    private var customHeader: some View {
-        HStack {
-            Button {
-                router.pop()
-            } label: {
-                Image(systemName: "chevron.left")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 20)
-                    .foregroundStyle(Constants.Colors.black)
-            }
-            .frame(width: 24, alignment: .leading)
-            
-            Spacer()
-            
-            Text("Availability Settings")
-                .font(Constants.Fonts.h3)
-                .foregroundStyle(Constants.Colors.black)
-            
-            Spacer()
-            
-            // Empty spacer for balance
-            Color.clear
-                .frame(width: 24)
-        }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 12)
-        .overlay(alignment: .bottom) {
-            Divider()
-        }
-        .background(Constants.Colors.white)
     }
     
     // MARK: - Functions

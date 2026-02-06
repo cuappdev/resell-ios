@@ -45,10 +45,13 @@ struct HomeView: View {
                         }, label: {
                             Image("filters")
                                 .resizable()
-                                .frame(width: 40, height: 40)
+                                .frame(width: 24, height: 21)
+                                .padding(12)
+                                .contentShape(Rectangle())
                         })
-                        .padding(.trailing, 24)
+                        .padding(.trailing, 12)
                     }
+                    .padding(.bottom, 4)
                     
                     ProductsGalleryView(items: viewModel.filteredItems, onScrollToBottom: viewModel.fetchMoreItems)
             }

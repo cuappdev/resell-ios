@@ -630,7 +630,6 @@ struct MessagesAvailabilitySheet: View {
                 isEditing: isEditing,
                 singleSelectionMode: true,
                 startDate: gridStartDate,
-                gridHeight: showCalendar ? UIScreen.height * 0.35 : UIScreen.height * 0.625,
                 onVisibleDatesChanged: { dates in
                     visibleGridDates = dates
                     if let firstDate = dates.first {
