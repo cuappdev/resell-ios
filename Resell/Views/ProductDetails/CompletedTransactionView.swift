@@ -30,59 +30,60 @@ struct CompletedTransactionView: View {
     // MARK: - UI
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                // Transaction summary card
-                transactionSummaryCard
-                
-                Divider()
-                    .padding(.horizontal)
-                
-                // Review section
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Leave a Review")
-                        .font(.custom("Rubik-Medium", size: 20))
-                        .foregroundColor(.black)
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    // Transaction summary card
+                    transactionSummaryCard
                     
-                    Text("How was your experience with \(transaction.seller?.username ?? "the seller")?")
-                        .font(.custom("Rubik-Regular", size: 14))
-                        .foregroundColor(Constants.Colors.secondaryGray)
+                    Divider()
                     
-                    // Star rating
-                    starRatingView
-                    
-                    // Review text field
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Comments (optional)")
-                            .font(.custom("Rubik-Medium", size: 14))
-                            .foregroundColor(Constants.Colors.secondaryGray)
+                    // Review section
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text("Transaction Review")
+                            .font(Constants.Fonts.h3)
+                            .foregroundColor(.black)
                         
-                        TextEditor(text: $reviewFeedback)
-                            .frame(height: 120)
-                            .padding(12)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Constants.Colors.stroke, lineWidth: 1)
-                            )
-                            .font(.custom("Rubik-Regular", size: 14))
+                        // Star rating
+                        starRatingView
+                        
+                        // Review text field with inline placeholder
+                        ZStack(alignment: .topLeading) {
+                            if reviewFeedback.isEmpty {
+                                Text("How was your transaction experience with \(transaction.seller?.fullName ?? transaction.seller?.username ?? "the seller")? (optional)")
+                                    .font(Constants.Fonts.body2)
+                                    .foregroundColor(Constants.Colors.secondaryGray)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 14)
+                            }
+                            
+                            TextEditor(text: $reviewFeedback)
+                                .frame(height: 140)
+                                .font(Constants.Fonts.body2)
+                                .foregroundColor(Constants.Colors.black)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .scrollContentBackground(.hidden)
+                        }
+                        .background(Constants.Colors.wash)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                 }
-                .padding(.horizontal)
-                
-                Spacer(minLength: 40)
-                
-                // Submit button
-                PurpleButton(isActive: canSubmit, text: isSubmitting ? "Submitting..." : "Submit Review") {
-                    submitReview()
-                }
-                .disabled(!canSubmit || isSubmitting)
-                .padding(.horizontal)
-                .padding(.bottom, 24)
+                .padding(.horizontal, 24)
+                .padding(.top, 24)
             }
-            .padding(.top, 16)
+            
+            // Submit button pinned to bottom
+            PurpleButton(isActive: canSubmit, text: isSubmitting ? "Submitting..." : "Submit Review") {
+                submitReview()
+            }
+            .disabled(!canSubmit || isSubmitting)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 32)
+            .padding(.top, 12)
         }
         .background(Constants.Colors.white)
-        .navigationTitle("Transaction Complete")
+        .navigationTitle("Completed Transaction")
         .navigationBarTitleDisplayMode(.inline)
         .alert("Review Submitted!", isPresented: $showSuccessAlert) {
             Button("OK") {
@@ -101,67 +102,48 @@ struct CompletedTransactionView: View {
     // MARK: - Subviews
     
     private var transactionSummaryCard: some View {
-        HStack(alignment: .top, spacing: 12) {
-            // Post image
-            KFImage(transaction.post?.firstImageURL)
-                .placeholder {
-                    ShimmerView()
-                        .frame(width: 80, height: 80)
-                }
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 80, height: 80)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Purchase Summary")
+                .font(Constants.Fonts.h3)
+                .foregroundStyle(.black)
             
-            VStack(alignment: .leading, spacing: 6) {
-                Text(transaction.post?.title ?? "Item")
-                    .font(.custom("Rubik-Medium", size: 16))
-                    .foregroundColor(.black)
-                    .lineLimit(2)
+            HStack(spacing: 16) {
+                // Post image
+                KFImage(transaction.post?.firstImageURL)
+                    .placeholder {
+                        ShimmerView()
+                            .frame(width: 80, height: 80)
+                    }
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 80, height: 80)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
                 
-                Text(formattedAmount)
-                    .font(.custom("Rubik-Medium", size: 18))
-                    .foregroundColor(Constants.Colors.resellPurple)
-                
-                HStack(spacing: 4) {
-                    if let photoURL = transaction.seller?.photoURL {
-                        KFImage(photoURL)
-                            .placeholder {
-                                Circle().fill(Color.gray.opacity(0.3))
-                            }
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 20, height: 20)
-                            .clipShape(Circle())
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 0) {
+                        Text(transaction.post?.title ?? "Item")
+                            .font(Constants.Fonts.title1)
+                            .foregroundColor(.black)
+                        
+                        Text(" • ")
+                            .font(Constants.Fonts.body1)
+                            .foregroundColor(.black)
+                        
+                        Text(formattedAmount)
+                            .font(Constants.Fonts.body1)
+                            .foregroundColor(Constants.Colors.black)
                     }
                     
-                    Text(transaction.seller?.username ?? "Seller")
-                        .font(.custom("Rubik-Regular", size: 12))
-                        .foregroundColor(Constants.Colors.secondaryGray)
+                    Text("Sold by \(transaction.seller?.username ?? "Seller")")
+                        .font(Constants.Fonts.body2)
+                        .foregroundColor(Constants.Colors.black)
+                    
+                    Text("Purchased \(formattedDate)")
+                        .font(.custom("Rubik-Regular", size: 11))
+                        .foregroundColor(Constants.Colors.black)
                 }
-                
-                Text("Purchased \(formattedDate)")
-                    .font(.custom("Rubik-Regular", size: 11))
-                    .foregroundColor(Constants.Colors.secondaryGray)
             }
-            
-            Spacer()
-            
-            Label("Completed", systemImage: "checkmark.circle.fill")
-                .font(.custom("Rubik-Medium", size: 10))
-                .foregroundColor(.green)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.green.opacity(0.1))
-                .clipShape(Capsule())
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.white)
-                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
-        )
-        .padding(.horizontal)
     }
     
     private var starRatingView: some View {
@@ -176,7 +158,7 @@ struct CompletedTransactionView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 36, height: 36)
-                        .foregroundColor(index <= stars ? .yellow : Constants.Colors.secondaryGray.opacity(0.5))
+                        .foregroundColor(index <= stars ? Constants.Colors.resellPurple : Constants.Colors.secondaryGray.opacity(0.5))
                 }
             }
             

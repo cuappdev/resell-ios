@@ -107,7 +107,6 @@ struct NotificationsView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Constants.Colors.white)
         .navigationTitle("Notifications")
-        .preferredColorScheme(.light)
         .onAppear {
             viewModel.fetchNotifications()
         }

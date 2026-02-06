@@ -106,6 +106,8 @@ struct MainTabView: View {
                         .environmentObject(onboardingViewModel)
                 case .completedTransaction(let transaction):
                     CompletedTransactionView(transaction: transaction)
+                case .reviewTesting:
+                    ReviewTestingView()
                 default:
                     EmptyView()
                 }
