@@ -44,7 +44,7 @@ struct FilterView: View {
                     Text("Filters")
                         .font(.custom("Rubik-Medium", size: 22))
                         .foregroundStyle(.black)
-                        .padding(.bottom, 8)
+                        .padding(.vertical, 20)
                     
                     Divider()
                     
