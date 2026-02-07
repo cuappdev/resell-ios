@@ -257,64 +257,64 @@ struct AvailabilityGridView: View {
             .background(Constants.Colors.white)
             
             // Grid area (non-scrollable)
-            ZStack(alignment: .topLeading) {
+                    ZStack(alignment: .topLeading) {
                 // Vertical grid lines
-                HStack(spacing: 0) {
-                    Rectangle()
-                        .fill(Color.clear)
-                        .frame(width: timeColumnWidth)
-                    
-                    ForEach(0..<4, id: \.self) { colIndex in
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(width: 0.5, height: CGFloat(times.count) * cellHeight)
-                        
-                        if colIndex < 3 {
+                        HStack(spacing: 0) {
                             Rectangle()
                                 .fill(Color.clear)
-                                .frame(width: gridColumnWidth - 0.5)
+                                .frame(width: timeColumnWidth)
+                            
+                            ForEach(0..<4, id: \.self) { colIndex in
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.3))
+                                    .frame(width: 0.5, height: CGFloat(times.count) * cellHeight)
+                                
+                                if colIndex < 3 {
+                                    Rectangle()
+                                        .fill(Color.clear)
+                                        .frame(width: gridColumnWidth - 0.5)
+                                }
+                            }
                         }
-                    }
-                }
-                
-                // Horizontal grid lines
-                VStack(spacing: 0) {
-                    ForEach(0..<times.count + 1, id: \.self) { rowIndex in
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(width: totalGridWidth, height: 0.5)
                         
-                        if rowIndex < times.count {
-                            Spacer()
-                                .frame(height: cellHeight - 0.5)
+                        // Horizontal grid lines
+                        VStack(spacing: 0) {
+                            ForEach(0..<times.count + 1, id: \.self) { rowIndex in
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.3))
+                                    .frame(width: totalGridWidth, height: 0.5)
+                                
+                                if rowIndex < times.count {
+                                    Spacer()
+                                        .frame(height: cellHeight - 0.5)
+                                }
+                            }
                         }
-                    }
-                }
-                
-                // Time labels and cells
-                HStack(spacing: 0) {
-                    // Time labels column
-                    VStack(spacing: 0) {
-                        ForEach(times, id: \.self) { time in
-                            Text(time)
-                                .font(Constants.Fonts.title2)
-                                .foregroundStyle(Constants.Colors.secondaryGray)
-                                .frame(width: timeColumnWidth, height: cellHeight)
-                        }
-                    }
+                        
+                        // Time labels and cells
+                        HStack(spacing: 0) {
+                            // Time labels column
+                            VStack(spacing: 0) {
+                                ForEach(times, id: \.self) { time in
+                                    Text(time)
+                                        .font(Constants.Fonts.title2)
+                                        .foregroundStyle(Constants.Colors.secondaryGray)
+                                        .frame(width: timeColumnWidth, height: cellHeight)
+                                }
+                            }
 
-                    // Cells area
-                    CellsGridView(
-                        dates: Array(paginatedDates[index]),
-                        times: times,
-                        selectedCells: selectedCells,
-                        draggedCells: draggedCells,
-                        buyerUnavailableCells: buyerUnavailableCells,
-                        sellerUnavailableCells: sellerUnavailableCells,
-                        gridColumnWidth: gridColumnWidth,
-                        cellHeight: cellHeight
-                    )
-                    .contentShape(Rectangle())
+                            // Cells area
+                            CellsGridView(
+                                dates: Array(paginatedDates[index]),
+                                times: times,
+                                selectedCells: selectedCells,
+                                draggedCells: draggedCells,
+                                buyerUnavailableCells: buyerUnavailableCells,
+                                sellerUnavailableCells: sellerUnavailableCells,
+                                gridColumnWidth: gridColumnWidth,
+                                cellHeight: cellHeight
+                            )
+                            .contentShape(Rectangle())
                 }
             }
         }

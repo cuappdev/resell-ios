@@ -64,6 +64,7 @@ struct MainTabView: View {
                     SuggestionsView()
                 case .productDetails(let item):
                     ProductDetailsView(post: item)
+                        .ignoresSafeArea(edges: .top)
                 case .reportConfirmation:
                     ReportConfirmationView()
                         .environmentObject(reportViewModel)

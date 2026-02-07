@@ -49,29 +49,29 @@ struct UserReviewCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 4) {
+                HStack(spacing: 4) {
                 Text(review.buyer?.givenName ?? "Anonymous")
-                    .font(Constants.Fonts.title3)
-                    .foregroundColor(Constants.Colors.black)
-                
+                        .font(Constants.Fonts.title3)
+                        .foregroundColor(Constants.Colors.black)
+                    
                 Text("•")
                     .font(Constants.Fonts.body2)
                     .foregroundColor(Constants.Colors.black)
                 
                 if let dateString = review.date, let date = parseDate(dateString) {
                     Text(formatDate(date))
-                        .font(Constants.Fonts.body2)
-                        .foregroundColor(Constants.Colors.inactiveGray)
-                }
+                            .font(Constants.Fonts.body2)
+                            .foregroundColor(Constants.Colors.inactiveGray)
+                    }
                 
                 Spacer()
-                
-                HStack(spacing: 2) {
-                    ForEach(1...5, id: \.self) { index in
-                        Image(systemName: index <= review.stars ? "star.fill" : "star")
-                            .resizable()
+                    
+                    HStack(spacing: 2) {
+                        ForEach(1...5, id: \.self) { index in
+                            Image(systemName: index <= review.stars ? "star.fill" : "star")
+                                .resizable()
                             .frame(width: 20, height: 20)
-                            .foregroundColor(index <= review.stars ? Constants.Colors.resellPurple : Constants.Colors.inactiveGray)
+                                .foregroundColor(index <= review.stars ? Constants.Colors.resellPurple : Constants.Colors.inactiveGray)
                     }
                 }
             }

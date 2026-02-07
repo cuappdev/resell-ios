@@ -112,46 +112,46 @@ struct ProductGalleryCell: View {
         Button {
             selectedItem = post
         } label: {
-            VStack(spacing: 0) {
-                let url = URL(string: post.images.first ?? "")
-                ZStack {
-                    CachedImageView(isImageLoaded: $isImageLoaded, imageURL: url)
+        VStack(spacing: 0) {
+            let url = URL(string: post.images.first ?? "")
+            ZStack {
+                CachedImageView(isImageLoaded: $isImageLoaded, imageURL: url)
+                    .frame(width: cellWidth, height: (savedCell ? cellWidth - 20 : cellWidth / 0.75))
+                    .clipped()
+                
+                // Sold overlay
+                if isSold {
+                    Rectangle()
+                        .fill(Color.black.opacity(0.5))
                         .frame(width: cellWidth, height: (savedCell ? cellWidth - 20 : cellWidth / 0.75))
-                        .clipped()
                     
-                    // Sold overlay
-                    if isSold {
-                        Rectangle()
-                            .fill(Color.black.opacity(0.5))
-                            .frame(width: cellWidth, height: (savedCell ? cellWidth - 20 : cellWidth / 0.75))
-                        
-                        Text("Item Sold")
-                            .font(.custom("Rubik-Medium", size: 16))
-                            .foregroundColor(.white)
-                    }
+                    Text("Item Sold")
+                        .font(.custom("Rubik-Medium", size: 16))
+                        .foregroundColor(.white)
                 }
+            }
 
-                HStack {
-                    Text(post.title)
-                        .font(Constants.Fonts.title3)
-                        .foregroundStyle(isSold ? Constants.Colors.secondaryGray : Constants.Colors.black)
-                    
-                    Spacer()
-                    
-                    Text("$\(post.originalPrice)")
-                        .font(Constants.Fonts.title4)
-                        .foregroundStyle(isSold ? Constants.Colors.secondaryGray : Constants.Colors.black)
-                }
-                .padding(8)
-                .background(Constants.Colors.white)
+            HStack {
+                Text(post.title)
+                    .font(Constants.Fonts.title3)
+                    .foregroundStyle(isSold ? Constants.Colors.secondaryGray : Constants.Colors.black)
+                
+                Spacer()
+                
+                Text("$\(post.originalPrice)")
+                    .font(Constants.Fonts.title4)
+                    .foregroundStyle(isSold ? Constants.Colors.secondaryGray : Constants.Colors.black)
             }
-            .frame(width: cellWidth)
-            .clipped()
-            .clipShape(.rect(cornerRadius: 8))
-            .overlay {
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Constants.Colors.stroke, lineWidth: 1)
-            }
+            .padding(8)
+            .background(Constants.Colors.white)
+        }
+        .frame(width: cellWidth)
+        .clipped()
+        .clipShape(.rect(cornerRadius: 8))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Constants.Colors.stroke, lineWidth: 1)
+        }
         }
         .buttonStyle(.plain)
     }
