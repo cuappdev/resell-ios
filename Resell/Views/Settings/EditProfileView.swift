@@ -180,7 +180,6 @@ struct EditProfileView: View {
     // MARK: - Functions
     
     private func loadCurrentValues() {
-        // Load current profile data into editable state
         editedUsername = profileManager.username
         editedBio = profileManager.bio
         editedVenmo = profileManager.venmoHandle
@@ -210,8 +209,4 @@ struct EditProfileView: View {
             editedProfilePic = image
         }
     }
-}
-
-#Preview {
-    EditProfileView()
 }

@@ -34,6 +34,7 @@ struct MainView: View {
             .environmentObject(onboardingViewModel)
             .environmentObject(reportViewModel)
             .background(Constants.Colors.white)
+            .preferredColorScheme(.light)
             .onAppear {
                 let signInConfig = GIDConfiguration.init(clientID: Keys.googleClientID)
                 GIDSignIn.sharedInstance.configuration = signInConfig

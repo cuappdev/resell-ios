@@ -109,6 +109,9 @@ struct ProductGalleryCell: View {
     }
     
     var body: some View {
+        Button {
+            selectedItem = post
+        } label: {
         VStack(spacing: 0) {
             let url = URL(string: post.images.first ?? "")
             ZStack {
@@ -145,12 +148,11 @@ struct ProductGalleryCell: View {
         .frame(width: cellWidth)
         .clipped()
         .clipShape(.rect(cornerRadius: 8))
-        .onTapGesture {
-            selectedItem = post
-        }
         .overlay {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(Constants.Colors.stroke, lineWidth: 1)
         }
+        }
+        .buttonStyle(.plain)
     }
 }

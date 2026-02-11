@@ -20,11 +20,33 @@ class ProfileViewModel: ObservableObject {
     @Published var isLoadingExternalUser: Bool = false
     @Published var externalUser: User? = nil
     @Published var externalUserPosts: [Post] = []
+    @Published var externalUserReviews: [UserReview] = []
     
     @Published var isFollowing: Bool = false
     @Published var isFollowLoading: Bool = false
     @Published var followerCount: Int = 0
     @Published var followingCount: Int = 0
+    
+    /// Computed average star rating for the external user
+    var averageStarRating: Double {
+        guard !externalUserReviews.isEmpty else { return 0 }
+        let total = externalUserReviews.reduce(0) { $0 + $1.stars }
+        return Double(total) / Double(externalUserReviews.count)
+    }
+    
+    var reviewCount: Int {
+        externalUserReviews.count
+    }
+    
+    /// Number of items sold - uses backend value if available, otherwise falls back to review count
+    var soldCount: Int {
+        // If backend returns a valid soldPosts count, use it
+        if let backendCount = externalUser?.soldPosts, backendCount > 0 {
+            return backendCount
+        }
+        // Fallback: use review count since each review represents a completed transaction
+        return externalUserReviews.count
+    }
 
     enum Tab: String {
         case listing, archive, wishlist
@@ -65,6 +87,7 @@ class ProfileViewModel: ObservableObject {
     func loadExternalUser(id: String) {
         externalUser = nil
         externalUserPosts = []
+        externalUserReviews = []
         isFollowing = false
         followerCount = 0
         followingCount = 0
@@ -89,6 +112,20 @@ class ProfileViewModel: ObservableObject {
                 checkUserIsBlocked(userId: id)
                 checkUserIsFollowing(userId: id)
                 externalUserPosts = try await NetworkManager.shared.getPostsByUserID(id: externalUser?.firebaseUid ?? "").posts
+                
+                // Fetch user reviews for this seller (UserReview has buyer info directly)
+                // Use firebaseUid for consistency with posts
+                if let firebaseUid = externalUser?.firebaseUid {
+                do {
+                        externalUserReviews = try await NetworkManager.shared.getUserReviewsBySeller(sellerId: firebaseUid)
+                } catch {
+                        NetworkManager.shared.logger.error("Error fetching user reviews: \(error)")
+                        externalUserReviews = []
+                    }
+                } else {
+                    NetworkManager.shared.logger.error("Cannot fetch reviews: externalUser has no firebaseUid")
+                    externalUserReviews = []
+                }
             } catch {
                 NetworkManager.shared.logger.error("Error in ProfileViewModel.loadExternalUser: \(error)")
             }

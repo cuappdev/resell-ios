@@ -43,9 +43,10 @@ struct ExternalProfileView: View {
                             .background(Constants.Colors.white)
                         } else {
                             ScrollView {
-                                // review sections
-                                ReviewSection()
+                                ReviewSection(reviews: viewModel.externalUserReviews)
+                                    .loadingView(isLoading: viewModel.isLoadingExternalUser)
                             }
+                            .background(Constants.Colors.white)
                         }
                     }
                     .background(Constants.Colors.white)
@@ -106,15 +107,10 @@ struct ExternalProfileView: View {
                         .foregroundStyle(.black)
                     
                     HStack {
-                        ForEach(0..<5) { _ in
-                            // if we could get away from using images here, it might be faster/better...
-                            Image(systemName: "star.fill")
-                                .resizable()
-                                .foregroundStyle(.gray)
-                                .frame(width: 12, height: 12)
-                        }
+                        StarRatingView(rating: viewModel.averageStarRating)
                         
-                        Text("(0)")
+                        Text("(\(viewModel.reviewCount))")
+                            .font(Constants.Fonts.body2)
                             .underline()
                             .foregroundStyle(Constants.Colors.inactiveGray)
                     }
@@ -128,7 +124,7 @@ struct ExternalProfileView: View {
             
             // metrics bar
             HStack {
-                Text("\(viewModel.externalUser?.soldPosts ?? 0)")
+                Text("\(viewModel.soldCount)")
                 .font(Constants.Fonts.body2)
                 .fontWeight(.medium)
                 .foregroundColor(.black)
@@ -200,7 +196,7 @@ struct ExternalProfileView: View {
                                 RoundedRectangle(cornerRadius: 90.79)
                                     .stroke(Constants.Colors.resellPurple, lineWidth: viewModel.isFollowing ? 1.5 : 0)
                             )
-                            .frame(width: 313, height: 38.79)
+                            .frame(width: 366, height: 38.79)
                         
                         if viewModel.isFollowLoading {
                             ProgressView()
@@ -221,16 +217,6 @@ struct ExternalProfileView: View {
                     }
                 }
                 .disabled(viewModel.isFollowLoading)
-                
-                ZStack {
-                    Image(systemName: "envelope")
-                        .foregroundStyle(Constants.Colors.resellPurple)
-                        .frame(width: 20, height: 16)
-                    
-                    Circle()
-                        .stroke(Constants.Colors.resellPurple, lineWidth: 1.2)
-                        .frame(width: 39, height: 39)
-                }
             }
         }
         .padding(.trailing, 26)
@@ -314,10 +300,10 @@ struct ExternalProfileView: View {
                         .scaledToFit()
                         .frame(width: 20, height: 20)
                     
-                    Text(viewModel.externalUser?.stars ?? "0")
+                    Text(String(format: "%.1f", viewModel.averageStarRating))
                         .font(Constants.Fonts.body2)
                         .fontWeight(.medium)
-                    + Text(" (\(viewModel.externalUser?.numReviews ?? 0))")
+                    + Text(" (\(viewModel.reviewCount))")
                         .font(Constants.Fonts.body2)
                 }
                 .foregroundColor(listingViewIsPresented ? Constants.Colors.inactiveGray : Constants.Colors.resellPurple)

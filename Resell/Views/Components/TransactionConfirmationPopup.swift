@@ -11,10 +11,11 @@ struct TransactionConfirmationPopup: View {
     
     // MARK: - Properties
     
+    @EnvironmentObject var router: Router
     @Binding var isPresented: Bool
     
     let notification: Notifications
-    let onConfirm: (Bool) -> Void
+    let onConfirm: (Bool, Transaction?) -> Void
     
     @State private var isLoading = false
     
@@ -30,7 +31,6 @@ struct TransactionConfirmationPopup: View {
     
     var body: some View {
         ZStack {
-            // Dimmed background
             Color.black.opacity(0.4)
                 .ignoresSafeArea()
                 .onTapGesture {
@@ -39,9 +39,7 @@ struct TransactionConfirmationPopup: View {
                     }
                 }
             
-            // Popup card
             VStack(spacing: 20) {
-                // Header
                 VStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 48))
@@ -52,16 +50,13 @@ struct TransactionConfirmationPopup: View {
                         .foregroundColor(.black)
                 }
                 
-                // Description
                 Text("Did your meetup for **\(postTitle)** with **\(sellerName)** happen?")
                     .font(.custom("Rubik-Regular", size: 16))
                     .foregroundColor(Constants.Colors.secondaryGray)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 8)
                 
-                // Buttons
                 VStack(spacing: 12) {
-                    // Confirm button
                     Button {
                         handleConfirmation(completed: true)
                     } label: {
@@ -83,7 +78,6 @@ struct TransactionConfirmationPopup: View {
                     }
                     .disabled(isLoading)
                     
-                    // Deny button
                     Button {
                         handleConfirmation(completed: false)
                     } label: {
@@ -100,7 +94,6 @@ struct TransactionConfirmationPopup: View {
                     }
                     .disabled(isLoading)
                     
-                    // Later button
                     Button {
                         isPresented = false
                     } label: {
@@ -123,7 +116,6 @@ struct TransactionConfirmationPopup: View {
     
     private func handleConfirmation(completed: Bool) {
         guard let transactionId = notification.data.transactionId else {
-            // No transaction ID - just dismiss
             isPresented = false
             return
         }
@@ -131,38 +123,30 @@ struct TransactionConfirmationPopup: View {
         isLoading = true
         
         Task {
-            defer {
-                Task { @MainActor in
+            do {
+                var transaction: Transaction? = nil
+                
+                if completed {
+                    let response = try await NetworkManager.shared.completeTransaction(transactionId: transactionId)
+                    transaction = response.transaction
+                }
+                
+                await MainActor.run {
+                    isLoading = false
+                    isPresented = false
+                    onConfirm(completed, transaction)
+                    
+                    if completed, let tx = transaction {
+                        router.push(.completedTransaction(tx))
+                    }
+                }
+            } catch {
+                await MainActor.run {
                     isLoading = false
                     isPresented = false
                 }
+                NetworkManager.shared.logger.error("Error confirming transaction: \(error.localizedDescription)")
             }
-            
-            onConfirm(completed)
         }
     }
-}
-
-// MARK: - Preview
-
-#Preview {
-    TransactionConfirmationPopup(
-        isPresented: .constant(true),
-        notification: Notifications(
-            id: "test",
-            userId: "user123",
-            title: "Confirm your meetup",
-            body: "Did your meetup happen?",
-            data: NotificationData(
-                type: "transaction_confirmation",
-                postTitle: "iPhone 15 Pro",
-                sellerUsername: "john_doe",
-                transactionId: "tx123"
-            ),
-            read: false,
-            createdAt: Date(),
-            updatedAt: Date()
-        ),
-        onConfirm: { _ in }
-    )
 }

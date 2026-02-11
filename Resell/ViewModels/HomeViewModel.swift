@@ -85,7 +85,7 @@ class HomeViewModel: ObservableObject {
         Task {
             defer {
                 Task { @MainActor in
-                    withAnimation { isLoading = false }
+                    isLoading = false
                 }
             }
             
@@ -152,7 +152,7 @@ class HomeViewModel: ObservableObject {
         
         isLoading = true
 
-        defer { Task { @MainActor in withAnimation { isLoading = false } } }
+        defer { Task { @MainActor in isLoading = false } }
 
         do {
             let postsResponse = try await NetworkManager.shared.getSavedPosts()
@@ -167,7 +167,7 @@ class HomeViewModel: ObservableObject {
         isLoading = true
 
         Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+            defer { Task { @MainActor in isLoading = false } }
 
             do {
                 let postsResponse = try await NetworkManager.shared.getSavedPosts()

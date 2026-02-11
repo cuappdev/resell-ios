@@ -8,8 +8,10 @@
 import SwiftUI
 
 struct AvailabilitySettingsView: View {
+    
     // MARK: - Properties
     
+    @EnvironmentObject var router: Router
     @State private var selectedCells: Set<CellIdentifier> = []
     @State private var currentMonthOffset: Int = 0
     @State private var gridStartDate: Date = Calendar.current.startOfDay(for: Date())
@@ -29,27 +31,22 @@ struct AvailabilitySettingsView: View {
     // MARK: - Body
     
     var body: some View {
+        ScrollView(.vertical, showsIndicators: false) {
         VStack(spacing: 0) {
-            // Month picker header with hamburger menu - stays fixed at top
             MonthPickerHeader(
                 currentMonthOffset: $currentMonthOffset,
                 showCalendar: $showCalendar,
                 showSettings: $showSettings
             )
-            .padding(.top, 8)
             
-            // Month calendar - collapsible
             if showCalendar {
                 MonthCalendarView(
                     currentMonthOffset: $currentMonthOffset,
                     gridStartDate: $gridStartDate,
                     visibleGridDates: visibleGridDates,
                     onDateSelected: { selectedDate in
-                        // Reset page to 0 when user taps a date
                         gridCurrentPage = 0
-                        // Explicitly set the start date (binding should handle this but being explicit)
                         gridStartDate = selectedDate
-                        // Update visible dates immediately
                         updateVisibleDates(from: selectedDate, page: 0)
                     }
                 )
@@ -64,18 +61,17 @@ struct AvailabilitySettingsView: View {
                 .font(Constants.Fonts.body2)
                 .foregroundColor(Constants.Colors.secondaryGray)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal)
+                .padding(.leading, 28)
             
-            // Availability grid - synced with calendar selection
+            
             AvailabilityGridView(
                 selectedCells: $selectedCells,
                 currentPage: $gridCurrentPage,
                 isEditing: true,
                 startDate: gridStartDate,
-                gridHeight: showCalendar ? UIScreen.height * 0.4 : UIScreen.height * 0.65,
                 onVisibleDatesChanged: { dates in
                     visibleGridDates = dates
-                    // Update month offset based on visible dates
+
                     if let firstDate = dates.first {
                         let newMonthOffset = CalendarHelper.monthOffset(for: firstDate)
                         if newMonthOffset != currentMonthOffset && newMonthOffset >= 0 {
@@ -88,7 +84,6 @@ struct AvailabilitySettingsView: View {
             )
             .id(gridStartDate) // Force rebuild when start date changes
             
-            // Save button
             if !showCalendar {
                 PurpleButton(isLoading: isSaving, text: isSaving ? "Saving..." : "Save") {
                     Task {
@@ -96,10 +91,13 @@ struct AvailabilitySettingsView: View {
                     }
                 }
                 .disabled(isSaving)
+                .padding(.top, 16)
                 .padding(.horizontal)
                 .padding(.bottom, 24)
             }
         }
+        }
+        .scrollDisabled(!showCalendar)
         .background(Constants.Colors.white)
         .overlay {
             if isLoading {
@@ -109,11 +107,22 @@ struct AvailabilitySettingsView: View {
                     .background(Color.white.opacity(0.7))
             }
         }
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Text("Availability")
+                Text("Availability Settings")
                     .font(Constants.Fonts.h3)
                     .foregroundStyle(Constants.Colors.black)
+            }
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    router.pop()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(Constants.Colors.black)
+                }
             }
         }
         .alert("Error", isPresented: .constant(errorMessage != nil)) {
@@ -181,7 +190,6 @@ struct AvailabilitySettingsView: View {
                 selectedCells = cells
             }
         } catch {
-            // If no availability exists yet, that's okay - just start with empty grid
             print("Failed to load availability: \(error)")
         }
     }
@@ -241,11 +249,5 @@ struct AvailabilitySettingsView: View {
         }
         
         return cells
-    }
-}
-
-#Preview {
-    NavigationStack {
-        AvailabilitySettingsView()
     }
 }

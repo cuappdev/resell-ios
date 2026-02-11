@@ -20,6 +20,9 @@ class ChatsViewModel: ObservableObject {
 
     @Published var purchaseChats: [Chat] = []
     @Published var offerChats: [Chat] = []
+    
+    // Archived chats (completed transactions)
+    @Published var archivedChats: [Chat] = []
 
     @Published var purchaseUnread: Int = 0
     @Published var offerUnread: Int = 0
@@ -60,6 +63,8 @@ class ChatsViewModel: ObservableObject {
             return purchaseChats.isEmpty
         case .offers:
             return offerChats.isEmpty
+        case .archived:
+            return archivedChats.isEmpty
         }
     }
 
@@ -69,15 +74,19 @@ class ChatsViewModel: ObservableObject {
             return "No messages with sellers yet"
         case .offers:
             return "No messages with buyers yet"
+        case .archived:
+            return "No archived messages"
         }
     }
 
     func emptyStateMessage() -> String {
         switch selectedTab {
         case .purchases:
-            return "When you contact a seller, you’ll see your messages here"
+            return "When you contact a seller, you'll see your messages here"
         case .offers:
-            return "When a buyer contacts you, you’ll see their messages here"
+            return "When a buyer contacts you, you'll see their messages here"
+        case .archived:
+            return "Completed transactions will appear here"
         }
     }
 
@@ -108,7 +117,15 @@ class ChatsViewModel: ObservableObject {
         FirestoreManager.shared.subscribeToBuyerChats { [weak self] purchaseChats in
             guard let self else { return }
 
-            self.purchaseChats = purchaseChats.filter { !self.blockedUsers.contains($0.other.email) }
+            let filteredChats = purchaseChats.filter { !self.blockedUsers.contains($0.other.email) }
+            
+            // Separate active and archived (sold) chats
+            self.purchaseChats = filteredChats.filter { $0.post.sold != true }
+            let archivedPurchases = filteredChats.filter { $0.post.sold == true }
+            
+            // Merge with existing archived chats from offers
+            self.updateArchivedChats(purchases: archivedPurchases)
+            
             purchaseUnread = countUnviewedChats(chats: self.purchaseChats)
             isLoading = false
         }
@@ -119,10 +136,34 @@ class ChatsViewModel: ObservableObject {
         FirestoreManager.shared.subscribeToSellerChats { [weak self] offerChats in
             guard let self else { return }
 
-            self.offerChats = offerChats.filter { !self.blockedUsers.contains($0.other.email) }
+            let filteredChats = offerChats.filter { !self.blockedUsers.contains($0.other.email) }
+            
+            // Separate active and archived (sold) chats
+            self.offerChats = filteredChats.filter { $0.post.sold != true }
+            let archivedOffers = filteredChats.filter { $0.post.sold == true }
+            
+            // Merge with existing archived chats from purchases
+            self.updateArchivedChats(offers: archivedOffers)
+            
             offerUnread = countUnviewedChats(chats: self.offerChats)
             isLoading = false
         }
+    }
+    
+    private var archivedPurchasesCache: [Chat] = []
+    private var archivedOffersCache: [Chat] = []
+    
+    private func updateArchivedChats(purchases: [Chat]? = nil, offers: [Chat]? = nil) {
+        if let purchases = purchases {
+            archivedPurchasesCache = purchases
+        }
+        if let offers = offers {
+            archivedOffersCache = offers
+        }
+        
+        // Combine and sort by updatedAt
+        archivedChats = (archivedPurchasesCache + archivedOffersCache)
+            .sorted { $0.updatedAt > $1.updatedAt }
     }
 
     func countUnviewedChats(chats: [Chat]) -> Int {
@@ -161,4 +202,5 @@ class ChatsViewModel: ObservableObject {
 enum ChatTab: String, CaseIterable {
     case purchases = "Purchases"
     case offers = "Offers"
+    case archived = "Archived"
 }

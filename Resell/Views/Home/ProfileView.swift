@@ -144,7 +144,9 @@ struct ProfileView: View {
                                     .foregroundStyle(Constants.Colors.black)
                                     .multilineTextAlignment(.leading)
                             }
+                            
                             Spacer()
+                            
                         }
                         .padding(.vertical, 16)
                         .padding(.horizontal, 12)
@@ -164,5 +166,3 @@ struct ProfileView: View {
         .background(Constants.Colors.white)
     }
 }
-
-

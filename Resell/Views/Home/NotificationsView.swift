@@ -53,11 +53,12 @@ struct NotificationsView: View {
                         if let items = viewModel.groupedFilteredNotifications[section], !items.isEmpty {
                             Text(section.rawValue)
                                 .font(.custom("Rubik-Medium", size: 18))
-                                .foregroundColor(.primary)
+                                .foregroundColor(Constants.Colors.black)
                                 .textCase(nil)
                                 .padding(.leading, 8)
                                 .padding(.top, 5)
                                 .listRowSeparator(.hidden)
+                                .listRowBackground(Constants.Colors.white)
                             ForEach(items) { notification in
                                 notificationView(for: notification)
                                     .listRowInsets(EdgeInsets())
@@ -68,6 +69,8 @@ struct NotificationsView: View {
                 }
                 .listStyle(.plain)
                 .listRowSeparator(.hidden)
+                .scrollContentBackground(.hidden)
+                .background(Constants.Colors.white)
                 .refreshable {
                     viewModel.fetchNotifications()
                 }
@@ -101,8 +104,8 @@ struct NotificationsView: View {
                 .offset(y: -60)
             }
         }
-        .padding(.top, 5)
-        .padding(.vertical, 1)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Constants.Colors.white)
         .navigationTitle("Notifications")
         .onAppear {
             viewModel.fetchNotifications()
@@ -123,10 +126,12 @@ struct NotificationsView: View {
                 TransactionConfirmationPopup(
                     isPresented: $showTransactionConfirmation,
                     notification: notification,
-                    onConfirm: { completed in
-                        viewModel.confirmTransaction(notification: notification, completed: completed)
+                    onConfirm: { completed, _ in
+                        // Remove the notification after handling
+                        viewModel.removeNotification(notification: notification)
                     }
                 )
+                .environmentObject(router)
                 .transition(.opacity)
                 .animation(.easeInOut(duration: 0.2), value: showTransactionConfirmation)
             }
@@ -191,7 +196,7 @@ struct NotificationsView: View {
             handleNotificationTap(notification)
         }
         .listRowBackground(
-            (notification.read ? Color.white : Constants.Colors.resellPurple.opacity(0.1))
+            (notification.read ? Constants.Colors.white : Constants.Colors.resellPurple.opacity(0.1))
         )
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
             Button(action: {

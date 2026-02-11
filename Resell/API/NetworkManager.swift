@@ -13,9 +13,7 @@ class NetworkManager {
     
     // MARK: - Singleton Instance
     
-    
     static let shared = NetworkManager()
-    
     
     // MARK: - Error Logger for Networking
     
@@ -26,10 +24,16 @@ class NetworkManager {
     private let hostURL: String = Keys.localServerURL
     private let maxAttempts = 2
     
-    /// Shared JSON encoder configured for backend compatibility
+    /// Shared JSON encoder configured for backend compatibility (sends dates as ISO8601 strings)
     private let jsonEncoder: JSONEncoder = {
         let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .secondsSince1970
+        // Backend expects ISO8601 strings like "2026-01-28T03:12:55.810Z"
+        encoder.dateEncodingStrategy = .custom { date, encoder in
+            var container = encoder.singleValueContainer()
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            try container.encode(formatter.string(from: date))
+        }
         return encoder
     }()
     
@@ -181,10 +185,6 @@ class NetworkManager {
             // refactor to use cached token if valid...
             let accessToken = try await GoogleAuthManager.shared.getValidToken()
             request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-            
-            //           if let accessToken = GoogleAuthManager.shared.accessToken {
-            //               request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-            //           }
             
             request.httpBody = body
             return request
@@ -560,12 +560,36 @@ class NetworkManager {
         /// Send initial proposal (buyer proposes a meeting time)
         func sendInitialProposal(chatId: String, messageBody: MessageBody) async throws {
             let url = try constructURL(endpoint: "/chat/proposal/initial/\(chatId)/")
+            
+            // Debug: Log what dates we're sending
+            if let start = messageBody.startDate, let end = messageBody.endDate {
+                print("📅 Sending initial proposal with dates:")
+                print("   startDate: \(start) (ms: \(Int64(start.timeIntervalSince1970 * 1000)))")
+                print("   endDate: \(end) (ms: \(Int64(end.timeIntervalSince1970 * 1000)))")
+            }
+            
+            let encoded = try jsonEncoder.encode(messageBody)
+            if let jsonString = String(data: encoded, encoding: .utf8) {
+                print("📤 Encoded initial proposal body: \(jsonString)")
+            }
+            
             return try await post(url: url, body: messageBody)
         }
         
         /// Respond to a proposal (seller accepts or declines)
         func respondToProposal(chatId: String, messageBody: ProposalResponseBody) async throws -> ProposalResponseResult {
             let url = try constructURL(endpoint: "/chat/proposal/\(chatId)/")
+            
+            // Debug: Log what dates we're sending
+            print("📅 Responding to proposal with dates:")
+            print("   startDate: \(messageBody.startDate) (ms: \(Int64(messageBody.startDate.timeIntervalSince1970 * 1000)))")
+            print("   endDate: \(messageBody.endDate) (ms: \(Int64(messageBody.endDate.timeIntervalSince1970 * 1000)))")
+            
+            let encoded = try jsonEncoder.encode(messageBody)
+            if let jsonString = String(data: encoded, encoding: .utf8) {
+                print("📤 Encoded proposal body: \(jsonString)")
+            }
+            
             return try await post(url: url, body: messageBody)
         }
         
@@ -590,10 +614,16 @@ class NetworkManager {
             return decoder
         }
         
-        /// ISO8601 encoder for availability endpoints
+        /// ISO8601 encoder for availability endpoints (sends dates as ISO8601 strings)
         private var iso8601Encoder: JSONEncoder {
             let encoder = JSONEncoder()
-            encoder.dateEncodingStrategy = .iso8601
+            // Backend expects ISO8601 strings like "2026-01-28T03:12:55.810Z"
+            encoder.dateEncodingStrategy = .custom { date, encoder in
+                var container = encoder.singleValueContainer()
+                let formatter = ISO8601DateFormatter()
+                formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                try container.encode(formatter.string(from: date))
+            }
             return encoder
         }
         
@@ -616,8 +646,24 @@ class NetworkManager {
         func updateAvailability(schedule: [String: [AvailabilitySlot]]) async throws -> AvailabilityResponse {
             let url = try constructURL(endpoint: "/availability/update/")
             let requestData = try iso8601Encoder.encode(UpdateAvailabilityBody(schedule: schedule))
+            
+            // Debug: Log full URL and request body
+            print("📅 Update availability URL: \(url.absoluteString)")
+            if let jsonString = String(data: requestData, encoding: .utf8) {
+                print("📅 Update availability body: \(jsonString)")
+            }
+            
             let request = try await createRequest(url: url, method: "POST", body: requestData)
             let (data, response) = try await URLSession.shared.data(for: request)
+            
+            // Debug: Log response
+            if let httpResponse = response as? HTTPURLResponse {
+                print("📅 Update availability status: \(httpResponse.statusCode)")
+            }
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("📅 Update availability response: \(responseString)")
+            }
+            
             try handleResponse(data: data, response: response)
             return try iso8601Decoder.decode(AvailabilityResponse.self, from: data)
         }
@@ -626,22 +672,281 @@ class NetworkManager {
         
         func getTransactionsByBuyerId(userId: String) async throws -> TransactionsResponse {
             let url = try constructURL(endpoint: "/transaction/buyerId/\(userId)/")
-            return try await get(url: url)
+            let request = try await createRequest(url: url, method: "GET")
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try handleResponse(data: data, response: response)
+            return try iso8601Decoder.decode(TransactionsResponse.self, from: data)
         }
         
         func getTransactionsBySellerId(userId: String) async throws -> TransactionsResponse {
             let url = try constructURL(endpoint: "/transaction/sellerId/\(userId)/")
-            return try await get(url: url)
+            let request = try await createRequest(url: url, method: "GET")
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try handleResponse(data: data, response: response)
+            return try iso8601Decoder.decode(TransactionsResponse.self, from: data)
         }
         
         func getTransactionById(transactionId: String) async throws -> TransactionResponse {
             let url = try constructURL(endpoint: "/transaction/id/\(transactionId)/")
-            return try await get(url: url)
+            let request = try await createRequest(url: url, method: "GET")
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try handleResponse(data: data, response: response)
+            return try iso8601Decoder.decode(TransactionResponse.self, from: data)
         }
         
         func completeTransaction(transactionId: String) async throws -> TransactionResponse {
             let url = try constructURL(endpoint: "/transaction/complete/id/\(transactionId)/")
-            return try await post(url: url, body: CompleteTransactionBody(completed: true))
+            let requestData = try jsonEncoder.encode(CompleteTransactionBody(completed: true))
+            let request = try await createRequest(url: url, method: "POST", body: requestData)
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try handleResponse(data: data, response: response)
+            
+            // Debug: Print raw response
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("📦 Complete transaction raw response: \(jsonString)")
+            }
+            
+            do {
+                return try iso8601Decoder.decode(TransactionResponse.self, from: data)
+            } catch let decodingError as DecodingError {
+                print("❌ Transaction decoding error: \(decodingError)")
+                throw decodingError
+            }
+        }
+        
+        // MARK: - Transaction Review Functions
+        
+        func createTransactionReview(review: CreateTransactionReviewBody) async throws -> TransactionReviewResponse {
+            let url = try constructURL(endpoint: "/transactionReview/")
+            let requestData = try jsonEncoder.encode(review)
+            
+            // Debug: Print what we're sending
+            if let jsonString = String(data: requestData, encoding: .utf8) {
+                print("⭐ Sending review body: \(jsonString)")
+            }
+            
+            let request = try await createRequest(url: url, method: "POST", body: requestData)
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try handleResponse(data: data, response: response)
+            
+            // Debug: Print raw response
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("⭐ Create review raw response: \(jsonString)")
+            }
+            
+            // Try different response formats
+            do {
+                // Try wrapped format first: { "review": {...} }
+                return try iso8601Decoder.decode(TransactionReviewResponse.self, from: data)
+            } catch {
+                print("❌ Review decoding error (wrapped): \(error)")
+                
+                // Try direct format: {...}
+                do {
+                    let review = try iso8601Decoder.decode(TransactionReview.self, from: data)
+                    return TransactionReviewResponse(review: review)
+                } catch {
+                    print("❌ Review decoding error (direct): \(error)")
+                    throw error
+                }
+            }
+        }
+        
+        func getTransactionReview(transactionId: String) async throws -> TransactionReviewResponse {
+            let url = try constructURL(endpoint: "/transactionReview/transactionId/\(transactionId)/")
+            let request = try await createRequest(url: url, method: "GET")
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try handleResponse(data: data, response: response)
+            return try iso8601Decoder.decode(TransactionReviewResponse.self, from: data)
+        }
+        
+        /// Get all transaction reviews for a seller
+        func getReviewsForSeller(sellerId: String) async throws -> [TransactionReview] {
+            let url = try constructURL(endpoint: "/transactionReview/")
+            let request = try await createRequest(url: url, method: "GET")
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try handleResponse(data: data, response: response)
+            
+            // Debug: print raw response
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("⭐ Transaction reviews raw response: \(jsonString.prefix(1000))")
+            }
+            
+            var allReviews: [TransactionReview] = []
+            
+            // Try wrapped format first: { "reviews": [...] }
+            do {
+                let wrapped = try iso8601Decoder.decode(TransactionReviewsResponse.self, from: data)
+                allReviews = wrapped.reviews
+            } catch {
+                print("❌ Wrapped decode failed: \(error)")
+                // Try direct array
+                do {
+                    allReviews = try iso8601Decoder.decode([TransactionReview].self, from: data)
+                } catch {
+                    print("❌ Array decode failed: \(error)")
+                    throw error
+                }
+            }
+            
+            print("⭐ Found \(allReviews.count) total transaction reviews")
+            
+            // NOTE: Backend doesn't include seller in transaction review response
+            // For now, return all reviews. Backend should be updated to include seller info for proper filtering.
+            // TODO: Filter by seller once backend includes seller in transaction object
+            return allReviews
+        }
+        
+        // MARK: - User Review Functions
+        
+        func createUserReview(review: CreateUserReviewBody) async throws -> UserReviewResponse {
+            let url = try constructURL(endpoint: "/userReview/")
+            let requestData = try jsonEncoder.encode(review)
+            
+            // Debug: Print what we're sending
+            if let jsonString = String(data: requestData, encoding: .utf8) {
+                print("👤 Sending user review body: \(jsonString)")
+            }
+            
+            let request = try await createRequest(url: url, method: "POST", body: requestData)
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            // Debug: Print HTTP status
+            if let httpResponse = response as? HTTPURLResponse {
+                print("👤 User review HTTP status: \(httpResponse.statusCode)")
+            }
+            
+            // Debug: Print raw response regardless of status
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("👤 Create user review raw response: \(jsonString)")
+            }
+            
+            try handleResponse(data: data, response: response)
+            
+            // Try different response formats
+            do {
+                // Try wrapped format first: { "review": {...} }
+                return try JSONDecoder().decode(UserReviewResponse.self, from: data)
+            } catch {
+                print("❌ User review decoding error (wrapped): \(error)")
+                
+                // Try direct format: {...}
+                do {
+                    let review = try JSONDecoder().decode(UserReview.self, from: data)
+                    return UserReviewResponse(review: review)
+                } catch {
+                    print("❌ User review decoding error (direct): \(error)")
+                    throw error
+                }
+            }
+        }
+        
+        func getUserReviewsBySeller(sellerId: String) async throws -> [UserReview] {
+            // Try with query parameter first
+            let endpoint = "/userReview/?sellerId=\(sellerId)"
+            let url = try constructURL(endpoint: endpoint)
+            let request = try await createRequest(url: url, method: "GET")
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            // Check if 404 - try without query parameter (fetch all)
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 404 {
+                print("⚠️ Query parameter endpoint returned 404, trying base endpoint...")
+                return try await getUserReviewsBySellerFallback(sellerId: sellerId)
+            }
+            
+            // Handle other errors
+            do {
+                try handleResponse(data: data, response: response)
+            } catch {
+                // If handleResponse throws, try fallback
+                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 404 {
+                    return try await getUserReviewsBySellerFallback(sellerId: sellerId)
+                }
+                throw error
+            }
+            
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("👤 User reviews raw response (with query): \(jsonString.prefix(1000))")
+            }
+            
+            var allReviews: [UserReview] = []
+            
+            // Try wrapped format first: { "reviews": [...] }
+            do {
+                let wrapped = try JSONDecoder().decode(UserReviewsResponse.self, from: data)
+                allReviews = wrapped.reviews
+            } catch {
+                // Try direct array
+                do {
+                    allReviews = try JSONDecoder().decode([UserReview].self, from: data)
+                } catch {
+                    print("❌ User reviews decode failed: \(error)")
+                    throw error
+                }
+            }
+            
+            print("✅ Found \(allReviews.count) user reviews for seller \(sellerId) (query parameter worked)")
+            return allReviews
+        }
+        
+        private func getUserReviewsBySellerFallback(sellerId: String) async throws -> [UserReview] {
+            // Fallback: fetch all and filter client-side (if seller info is available)
+            let url = try constructURL(endpoint: "/userReview/")
+            let request = try await createRequest(url: url, method: "GET")
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 404 {
+                print("⚠️ User reviews endpoint returned 404 - no reviews exist yet")
+                return []
+            }
+            
+            try handleResponse(data: data, response: response)
+            
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("👤 User reviews raw response (fallback): \(jsonString.prefix(1000))")
+            }
+            
+            var allReviews: [UserReview] = []
+            
+            // Try wrapped format first: { "reviews": [...] }
+            do {
+                let wrapped = try JSONDecoder().decode(UserReviewsResponse.self, from: data)
+                allReviews = wrapped.reviews
+            } catch {
+                // Try direct array
+                do {
+                    allReviews = try JSONDecoder().decode([UserReview].self, from: data)
+                } catch {
+                    print("❌ User reviews decode failed: \(error)")
+                    throw error
+                }
+            }
+            
+            // Debug: Check what seller info we have
+            print("🔍 Debugging reviews for sellerId: \(sellerId)")
+            var reviewsWithSeller = 0
+            for review in allReviews {
+                if review.seller != nil {
+                    reviewsWithSeller += 1
+                }
+            }
+            print("  Total reviews: \(allReviews.count), Reviews with seller info: \(reviewsWithSeller)")
+            
+            // Filter by sellerId (only works if backend returns seller info)
+            let filteredReviews = allReviews.filter { review in
+                guard let sellerUid = review.seller?.firebaseUid else {
+                    return false
+                }
+                return sellerUid == sellerId
+            }
+            
+            if filteredReviews.isEmpty && !allReviews.isEmpty {
+                print("⚠️ WARNING: Backend is not returning 'seller' field in UserReview response. Cannot filter reviews by seller.")
+                print("⚠️ This is a backend issue - the response should include seller info for each review.")
+            }
+            
+            print("✅ Found \(filteredReviews.count) user reviews for seller \(sellerId) out of \(allReviews.count) total")
+            return filteredReviews
         }
         
         // MARK: - Other Networking Functions
@@ -750,7 +1055,6 @@ class NetworkManager {
             } catch {
                 throw error
             }
-            
             
             // Try different response formats
             if let wrapped = try? iso8601Decoder.decode(MarkReadResponse.self, from: data) {

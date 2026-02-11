@@ -45,8 +45,21 @@ struct MessagesView: View {
         }
         .background(Constants.Colors.white)
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
         .toolbarBackground(Constants.Colors.white, for: .automatic)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    router.pop()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 12, height: 20)
+                        .foregroundStyle(Constants.Colors.black)
+                }
+            }
+                
             ToolbarItem(placement: .principal) {
                 headerButton
             }
@@ -617,7 +630,6 @@ struct MessagesAvailabilitySheet: View {
                 isEditing: isEditing,
                 singleSelectionMode: true,
                 startDate: gridStartDate,
-                gridHeight: showCalendar ? UIScreen.height * 0.35 : UIScreen.height * 0.625,
                 onVisibleDatesChanged: { dates in
                     visibleGridDates = dates
                     if let firstDate = dates.first {
@@ -943,7 +955,6 @@ struct MessageBubbleView: View {
     var hasActiveConfirmedMeeting: Bool = false
 
     var body: some View {
-        // Proposals are centered, other messages are aligned left/right
         if message.messageType == .proposal {
             proposalMessageView
                 .padding(.horizontal, 24)

@@ -29,5 +29,4 @@ struct TabViewIcon: View {
                 .tint(Constants.Colors.inactiveGray)
         }
     }
-    
 }

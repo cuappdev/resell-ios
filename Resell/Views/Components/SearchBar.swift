@@ -29,7 +29,6 @@ struct SearchBar: View {
                     
                     if isEditable {
                         ZStack(alignment: .leading) {
-                           // ✅ Custom placeholder that respects your color
                            if textBinding.wrappedValue.isEmpty {
                                Text(placeholder)
                                    .font(Constants.Fonts.body1)

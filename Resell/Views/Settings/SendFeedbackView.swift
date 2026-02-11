@@ -147,9 +147,4 @@ struct SendFeedbackView: View {
         }
         .padding(Constants.Spacing.horizontalPadding)
     }
-
-}
-
-#Preview {
-    SendFeedbackView()
 }

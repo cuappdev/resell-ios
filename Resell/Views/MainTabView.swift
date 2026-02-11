@@ -64,6 +64,7 @@ struct MainTabView: View {
                     SuggestionsView()
                 case .productDetails(let item):
                     ProductDetailsView(post: item)
+                        .ignoresSafeArea(edges: .top)
                 case .reportConfirmation:
                     ReportConfirmationView()
                         .environmentObject(reportViewModel)
@@ -104,6 +105,10 @@ struct MainTabView: View {
                 case .venmo:
                     VenmoView(userDidLogin: $mainViewModel.userDidLogin)
                         .environmentObject(onboardingViewModel)
+                case .completedTransaction(let transaction):
+                    CompletedTransactionView(transaction: transaction)
+                case .reviewTesting:
+                    ReviewTestingView()
                 default:
                     EmptyView()
                 }

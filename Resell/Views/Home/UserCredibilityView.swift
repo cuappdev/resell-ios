@@ -24,8 +24,8 @@ struct UserCredibilityView: View {
     }
     
     var headerView: some View {
-        VStack{
-            HStack{
+        VStack {
+            HStack {
                 Button {
                     router.pop()
                 } label: {
@@ -173,9 +173,4 @@ struct UserCredibilityView: View {
     var storefront_review_tab: some View {
         Text("Tab")
     }
-    
-}
-
-#Preview {
-    UserCredibilityView()
 }

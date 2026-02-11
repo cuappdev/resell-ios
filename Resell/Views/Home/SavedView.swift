@@ -29,14 +29,26 @@ struct SavedView: View {
                 await viewModel.getSavedPosts()
             }
         }
+        .navigationBarBackButtonHidden(true)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    router.pop()
+                } label: {
+                    Image("chevron.left")
+                        .resizable()
+                        .frame(width: 36, height: 24)
+                        .foregroundStyle(.black)
+                }
+            }
+            
             ToolbarItem(placement: .principal) {
                 Text("Saved By You")
                     .font(Constants.Fonts.h1)
                     .foregroundStyle(Constants.Colors.black)
             }
         }
-        .toolbarBackground(.hidden, for: .navigationBar)
     }
     
     private var headerView: some View {

@@ -43,7 +43,21 @@ struct DetailedFilterView: View {
                 filtersViewModel.clearFilterSearch()
             }
         }
+        .navigationBarBackButtonHidden(true)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    router.pop()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 12, height: 20)
+                        .fontWeight(.medium)
+                        .foregroundStyle(Constants.Colors.black)
+                }
+            }
+            
             ToolbarItem(placement: .principal) {
                 Text(filter.title)
                     .font(Constants.Fonts.h1)
@@ -67,9 +81,9 @@ struct DetailedFilterView: View {
                 Button(action: {
                     presentPopup = true
                 }, label: {
-                    Image("filters") // consider replacing as it doesn't seem to render that well?
+                    Image("filters") 
                         .resizable()
-                        .frame(width: 40, height: 40)
+                        .frame(width: 24, height: 21)
                 })
             }
             .padding(.bottom, 12)

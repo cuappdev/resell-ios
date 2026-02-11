@@ -16,14 +16,6 @@ struct FilterView: View {
 
     private var categories : [String] = ["Clothing", "Books", "School", "Electronics", "Handmade", "Sports & Outdoors", "Other"]
     private var conditions : [String] = ["Gently Used", "Worn", "Never Used"]
-    
-    let columns = [
-            GridItem(.flexible()),
-            GridItem(.flexible()),
-            GridItem(.flexible())
-        ]
-    
-    let gridItem = GridItem(.adaptive(minimum: 100), spacing: 10)
 
     let home : Bool
     
@@ -40,111 +32,114 @@ struct FilterView: View {
                 .ignoresSafeArea()
             
             ZStack {
-                VStack{
+                VStack(spacing: 0) {
+                    // Drag handle — centered
                     RoundedRectangle(cornerRadius: 10)
                         .frame(width: 66, height: 6)
                         .foregroundStyle(Constants.Colors.filterGray)
-                        .padding(.bottom, 16)
-                        .padding(.top, home ? 0 : 16) // hacky solultion...
+                        .padding(.top, 12)
+                        .padding(.bottom, 8)
                     
+                    // Title — centered
                     Text("Filters")
                         .font(.custom("Rubik-Medium", size: 22))
                         .foregroundStyle(.black)
+                        .padding(.vertical, 20)
                     
                     Divider()
                     
-                    HStack(spacing: 120) {
-                        Text("Sort by")
-                            .font(.custom("Rubik-Medium", size: 20))
-                            .foregroundStyle(.black)
+                    // Scrollable content
+                    ScrollView {
+                        // Left-aligned content sections
+                        VStack(alignment: .leading, spacing: 0) {
                         
-                        Button{
-                            presentPopup.toggle()
-                        } label: {
-                            Text("\(filtersVM.selectedSort?.title ?? "Any")")
-                                .font(.custom("Rubik-Regular", size: 20))
-                                .foregroundStyle(.gray)
-                            
-                            Image(systemName: "chevron.down")
-                                .foregroundStyle(.gray)
-                                .padding(.leading, -2)
-                        }
-                    }.padding(.top, 12)
-                        .frame(width: 320)
-                    
-                    Divider()
-                        .frame(width: 344, height: 1)
-                        .padding(.top, 12)
-                    
-                    VStack(alignment: .leading){
-                        VStack {
-                            Text("Price Range")
+                        // MARK: - Sort By
+                        
+                        HStack {
+                            Text("Sort by")
                                 .font(.custom("Rubik-Medium", size: 20))
-                                .padding(.leading, 28)
-                                .padding(.bottom, 8)
+                                .foregroundStyle(.black)
                             
-                            if filtersVM.lowValue == 0 && filtersVM.highValue == 1000 {
-                                Text("Any")
-                                    .font(.custom("Rubik-Regular", size: 20))
-                                    .foregroundStyle(.gray)
-                                    .padding(.trailing, 52)
-                            } else if filtersVM.lowValue == 0 {
-                                Text("Up to $\(Int(filtersVM.highValue))")
-                                    .font(.custom("Rubik-Regular", size: 20))
-                                    .foregroundStyle(.gray)
-                            } else if filtersVM.highValue == 1000 {
-                                Text("$\(Int(filtersVM.lowValue)) +")
-                                    .font(.custom("Rubik-Regular", size: 20))
-                                    .foregroundStyle(.gray)
-                                    .padding(.trailing, filtersVM.lowValue > 99 ? 24 : 36)
-                            } else {
-                                Text("$\(Int(filtersVM.lowValue)) to $\(Int(filtersVM.highValue))")
-                                    .font(.custom("Rubik-Regular", size: 20))
-                                    .foregroundStyle(.gray)
+                            Spacer()
+                            
+                            Button {
+                                presentPopup.toggle()
+                            } label: {
+                                HStack(spacing: 2) {
+                                    Text("\(filtersVM.selectedSort?.title ?? "Any")")
+                                        .font(.custom("Rubik-Regular", size: 20))
+                                        .foregroundStyle(.gray)
+                                    
+                                    Image(systemName: "chevron.down")
+                                        .foregroundStyle(.gray)
+                                }
                             }
                         }
+                        .padding(.vertical, 24)
                         
-                        // SLIDER
+                        Divider()
+                            .padding(.bottom, 16)
+                        
+                        // MARK: - Price Range
+                        
+                        HStack {
+                            Text("Price Range")
+                                .font(.custom("Rubik-Medium", size: 20))
+                                .foregroundStyle(.black)
+                            
+                            Spacer()
+                            
+                            Group {
+                                if filtersVM.lowValue == 0 && filtersVM.highValue == 1000 {
+                                    Text("Any")
+                                } else if filtersVM.lowValue == 0 {
+                                    Text("Up to $\(Int(filtersVM.highValue))")
+                                } else if filtersVM.highValue == 1000 {
+                                    Text("$\(Int(filtersVM.lowValue)) +")
+                                } else {
+                                    Text("$\(Int(filtersVM.lowValue)) to $\(Int(filtersVM.highValue))")
+                                }
+                            }
+                            .font(.custom("Rubik-Regular", size: 20))
+                            .foregroundStyle(.gray)
+                        }
+                        .padding(.bottom, 8)
+                        
+                        // Slider — extend trailing to avoid clipping the 344pt track
                         RangeSlider(lowValue: $filtersVM.lowValue, highValue: $filtersVM.highValue, range: 0...1000)
-                            .padding(.leading, 28)
-                            .offset(y: -20)
+                            .padding(.trailing, -28)
                         
-                        HStack{
+                        HStack {
                             Text("Items On Sale")
                                 .font(.custom("Rubik-Regular", size: 20))
                                 .foregroundStyle(.gray)
-                                .padding(.leading, 28)
                             
                             Spacer()
                             
                             Button {
                                 filtersVM.showSale.toggle()
                             } label: {
-                                Image(filtersVM.showSale ? "toggle-set" : "toggle" )
-                            }.padding(.trailing, 28)
-                            
-                            
+                                Image(filtersVM.showSale ? "toggle-set" : "toggle")
+                            }
                         }
-                        .offset(y: -28)
-                    }
-                    if home {
-                        Divider()
-                            .frame(width: 344, height: 1)
-                            .offset(y: -16)
+                        .offset(y: -8)
                         
-                        
-                        VStack{
+                        if home {
+                            Divider()
+                                .padding(.top, 4)
+                                .padding(.bottom, 12)
+                            
+                            // MARK: - Product Category
+                            
                             Text("Product Category")
                                 .font(.custom("Rubik-Medium", size: 20))
-                                .padding(.bottom, 8)
-                                .padding(.trailing, 72)
                                 .foregroundStyle(.black)
+                                .padding(.bottom, 8)
                             
                             HFlow {
                                 ForEach(categories, id: \.self) { category in
                                     HStack {
                                         Button {
-                                            // TODO: change logic for uppercasing...
                                             if filtersVM.categoryFilters.contains(category){
                                                 filtersVM.categoryFilters.remove(category)
                                             } else {
@@ -152,7 +147,7 @@ struct FilterView: View {
                                             }
                                         } label: {
                                             if filtersVM.categoryFilters.contains(category) {
-                                                HStack{
+                                                HStack {
                                                     Text(category)
                                                         .font(.custom("Rubik-Medium", size: 14))
                                                         .foregroundStyle(Constants.Colors.resellPurple)
@@ -181,24 +176,18 @@ struct FilterView: View {
                                     }
                                 }
                             }
-                            .frame(width: 320, alignment: .leading)
-                            .offset(x: 36)
+                            
+                            Divider()
+                                .padding(.vertical, 12)
                         }
-                        .padding(.trailing, 96)
                         
-                        Divider()
-                            .frame(width: 344, height: 1)
-                            .offset(y: 16)
+                        // MARK: - Condition
                         
-                    }
-                    
-                    VStack{
                         Text("Condition")
                             .font(.custom("Rubik-Medium", size: 20))
-                            .padding(.trailing, 232)
-                            .padding(.bottom, 8)
-                            .padding(.top, home ? 28 : 0)
                             .foregroundStyle(.black)
+                            .padding(.bottom, 8)
+                            .padding(.top, home ? 0 : 12)
                         
                         HStack {
                             ForEach(conditions, id: \.self){ condition in
@@ -210,7 +199,7 @@ struct FilterView: View {
                                     }
                                 } label: {
                                     if filtersVM.conditionFilters.contains(condition) {
-                                        HStack{
+                                        HStack {
                                             Text(condition)
                                                 .font(.custom("Rubik-Medium", size: 14))
                                                 .foregroundStyle(Constants.Colors.resellPurple)
@@ -236,16 +225,14 @@ struct FilterView: View {
                                         )
                                 )
                             }
-                            
-                        }
-                        .frame(width: 320, alignment: .leading)
-                        .padding(.leading, -8)
-                        
-                        if !home {
-                            Spacer()
                         }
                     }
-                    .padding(.trailing, 32)
+                    .padding(.horizontal, 28)
+                    } // End of ScrollView
+                    
+                    Spacer()
+                    
+                    // MARK: - Reset / Apply Buttons (Fixed at bottom)
                     
                     HStack{
                         Button {
@@ -253,7 +240,6 @@ struct FilterView: View {
                         } label: {
                             Text("Reset")
                                 .font(.custom("Rubik-Medium", size: 20))
-                                .padding(.leading, 40)
                                 .foregroundStyle(.black)
                         }
                         
@@ -274,22 +260,20 @@ struct FilterView: View {
                                 .background(filtersVM.categoryFilters.isEmpty && filtersVM.conditionFilters.isEmpty ? Constants.Colors.resellPurple.opacity(0.4) : Constants.Colors.resellPurple)
                                 .cornerRadius(20)
                         }
-                        .padding(.trailing, 40)
                     }
-                    .padding(.top, 32)
+                    .padding(.horizontal, 40)
+                    .padding(.vertical, 16)
                 }
                 
                 if presentPopup {
                     SortByView(selectedSort: $filtersVM.selectedSort)
-                        .offset(x: 88, y: home ? -142 : 0)
+                        .offset(x: 88, y: -142)
                         .onTapGesture {
                             presentPopup.toggle()
                         }
                 }
             }
         }
-//        .frame(width: 414, height: home ? 786 : 686)
-//        .background(Color.white)
 
         // TODO: Add border to filter view
     }

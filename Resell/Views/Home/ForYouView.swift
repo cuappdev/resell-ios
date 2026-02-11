@@ -37,7 +37,6 @@ struct ForYouView: View {
                             forYouCard(title: titles[1], posts: recentPosts, loaded: $recentLoadedStates)
                         }
                     } else {
-                        // Empty state
                         ZStack {
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(Color.gray, lineWidth: 1)
@@ -47,6 +46,7 @@ struct ForYouView: View {
                             VStack {
                                 Text("You haven't saved any listings yet.")
                                     .foregroundStyle(Constants.Colors.black)
+                                
                                 Text("Tap \(Image(systemName: "bookmark")) on a listing to save.")
                                     .foregroundStyle(Constants.Colors.black)
                             }
@@ -60,7 +60,6 @@ struct ForYouView: View {
             Task {
                 async let saved: () = viewModel.getSavedPosts()
                 
-                // Fetch posts for recent searches
                 print("trying to load recently searched")
                 let recent = await searchViewModel.loadRecentlySearchedPosts()
                 recentPosts = recent
@@ -136,8 +135,4 @@ struct ForYouView: View {
             .clipShape(RoundedRectangle(cornerRadius: 20))
         }
     }
-}
-
-#Preview {
-    ForYouView()
 }
