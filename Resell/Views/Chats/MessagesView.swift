@@ -1163,6 +1163,8 @@ struct MessageBubbleView: View {
             return "The meeting has been confirmed"
         case false:
             return "The meeting was declined"
+        default:
+            return "Status unknown in Message acceptance"
         }
     }
     
