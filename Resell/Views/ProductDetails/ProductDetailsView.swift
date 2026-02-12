@@ -183,6 +183,7 @@ struct ProductDetailsView: View {
     }
 
     private var detailsView: some View {
+        
         GeometryReader { geometry in
             VStack(alignment: .leading) {
                 HStack {
@@ -229,7 +230,12 @@ struct ProductDetailsView: View {
 
     private var sellerProfileView: some View {
         Button {
-            router.push(.profile(viewModel.item?.user?.firebaseUid ?? ""))
+            if viewModel.isMyPost() {
+                mainViewModel.selection = 2
+                router.popToRoot()
+            } else {
+                router.push(.profile(viewModel.item?.user?.firebaseUid ?? ""))
+            }
         } label: {
             HStack {
                 KFImage(viewModel.item?.user?.photoUrl)
