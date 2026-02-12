@@ -221,7 +221,7 @@ class NetworkManager {
         // MARK: - Auth Networking Functions
         
         func authorize(authorizeBody: AuthorizeBody) async throws -> User? {
-            let url = try constructURL(endpoint: "/api/auth")
+            let url = try constructURL(endpoint: "/auth")
             
             return try await post(url: url, body: authorizeBody)
         }
