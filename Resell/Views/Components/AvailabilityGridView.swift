@@ -98,21 +98,23 @@ struct AvailabilityGridView: View {
                     let startedInCellArea = dragStartLocation.x > timeColumnWidth
                     
                     if startedInCellArea && isEditing {
-                        if singleSelectionMode {
-                            if let identifier = mapDragLocationToCell(
-                                location: value.startLocation,
-                                dates: Array(paginatedDates[currentPage]),
-                                times: times,
-                                cellHeight: cellHeight
-                            ) {
+                        if let identifier = mapDragLocationToCell(
+                            location: singleSelectionMode ? value.startLocation : value.location,
+                            dates: Array(paginatedDates[currentPage]),
+                            times: times,
+                            cellHeight: cellHeight
+                        ) {
+                            guard !isPastTime(identifier) else { return }
+                            
+                            if singleSelectionMode {
                                 if selectedCells.contains(identifier) {
                                     selectedCells.remove(identifier)
                                 } else {
                                     selectedCells.removeAll()
                                     selectedCells.insert(identifier)
                                 }
+                                return
                             }
-                            return
                         }
                         
                         let horizontalDrag = abs(value.translation.width)
@@ -324,6 +326,14 @@ struct AvailabilityGridView: View {
 
     // MARK: - Functions
     
+    private func isPastTime(_ identifier: CellIdentifier) -> Bool {
+        guard let cellAvailability = AvailabilityGridView.cellsToAvailabilities([identifier]).first else {
+            return false
+        }
+        
+        return cellAvailability.startDate < Date()
+    }
+    
     /// Fills in the cells between two cells in the same column to prevent gaps when dragging quickly
     private func fillCellGap(from startCell: CellIdentifier, to endCell: CellIdentifier, date: String) -> [CellIdentifier] {
         guard startCell.date == endCell.date else { return [] }
@@ -439,7 +449,9 @@ struct CellsGridView: View {
             isBuyerUnavailableTop: buyerUnavailableCells.contains(topIdentifier),
             isBuyerUnavailableBottom: buyerUnavailableCells.contains(bottomIdentifier),
             isSellerUnavailableTop: sellerUnavailableCells.contains(topIdentifier),
-            isSellerUnavailableBottom: sellerUnavailableCells.contains(bottomIdentifier)
+            isSellerUnavailableBottom: sellerUnavailableCells.contains(bottomIdentifier),
+            isPastTop: checkIsPast(identifier: topIdentifier),
+            isPastBottom: checkIsPast(identifier: bottomIdentifier)
         )
     }
     
@@ -455,6 +467,13 @@ struct CellsGridView: View {
         let adjacentTime = times[rowIndex + 1]
         let adjacentIdentifier = CellIdentifier(date: date, time: "\(adjacentTime) Top")
         return combinedCells.contains(adjacentIdentifier)
+    }
+    
+    private func checkIsPast(identifier: CellIdentifier) -> Bool {
+        guard let cellDate = AvailabilityGridView.cellsToAvailabilities([identifier]).first?.startDate else {
+            return false
+        }
+        return cellDate < Date()
     }
 }
 
@@ -477,6 +496,9 @@ struct CellView: View {
     var isSellerUnavailableTop: Bool = false
     var isSellerUnavailableBottom: Bool = false
 
+    let isPastTop: Bool
+    let isPastBottom: Bool
+    
     private let cellHeight = UIScreen.height / 12 - 25
     
     // Opacity constants
@@ -501,7 +523,7 @@ struct CellView: View {
                 showBottomBorder: isSelectedTop && !isSelectedBottom,
                 showLeftBorder: isSelectedTop,  // Always show left border
                 showRightBorder: isSelectedTop,  // Always show right border
-                fillColor: fillColor(isSelected: isSelectedTop, isHighlighted: isHighlightedTop, isBuyerUnavailable: isBuyerUnavailableTop, isSellerUnavailable: isSellerUnavailableTop),
+                fillColor: fillColor(isSelected: isSelectedTop, isHighlighted: isHighlightedTop, isBuyerUnavailable: isBuyerUnavailableTop, isSellerUnavailable: isSellerUnavailableTop, isPast: isPastTop),
                 borderWidth: borderWidth,
                 dashPattern: dashPattern
             )
@@ -515,7 +537,7 @@ struct CellView: View {
                 showBottomBorder: isSelectedBottom && !isBottomAdjacentSelected,
                 showLeftBorder: isSelectedBottom,  // Always show left border
                 showRightBorder: isSelectedBottom,  // Always show right border
-                fillColor: fillColor(isSelected: isSelectedBottom, isHighlighted: isHighlightedBottom, isBuyerUnavailable: isBuyerUnavailableBottom, isSellerUnavailable: isSellerUnavailableBottom),
+                fillColor: fillColor(isSelected: isSelectedBottom, isHighlighted: isHighlightedBottom, isBuyerUnavailable: isBuyerUnavailableBottom, isSellerUnavailable: isSellerUnavailableBottom, isPast: isPastBottom),
                 borderWidth: borderWidth,
                 dashPattern: dashPattern
             )
@@ -523,7 +545,10 @@ struct CellView: View {
         }
     }
     
-    private func fillColor(isSelected: Bool, isHighlighted: Bool, isBuyerUnavailable: Bool, isSellerUnavailable: Bool) -> Color {
+    private func fillColor(isSelected: Bool, isHighlighted: Bool, isBuyerUnavailable: Bool, isSellerUnavailable: Bool, isPast: Bool) -> Color {
+        if isPast {
+            return Color.gray.opacity(0.65)
+        }
         if isHighlighted {
             // Currently being dragged - use lighter opacity
             return Constants.Colors.resellPurple.opacity(dragOpacity)
