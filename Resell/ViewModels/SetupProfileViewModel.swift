@@ -13,7 +13,9 @@ class SetupProfileViewModel: ObservableObject {
 
     // MARK: - Properties
 
+    @Published var errorText: String = ""
     @Published var didAgreeWithEULA: Bool = false
+    @Published var didPresentError: Bool = false
     @Published var didShowPhotosPicker: Bool = false
     @Published var didShowWebView: Bool = false
     @Published var isLoading: Bool = false
@@ -22,7 +24,7 @@ class SetupProfileViewModel: ObservableObject {
     @Published var bio: String = ""
     @Published var venmoHandle: String = ""
 
-    @Published var selectedImage: UIImage = UIImage(named: "emptyProfile")!
+    @Published var selectedImage: UIImage? = nil
     @Published var selectedItem: PhotosPickerItem? = nil
 
     @Published var netid: String = ""
@@ -43,28 +45,41 @@ class SetupProfileViewModel: ObservableObject {
             if let data = try? await newItem.loadTransferable(type: Data.self),
                let image = UIImage(data: data) {
                 DispatchQueue.main.async {
-                    self.selectedImage = image
+
+                    self.selectedImage = image.resizedToMaxDimension(512)
                 }
             }
         }
     }
 
     func createNewUser() {
-        Task {
-            isLoading = true
-            
-            do {
-                if let imageBase64 = selectedImage.toBase64() {
-                    let user = CreateUserBody(username: username.cleaned(), netid: netid, givenName: givenName, familyName: familyName, photoUrl: imageBase64, email: email, googleID: googleID, bio: bio.cleaned())
-                    try await NetworkManager.shared.createUser(user: user)
-                } else {
-                    // TODO: Present Toast Error
-                }
+        isLoading = true
 
-                isLoading = false
+        if selectedImage == nil {
+            presentError("Please select a profile picture.")
+            return
+        }
+
+        Task {
+            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+
+            do {
+                if let imageBase64 = selectedImage?.resizedToMaxDimension(256).toBase64() {
+                    let imageBody = ImageBody(imageBase64: imageBase64)
+                    let imageUrl = try await NetworkManager.shared.uploadImage(image: imageBody).image
+
+                    guard let fcmToken = FirebaseNotificationService.shared.fcmToken, let user = GoogleAuthManager.shared.user else {
+                        return
+                    }
+
+                    let userBody = user.toCreateUserBody(username: username, bio: bio, venmoHandle: venmoHandle, imageUrl: imageUrl, fcmToken: fcmToken)
+                    try await NetworkManager.shared.createUser(user: userBody)
+                }
             } catch {
-                NetworkManager.shared.logger.error("Error in SetupProfileViewModel.createNewUser: \(error.localizedDescription)")
-                isLoading = false
+                if error as? ErrorResponse == ErrorResponse.usernameAlreadyExists {
+                    presentError("That username is already taken.")
+                }
+                NetworkManager.shared.logger.error("Error in SetupProfileViewModel.createNewUser: \(error)")
             }
         }
     }
@@ -85,6 +100,11 @@ class SetupProfileViewModel: ObservableObject {
         familyName = ""
         email = ""
         googleID = ""
+    }
+
+    private func presentError(_ error: String) {
+        errorText = error
+        didPresentError = true
     }
 
 }

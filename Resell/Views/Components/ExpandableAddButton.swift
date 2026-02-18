@@ -26,8 +26,8 @@ struct ExpandableAddButton: View {
                     .onTapGesture {
                         withAnimation {
                             isExpanded.toggle()
-                        }
                     }
+                }
             }
 
             VStack(alignment: .trailing, spacing: 24) {
@@ -72,6 +72,7 @@ struct ExpandableAddButton: View {
             }
             .offset(y: isExpanded ? -64 : 64)
             .opacity(isExpanded ? 1 : 0)
+            .allowsHitTesting(isExpanded)
 
             Button {
                 router.push(.newRequest)
@@ -83,6 +84,7 @@ struct ExpandableAddButton: View {
             }
             .offset(y: isExpanded ? 0 : 64)
             .opacity(isExpanded ? 1 : 0)
+            .allowsHitTesting(isExpanded)
         }
     }
 
@@ -105,8 +107,4 @@ struct ExpandableAddButton: View {
                 .stroke(Constants.Colors.resellGradient, lineWidth: 3)
         }
     }
-}
-
-#Preview {
-    ExpandableAddButton()
 }

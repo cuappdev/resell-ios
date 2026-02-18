@@ -8,39 +8,54 @@
 import SwiftUI
 
 struct SavedView: View {
-
+    // TODO: This should be the same as the detailed filter view imo...
     @EnvironmentObject var router: Router
-    @StateObject private var viewModel = HomeViewModel.shared
-
+    @EnvironmentObject private var viewModel: HomeViewModel
+    
     var body: some View {
-        NavigationStack(path: $router.path) {
-            ZStack {
-                VStack(spacing: 0) {
-                    headerView
-                    ProductsGalleryView(items: viewModel.savedItems)
+        ScrollView(.vertical){
+            ProductsGalleryView(items: viewModel.savedItems)
+        }
+        .background(Constants.Colors.white)
+        .loadingView(isLoading: viewModel.isLoading)
+        .emptyState(isEmpty: $viewModel.savedItems.isEmpty, title: "No saved posts", text: "Posts you have bookmarked will be displayed here.")
+        .refreshable {
+            Task {
+                await viewModel.getSavedPosts()
+            }
+        }
+        .onAppear {
+            Task {
+                await viewModel.getSavedPosts()
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    router.pop()
+                } label: {
+                    Image("chevron.left")
+                        .resizable()
+                        .frame(width: 36, height: 24)
+                        .foregroundStyle(.black)
                 }
             }
-            .background(Constants.Colors.white)
-            .onAppear {
-                viewModel.getSavedPosts()
+            
+            ToolbarItem(placement: .principal) {
+                Text("Saved By You")
+                    .font(Constants.Fonts.h1)
+                    .foregroundStyle(Constants.Colors.black)
             }
-            .emptyState(isEmpty: $viewModel.savedItems.isEmpty, title: "No saved posts", text: "Posts you have bookmarked will be displayed here.")
         }
     }
-
+    
     private var headerView: some View {
-        HStack {
-            Text("Saved")
+        VStack {
+            Text("Saved By You")
                 .font(Constants.Fonts.h1)
                 .foregroundStyle(Constants.Colors.black)
-
-            Spacer()
-            
-            Button(action: {
-                //TODO: Search Endpoint
-            }, label: {
-                Icon(image: "search")
-            })
         }
         .padding(.horizontal, 25)
     }

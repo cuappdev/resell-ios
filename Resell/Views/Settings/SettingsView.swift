@@ -26,7 +26,7 @@ struct SettingsView: View {
     // MARK: - UI
 
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             ForEach(isAccountSettings ? viewModel.accountSettings : viewModel.settings, id: \.self) { setting in
                 switch setting {
                 case .accountSettings:
@@ -41,13 +41,13 @@ struct SettingsView: View {
                     settingsRow(isRed: true, title: "Delete Account", icon: "") {
                         withAnimation { viewModel.didShowDeleteAccountView = true }
                     }
-                case .notifications:
-                    settingsRow(title: "Notifications", icon: "notifications") {
-                        router.push(.notifications)
-                    }
                 case .sendFeedback:
                     settingsRow(title: "Send Feedback", icon: "feedback") {
                         router.push(.feedback)
+                    }
+                case .reviewTesting:
+                    settingsRow(title: "🧪 Test Reviews", icon: "feedback") {
+                        router.push(.reviewTesting)
                     }
                 case .blockedUsers:
                     settingsRow(title: "Blocked Users", icon: "slash") {
@@ -62,13 +62,25 @@ struct SettingsView: View {
                         viewModel.didShowLogoutView = true
                     }
                 }
-
             }
 
             Spacer()
         }
-        .padding(.top, 24)
         .background(Constants.Colors.white)
+        .navigationTitle(isAccountSettings ? "Account Settings" : "Settings")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    router.pop()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(Constants.Colors.black)
+                }
+            }
+        }
         .sheet(isPresented: $viewModel.didShowWebView) {
             WebView(url: URL(string: "https://www.cornellappdev.com/license/resell")!)
                 .edgesIgnoringSafeArea(.all)
@@ -79,13 +91,6 @@ struct SettingsView: View {
         .popupModal(isPresented: $viewModel.didShowDeleteAccountView) {
             popupModalContent
                 .padding(Constants.Spacing.horizontalPadding)
-        }
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text(isAccountSettings ? "Account Settings" : "Settings")
-                    .font(Constants.Fonts.h3)
-                    .foregroundStyle(Constants.Colors.black)
-            }
         }
     }
 
@@ -125,11 +130,9 @@ struct SettingsView: View {
                 .padding(.top, 48)
 
             PurpleButton(isAlert: true, text: "Logout", horizontalPadding: 70) {
-                UserSessionManager.shared.logout()
                 viewModel.logout()
+                NotificationCenter.default.post(name: Constants.Notifications.LogoutUser, object: nil)
                 router.popToRoot()
-                mainViewModel.selection = 0
-                mainViewModel.userDidLogin = false
             }
 
             Button{
@@ -185,7 +188,6 @@ struct SettingsView: View {
                     .clipShape(.capsule)
             }
 
-
             Button {
                 viewModel.togglePopup(isPresenting: false)
             } label: {
@@ -196,8 +198,4 @@ struct SettingsView: View {
         }
         .frame(width: 300)
     }
-}
-
-#Preview {
-    SettingsView(isAccountSettings: false)
 }

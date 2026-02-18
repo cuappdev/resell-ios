@@ -7,6 +7,7 @@
 
 import Kingfisher
 import SwiftUI
+import UserNotifications
 
 struct ProductDetailsView: View {
 
@@ -16,92 +17,114 @@ struct ProductDetailsView: View {
     @EnvironmentObject var router: Router
 
     @StateObject private var viewModel = ProductDetailsViewModel()
-    @State var id: String
+
+    var post: Post
+
+    /// Read the true top safe area inset from the window.
+    private var topSafeArea: CGFloat {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first?.windows.first?.safeAreaInsets.top ?? 0
+    }
+
+    // Base image height before adding safe area compensation
+    private var baseImageHeight: CGFloat {
+        UIScreen.main.bounds.width * 1.5
+    }
+
+    // Total image height including safe area so the image extends behind the status bar
+    private var imageHeight: CGFloat {
+        baseImageHeight + topSafeArea
+    }
 
     // MARK: - UI
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            VStack {
+            VStack(spacing: 0) {
                 if viewModel.isLoading {
                     ShimmerView()
-                        .frame(height: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio))
-                        .ignoresSafeArea()
+                        .frame(height: imageHeight)
                 } else {
                     imageGallery
-                        .frame(height: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio))
+                        .frame(height: imageHeight)
                 }
 
-                if viewModel.maxImgRatio > 0 {
-                    Spacer()
-                }
+                Spacer()
             }
 
             DraggableSheetView(maxDrag: viewModel.maxDrag) {
                 detailsView
             }
-            .ignoresSafeArea()
 
-            buttonGradientView
+            if !viewModel.isMyPost() {
+                buttonGradientView
+            }
 
             if viewModel.didShowOptionsMenu {
                 OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowDeleteView: $viewModel.didShowDeleteView, options: {
                     var options: [Option] = [
-                        .share(url: URL(string: "https://www.google.com")!, itemName: viewModel.item?.title ?? ""),
-                        .report(type: "Post", id: id)
+                        .report(type: "Post", id: post.id)
                     ]
                     if viewModel.isUserPost() {
                         options.append(.delete)
                     }
                     return options
                 }())
-                .padding(.top, (UIApplication.shared.keyWindow?.safeAreaInsets.top ?? 0) + 30)
-                .zIndex(1)
-            }
-        }
-        .background(Constants.Colors.white)
-        .ignoresSafeArea()
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    router.pop()
-                } label: {
-                    Image("chevron.left.white")
-                        .resizable()
-                        .frame(width: 36, height: 24)
-                }
+                .padding(.top, topSafeArea * 2 + 30)
+                .zIndex(2)
             }
 
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    withAnimation {
-                        viewModel.didShowOptionsMenu.toggle()
+            // Custom navigation buttons overlay
+            VStack {
+                HStack {
+                    Button {
+                        router.pop()
+                    } label: {
+                        Image("chevron.left.white")
+                            .resizable()
+                            .frame(width: 36, height: 24)
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
                     }
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .resizable()
-                        .frame(width: 24, height: 6)
-                        .foregroundStyle(Constants.Colors.white)
+                    .padding(.leading, 12)
+
+                    Spacer()
+
+                    Button {
+                        withAnimation {
+                            viewModel.didShowOptionsMenu.toggle()
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .resizable()
+                            .frame(width: 24, height: 6)
+                            .foregroundStyle(Constants.Colors.white)
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .padding(.trailing, 12)
                 }
-                .padding()
+                .padding(.top, topSafeArea * 2 + 4)
+
+                Spacer()
             }
+            .zIndex(1)
         }
-        .sheet(isPresented: $viewModel.didShowDeleteView) {
-            deletePostView
-                .background(Constants.Colors.white)
-        }
-        .loadingView(isLoading: viewModel.isLoading)
+        .background(Constants.Colors.white)
+        // Pull content up to counteract NavigationStack's safe area inset
+        .padding(.top, -topSafeArea)
+        .ignoresSafeArea(edges: .top)
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear {
-            viewModel.getPost(id: id)
-            viewModel.getSimilarPosts(id: id)
+            viewModel.setPost(post: post)
 
             withAnimation {
                 mainViewModel.hidesTabBar = true
             }
 
-            // Set the max drag when the image finishes downloading
-            viewModel.maxDrag = max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio)
+            viewModel.maxDrag = imageHeight
         }
         .onDisappear {
             viewModel.didShowOptionsMenu = false
@@ -109,6 +132,10 @@ struct ProductDetailsView: View {
                 mainViewModel.hidesTabBar = false
             }
         }
+    }
+
+    private var isSold: Bool {
+        viewModel.item?.sold == true
     }
 
     @ViewBuilder
@@ -122,34 +149,41 @@ struct ProductDetailsView: View {
             .background(Constants.Colors.white)
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
 
+            // Sold overlay
+            if isSold {
+                Rectangle()
+                    .fill(Color.black.opacity(0.5))
+
+                Text("Item Sold")
+                    .font(.custom("Rubik-Medium", size: 24))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+
             CustomPageControlIndicatorView(currentPage: $viewModel.currentPage, numberOfPages: $viewModel.images.count)
                 .frame(height: 20)
                 .padding()
         }
-        .ignoresSafeArea(edges: .top)
     }
 
     private func imageView(_ index: Int) -> some View {
-        GeometryReader { geometry in
-            KFImage(viewModel.images[index])
-                .placeholder {
-                    ShimmerView()
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-                .fade(duration: 0.3)
-                .scaleFactor(UIScreen.main.scale)
-                .backgroundDecode()
-                .resizable()
-                .scaledToFill()
-                .frame(width: geometry.size.width)
-                .tag(index)
-                .aspectRatio(contentMode: .fill)
-                .clipped()
-                .ignoresSafeArea(edges: .top)
-        }
+        KFImage(viewModel.images[index])
+            .placeholder {
+                ShimmerView()
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+            .fade(duration: 0.3)
+            .scaleFactor(UIScreen.main.scale)
+            .backgroundDecode()
+            .resizable()
+            .scaledToFill()
+            .frame(width: UIScreen.main.bounds.width, height: imageHeight)
+            .tag(index)
+            .clipped()
     }
 
     private var detailsView: some View {
+        
         GeometryReader { geometry in
             VStack(alignment: .leading) {
                 HStack {
@@ -176,11 +210,7 @@ struct ProductDetailsView: View {
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
             .background(Color.white)
             .cornerRadius(40)
-            .position(x: UIScreen.width / 2, y: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio - 50) + geometry.size.height / 2)
-            .overlay(alignment: .trailing) {
-                saveButton
-                    .position(x: UIScreen.width - 60, y: max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio - 110))
-            }
+            .position(x: UIScreen.width / 2, y: imageHeight - 50 + geometry.size.height / 2)
         }
     }
 
@@ -192,7 +222,7 @@ struct ProductDetailsView: View {
 
             Spacer()
 
-            Text("$\(viewModel.item?.originalPrice ?? "")")
+            Text("$\(viewModel.item?.originalPrice ?? "0")")
                 .font(Constants.Fonts.h2)
                 .foregroundStyle(Constants.Colors.black)
         }
@@ -200,7 +230,12 @@ struct ProductDetailsView: View {
 
     private var sellerProfileView: some View {
         Button {
-            router.push(.profile(viewModel.item?.user?.id ?? ""))
+            if viewModel.isMyPost() {
+                mainViewModel.selection = 2
+                router.popToRoot()
+            } else {
+                router.push(.profile(viewModel.item?.user?.firebaseUid ?? ""))
+            }
         } label: {
             HStack {
                 KFImage(viewModel.item?.user?.photoUrl)
@@ -245,36 +280,37 @@ struct ProductDetailsView: View {
                     }
                 } else {
                     ForEach(viewModel.similarPosts, id: \.self.id) { item in
-                        KFImage(item.images.first)
-                            .placeholder {
-                                ShimmerView()
-                                    .frame(width: imageSize, height: imageSize)
-                                    .clipShape(.rect(cornerRadius: 10))
-                            }
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: imageSize, height: imageSize)
-                            .clipShape(.rect(cornerRadius: 10))
-                            .onTapGesture {
-                                changeItem(postID: item.id)
-                            }
+                        let url = URL(string: item.images.first ?? "")
+                        if let url = url {
+                            KFImage(url)
+                                .placeholder {
+                                    ShimmerView()
+                                        .frame(width: imageSize, height: imageSize)
+                                        .clipShape(.rect(cornerRadius: 10))
+                                }
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: imageSize, height: imageSize)
+                                .clipShape(.rect(cornerRadius: 10))
+                                .onTapGesture {
+                                    changeItem(post: item)
+                                }
+                        }
                     }
                 }
             }
         }
     }
 
-    private func changeItem(postID: String) {
-        id = postID
+    private func changeItem(post: Post) {
         viewModel.clear()
-        viewModel.getPost(id: postID)
-        viewModel.getSimilarPosts(id: postID)
+        viewModel.setPost(post: post)
 
         withAnimation {
             mainViewModel.hidesTabBar = true
         }
 
-        viewModel.maxDrag = max(150, UIScreen.main.bounds.width * viewModel.maxImgRatio)
+        viewModel.maxDrag = imageHeight
 
         if let existingIndex = router.path.lastIndex(where: {
             if case .productDetails = $0 {
@@ -282,16 +318,24 @@ struct ProductDetailsView: View {
             }
             return false
         }) {
-            router.path[existingIndex] = .productDetails(postID)
+            router.path[existingIndex] = .productDetails(post)
         } else {
-            router.push(.productDetails(postID))
+            router.push(.productDetails(post))
         }
     }
 
     private var buttonGradientView: some View {
         VStack {
             PurpleButton(text: "Contact Seller") {
-                // TODO: Chat with Seller
+                if let item = viewModel.item, let user = item.user, let me = GoogleAuthManager.shared.user {
+                    let chatInfo = ChatInfo(
+                        listing: item,
+                        buyer: me,
+                        seller: user
+                    )
+
+                    navigateToChats(chatInfo: chatInfo)
+                }
             }
         }
         .frame(width: UIScreen.width, height: 50)
@@ -305,24 +349,87 @@ struct ProductDetailsView: View {
         )
     }
 
-    private var saveButton: some View {
-        Button {
-            viewModel.isSaved.toggle()
-            viewModel.updateItemSaved()
-        } label: {
-            ZStack {
-                Circle()
-                    .frame(width: 72, height: 72)
-                    .foregroundStyle(Constants.Colors.white)
-                    .opacity(viewModel.isSaved ? 1.0 : 0.9)
-                    .shadow(radius: 2)
+    // TODO: FIX
 
-                Image(viewModel.isSaved ? "saved.fill" : "saved")
-                    .resizable()
-                    .frame(width: 21, height: 27)
+    func sendNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = "New Post"
+        content.subtitle = "Testing bookmarks"
+        content.sound = UNNotificationSound.default
+
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false)
+
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Error sending notification: \(error.localizedDescription)")
+            } else {
+                print("Push notification sent successfully!")
             }
         }
     }
+
+    func requestNotificationAuthorization() {
+        @AppStorage("isNotificationAuthorized") var isNotificationAuthorized = false
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { (granted, error) in
+            if let error = error {
+                print("Error sending notification: \(error.localizedDescription)")
+                return
+            }
+
+            if granted {
+                isNotificationAuthorized = true
+                print("Notification permission granted.")
+            } else {
+                isNotificationAuthorized = false
+                print("Notification permission denied.")
+            }
+        }
+    }
+
+    @AppStorage("isNotificationAuthorized") var isNotificationAuthorized = false
+
+//    private var saveButton: some View {
+//        if isNotificationAuthorized {
+//            Button {
+//                viewModel.isSaved.toggle()
+//                viewModel.updateItemSaved()
+//                sendNotification()
+//            } label: {
+//                ZStack {
+//                    Circle()
+//                        .frame(width: 72, height: 72)
+//                        .foregroundStyle(Constants.Colors.white)
+//                        .opacity(viewModel.isSaved ? 1.0 : 0.9)
+//                        .shadow(radius: 2)
+//
+//                    Image(viewModel.isSaved ? "saved.fill" : "saved")
+//                        .resizable()
+//                        .frame(width: 21, height: 27)
+//                }
+//            }
+//        } else {
+//            Button {
+//                viewModel.isSaved.toggle()
+//                viewModel.updateItemSaved()
+//                requestNotificationAuthorization()
+//                print("Test1")
+//            } label: {
+//                ZStack {
+//                    Circle()
+//                        .frame(width: 72, height: 72)
+//                        .foregroundStyle(Constants.Colors.white)
+//                        .opacity(viewModel.isSaved ? 1.0 : 0.9)
+//                        .shadow(radius: 2)
+//
+//                    Image(viewModel.isSaved ? "saved.fill" : "saved")
+//                        .resizable()
+//                        .frame(width: 21, height: 27)
+//                }
+//            }
+//        }
+//    }
 
     private var deletePostView: some View {
         VStack(spacing: 24) {
@@ -354,4 +461,21 @@ struct ProductDetailsView: View {
         .presentationCornerRadius(25)
         .presentationBackground(Constants.Colors.white)
     }
+
+    // MARK: - Functions
+
+    private func navigateToChats(chatInfo: ChatInfo) {
+        if let existingIndex = router.path.firstIndex(where: {
+            if case .messages = $0 {
+                return true
+            }
+            return false
+        }) {
+            router.path[existingIndex] = .messages(chatInfo: chatInfo)
+            router.popTo(router.path[existingIndex])
+        } else {
+            router.push(.messages(chatInfo: chatInfo))
+        }
+    }
 }
+

@@ -6,26 +6,93 @@
 //
 
 import Foundation
+import FirebaseAuth
+import GoogleSignIn
 
-struct User: Codable {
-    let id: String
+struct User: Codable, Equatable, Hashable {
+    let firebaseUid: String
     let username: String
     let netid: String
     let givenName: String
     let familyName: String
     let admin: Bool
+    let isActive: Bool
+    let stars: String
+    let numReviews: Int
+    let following: [User]?
+    let followers: [User]?
+    let soldPosts: Int?
     let photoUrl: URL
-    let venmoHandle: String
+    let venmoHandle: String?
     let email: String
     let googleId: String
     let bio: String
-    let isActive: Bool
+    let posts: [Post]?
+    let saved: [Post]?
+    let feedbacks: [Feedback]?
+    let requests: [Request]?
     let blocking: [String]?
     let blockers: [String]?
-    let reports: [String]?
+    let reports: [Report]?
     let reportedBy: [String]?
-    let posts: [Post]?
-    let feedbacks: [Feedback]?
+
+    func toCreateUserBody(username: String, bio: String, venmoHandle: String, imageUrl: String, fcmToken: String) -> CreateUserBody {
+        return CreateUserBody(
+            username: username,
+            netid: self.netid,
+            givenName: self.givenName,
+            familyName: self.familyName,
+            photoUrl: imageUrl,
+            venmoHandle: venmoHandle,
+            email: self.email,
+            googleId: self.googleId,
+            bio: bio,
+            fcmToken: fcmToken
+        )
+    }
+
+    static func fromGUser(_ user: GIDGoogleUser, firebaseUserId: String) throws -> User {
+        guard let defaultImageUrl = URL(string: "http://www.gravatar.com/avatar/?d=mp") else {
+            // TODO: Throw better error
+            throw URLError(.badServerResponse)
+        }
+
+        return User(
+            firebaseUid: firebaseUserId,
+            username: user.profile?.email ?? "",
+            netid: String(user.profile?.email.split(separator: "@")[0] ?? ""),
+            givenName: user.profile?.givenName ?? "",
+            familyName: user.profile?.familyName ?? "",
+            admin: false,
+            isActive: true,
+            stars: "0.0",
+            numReviews: 0,
+            following: [],
+            followers: [],
+            soldPosts: 0,
+            photoUrl: user.profile?.imageURL(withDimension: 512) ?? defaultImageUrl,
+            venmoHandle: "",
+            email: user.profile?.email ?? "",
+            googleId: user.userID ?? "",
+            bio: "",
+            posts: [],
+            saved: [],
+            feedbacks: [],
+            requests: [],
+            blocking: [],
+            blockers: [],
+            reports: [],
+            reportedBy: []
+        )
+    }
+
+    static func == (lhs: User, rhs: User) -> Bool {
+        return lhs.firebaseUid == rhs.firebaseUid
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(firebaseUid)
+    }
 }
 
 struct UsersResponse: Codable {
@@ -36,27 +103,17 @@ struct UserResponse: Codable {
     let user: User
 }
 
-struct UserSessionData: Codable {
-    let sessions: [UserSession]
-
-    struct UserSession: Codable {
-        let userId: String
-        let accessToken: String
-        let active: Bool
-        let expiresAt: Int
-        let refreshToken: String
-    }
-}
-
 struct CreateUserBody: Codable {
     let username: String
     let netid: String
     let givenName: String
     let familyName: String
     let photoUrl: String
+    let venmoHandle: String
     let email: String
-    let googleID: String
+    let googleId: String
     let bio: String
+    let fcmToken: String
 }
 
 struct EditUserBody: Codable {
@@ -76,4 +133,16 @@ struct UnblockUserBody: Codable {
 
 struct LogoutResponse: Codable {
     let logoutSuccess: Bool
+}
+
+struct AuthorizeBody: Codable {
+    let token: String?
+}
+
+struct FollowUserBody: Codable {
+    let userId: String
+}
+
+struct UnfollowUserBody: Codable {
+    let userId: String
 }

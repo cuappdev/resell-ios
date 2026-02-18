@@ -6,72 +6,197 @@
 //
 
 import SwiftUI
+import Kingfisher
 
 @MainActor
 class HomeViewModel: ObservableObject {
 
-    // MARK: - Shared Instance
-
-    static let shared = HomeViewModel()
-
     // MARK: - Properties
+    private var mainViewModel: MainViewModel?
+    
+    static let shared = HomeViewModel()
+    
+    private var searchViewModel = SearchViewModel.shared
 
+    private init() {
+        configureImageCache()
+    }
+
+    func configure(mainViewModel: MainViewModel) {
+        self.mainViewModel = mainViewModel
+    }
+
+    @Published var isLoading: Bool = false
     @Published var filteredItems: [Post] = []
-    @Published var selectedFilter: String = "Recent" {
+    @Published var cardsLoaded: Bool = false
+    @Published var selectedFilter: [String] = ["Recent"] {
         didSet {
-            if selectedFilter == "Recent" {
+            if selectedFilter == ["Recent"] {
                 filteredItems = allItems
             } else {
-                filterPosts(by: selectedFilter)
+                filterPosts()
             }
         }
     }
-
+    
     @Published var savedItems: [Post] = []
 
     private var allItems: [Post] = []
-
-    // MARK: - Persistent Storage
+    private var page = 1
+    private var hasMorePages = true
+    private var isFetchingMore = false
+    
+    // MARK: - Caching Properties
+    private var hasLoadedInitialData = false
+    private var lastFetchTime: Date?
+    private var lastSavedFetchTime: Date?
+    private let cacheValidityDuration: TimeInterval = 180 // 3 minutes for home feed
 
     @AppStorage("blockedUsers") private var blockedUsersStorage: String = "[]"
 
     // MARK: - Functions
+    
+    private func configureImageCache() {
+        let cache = ImageCache.default
+        
+        cache.memoryStorage.config.totalCostLimit = 150 * 1024 * 1024 // 150 MB
+        
+        cache.diskStorage.config.sizeLimit = 500 * 1024 * 1024 // 500 MB
+        
+        cache.memoryStorage.config.expiration = .seconds(600) // 10 minutes
+        
+        cache.diskStorage.config.expiration = .days(7)
+        
+        ImageDownloader.default.downloadTimeout = 15.0
+        KingfisherManager.shared.downloader.downloadTimeout = 15.0
+        
+    }
 
-    func getAllPosts() {
+    func getAllPosts(forceRefresh: Bool = false) {
+        if !forceRefresh && shouldUseCachedData() {
+            print("Using cached posts data")
+            return
+        }
+        
+        isLoading = true
+        page = 1
+        hasMorePages = true
+        
         Task {
+            defer {
+                Task { @MainActor in
+                    isLoading = false
+                }
+            }
+            
             do {
                 let postsResponse = try await NetworkManager.shared.getAllPosts()
+                
                 allItems = Post.sortPostsByDate(postsResponse.posts)
-
-                if selectedFilter == "Recent" {
-                    filteredItems = allItems
-                } else {
-                    filterPosts(by: selectedFilter)
-                }
+                filteredItems = allItems
+                
+                // Update cache state
+                hasLoadedInitialData = true
+                lastFetchTime = Date()
             } catch {
+                // TODO: Add proper error handling
                 NetworkManager.shared.logger.error("Error in HomeViewModel.getAllPosts: \(error)")
+                isLoading = false
             }
         }
     }
 
-    func getSavedPosts() {
+    func fetchMoreItems() {
+        guard !isFetchingMore && hasMorePages else {
+            return
+        }
+        
+        isFetchingMore = true
+        page += 1
+        
         Task {
+            defer {
+                Task { @MainActor in
+                    isFetchingMore = false
+                }
+            }
+            
+            do {
+                let postsResponse = try await NetworkManager.shared.getAllPosts(page: page)
+                let newPosts = Post.sortPostsByDate(postsResponse.posts)
+                
+                if newPosts.isEmpty {
+                    hasMorePages = false
+                    return
+                }
+                
+                allItems.append(contentsOf: newPosts)
+                
+                if selectedFilter == ["Recent"] {
+                    filteredItems = allItems
+                }
+                
+            } catch {
+                NetworkManager.shared.logger.error("Error in HomeViewModel.fetchMoreItems: \(error)")
+                page -= 1 // Revert page increment on error
+            }
+        }
+    }
+
+    func getSavedPosts() async  {
+        if let lastFetch = lastSavedFetchTime,
+           Date().timeIntervalSince(lastFetch) < cacheValidityDuration,
+           !savedItems.isEmpty {
+            return
+        }
+        
+        isLoading = true
+
+        defer { Task { @MainActor in isLoading = false } }
+
+        do {
+            let postsResponse = try await NetworkManager.shared.getSavedPosts()
+            savedItems = Post.sortPostsByDate(postsResponse.posts)
+            lastSavedFetchTime = Date()
+        } catch {
+            NetworkManager.shared.logger.error("Error in HomeViewModel.getSavedPosts: \(error)")
+        }
+    }
+
+    func getSavedPosts(completion: @escaping () -> Void)  {
+        isLoading = true
+
+        Task {
+            defer { Task { @MainActor in isLoading = false } }
+
             do {
                 let postsResponse = try await NetworkManager.shared.getSavedPosts()
-                savedItems = postsResponse.posts
+                savedItems = Post.sortPostsByDate(postsResponse.posts)
+                lastSavedFetchTime = Date()
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.getSavedPosts: \(error)")
             }
         }
     }
-
-    func filterPosts(by filter: String) {
+    
+    func filterPosts() {
         Task {
+            isLoading = true
+            
+            defer {
+                Task { @MainActor in
+                    isLoading = false
+                }
+            }
+            
             do {
-                let postsResponse = try await NetworkManager.shared.getFilteredPosts(by: selectedFilter)
+                let postsResponse = try await NetworkManager.shared.getFilteredPostsByCategory(for: selectedFilter)
                 filteredItems = postsResponse.posts
             } catch {
                 NetworkManager.shared.logger.error("Error in HomeViewModel.filterPosts: \(error)")
+            }
+            await MainActor.run {
+                isLoading = false
             }
         }
     }
@@ -79,20 +204,63 @@ class HomeViewModel: ObservableObject {
     func getBlockedUsers() {
         Task {
             do {
-                if let userID = UserSessionManager.shared.userID {
-                    let blockedUsers = try await NetworkManager.shared.getBlockedUsers(id: userID).users.map { $0.id }
+                if let userID = GoogleAuthManager.shared.user?.firebaseUid {
+                    let blockedUsers = try await NetworkManager.shared.getBlockedUsers(id: userID).users.map { $0.firebaseUid }
                     if let jsonData = try? JSONEncoder().encode(blockedUsers),
                        let jsonString = String(data: jsonData, encoding: .utf8) {
                         blockedUsersStorage = jsonString
                     }
                 } else {
-                    UserSessionManager.shared.logger.error("Error in BlockedUsersView: userID not found.")
+                    GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User id not available.")
                 }
 
             } catch {
-                NetworkManager.shared.logger.error("Error in BlockedUsersView: \(error.localizedDescription)")
+                NetworkManager.shared.logger.error("Error in \(#file) \(#function): \(error)")
             }
         }
     }
-
+    
+    func clearCache() {
+        hasLoadedInitialData = false
+        lastFetchTime = nil
+        lastSavedFetchTime = nil
+        allItems = []
+        filteredItems = []
+        savedItems = []
+        page = 1
+        hasMorePages = true
+        
+        ImageCache.default.clearMemoryCache()
+    }
+    
+    func cleanupMemory() {
+        ImageCache.default.clearMemoryCache()
+    }
+    
+    // MARK: - Private Methods
+    
+    private func shouldUseCachedData() -> Bool {
+        guard hasLoadedInitialData else { return false }
+        guard let lastFetch = lastFetchTime else { return false }
+        
+        let timeSinceLastFetch = Date().timeIntervalSince(lastFetch)
+        return timeSinceLastFetch < cacheValidityDuration && !allItems.isEmpty
+    }
+    
+    private func getMemoryUsage() -> Double {
+        var info = mach_task_basic_info()
+        var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size)/4
+        
+        let kerr: kern_return_t = withUnsafeMutablePointer(to: &info) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
+                task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &count)
+            }
+        }
+        
+        if kerr == KERN_SUCCESS {
+            let usedMemory = Double(info.resident_size) / 1024.0 / 1024.0 // Convert to MB
+            return usedMemory
+        }
+        return 0
+    }
 }

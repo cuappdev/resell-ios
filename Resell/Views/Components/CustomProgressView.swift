@@ -32,8 +32,3 @@ struct CustomProgressView: View {
             }
     }
 }
-
-#Preview {
-    CustomProgressView()
-}
-

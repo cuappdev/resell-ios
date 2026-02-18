@@ -28,5 +28,4 @@ struct CustomPageControlIndicatorView: View {
         }
         .padding(.vertical, 10)
     }
-
 }

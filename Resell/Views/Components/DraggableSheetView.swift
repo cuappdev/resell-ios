@@ -27,20 +27,34 @@ struct DraggableSheetView<Content: View>: View {
                 .gesture(
                     DragGesture()
                         .onChanged { value in
-                            dragOffset = value.translation.height
+                            let potentialOffset = lastDragOffset + value.translation.height
+                            
+                            // Prevent dragging above the initial position (-50)
+                            if potentialOffset < -50 {
+                                // Add resistance when trying to drag up past the start
+                                dragOffset = (-50 - lastDragOffset) + (value.translation.height - (-50 - lastDragOffset)) * 0.1
+                            } else {
+                                dragOffset = value.translation.height
+                            }
+                            
                             isDragging = true
                         }
                         .onEnded { value in
                             // Update the last drag offset based on the drag position
                             lastDragOffset += dragOffset + value.predictedEndTranslation.height * 0.3 // Adjust momentum effect
 
-                            // Limit dragging downwards
+                            // Limit dragging downwards (can pull down a bit)
                             if lastDragOffset > 0 {
                                 lastDragOffset = 50
                             }
+                            
+                            // Prevent dragging above the initial position
+                            else if lastDragOffset < -50 {
+                                lastDragOffset = -50
+                            }
 
-                            // Prevent dragging above the top
-                            else if lastDragOffset < -maxDrag {
+                            // Prevent dragging above the max drag limit
+                            if lastDragOffset < -maxDrag {
                                 lastDragOffset = -200
                             }
 

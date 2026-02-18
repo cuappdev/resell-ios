@@ -7,43 +7,55 @@
 
 import Foundation
 
-struct Post: Codable, Equatable, Identifiable {
+struct Post: Codable, Equatable, Identifiable, Hashable {
     let id: String
     let title: String
     let description: String
-    let categories: [String]
+    let categories: [PostCategory]?
+    let category: String?
+    let condition: String?
     let originalPrice: String
-    let alteredPrice: String
-    let images: [URL]
+    let alteredPrice: String?
+    let images: [String]
     let created: String
     let location: String?
     let archive: Bool
     let user: User?
+    let sold: Bool?
 
     enum CodingKeys: String, CodingKey {
-        case id, title, description, categories
+        case id, title, description, categories, category, condition
         case originalPrice = "original_price"
         case alteredPrice = "altered_price"
-        case images, created, location, archive, user
+        case images, created, location, archive, user, sold
     }
-    
+
     static func == (lhs: Post, rhs: Post) -> Bool {
         return lhs.id == rhs.id
     }
 
-    static func sortPostsByDate(_ posts: [Post], ascending: Bool = true) -> [Post] {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+
+    static func sortPostsByDate(_ posts: [Post], ascending: Bool = false) -> [Post] {
+        let isoDateFormatter = ISO8601DateFormatter()
+        isoDateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
 
         return posts.sorted {
-            guard let date1 = dateFormatter.date(from: $0.created),
-                  let date2 = dateFormatter.date(from: $1.created) else {
+            guard let date1 = isoDateFormatter.date(from: $0.created),
+                  let date2 = isoDateFormatter.date(from: $1.created) else {
                 return ascending
             }
+            
             return ascending ? date1 < date2 : date1 > date2
         }
     }
+}
+
+struct PostCategory: Codable {
+    let id: String
+    let name: String
 }
 
 struct PostsResponse: Codable {
@@ -51,11 +63,20 @@ struct PostsResponse: Codable {
 }
 
 struct PostResponse: Codable {
-    let post: Post
+    let post: Post?
+}
+
+struct SearchedPostResponse: Codable {
+    let posts: [Post]
+    let searchId: String
 }
 
 struct FilterRequest: Codable {
-    let category: String
+    let categories: [String]
+}
+
+struct SuggestionsWrapper: Codable {
+    let postIds: [String]
 }
 
 struct SearchRequest: Codable {
@@ -70,7 +91,8 @@ struct PostBody: Codable {
     let title: String
     let description: String
     let categories: [String]
-    let originalPrice: Double
+    let condition: String
+    let original_price: Double
     let imagesBase64: [String]
     let userId: String
 
@@ -78,7 +100,8 @@ struct PostBody: Codable {
         case title
         case description
         case categories
-        case originalPrice = "original_price"
+        case condition
+        case original_price = "original_price"
         case imagesBase64
         case userId
     }

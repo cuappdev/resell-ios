@@ -56,7 +56,8 @@ struct PriceInputView: View {
         .padding(.top, UIScreen.height < 700 ? 0 : 48)
         .background(Constants.Colors.white)
     }
-
+    
+    // MARK: This should probably be refactored...
     private var numberPadView: some View {
         VStack {
             HStack {
@@ -161,8 +162,6 @@ struct PriceInputView: View {
 
         return false
     }
-
-
 }
 
 struct NumericButton: View {
@@ -180,7 +179,3 @@ struct NumericButton: View {
         }
     }
 }
-
-#Preview(body: {
-    PriceInputView(price: .constant(""), isPresented: .constant(true), titleText: "What price do you want to sell your product?")
-})
