@@ -37,6 +37,7 @@ class NetworkManager {
         return encoder
     }()
     
+    
     // MARK: - Init
     
     
@@ -190,7 +191,6 @@ class NetworkManager {
             return request
         }
             
-            
         private func constructURL(endpoint: String) throws -> URL {
             guard let url = URL(string: "\(hostURL)\(endpoint)") else {
                 logger.error("Failed to construct URL for endpoint: \(endpoint)")
@@ -200,7 +200,6 @@ class NetworkManager {
             
             return url
         }
-            
             
         private func handleResponse(data: Data, response: URLResponse) throws {
             guard let httpResponse = response as? HTTPURLResponse else {
@@ -229,10 +228,8 @@ class NetworkManager {
         func getUser() async throws -> UserResponse {
             let url = try constructURL(endpoint: "/auth/")
             
-            
             return try await get(url: url)
         }
-        
         
         func createUser(user: CreateUserBody) async throws {
             let url = try constructURL(endpoint: "/user/create")
@@ -240,22 +237,17 @@ class NetworkManager {
             try await post(url: url, body: user)
         }
         
-        
         func logout() async throws -> LogoutResponse {
             let url = try constructURL(endpoint: "/auth/logout/")
-            
             
             return try await post(url: url)
         }
         
-        
         func deleteAccount(userID: String) async throws {
             let url = try constructURL(endpoint: "/auth/id/\(userID)/")
             
-            
             try await delete(url: url)
         }
-        
         
         // MARK: - User Networking Functions
         
@@ -263,14 +255,11 @@ class NetworkManager {
         func getUserByGoogleID(googleID: String) async throws -> UserResponse {
             let url = try constructURL(endpoint: "/user/googleId/\(googleID)/")
             
-            
             return try await get(url: url)
         }
         
-        
         func getUserByID(id: String) async throws -> UserResponse {
             let url = try constructURL(endpoint: "/user/id/\(id)/")
-            
             
             return try await get(url: url)
         }
@@ -278,30 +267,23 @@ class NetworkManager {
         func updateUserProfile(edit: EditUserBody) async throws -> UserResponse {
             let url = try constructURL(endpoint: "/user/")
             
-            
             return try await post(url: url, body: edit)
         }
-        
         
         func getBlockedUsers(id: String) async throws -> UsersResponse {
             let url = try constructURL(endpoint: "/user/blocked/id/\(id)")
             
-            
             return try await get(url: url)
         }
-        
         
         func blockUser(blocked: BlockUserBody) async throws {
             let url = try constructURL(endpoint: "/user/block/")
             
-            
             try await post(url: url, body: blocked)
         }
         
-        
         func unblockUser(unblocked: UnblockUserBody) async throws {
             let url = try constructURL(endpoint: "/user/unblock/")
-            
             
             try await post(url: url, body: unblocked)
         }
@@ -330,8 +312,10 @@ class NetworkManager {
             return try await get(url: url)
         }
         
+    
         // MARK: - Post Networking Functions
         
+    
         func getAllPosts(page: Int = 1) async throws -> PostsResponse {
             let url = try constructURL(endpoint: "/post?page=\(page)")
             
@@ -346,7 +330,6 @@ class NetworkManager {
         
         func getSavedPosts() async throws -> PostsResponse {
             let url = try constructURL(endpoint: "/post/save/")
-            
             
             return try await get(url: url)
         }
@@ -367,7 +350,6 @@ class NetworkManager {
         func getSearchedPosts(with keywords: String) async throws -> SearchedPostResponse {
             let url = try constructURL(endpoint: "/post/search/")
             
-            
             return try await post(url: url, body: SearchRequest(keywords: keywords))
         }
         
@@ -380,14 +362,12 @@ class NetworkManager {
         func getPostsByUserID(id: String) async throws -> PostsResponse {
             let url = try constructURL(endpoint: "/post/userId/\(id)/")
             
-            
             return try await get(url: url)
         }
         
         
         func getArchivedPostsByUserID(id: String) async throws -> PostsResponse {
             let url = try constructURL(endpoint: "/post/archive/userId/\(id)/")
-            
             
             return try await get(url: url)
         }
@@ -396,14 +376,11 @@ class NetworkManager {
         func getPostByID(id: String) async throws -> PostResponse {
             let url = try constructURL(endpoint: "/post/id/\(id)/")
             
-            
             return try await get(url: url)
         }
-        
-        
+    
         func getSimilarPostsByID(id: String) async throws -> PostsResponse {
             let url = try constructURL(endpoint: "/post/similar/postId/\(id)/")
-            
             
             return try await get(url: url)
         }
@@ -412,7 +389,6 @@ class NetworkManager {
         func savePostByID(id: String) async throws -> PostResponse {
             let url = try constructURL(endpoint: "/post/save/postId/\(id)/")
             
-            
             return try await post(url: url)
         }
         
@@ -420,14 +396,12 @@ class NetworkManager {
         func unsavePostByID(id: String) async throws -> PostResponse {
             let url = try constructURL(endpoint: "/post/unsave/postId/\(id)/")
             
-            
             return try await post(url: url)
         }
         
         
         func postIsSaved(id: String) async throws -> SavedResponse {
             let url = try constructURL(endpoint: "/post/isSaved/postId/\(id)/")
-            
             
             return try await get(url: url)
         }
@@ -480,7 +454,6 @@ class NetworkManager {
         func deletePost(id: String) async throws {
             let url = try constructURL(endpoint: "/post/id/\(id)/")
             
-            
             try await delete(url: url)
         }
         
@@ -491,7 +464,6 @@ class NetworkManager {
         func getRequestsByUserID(id: String) async throws -> RequestsResponse {
             let url = try constructURL(endpoint: "/request/userId/\(id)/")
             
-            
             return try await get(url: url)
         }
         
@@ -499,14 +471,12 @@ class NetworkManager {
         func postRequest(request: RequestBody) async throws -> RequestResponse {
             let url = try constructURL(endpoint: "/request/")
             
-            
             return try await post(url: url, body: request)
         }
         
         
         func deleteRequest(id: String) async throws {
             let url = try constructURL(endpoint: "/request/id/\(id)/")
-            
             
             try await delete(url: url)
         }
@@ -518,13 +488,13 @@ class NetworkManager {
         func postFeedback(feedback: FeedbackBody) async throws {
             let url = try constructURL(endpoint: "/feedback/")
             
-            
             try await post(url: url, body: feedback)
         }
         
         
         // MARK: - Reporting Networking Functions
         
+    
         func reportPost(reportBody: ReportPostBody) async throws {
             let url = try constructURL(endpoint: "/report/post/")
             
@@ -543,8 +513,10 @@ class NetworkManager {
             try await post(url: url, body: reportBody)
         }
         
+    
         // MARK: - Chat Networking Functions
         
+    
         func sendChatMessage(chatId: String, messageBody: MessageBody) async throws {
             let url = try constructURL(endpoint: "/chat/message/\(chatId)/")
             
@@ -605,8 +577,10 @@ class NetworkManager {
             return try await post(url: url)
         }
         
+    
         // MARK: - Availability Networking Functions
         
+    
         /// ISO8601 decoder for availability endpoints (dates come as strings like "2026-01-23T16:00:00Z")
         private var iso8601Decoder: JSONDecoder {
             let decoder = JSONDecoder()
