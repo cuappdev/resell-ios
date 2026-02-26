@@ -53,12 +53,17 @@ class SetupProfileViewModel: ObservableObject {
     }
 
     func createNewUser() {
-        isLoading = true
-
         if selectedImage == nil {
             presentError("Please select a profile picture.")
             return
         }
+        
+        if bio.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            presentError("Please enter a bio.")
+            return
+        }
+        
+        isLoading = true
 
         Task {
             defer { Task { @MainActor in withAnimation { isLoading = false } } }
