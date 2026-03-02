@@ -75,6 +75,8 @@ class CurrentUserProfileManager: ObservableObject {
                 username = user.username
                 givenName = user.givenName
                 bio = user.bio.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Hi I'm \(username), looking for great deals and selling even greater items" : user.bio
+                print(bio)
+                print(username)
                 venmoHandle = user.venmoHandle ?? ""
                 
                 await decodeProfileImage(url: user.photoUrl)

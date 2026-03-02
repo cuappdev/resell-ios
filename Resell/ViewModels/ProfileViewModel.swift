@@ -77,6 +77,19 @@ class ProfileViewModel: ObservableObject {
             ? CurrentUserProfileManager.shared.isLoading
             : isLoadingExternalUser
     }
+    
+    var displayBio: String {
+        if isViewingCurrentUser {
+            return CurrentUserProfileManager.shared.bio
+        } else {
+            if let bio = externalUser?.bio, !bio.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return bio
+            }
+            
+            let name = externalUser?.givenName ?? externalUser?.username ?? "a Cornell Student"
+            return "Hi, I'm \(name)! Looking for great deals and selling even greater items."
+        }
+    }
 
     // MARK: - Functions
 
