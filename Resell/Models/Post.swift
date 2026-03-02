@@ -25,8 +25,8 @@ struct Post: Codable, Equatable, Identifiable, Hashable {
 
     enum CodingKeys: String, CodingKey {
         case id, title, description, categories, category, condition
-        case originalPrice = "original_price"
-        case alteredPrice = "altered_price"
+        case originalPrice = "originalPrice"
+        case alteredPrice = "alteredPrice"
         case images, created, location, archive, user, sold
     }
 

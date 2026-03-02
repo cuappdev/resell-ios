@@ -118,7 +118,7 @@ struct ExternalProfileView: View {
             }
             
             // bio
-            Text(viewModel.externalUser?.bio ?? "no bio found....")
+            Text(viewModel.displayBio)
                 .font(Constants.Fonts.body2)
                 .foregroundStyle(.black)
             
