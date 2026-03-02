@@ -126,7 +126,7 @@ class ChatsViewModel: ObservableObject {
             // Merge with existing archived chats from offers
             self.updateArchivedChats(purchases: archivedPurchases)
             
-            purchaseUnread = countUnviewedChats(chats: self.purchaseChats)
+            self.purchaseUnread = self.countUnviewedChats(chats: self.purchaseChats)
             isLoading = false
         }
     }
@@ -145,7 +145,7 @@ class ChatsViewModel: ObservableObject {
             // Merge with existing archived chats from purchases
             self.updateArchivedChats(offers: archivedOffers)
             
-            offerUnread = countUnviewedChats(chats: self.offerChats)
+            self.offerUnread = self.countUnviewedChats(chats: self.offerChats)
             isLoading = false
         }
     }

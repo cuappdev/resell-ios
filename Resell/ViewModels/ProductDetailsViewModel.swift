@@ -23,7 +23,7 @@ class ProductDetailsViewModel: ObservableObject {
     @Published var images: [URL] = []
 
     @Published var isSaved: Bool = false
-    @Published var maxDrag: CGFloat = UIScreen.height / 2
+    @Published var maxDrag: CGFloat = UIScreen.main.bounds.height / 2
     @Published var maxImgRatio: CGFloat = 1.0
     @Published var item: Post?
     @Published var similarPosts: [Post] = []
