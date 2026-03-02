@@ -53,7 +53,7 @@ struct ProductDetailsView: View {
                 Spacer()
             }
 
-            DraggableSheetView(maxDrag: viewModel.maxDrag) {
+            DraggableSheetView(startY: imageHeight) {
                 detailsView
             }
 
@@ -182,21 +182,53 @@ struct ProductDetailsView: View {
             .clipped()
     }
 
+//    private var detailsView: some View {
+//        
+//        GeometryReader { geometry in
+//            VStack(alignment: .leading) {
+//                HStack {
+//                    RoundedRectangle(cornerRadius: 4)
+//                        .frame(width: 50, height: 8)
+//                        .foregroundStyle(Constants.Colors.inactiveGray)
+//                        .padding(.top, 12)
+//                        .frame(alignment: .center)
+//                }
+//                .frame(maxWidth: .infinity, alignment: .center)
+//
+//                titlePriceView
+//
+//                sellerProfileView
+//                    .padding(.bottom, 24)
+//
+//                itemDescriptionView
+//                    .padding(.bottom, 32)
+//
+//                similarItemsView
+//
+//                Spacer()
+//            }
+//            .padding(.horizontal, Constants.Spacing.horizontalPadding)
+//            .background(Color.white)
+//            .cornerRadius(40)
+//            .position(x: UIScreen.width / 2, y: imageHeight - 50 + geometry.size.height / 2)
+//        }
+//    }
+    
     private var detailsView: some View {
-        
-        GeometryReader { geometry in
+        VStack(alignment: .leading, spacing: 0) {
+            // Drag Handle
+            HStack {
+                RoundedRectangle(cornerRadius: 4)
+                    .frame(width: 50, height: 8)
+                    .foregroundStyle(Constants.Colors.inactiveGray)
+                    .padding(.top, 12)
+            }
+            .frame(maxWidth: .infinity)
+
             VStack(alignment: .leading) {
-                HStack {
-                    RoundedRectangle(cornerRadius: 4)
-                        .frame(width: 50, height: 8)
-                        .foregroundStyle(Constants.Colors.inactiveGray)
-                        .padding(.top, 12)
-                        .frame(alignment: .center)
-                }
-                .frame(maxWidth: .infinity, alignment: .center)
-
                 titlePriceView
-
+                    .padding(.top, 10)
+                
                 sellerProfileView
                     .padding(.bottom, 24)
 
@@ -204,14 +236,13 @@ struct ProductDetailsView: View {
                     .padding(.bottom, 32)
 
                 similarItemsView
-
-                Spacer()
+                
+                // This ensures the sheet is tall enough to cover the screen when pulled up
+                Spacer(minLength: 500)
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
-            .background(Color.white)
-            .cornerRadius(40)
-            .position(x: UIScreen.width / 2, y: imageHeight - 50 + geometry.size.height / 2)
         }
+        .background(Color.white)
     }
 
     private var titlePriceView: some View {
