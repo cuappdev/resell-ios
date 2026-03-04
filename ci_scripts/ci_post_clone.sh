@@ -1,4 +1,5 @@
-#
+#!/bin/sh
+
 //  ci_post_clone.sh
 //  Resell
 //
