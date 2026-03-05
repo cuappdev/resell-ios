@@ -405,6 +405,7 @@
 			children = (
 				2E9F757F2EB6D441003FE0E0 /* GoogleService-Info.plist */,
 				2E9F75802EB6D441003FE0E0 /* resell-service.json */,
+				2CDCEE622CD6C4B0008DF5E8 /* Keys.xcconfig */,
 			);
 			path = Supporting;
 			sourceTree = "<group>";
@@ -461,7 +462,6 @@
 		2C9B4CBE2C8FB7B70029DF61 = {
 			isa = PBXGroup;
 			children = (
-				2CDCEE622CD6C4B0008DF5E8 /* Keys.xcconfig */,
 				2C9B4CC92C8FB7B70029DF61 /* Resell */,
 				2C9B4CDA2C8FB7B80029DF61 /* ResellTests */,
 				2C9B4CE42C8FB7B80029DF61 /* ResellUITests */,
