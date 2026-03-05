@@ -25,6 +25,7 @@ class NetworkManager {
         private let hostURL: String = Keys.devServerURL
     #else
         private let hostURL: String = Keys.localServerURL
+    #endif
     private let maxAttempts = 2
     
     /// Shared JSON encoder configured for backend compatibility (sends dates as ISO8601 strings)
