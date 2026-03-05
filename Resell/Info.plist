@@ -49,5 +49,7 @@
 		<string>remote-notification</string>
 		<string>fetch</string>
 	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
