@@ -20,8 +20,11 @@ class NetworkManager {
     let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.cornellappdev.Resell", category: "#file")
     
     // MARK: - Properties
-    
-    private let hostURL: String = Keys.localServerURL
+
+    #if DEBUG
+        private let hostURL: String = Keys.devServerURL
+    #else
+        private let hostURL: String = Keys.localServerURL
     private let maxAttempts = 2
     
     /// Shared JSON encoder configured for backend compatibility (sends dates as ISO8601 strings)
