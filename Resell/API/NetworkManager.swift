@@ -24,7 +24,7 @@ class NetworkManager {
     #if DEBUG
         private let hostURL: String = Keys.devServerURL
     #else
-        private let hostURL: String = Keys.localServerURL
+        private let hostURL: String = Keys.prodServerURL
     #endif
     private let maxAttempts = 2
     
@@ -49,26 +49,35 @@ class NetworkManager {
     
     // MARK: - Template Helper Functions
     
-        /// Centralized network error handling that determines whether to retry or force logout
-        private func handleNetworkError<T>(_ error: Error, attempt: Int, retryOperation: () async throws -> T) async throws -> T {
-            // If we've hit max attempts, force logout and throw max retries error
-            if attempt >= maxAttempts {
-                logger.error("Max retry attempts (\(self.maxAttempts)) reached. Forcing user logout.")
-                GoogleAuthManager.shared.forceLogout(reason: "Max authentication retry attempts exceeded")
-                throw ErrorResponse.maxRetriesHit
-            }
+        private var authEstablishingPathSuffixes: [String] { ["/auth"] }
+        
+        private func shouldRetryOn401(_ request: URLRequest) -> Bool {
+            guard let path = request.url?.path else { return true }
+            return !authEstablishingPathSuffixes.contains { path.hasSuffix($0) }
+        }
+        
+        /// Central request execution with 401 interceptor: refreshes token and retries when eligible.
+        private func perform(requestBuilder: () async throws -> URLRequest, attempt: Int = 1) async throws -> (Data, URLResponse) {
+            let request = try await requestBuilder()
+            let (data, response) = try await URLSession.shared.data(for: request)
             
-            // Check if this is a 401 unauthorized error that we can potentially recover from
-            if let errorResponse = error as? ErrorResponse, errorResponse.httpCode == 401 {
-                logger.info("Received 401 error on attempt \(attempt). Attempting to refresh auth token.")
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 401 {
+                let error = (try? JSONDecoder().decode(ErrorResponse.self, from: data)) ?? ErrorResponse(error: "Unauthorized", httpCode: 401)
                 
+                if attempt >= maxAttempts {
+                    logger.error("Max retry attempts (\(self.maxAttempts)) reached. Forcing user logout.")
+                    GoogleAuthManager.shared.forceLogout(reason: "Max authentication retry attempts exceeded")
+                    throw ErrorResponse.maxRetriesHit
+                }
+                if !shouldRetryOn401(request) {
+                    throw error
+                }
+                
+                logger.info("Received 401 on attempt \(attempt). Refreshing auth token and retrying.")
                 do {
-                    // Try to refresh the authentication
                     try await GoogleAuthManager.shared.refreshSignInIfNeeded()
-                    logger.info("Auth token refreshed successfully. Retrying network request.")
-                    
-                    // Retry the operation
-                    return try await retryOperation()
+                    logger.info("Auth token refreshed. Retrying request.")
+                    return try await perform(requestBuilder: requestBuilder, attempt: attempt + 1)
                 } catch {
                     logger.error("Failed to refresh auth token: \(error.localizedDescription)")
                     GoogleAuthManager.shared.forceLogout(reason: "Failed to refresh authentication token")
@@ -76,8 +85,8 @@ class NetworkManager {
                 }
             }
             
-            // For non-401 errors, don't retry and just throw the original error
-            throw error
+            try handleResponse(data: data, response: response)
+            return (data, response)
         }
         
         /// Template function to FETCH data from URL and decodes it into a specified type `T`,
@@ -88,19 +97,8 @@ class NetworkManager {
         /// - Parameter url: The URL from which data should be fetched.
         /// - Returns: A publisher that emits a decoded instance of type `T` or an error if the decoding or network request fails.
         ///
-        func get<T: Decodable>(url: URL, attempt: Int = 1) async throws -> T {
-            let request = try await createRequest(url: url, method: "GET")
-            
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            do {
-                try handleResponse(data: data, response: response)
-            } catch {
-                return try await handleNetworkError(error, attempt: attempt) {
-                    try await get(url: url, attempt: attempt + 1)
-                }
-            }
-            
+        func get<T: Decodable>(url: URL) async throws -> T {
+            let (data, _) = try await perform { try await createRequest(url: url, method: "GET") }
             return try JSONDecoder().decode(T.self, from: data)
         }
     
@@ -116,69 +114,27 @@ class NetworkManager {
         ///   - body: The data to be sent in the request body, which must conform to `Encodable`.
         /// - Returns: A publisher that emits a decoded instance of type `T` or an error if the decoding or network request fails.
         ///
-        func post<T: Decodable, U: Encodable>(url: URL, body: U, attempt: Int = 1) async throws -> T {
+        func post<T: Decodable, U: Encodable>(url: URL, body: U) async throws -> T {
             let requestData = try jsonEncoder.encode(body)
-            let request = try await createRequest(url: url, method: "POST", body: requestData)
-            
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            do {
-                try handleResponse(data: data, response: response)
-            } catch {
-                return try await handleNetworkError(error, attempt: attempt) {
-                    try await post(url: url, body: body, attempt: attempt + 1)
-                }
-            }
-            
+            let (data, _) = try await perform { try await createRequest(url: url, method: "POST", body: requestData) }
             return try JSONDecoder().decode(T.self, from: data)
         }
         
         /// Overloaded post function for requests without a return
-        func post<U: Encodable>(url: URL, body: U, attempt: Int = 1) async throws {
+        func post<U: Encodable>(url: URL, body: U) async throws {
             let requestData = try jsonEncoder.encode(body)
-            let request = try await createRequest(url: url, method: "POST", body: requestData)
-            
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            do {
-                try handleResponse(data: data, response: response)
-            } catch {
-                try await handleNetworkError(error, attempt: attempt) {
-                    try await post(url: url, body: body, attempt: attempt + 1)
-                }
-            }
+            _ = try await perform { try await createRequest(url: url, method: "POST", body: requestData) }
         }
             
         /// Overloaded post function for requests without a body
-        func post<T: Decodable>(url: URL, attempt: Int = 1) async throws -> T {
-            let request = try await createRequest(url: url, method: "POST")
-            
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            do {
-                try handleResponse(data: data, response: response)
-            } catch {
-                return try await handleNetworkError(error, attempt: attempt) {
-                    try await post(url: url, attempt: attempt + 1)
-                }
-            }
-            
+        func post<T: Decodable>(url: URL) async throws -> T {
+            let (data, _) = try await perform { try await createRequest(url: url, method: "POST") }
             return try JSONDecoder().decode(T.self, from: data)
         }
             
-        /// Template function to DELETE data to a specified URL with an encodable body and decodes the response into a specified type `T`.
-        func delete(url: URL, attempt: Int = 1) async throws {
-            let request = try await createRequest(url: url, method: "DELETE")
-            
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            do {
-                try handleResponse(data: data, response: response)
-            } catch {
-                try await handleNetworkError(error, attempt: attempt) {
-                    try await delete(url: url, attempt: attempt + 1)
-                }
-            }
+        /// Template function to DELETE data to a specified URL
+        func delete(url: URL) async throws {
+            _ = try await perform { try await createRequest(url: url, method: "DELETE") }
         }
             
         private func createRequest(url: URL, method: String, body: Data? = nil) async throws -> URLRequest {
@@ -232,7 +188,6 @@ class NetworkManager {
         
         func getUser() async throws -> UserResponse {
             let url = try constructURL(endpoint: "/auth/")
-            
             
             return try await get(url: url)
         }
@@ -964,18 +919,8 @@ class NetworkManager {
         // MARK: - Notifications Networking Functions
         
         /// Custom GET for notifications with ISO8601 date decoding
-        private func getNotifications(url: URL, attempt: Int = 1) async throws -> [Notifications] {
-            let request = try await createRequest(url: url, method: "GET")
-            
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            do {
-                try handleResponse(data: data, response: response)
-            } catch {
-                return try await handleNetworkError(error, attempt: attempt) {
-                    try await getNotifications(url: url, attempt: attempt + 1)
-                }
-            }
+        private func getNotifications(url: URL) async throws -> [Notifications] {
+            let (data, _) = try await perform { try await createRequest(url: url, method: "GET") }
             
             // Debug: Print raw JSON response
             if let jsonString = String(data: data, encoding: .utf8) {
@@ -1002,22 +947,13 @@ class NetworkManager {
         }
         
         /// Custom POST for notifications with ISO8601 date decoding
-        private func postNotification<T: Decodable>(url: URL, body: some Encodable, attempt: Int = 1) async throws -> T {
-            var request = try await createRequest(url: url, method: "POST")
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = try iso8601Encoder.encode(body)
-            
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            do {
-                try handleResponse(data: data, response: response)
-            } catch {
-                return try await handleNetworkError(error, attempt: attempt) {
-                    try await postNotification(url: url, body: body, attempt: attempt + 1)
-                }
+        private func postNotification<T: Decodable>(url: URL, body: some Encodable) async throws -> T {
+            let (data, _) = try await perform {
+                var request = try await createRequest(url: url, method: "POST")
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                request.httpBody = try iso8601Encoder.encode(body)
+                return request
             }
-            
-            
             return try iso8601Decoder.decode(T.self, from: data)
         }
         
