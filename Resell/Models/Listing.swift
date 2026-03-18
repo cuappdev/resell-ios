@@ -18,7 +18,7 @@ struct Listing: Codable {
 
     enum CodingKeys: String, CodingKey {
         case id, title, description, categories
-        case originalPrice = "original_price"
+        case originalPrice = "originalPrice"
         case images, user
     }
 }

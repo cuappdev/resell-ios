@@ -56,14 +56,18 @@ struct ProductDetailsView: View {
             DraggableSheetView(startY: imageHeight) {
                 detailsView
             }
+            .zIndex(1)
 
             if !viewModel.isMyPost() {
                 buttonGradientView
+                    .zIndex(2)
             }
 
             if viewModel.didShowOptionsMenu {
                 OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowDeleteView: $viewModel.didShowDeleteView, options: {
                     var options: [Option] = [
+                        // MARK - Need to get a real shareable url (put in post or viewmodel)
+//                        .share(url: "TEST", itemName: viewModel.item?.title ?? "cool item"),
                         .report(type: "Post", id: post.id)
                     ]
                     if viewModel.isUserPost() {
@@ -181,68 +185,41 @@ struct ProductDetailsView: View {
             .tag(index)
             .clipped()
     }
-
-//    private var detailsView: some View {
-//        
-//        GeometryReader { geometry in
-//            VStack(alignment: .leading) {
-//                HStack {
-//                    RoundedRectangle(cornerRadius: 4)
-//                        .frame(width: 50, height: 8)
-//                        .foregroundStyle(Constants.Colors.inactiveGray)
-//                        .padding(.top, 12)
-//                        .frame(alignment: .center)
-//                }
-//                .frame(maxWidth: .infinity, alignment: .center)
-//
-//                titlePriceView
-//
-//                sellerProfileView
-//                    .padding(.bottom, 24)
-//
-//                itemDescriptionView
-//                    .padding(.bottom, 32)
-//
-//                similarItemsView
-//
-//                Spacer()
-//            }
-//            .padding(.horizontal, Constants.Spacing.horizontalPadding)
-//            .background(Color.white)
-//            .cornerRadius(40)
-//            .position(x: UIScreen.width / 2, y: imageHeight - 50 + geometry.size.height / 2)
-//        }
-//    }
     
     private var detailsView: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Drag Handle
-            HStack {
-                RoundedRectangle(cornerRadius: 4)
-                    .frame(width: 50, height: 8)
-                    .foregroundStyle(Constants.Colors.inactiveGray)
-                    .padding(.top, 12)
-            }
-            .frame(maxWidth: .infinity)
-
-            VStack(alignment: .leading) {
-                titlePriceView
-                    .padding(.top, 10)
+        ZStack (alignment: .topTrailing) {
+            VStack(alignment: .leading, spacing: 0) {
+                // Drag Handle
+                HStack {
+                    RoundedRectangle(cornerRadius: 4)
+                        .frame(width: 50, height: 8)
+                        .foregroundStyle(Constants.Colors.inactiveGray)
+                        .padding(.top, 12)
+                }
+                .frame(maxWidth: .infinity)
                 
-                sellerProfileView
-                    .padding(.bottom, 24)
-
-                itemDescriptionView
-                    .padding(.bottom, 32)
-
-                similarItemsView
-                
-                // This ensures the sheet is tall enough to cover the screen when pulled up
-                Spacer(minLength: 500)
+                VStack(alignment: .leading) {
+                    titlePriceView
+                        .padding(.top, 10)
+                    
+                    sellerProfileView
+                        .padding(.bottom, 24)
+                    
+                    itemDescriptionView
+                        .padding(.bottom, 32)
+                    
+                    similarItemsView
+                    
+                    // This ensures the sheet is tall enough to cover the screen when pulled up
+                    Spacer(minLength: 500)
+                }
+                .padding(.horizontal, Constants.Spacing.horizontalPadding)
             }
-            .padding(.horizontal, Constants.Spacing.horizontalPadding)
+            
+            saveButton
+                .padding(.trailing, Constants.Spacing.horizontalPadding)
+                .offset(y: -95)
         }
-        .background(Color.white)
     }
 
     private var titlePriceView: some View {
@@ -421,46 +398,46 @@ struct ProductDetailsView: View {
 
     @AppStorage("isNotificationAuthorized") var isNotificationAuthorized = false
 
-//    private var saveButton: some View {
-//        if isNotificationAuthorized {
-//            Button {
-//                viewModel.isSaved.toggle()
-//                viewModel.updateItemSaved()
-//                sendNotification()
-//            } label: {
-//                ZStack {
-//                    Circle()
-//                        .frame(width: 72, height: 72)
-//                        .foregroundStyle(Constants.Colors.white)
-//                        .opacity(viewModel.isSaved ? 1.0 : 0.9)
-//                        .shadow(radius: 2)
-//
-//                    Image(viewModel.isSaved ? "saved.fill" : "saved")
-//                        .resizable()
-//                        .frame(width: 21, height: 27)
-//                }
-//            }
-//        } else {
-//            Button {
-//                viewModel.isSaved.toggle()
-//                viewModel.updateItemSaved()
-//                requestNotificationAuthorization()
-//                print("Test1")
-//            } label: {
-//                ZStack {
-//                    Circle()
-//                        .frame(width: 72, height: 72)
-//                        .foregroundStyle(Constants.Colors.white)
-//                        .opacity(viewModel.isSaved ? 1.0 : 0.9)
-//                        .shadow(radius: 2)
-//
-//                    Image(viewModel.isSaved ? "saved.fill" : "saved")
-//                        .resizable()
-//                        .frame(width: 21, height: 27)
-//                }
-//            }
-//        }
-//    }
+    private var saveButton: some View {
+        if isNotificationAuthorized {
+            Button {
+                viewModel.isSaved.toggle()
+                viewModel.updateItemSaved()
+                sendNotification()
+            } label: {
+                ZStack {
+                    Circle()
+                        .frame(width: 72, height: 72)
+                        .foregroundStyle(Constants.Colors.white)
+                        .opacity(viewModel.isSaved ? 1.0 : 0.9)
+                        .shadow(radius: 2)
+
+                    Image(viewModel.isSaved ? "saved.fill" : "saved")
+                        .resizable()
+                        .frame(width: 21, height: 27)
+                }
+            }
+        } else {
+            Button {
+                viewModel.isSaved.toggle()
+                viewModel.updateItemSaved()
+                requestNotificationAuthorization()
+                print("Test1")
+            } label: {
+                ZStack {
+                    Circle()
+                        .frame(width: 72, height: 72)
+                        .foregroundStyle(Constants.Colors.white)
+                        .opacity(viewModel.isSaved ? 1.0 : 0.9)
+                        .shadow(radius: 2)
+
+                    Image(viewModel.isSaved ? "saved.fill" : "saved")
+                        .resizable()
+                        .frame(width: 21, height: 27)
+                }
+            }
+        }
+    }
 
     private var deletePostView: some View {
         VStack(spacing: 24) {

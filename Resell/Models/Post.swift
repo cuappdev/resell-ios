@@ -101,7 +101,7 @@ struct PostBody: Codable {
         case description
         case categories
         case condition
-        case original_price = "original_price"
+        case original_price = "originalPrice"
         case imagesBase64
         case userId
     }
