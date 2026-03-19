@@ -133,6 +133,9 @@ struct SettingsView: View {
                 viewModel.logout()
                 NotificationCenter.default.post(name: Constants.Notifications.LogoutUser, object: nil)
                 router.popToRoot()
+                
+                //route to the log in page here?
+//                router.push(.login)
             }
 
             Button{
