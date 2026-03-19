@@ -38,6 +38,7 @@ struct ProfileView: View {
                     .font(Constants.Fonts.body2)
                     .foregroundStyle(Constants.Colors.black)
                     .padding(.bottom, 28)
+                    .padding(.horizontal, 24)
                     .lineLimit(3)
                 
                 profileTabsView
