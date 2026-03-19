@@ -26,34 +26,35 @@ struct ForYouView: View {
                 .font(.custom("Rubik-Medium", size: 22))
                 .foregroundStyle(.black)
                 .padding(.leading, 24)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: 20) {
-                    if !viewModel.savedItems.isEmpty || !recentPosts.isEmpty {
+            
+            if !viewModel.savedItems.isEmpty || !recentPosts.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack(spacing: 20) {
                         if !viewModel.savedItems.isEmpty {
                             forYouCard(title: titles[0], posts: viewModel.savedItems, loaded: $savedLoadedStates)
                         }
                         if !recentPosts.isEmpty {
                             forYouCard(title: titles[1], posts: recentPosts, loaded: $recentLoadedStates)
                         }
-                    } else {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray, lineWidth: 1)
-                                .frame(width: 378, height: 110)
-                                .foregroundStyle(.white)
+                    }
+                    .padding(.leading, 24)
+                }
+            } else {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray, lineWidth: 1)
+                        .foregroundStyle(.white)
 
-                            VStack {
-                                Text("You haven't saved any listings yet.")
-                                    .foregroundStyle(Constants.Colors.black)
-                                
-                                Text("Tap \(Image(systemName: "bookmark")) on a listing to save.")
-                                    .foregroundStyle(Constants.Colors.black)
-                            }
-                        }
+                    VStack {
+                        Text("You haven't saved any listings yet.")
+                            .foregroundStyle(Constants.Colors.black)
+                        
+                        Text("Tap \(Image(systemName: "bookmark")) on a listing to save.")
+                            .foregroundStyle(Constants.Colors.black)
                     }
                 }
-                .padding(.leading, 24)
+                .frame(height: 110)
+                .padding(.horizontal, 24)
             }
         }
         .onAppear() {
