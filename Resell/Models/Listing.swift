@@ -26,3 +26,4 @@ struct Listing: Codable {
 struct ListingResponse: Codable {
     let post: Listing
 }
+    

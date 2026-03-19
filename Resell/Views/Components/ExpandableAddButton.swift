@@ -19,6 +19,17 @@ struct ExpandableAddButton: View {
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
+            if isExpanded {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        withAnimation {
+                            isExpanded.toggle()
+                    }
+                }
+            }
+            
             VStack(alignment: .trailing, spacing: 24) {
                 buttonOptions
 

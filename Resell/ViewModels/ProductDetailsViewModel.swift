@@ -159,10 +159,14 @@ class ProductDetailsViewModel: ObservableObject {
     }
 
     func deletePost() {
+        print("deletepost was called in productdetailsview")
         Task {
             do {
+                print("went into the task")
                 if let id = item?.id {
+                    print("trying to delete")
                     try await NetworkManager.shared.deletePost(id: id)
+                    print("got back")
                 }
 
                 didShowDeleteView = false
