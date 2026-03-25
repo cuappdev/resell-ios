@@ -26,15 +26,22 @@ struct EditProfileView: View {
     // MARK: - UI
 
     var body: some View {
-        VStack {
-            profileImageView
-                .padding(.bottom, 40)
-
-            nameView
-
-            editFieldsView
-
-            Spacer()
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack {
+                    profileImageView
+                        .padding(.bottom, 40)
+                    
+                    nameView
+                    
+                    editFieldsView
+                    
+                    Spacer()
+                }
+                .onTapGesture {
+                        proxy.scrollTo("bioField", anchor: .center)
+                    }
+            }
         }
         .padding(.top, 40)
         .background(Constants.Colors.white)
@@ -175,6 +182,7 @@ struct EditProfileView: View {
         }
         .padding(.top, 40)
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
+        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
     
     // MARK: - Functions
