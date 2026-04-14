@@ -37,7 +37,7 @@ struct SetupProfileView: View {
             Spacer()
 
             PurpleButton(isActive: viewModel.checkInputIsValid(), text: "Next", horizontalPadding: 80) {
-                viewModel.createNewUser()
+//                viewModel.createNewUser()
                 router.push(.venmo)
             }
         }
