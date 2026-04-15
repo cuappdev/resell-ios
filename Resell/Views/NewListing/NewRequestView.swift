@@ -20,30 +20,32 @@ struct NewRequestView: View {
     // MARK: - UI
 
     var body: some View {
-        VStack(spacing: 32) {
-            LabeledTextField(label: "Title", text: $viewModel.titleText)
-                .padding(.top, 32)
-
-            minMaxTextFields
-                .background {
-                    GeometryReader { geometry in
-                        Color.clear
-                            .preference(key: PriceFieldPositionKey.self, value: geometry.frame(in: .global).maxY)
+        ScrollView {
+            VStack(spacing: 32) {
+                LabeledTextField(label: "Title", text: $viewModel.titleText)
+                    .padding(.top, 32)
+                
+                minMaxTextFields
+                    .background {
+                        GeometryReader { geometry in
+                            Color.clear
+                                .preference(key: PriceFieldPositionKey.self, value: geometry.frame(in: .global).maxY)
+                        }
                     }
-                }
-                .onPreferenceChange(PriceFieldPositionKey.self) { value in
-                    self.priceFieldPosition = value
-                }
-
-            LabeledTextField(label: "Item Description", maxCharacters: 1000, frameHeight: 250, isMultiLine: true, placeholder: "Enter item details... \nCondition \nDimensions", text: $viewModel.descriptionText)
-
-            Spacer()
-
-            PurpleButton(isLoading: viewModel.isLoading, isActive: viewModel.checkInputIsValid(), text: "Continue") {
-                viewModel.createNewRequest()
-                router.pop()
-                withAnimation {
-                    mainViewModel.hidesTabBar = false
+                    .onPreferenceChange(PriceFieldPositionKey.self) { value in
+                        self.priceFieldPosition = value
+                    }
+                
+                LabeledTextField(label: "Item Description", maxCharacters: 1000, frameHeight: 250, isMultiLine: true, placeholder: "Enter item details... \nCondition \nDimensions", text: $viewModel.descriptionText)
+                
+                Spacer()
+                
+                PurpleButton(isLoading: viewModel.isLoading, isActive: viewModel.checkInputIsValid(), text: "Continue") {
+                    viewModel.createNewRequest()
+                    router.pop()
+                    withAnimation {
+                        mainViewModel.hidesTabBar = false
+                    }
                 }
             }
         }

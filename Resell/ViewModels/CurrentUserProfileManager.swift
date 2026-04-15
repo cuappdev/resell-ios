@@ -34,7 +34,9 @@ class CurrentUserProfileManager: ObservableObject {
     private var lastFetchTime: Date?
     private let cacheValidityDuration: TimeInterval = 300
     
-    private init() {}
+    private init() {
+        setupNotificationObservers()
+    }
     
     // MARK: - Public Methods
     
@@ -162,5 +164,18 @@ class CurrentUserProfileManager: ObservableObject {
               let image = UIImage(data: data) else { return }
         
         profilePic = image
+    }
+    
+    private func setupNotificationObservers() {
+        NotificationCenter.default.addObserver(
+            forName: Constants.Notifications.NewListingCreated,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                print("New listing detected. Refreshing profile...")
+                self?.loadProfile(forceRefresh: true)
+            }
+        }
     }
 }

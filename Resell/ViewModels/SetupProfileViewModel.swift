@@ -80,6 +80,19 @@ class SetupProfileViewModel: ObservableObject {
                 let userBody = user.toCreateUserBody(username: username, bio: bio, venmoHandle: venmoHandle, imageUrl: imageUrl, fcmToken: fcmToken)
                 try await NetworkManager.shared.createUser(user: userBody)
                 
+                if let currentUser = GoogleAuthManager.shared.user {
+                    let newPhotoUrl = URL(string: imageUrl) ?? currentUser.photoUrl
+                    
+                    let updatedUser = currentUser.updatingProfile(
+                        newUsername: username,
+                        newBio: bio,
+                        newVenmoHandle: venmoHandle,
+                        newPhotoUrl: newPhotoUrl
+                    )
+                    
+                    GoogleAuthManager.shared.user = updatedUser
+                }
+                
                 return true
             }
             return false
