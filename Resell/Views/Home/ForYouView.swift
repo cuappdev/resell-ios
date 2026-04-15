@@ -9,8 +9,8 @@ import SwiftUI
 import Kingfisher
 
 struct ForYouView: View {
-    @StateObject private var viewModel = HomeViewModel.shared
-    @StateObject private var searchViewModel = SearchViewModel.shared
+    @ObservedObject private var viewModel = HomeViewModel.shared
+    @ObservedObject private var searchViewModel = SearchViewModel.shared
     @EnvironmentObject var router: Router
 
     @State private var recentPosts: [Post] = [] // Fetched on demand

@@ -143,11 +143,13 @@ class HomeViewModel: ObservableObject {
         }
     }
 
-    func getSavedPosts() async  {
-        if let lastFetch = lastSavedFetchTime,
-           Date().timeIntervalSince(lastFetch) < cacheValidityDuration,
-           !savedItems.isEmpty {
-            return
+    func getSavedPosts(forceRefresh: Bool = false) async  {
+        if !forceRefresh{
+            if let lastFetch = lastSavedFetchTime,
+               Date().timeIntervalSince(lastFetch) < cacheValidityDuration,
+               !savedItems.isEmpty {
+                return
+            }
         }
         
         isLoading = true
@@ -162,20 +164,26 @@ class HomeViewModel: ObservableObject {
             NetworkManager.shared.logger.error("Error in HomeViewModel.getSavedPosts: \(error)")
         }
     }
-
-    func getSavedPosts(completion: @escaping () -> Void)  {
-        isLoading = true
-
-        Task {
-            defer { Task { @MainActor in isLoading = false } }
-
-            do {
-                let postsResponse = try await NetworkManager.shared.getSavedPosts()
-                savedItems = Post.sortPostsByDate(postsResponse.posts)
-                lastSavedFetchTime = Date()
-            } catch {
-                NetworkManager.shared.logger.error("Error in HomeViewModel.getSavedPosts: \(error)")
+    
+    func toggleLocalSaveStatus(for post: Post, isSaving: Bool) async {
+        let prevSavedItems = self.savedItems
+    
+        if isSaving {
+            if !savedItems.contains(where: { $0.id == post.id }) {
+                savedItems.insert(post, at: 0)
             }
+        } else {
+            savedItems.removeAll(where: { $0.id == post.id })
+        }
+        
+        do {
+            let postsResponse = try await NetworkManager.shared.getSavedPosts()
+            self.savedItems = Post.sortPostsByDate(postsResponse.posts)
+            self.lastSavedFetchTime = Date()
+        } catch {
+            print("Network failed, rolling back local state...")
+            self.savedItems = prevSavedItems
+            NetworkManager.shared.logger.error("Sync failed: \(error)")
         }
     }
     

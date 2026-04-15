@@ -17,6 +17,8 @@ struct ProductDetailsView: View {
     @EnvironmentObject var router: Router
 
     @StateObject private var viewModel = ProductDetailsViewModel()
+    
+    @ObservedObject private var homeViewModel = HomeViewModel.shared
 
     var post: Post
 
@@ -402,7 +404,12 @@ struct ProductDetailsView: View {
         if isNotificationAuthorized {
             Button {
                 viewModel.isSaved.toggle()
-                viewModel.updateItemSaved()
+                
+                Task {
+                    await viewModel.updateItemSaved()
+                    await homeViewModel.toggleLocalSaveStatus(for: post, isSaving: viewModel.isSaved)
+                }
+                
                 sendNotification()
             } label: {
                 ZStack {
@@ -420,9 +427,13 @@ struct ProductDetailsView: View {
         } else {
             Button {
                 viewModel.isSaved.toggle()
-                viewModel.updateItemSaved()
+                
+                Task {
+                    await viewModel.updateItemSaved()
+                    await homeViewModel.toggleLocalSaveStatus(for: post, isSaving: viewModel.isSaved)
+                }
+                
                 requestNotificationAuthorization()
-                print("Test1")
             } label: {
                 ZStack {
                     Circle()
