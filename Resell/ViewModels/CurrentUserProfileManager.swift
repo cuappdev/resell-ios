@@ -106,19 +106,15 @@ class CurrentUserProfileManager: ObservableObject {
             photoUrlBase64: profileImage.resizedToMaxDimension(256).toBase64() ?? ""
         )
         
-        // Update local state immediately for UI responsiveness
         self.username = username
         self.bio = bio
         self.venmoHandle = venmoHandle
         self.profilePic = profileImage
         
-        // Perform network request
         let updatedUserResponse = try await NetworkManager.shared.updateUserProfile(edit: edit)
         
-        // Update GoogleAuthManager user to persist changes across app restarts
         GoogleAuthManager.shared.user = updatedUserResponse.user
         
-        // Update cache timestamp so we don't immediately re-fetch old data
         lastFetchTime = Date()
     }
     
@@ -173,7 +169,6 @@ class CurrentUserProfileManager: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                print("New listing detected. Refreshing profile...")
                 self?.loadProfile(forceRefresh: true)
             }
         }

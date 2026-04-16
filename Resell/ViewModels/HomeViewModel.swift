@@ -20,6 +20,17 @@ class HomeViewModel: ObservableObject {
 
     private init() {
         configureImageCache()
+        
+        NotificationCenter.default.addObserver(
+            forName: Constants.Notifications.NewListingCreated,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                print("🏠 Home Page: New listing detected! Refreshing feed...")
+                self?.getAllPosts(forceRefresh: true)
+            }
+        }
     }
 
     func configure(mainViewModel: MainViewModel) {
