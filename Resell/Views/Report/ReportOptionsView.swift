@@ -39,7 +39,17 @@ struct ReportOptionsView: View {
             Spacer()
         }
         .background(Constants.Colors.white)
+        .navigationBarBackButtonHidden(true)
         .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    router.pop()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(Constants.Colors.black)
+                }
+            }
             ToolbarItem(placement: .principal) {
                 Text("Report \(viewModel.reportType)")
                     .font(Constants.Fonts.h3)

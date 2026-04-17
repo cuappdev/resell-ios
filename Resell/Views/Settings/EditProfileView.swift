@@ -23,6 +23,12 @@ struct EditProfileView: View {
     @State private var selectedItem: PhotosPickerItem? = nil
     @State private var didShowPhotosPicker: Bool = false
 
+    @FocusState private var focusedField: Field?
+
+    enum Field {
+        case username, venmo, bio
+    }
+    
     // MARK: - UI
 
     var body: some View {
@@ -38,13 +44,15 @@ struct EditProfileView: View {
                     
                     Spacer()
                 }
-                .onTapGesture {
-                        proxy.scrollTo("bioField", anchor: .center)
-                    }
             }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                focusedField = nil
+            }
+            .scrollDismissesKeyboard(.immediately)
+            
         }
         .padding(.top, 40)
-        .background(Constants.Colors.white)
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text("Edit Profile")
@@ -66,12 +74,6 @@ struct EditProfileView: View {
         .onAppear {
             loadCurrentValues()
         }
-        .onChange(of: profileManager.isLoading) { newValue in
-            if !newValue {
-                router.popToRoot()
-            }
-        }
-        .endEditingOnTap()
     }
 
     private var profileImageView: some View {
@@ -135,6 +137,7 @@ struct EditProfileView: View {
                     .foregroundStyle(Constants.Colors.black)
 
                 TextField("", text: $editedUsername)
+                    .focused($focusedField, equals: .username)
                     .font(Constants.Fonts.body1)
                     .foregroundStyle(Constants.Colors.black)
                     .multilineTextAlignment(.trailing)
@@ -150,6 +153,7 @@ struct EditProfileView: View {
                     .foregroundStyle(Constants.Colors.black)
 
                 TextField("", text: $editedVenmo)
+                    .focused($focusedField, equals: .venmo)
                     .font(Constants.Fonts.body1)
                     .foregroundStyle(Constants.Colors.black)
                     .multilineTextAlignment(.trailing)
@@ -165,6 +169,8 @@ struct EditProfileView: View {
                     .foregroundStyle(Constants.Colors.black)
 
                 TextEditor(text: $editedBio)
+                    .id("bioField")
+                    .focused($focusedField, equals: .bio)
                     .font(Constants.Fonts.body1)
                     .foregroundColor(Constants.Colors.black)
                     .padding(.horizontal, 16)

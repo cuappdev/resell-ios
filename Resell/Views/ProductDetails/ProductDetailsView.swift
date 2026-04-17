@@ -87,10 +87,12 @@ struct ProductDetailsView: View {
                             .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
                             .offset(x: -10)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Constants.Colors.black)
                     }
                     .background(.ultraThinMaterial, in: Circle())
                     .padding(.leading, 12)
-
+                    
                     Spacer()
 
                     Button {
