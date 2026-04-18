@@ -169,7 +169,9 @@ class CurrentUserProfileManager: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                self?.loadProfile(forceRefresh: true)
+                guard let self else { return }
+                guard !self.isLoading else { return }
+                self.loadProfile(forceRefresh: true)
             }
         }
     }
