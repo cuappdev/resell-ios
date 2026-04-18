@@ -160,6 +160,7 @@
 		2EEAAB282F1ADA380006FF5C /* AvailabilitySettingsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEAAB272F1ADA1B0006FF5C /* AvailabilitySettingsMenu.swift */; };
 		2EEAAB2D2F2311620006FF5C /* Availability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEAAB2C2F23115E0006FF5C /* Availability.swift */; };
 		2EEB57262F03C704008D2DF3 /* ReviewSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E02D3802F03C48200CCABE6 /* ReviewSection.swift */; };
+		C607480B2F90643700825192 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C607480A2F90643200825192 /* ShareSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -314,6 +315,7 @@
 		2EEAAB252F18CF6A0006FF5C /* MonthCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthCalendarView.swift; sourceTree = "<group>"; };
 		2EEAAB272F1ADA1B0006FF5C /* AvailabilitySettingsMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailabilitySettingsMenu.swift; sourceTree = "<group>"; };
 		2EEAAB2C2F23115E0006FF5C /* Availability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Availability.swift; sourceTree = "<group>"; };
+		C607480A2F90643200825192 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -589,6 +591,7 @@
 		2C9B4D052C8FCAF20029DF61 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				C607480A2F90643200825192 /* ShareSheet.swift */,
 				2EEAAB272F1ADA1B0006FF5C /* AvailabilitySettingsMenu.swift */,
 				2E87F7012F2A6D45007C228E /* StarRatingView.swift */,
 				2E87F6FD2F29A651007C228E /* TransactionConfirmationPopup.swift */,
@@ -974,6 +977,7 @@
 				2E87F7022F2A6D45007C228E /* StarRatingView.swift in Sources */,
 				2C9B4D092C8FD8200029DF61 /* LoginViewModel.swift in Sources */,
 				2C9337522C935C8100818C8E /* SavedView.swift in Sources */,
+				C607480B2F90643700825192 /* ShareSheet.swift in Sources */,
 				2CBC6B672CBDDB6400C842A4 /* PaginatedImageView.swift in Sources */,
 				2CE473A22CC4577500BD7E2C /* ReportConfirmationView.swift in Sources */,
 				2C18FFEA2CA1E4C900564577 /* SettingsViewModel.swift in Sources */,

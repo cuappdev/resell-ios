@@ -127,8 +127,8 @@ struct PostSummary: Codable, Hashable {
     
     private enum CodingKeys: String, CodingKey {
         case id, title, images, description, condition, sold
-        case originalPrice = "original_price"
-        case alteredPrice = "altered_price"
+        case originalPrice = "originalPrice"
+        case alteredPrice = "alteredPrice"
     }
 }
 

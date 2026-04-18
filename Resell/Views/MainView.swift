@@ -44,6 +44,31 @@ struct MainView: View {
             }
             .onOpenURL { url in
                 GIDSignIn.sharedInstance.handle(url)
+                
+                handleIncomingURL(url)
             }
+    }
+    
+    private func handleIncomingURL(_ url: URL) {
+        guard url.scheme == "resell", url.host == "product" else { return }
+        
+        let postId = url.lastPathComponent
+        
+        Task {
+            do {
+                let postResponse = try await NetworkManager.shared.getPostByID(id: postId)
+                let fetchedPost = postResponse.post
+                
+                await MainActor.run {
+                    router.popToRoot()
+                    
+                    if let post = fetchedPost {
+                        router.push(.productDetails(post))
+                    }
+                }
+            } catch {
+                print("Failed to load post from deep link: \(error.localizedDescription)")
+            }
+        }
     }
 }
