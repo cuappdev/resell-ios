@@ -27,7 +27,6 @@ class HomeViewModel: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                print("🏠 Home Page: New listing detected! Refreshing feed...")
                 self?.getAllPosts(forceRefresh: true)
             }
         }

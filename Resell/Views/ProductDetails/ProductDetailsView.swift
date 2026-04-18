@@ -67,14 +67,23 @@ struct ProductDetailsView: View {
 
             if viewModel.didShowOptionsMenu {
                 OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowDeleteView: $viewModel.didShowDeleteView, options: {
-                    var options: [Option] = [
-                        // MARK - Need to get a real shareable url (put in post or viewmodel)
-//                        .share(url: "TEST", itemName: viewModel.item?.title ?? "cool item"),
-                        .report(type: "Post", id: post.id)
-                    ]
+                    var options: [Option] = []
+                            
+                    let urlString = "resell://product/\(post.id)"
+                    if let shareUrl = URL(string: urlString) {
+                        options.append(
+                            .share(
+                                url: shareUrl,
+                                itemName: viewModel.item?.title ?? "Check out this AWESOME item on Resell!"
+                            ))
+                    }
+                    
+                    options.append(.report(type: "Post", id: post.id))
+                    
                     if viewModel.isUserPost() {
                         options.append(.delete)
                     }
+                    
                     return options
                 }())
                 .padding(.top, topSafeArea * 2 + 30)

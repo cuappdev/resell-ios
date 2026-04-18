@@ -14,11 +14,21 @@
 				<string>com.googleusercontent.apps.1534649394-98pts94l83s9309oijhplbo0duvu9abd</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>resell</string>
+			</array>
+		</dict>
 	</array>
 	<key>DEV_DATABASE_ID</key>
 	<string></string>
 	<key>FIREBASE_URL</key>
 	<string>$(FIREBASE_URL)</string>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
@@ -42,8 +52,6 @@
 		<string>Rubik-Medium.ttf</string>
 		<string>ReemKufi-Regular.ttf</string>
 	</array>
-	<key>FirebaseAppDelegateProxyEnabled</key>
-	<false/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

@@ -42,7 +42,6 @@ struct NewRequestView: View {
                 
                 PurpleButton(isLoading: viewModel.isLoading, isActive: viewModel.checkInputIsValid(), text: "Continue") {
                     viewModel.createNewRequest()
-                    router.pop()
                     withAnimation {
                         mainViewModel.hidesTabBar = false
                     }

@@ -95,6 +95,7 @@ class SetupProfileViewModel: ObservableObject {
                 
                 return true
             }
+            presentError("Failed to process profile image. Please try again.")
             return false
         } catch {
             if error as? ErrorResponse == ErrorResponse.usernameAlreadyExists {

@@ -17,6 +17,9 @@ struct OptionsMenuView: View {
     @Binding var didShowBlockView: Bool
 
     @EnvironmentObject var router: Router
+    
+    @State private var isShowingShareSheet = false
+    @State private var shareItems: [Any] = []
 
     var options: [Option]
 
@@ -46,7 +49,14 @@ struct OptionsMenuView: View {
                 ForEach(options.indices, id: \.self) { index in
                     switch options[index] {
                     case .share(let url, let item):
-                        ShareLink(item: url, subject: Text("Check out this \(item) on Resell")) {
+//                        ShareLink(item: url, subject: Text("Check out this \(item) on Resell")) {
+//                            optionView(name: "Share", icon: "share")
+//                        }
+                        Button {
+                            let shareText = "Check out this AWESOME \(item) on Resell!\n\(url.absoluteString)"
+                            shareItems = [shareText]
+                            isShowingShareSheet = true
+                        } label: {
                             optionView(name: "Share", icon: "share")
                         }
                     case .report(let type, let id):
@@ -98,6 +108,15 @@ struct OptionsMenuView: View {
             .scaleEffect(showMenu ? 1 : 0, anchor: .topTrailing)
             .animation(.spring, value: showMenu)
             .transition(.scale(scale: 0, anchor: .topTrailing))
+        }
+        .sheet(isPresented: $isShowingShareSheet) {
+            withAnimation {
+                showMenu = false
+            }
+        } content: {
+            ShareSheet(items: shareItems)
+                .presentationDetents([.medium, .large])
+                .ignoresSafeArea()
         }
     }
 
