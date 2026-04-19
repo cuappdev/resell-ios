@@ -101,9 +101,13 @@ struct ProductDetailsView: View {
                             .frame(width: 36, height: 24)
                             .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
+                            .offset(x: -10)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Constants.Colors.black)
                     }
+                    .background(.ultraThinMaterial, in: Circle())
                     .padding(.leading, 12)
-
+                    
                     Spacer()
 
                     Button {
@@ -117,8 +121,12 @@ struct ProductDetailsView: View {
                             .foregroundStyle(Constants.Colors.white)
                             .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
+                            
                     }
+                    .background(.ultraThinMaterial, in: Circle())
                     .padding(.trailing, 12)
+                    
+
                 }
                 .padding(.top, topSafeArea * 2 + 4)
 

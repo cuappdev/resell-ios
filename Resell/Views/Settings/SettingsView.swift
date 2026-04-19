@@ -46,7 +46,7 @@ struct SettingsView: View {
                         router.push(.feedback)
                     }
                 case .reviewTesting:
-                    settingsRow(title: "🧪 Test Reviews", icon: "feedback") {
+                    settingsRow(title: "Test Reviews", icon: "feedback") {
                         router.push(.reviewTesting)
                     }
                 case .blockedUsers:
@@ -54,7 +54,7 @@ struct SettingsView: View {
                         router.push(.blockedUsers)
                     }
                 case .eula:
-                    settingsRow(title: "Term and Conditions", icon: "terms") {
+                    settingsRow(title: "Terms and Conditions", icon: "terms") {
                         viewModel.didShowWebView = true
                     }
                 case .logout:

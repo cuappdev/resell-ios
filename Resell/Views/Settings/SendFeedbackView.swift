@@ -40,7 +40,17 @@ struct SendFeedbackView: View {
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
         .padding(.top, 40)
         .background(Constants.Colors.white)
+        .navigationBarBackButtonHidden(true)
         .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    router.pop()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(Constants.Colors.black)
+                }
+            }
             ToolbarItem(placement: .principal) {
                 Text("Send Feedback")
                     .font(Constants.Fonts.h3)
