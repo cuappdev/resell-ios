@@ -36,8 +36,8 @@ struct OptionsMenuView: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            Color.black
-                .opacity(0.3)
+            Color.clear
+                .contentShape(Rectangle())
                 .ignoresSafeArea()
                 .onTapGesture {
                     withAnimation {

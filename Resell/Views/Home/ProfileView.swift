@@ -49,6 +49,8 @@ struct ProfileView: View {
                             title: "No active requests",
                             text: "Submit a request and get notified when someone lists something similar"
                         )
+                        .padding(.top, 24)
+                        .loadingView(isLoading: viewModel.isLoading)
                 } else {
                     ScrollView{
                         ProductsGalleryView(items: viewModel.selectedPosts)

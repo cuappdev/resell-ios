@@ -132,6 +132,14 @@ struct ProductDetailsView: View {
         .ignoresSafeArea(edges: .top)
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $viewModel.didShowDeleteView) {
+                deletePostView
+            }
+            .onChange(of: viewModel.didShowDeleteView) { isPresented in
+                if isPresented {
+                    viewModel.didShowOptionsMenu = false
+                }
+            }
         .onAppear {
             viewModel.setPost(post: post)
 
