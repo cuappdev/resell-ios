@@ -15,7 +15,7 @@ struct DetailedFilterView: View {
     let filter: FilterCategory
     
     @StateObject private var filtersViewModel = FiltersViewModel(isHome: false)
-    @StateObject private var viewModel = HomeViewModel.shared
+    @ObservedObject private var viewModel = HomeViewModel.shared
     
     // Computed property to show either searched or all filtered items
     private var displayedItems: [Post] {

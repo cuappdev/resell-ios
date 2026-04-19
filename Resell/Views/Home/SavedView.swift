@@ -10,7 +10,8 @@ import SwiftUI
 struct SavedView: View {
     // TODO: This should be the same as the detailed filter view imo...
     @EnvironmentObject var router: Router
-    @EnvironmentObject private var viewModel: HomeViewModel
+//    @EnvironmentObject private var viewModel: HomeViewModel
+    @ObservedObject private var viewModel = HomeViewModel.shared
     
     var body: some View {
         ScrollView(.vertical){

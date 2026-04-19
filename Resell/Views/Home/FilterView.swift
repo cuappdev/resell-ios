@@ -24,7 +24,7 @@ struct FilterView: View {
         _isPresented = isPresented
     }
     
-    @StateObject private var homeViewModel = HomeViewModel.shared
+    @ObservedObject private var homeViewModel = HomeViewModel.shared
     
     var body: some View {
         ZStack {
