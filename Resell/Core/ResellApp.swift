@@ -20,9 +20,9 @@ struct ResellApp: App {
     @StateObject var mainViewModel = MainViewModel()
     
     init() {
-          //TODO: Refactor...
-          HomeViewModel.shared.configure(mainViewModel: mainViewModel)
-          setupKingfisher()
+        //TODO: Refactor...
+        HomeViewModel.shared.configure(mainViewModel: mainViewModel)
+        setupKingfisher()
     }
     
     private func setupKingfisher() {

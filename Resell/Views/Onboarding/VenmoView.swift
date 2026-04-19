@@ -31,13 +31,36 @@ struct VenmoView: View {
 
             Spacer()
 
-            PurpleButton(isLoading: viewModel.isLoading, isActive: !viewModel.venmoHandle.cleaned().isEmpty,text: "Continue") {
-                // viewModel.createNewUser()
+            PurpleButton(isLoading: viewModel.isLoading, isActive: !viewModel.venmoHandle.cleaned().isEmpty, text: "Continue") {
+                viewModel.isLoading = true
+                
+                Task {
+                    let success = await viewModel.createNewUser()
+                    viewModel.isLoading = false
+                    
+                    if success {
+                        withAnimation {
+                            router.popToRoot()
+                            userDidLogin = true
+                        }
+                    }
+                }
             }
 
             Button(action: {
-                withAnimation {
-                    userDidLogin = true
+                viewModel.venmoHandle = ""
+                viewModel.isLoading = true
+                
+                Task {
+                    let success = await viewModel.createNewUser()
+                    viewModel.isLoading = false
+                    
+                    if success {
+                        withAnimation {
+                            router.popToRoot()
+                            userDidLogin = true
+                        }
+                    }
                 }
             }, label: {
                 Text("Skip")
@@ -59,14 +82,14 @@ struct VenmoView: View {
                 }
             }
         }
-        .onChange(of: viewModel.isLoading) { newValue in
-            if !newValue {
-                withAnimation {
-                    router.popToRoot()
-                    userDidLogin = true
-                }
-            }
-        }
+//        .onChange(of: viewModel.isLoading) { newValue in
+//            if !newValue {
+//                withAnimation {
+//                    router.popToRoot()
+//                    userDidLogin = true
+//                }
+//            }
+//        }
         .endEditingOnTap()
     }
 }

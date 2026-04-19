@@ -12,17 +12,22 @@ struct Listing: Codable {
     let title: String
     let images: [String]
     let originalPrice: Double
-    let categories: [String]
+    let categories: [Category]
     let description: String
     let user: User?
 
     enum CodingKeys: String, CodingKey {
         case id, title, description, categories
-        case originalPrice = "original_price"
+        case originalPrice = "originalPrice"
         case images, user
     }
 }
 
 struct ListingResponse: Codable {
     let post: Listing
+}
+
+struct Category: Codable {
+    let id: String?
+    let name: String
 }

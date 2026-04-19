@@ -87,6 +87,7 @@ struct Constants {
     /// Notifications for pub/sub
     enum Notifications {
         static let LogoutUser = Notification.Name("LogoutUser")
+        static let NewListingCreated = Notification.Name("NewListingCreated")
     }
 
     /// Chat  categories used in Resell's design system
