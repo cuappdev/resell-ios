@@ -260,6 +260,7 @@ struct FilterView: View {
                                 .background(filtersVM.categoryFilters.isEmpty && filtersVM.conditionFilters.isEmpty ? Constants.Colors.resellPurple.opacity(0.4) : Constants.Colors.resellPurple)
                                 .cornerRadius(20)
                         }
+                        .disabled(filtersVM.categoryFilters.isEmpty && filtersVM.conditionFilters.isEmpty)
                     }
                     .padding(.horizontal, 40)
                     .padding(.vertical, 16)
