@@ -15,39 +15,39 @@ struct NewRequestView: View {
     @EnvironmentObject var mainViewModel: MainViewModel
     @StateObject private var viewModel = NewRequestViewModel()
 
-    @State private var priceFieldPosition: CGFloat = 0.0
+    @State private var sheetHeight: CGFloat? = nil
 
     // MARK: - UI
 
     var body: some View {
-        VStack(spacing: 32) {
-            LabeledTextField(label: "Title", text: $viewModel.titleText)
-                .padding(.top, 32)
-
-            minMaxTextFields
-                .background {
-                    GeometryReader { geometry in
-                        Color.clear
-                            .preference(key: PriceFieldPositionKey.self, value: geometry.frame(in: .global).maxY)
+        ScrollView {
+            VStack(spacing: 32) {
+                LabeledTextField(label: "Title", text: $viewModel.titleText)
+                    .padding(.top, 32)
+                
+                minMaxTextFields
+                    .background {
+                        GeometryReader { geometry in
+                            Color.clear
+                                .preference(key: PriceFieldPositionKey.self, value: geometry.frame(in: .global).maxY)
+                        }
+                    }
+                
+                LabeledTextField(label: "Item Description", maxCharacters: 1000, frameHeight: 250, isMultiLine: true, placeholder: "Enter item details... \nCondition \nDimensions", text: $viewModel.descriptionText)
+                
+                Spacer()
+                
+                PurpleButton(isLoading: viewModel.isLoading, isActive: viewModel.checkInputIsValid(), text: "Continue") {
+                    viewModel.createNewRequest()
+                    router.pop()
+                    withAnimation {
+                        mainViewModel.hidesTabBar = false
                     }
                 }
-                .onPreferenceChange(PriceFieldPositionKey.self) { value in
-                    self.priceFieldPosition = value
-                }
-
-            LabeledTextField(label: "Item Description", maxCharacters: 1000, frameHeight: 250, isMultiLine: true, placeholder: "Enter item details... \nCondition \nDimensions", text: $viewModel.descriptionText)
-
-            Spacer()
-
-            PurpleButton(isLoading: viewModel.isLoading, isActive: viewModel.checkInputIsValid(), text: "Continue") {
-                viewModel.createNewRequest()
-                router.pop()
-                withAnimation {
-                    mainViewModel.hidesTabBar = false
-                }
             }
+            .padding(.horizontal, 24)
         }
-        .padding(.horizontal, 24)
+        .ignoresSafeArea(.keyboard)
         .background(Constants.Colors.white)
         .navigationBarBackButtonHidden(true)
         .toolbar {
@@ -72,9 +72,16 @@ struct NewRequestView: View {
                 }
             }
         }
+        .onPreferenceChange(PriceFieldPositionKey.self) { value in
+            if sheetHeight == nil {
+                sheetHeight = UIScreen.height - value - (UIScreen.height < 700 ? 0 : 50)
+            }
+        }
         .sheet(isPresented: $viewModel.didShowPriceInput) {
             PriceInputView(price: viewModel.isMinText ? $viewModel.priceTextMin : $viewModel.priceTextMax, isPresented: $viewModel.didShowPriceInput, titleText: "What is the \(viewModel.isMinText ? "minimum" : "maximum") of your preferred price range?")
-                .presentationDetents([.height(UIScreen.height - priceFieldPosition - (UIScreen.height < 700 ? 0 : 50))])
+                .presentationDetents([
+                    .height(sheetHeight ?? 300)
+                ])
                 .presentationDragIndicator(.visible)
                 .presentationCornerRadius(25)
         }

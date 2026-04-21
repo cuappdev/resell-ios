@@ -36,7 +36,9 @@ class SetupProfileViewModel: ObservableObject {
     // MARK: - Functions
 
     func checkInputIsValid() -> Bool {
-        return !(username.cleaned().isEmpty || bio.cleaned().isEmpty) && didAgreeWithEULA
+        let hasImage = selectedImage != nil && selectedImage != UIImage(named: "emptyProfile")
+        
+        return !(username.cleaned().isEmpty || bio.cleaned().isEmpty) && didAgreeWithEULA && hasImage
     }
 
     /// Updates selectedImage with user profile
@@ -52,40 +54,55 @@ class SetupProfileViewModel: ObservableObject {
         }
     }
 
-    func createNewUser() {
+    func createNewUser() async -> Bool {
         if selectedImage == nil {
             presentError("Please select a profile picture.")
-            return
+            return false
         }
         
         if bio.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             presentError("Please enter a bio.")
-            return
+            return false
         }
-        
-        isLoading = true
 
-        Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
+        do {
+            if let imageBase64 = selectedImage?.resizedToMaxDimension(256).toBase64() {
+                let imageBody = ImageBody(imageBase64: imageBase64)
+                let imageUrl = try await NetworkManager.shared.uploadImage(image: imageBody).image
 
-            do {
-                if let imageBase64 = selectedImage?.resizedToMaxDimension(256).toBase64() {
-                    let imageBody = ImageBody(imageBase64: imageBase64)
-                    let imageUrl = try await NetworkManager.shared.uploadImage(image: imageBody).image
-
-                    guard let fcmToken = FirebaseNotificationService.shared.fcmToken, let user = GoogleAuthManager.shared.user else {
-                        return
-                    }
-
-                    let userBody = user.toCreateUserBody(username: username, bio: bio, venmoHandle: venmoHandle, imageUrl: imageUrl, fcmToken: fcmToken)
-                    try await NetworkManager.shared.createUser(user: userBody)
+                guard let user = GoogleAuthManager.shared.user else {
+                    presentError("Authentication failed. Please try logging in again.")
+                    return false
                 }
-            } catch {
-                if error as? ErrorResponse == ErrorResponse.usernameAlreadyExists {
-                    presentError("That username is already taken.")
+                
+                let fcmToken = FirebaseNotificationService.shared.fcmToken ?? ""
+
+                let userBody = user.toCreateUserBody(username: username, bio: bio, venmoHandle: venmoHandle, imageUrl: imageUrl, fcmToken: fcmToken)
+                try await NetworkManager.shared.createUser(user: userBody)
+                
+                if let currentUser = GoogleAuthManager.shared.user {
+                    let newPhotoUrl = URL(string: imageUrl) ?? currentUser.photoUrl
+                    
+                    let updatedUser = currentUser.updatingProfile(
+                        newUsername: username,
+                        newBio: bio,
+                        newVenmoHandle: venmoHandle,
+                        newPhotoUrl: newPhotoUrl
+                    )
+                    
+                    GoogleAuthManager.shared.user = updatedUser
                 }
-                NetworkManager.shared.logger.error("Error in SetupProfileViewModel.createNewUser: \(error)")
+                
+                return true
             }
+            presentError("Failed to process profile image. Please try again.")
+            return false
+        } catch {
+            if error as? ErrorResponse == ErrorResponse.usernameAlreadyExists {
+                presentError("That username is already taken.")
+            }
+            NetworkManager.shared.logger.error("Error in SetupProfileViewModel.createNewUser: \(error)")
+            return false
         }
     }
 

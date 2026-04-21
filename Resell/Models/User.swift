@@ -93,6 +93,36 @@ struct User: Codable, Equatable, Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(firebaseUid)
     }
+    
+    func updatingProfile(newUsername: String, newBio: String, newVenmoHandle: String, newPhotoUrl: URL) -> User {
+        return User(
+            firebaseUid: self.firebaseUid,
+            username: newUsername,
+            netid: self.netid,
+            givenName: self.givenName,
+            familyName: self.familyName,
+            admin: self.admin,
+            isActive: self.isActive,
+            stars: self.stars,
+            numReviews: self.numReviews,
+            following: self.following,
+            followers: self.followers,
+            soldPosts: self.soldPosts,
+            photoUrl: newPhotoUrl,
+            venmoHandle: newVenmoHandle,
+            email: self.email,
+            googleId: self.googleId,
+            bio: newBio,
+            posts: self.posts,
+            saved: self.saved,
+            feedbacks: self.feedbacks,
+            requests: self.requests,
+            blocking: self.blocking,
+            blockers: self.blockers,
+            reports: self.reports,
+            reportedBy: self.reportedBy
+        )
+    }
 }
 
 struct UsersResponse: Codable {

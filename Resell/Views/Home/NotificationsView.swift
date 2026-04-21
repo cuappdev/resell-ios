@@ -106,7 +106,24 @@ struct NotificationsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Constants.Colors.white)
-        .navigationTitle("Notifications")
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    router.pop()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(Constants.Colors.black)
+                }
+            }
+            
+            ToolbarItem(placement: .principal) {
+                Text("Notifications")
+                    .font(Constants.Fonts.h3)
+                    .foregroundStyle(Constants.Colors.black)
+            }
+        }
         .onAppear {
             viewModel.fetchNotifications()
         }

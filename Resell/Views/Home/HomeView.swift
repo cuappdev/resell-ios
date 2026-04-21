@@ -15,7 +15,7 @@ struct HomeView: View {
     @EnvironmentObject private var searchViewModel: SearchViewModel
     @EnvironmentObject var router: Router
     
-    @StateObject private var viewModel = HomeViewModel.shared
+    @ObservedObject private var viewModel = HomeViewModel.shared
     @StateObject private var filtersViewModel = FiltersViewModel(isHome: true)
     
     @State var forYouPosts: [[Post]] = []

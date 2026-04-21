@@ -116,19 +116,17 @@ class ProductDetailsViewModel: ObservableObject {
         }
     }
 
-    func updateItemSaved() {
-        Task {
-            do {
-                if let id = item?.id {
-                    if !isSaved {
-                        let _ = try await NetworkManager.shared.unsavePostByID(id: id)
-                    } else {
-                        let _ = try await NetworkManager.shared.savePostByID(id: id)
-                    }
+    func updateItemSaved() async {
+        do {
+            if let id = item?.id {
+                if !isSaved {
+                    let _ = try await NetworkManager.shared.unsavePostByID(id: id)
+                } else {
+                    let _ = try await NetworkManager.shared.savePostByID(id: id)
                 }
-            } catch {
-                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel:.updateItemSaved \(error)")
             }
+        } catch {
+            NetworkManager.shared.logger.error("Error in ProductDetailsViewModel:.updateItemSaved \(error)")
         }
     }
 

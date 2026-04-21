@@ -37,13 +37,25 @@ struct BlockedUsersView: View {
         }
         .frame(width: UIScreen.width)
         .background(Constants.Colors.white)
+        .navigationBarBackButtonHidden(true)
         .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    router.pop()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(Constants.Colors.black)
+                }
+            }
+            
             ToolbarItem(placement: .principal) {
                 Text("Blocked Users")
                     .font(Constants.Fonts.h3)
                     .foregroundStyle(Constants.Colors.black)
             }
         }
+        
         .emptyState(isEmpty: blockedUsers.isEmpty && !isLoading, title: "No blocked users", text: "Users you have blocked will appear here.")
         .popupModal(isPresented: $didShowPopup) {
             popupModalContent
