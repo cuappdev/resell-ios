@@ -76,7 +76,13 @@ struct HomeView: View {
         }
         .refreshable {
             // Force refresh when user pulls to refresh
-            viewModel.getAllPosts(forceRefresh: true)
+            if viewModel.hasActiveFilters {
+                Task {
+                    try? await filtersViewModel.applyFilters(homeViewModel: viewModel)
+                }
+            } else {
+                viewModel.getAllPosts(forceRefresh: true)
+            }
         }
         .loadingView(isLoading: viewModel.isLoading)
         .navigationBarBackButtonHidden()
