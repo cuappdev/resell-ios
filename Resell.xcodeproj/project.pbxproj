@@ -407,6 +407,7 @@
 			children = (
 				2E9F757F2EB6D441003FE0E0 /* GoogleService-Info.plist */,
 				2E9F75802EB6D441003FE0E0 /* resell-service.json */,
+				2CDCEE622CD6C4B0008DF5E8 /* Keys.xcconfig */,
 			);
 			path = Supporting;
 			sourceTree = "<group>";
@@ -469,7 +470,6 @@
 				2C9B4CC82C8FB7B70029DF61 /* Products */,
 				2C3859DF2CCD9FD400DA20EA /* Frameworks */,
 				2E9F75762EB6D2BE003FE0E0 /* Recovered References */,
-				2CDCEE622CD6C4B0008DF5E8 /* Keys.xcconfig */,
 			);
 			sourceTree = "<group>";
 		};
