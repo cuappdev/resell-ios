@@ -109,20 +109,6 @@ struct FilterView: View {
                         RangeSlider(lowValue: $filtersVM.lowValue, highValue: $filtersVM.highValue, range: 0...1000)
                             .padding(.trailing, -28)
                         
-                        HStack {
-                            Text("Items On Sale")
-                                .font(.custom("Rubik-Regular", size: 20))
-                                .foregroundStyle(.gray)
-                            
-                            Spacer()
-                            
-                            Button {
-                                filtersVM.showSale.toggle()
-                            } label: {
-                                Image(filtersVM.showSale ? "toggle-set" : "toggle")
-                            }
-                        }
-                        .offset(y: -8)
                         
                         if home {
                             Divider()
