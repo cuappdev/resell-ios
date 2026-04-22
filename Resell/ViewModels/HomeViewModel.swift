@@ -38,10 +38,11 @@ class HomeViewModel: ObservableObject {
 
     @Published var isLoading: Bool = false
     @Published var filteredItems: [Post] = []
+    @Published var hasActiveFilters: Bool = false
     @Published var cardsLoaded: Bool = false
     @Published var selectedFilter: [String] = ["Recent"] {
         didSet {
-            if selectedFilter == ["Recent"] {
+            if (selectedFilter == ["Recent"] && !hasActiveFilters) {
                 filteredItems = allItems
             } else {
                 filterPosts()
@@ -142,7 +143,7 @@ class HomeViewModel: ObservableObject {
                 
                 allItems.append(contentsOf: newPosts)
                 
-                if selectedFilter == ["Recent"] {
+                if selectedFilter == ["Recent"] && !hasActiveFilters {
                     filteredItems = allItems
                 }
                 

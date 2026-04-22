@@ -243,10 +243,10 @@ struct FilterView: View {
                                 .foregroundStyle(Color.white)
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 8)
-                                .background(filtersVM.categoryFilters.isEmpty && filtersVM.conditionFilters.isEmpty ? Constants.Colors.resellPurple.opacity(0.4) : Constants.Colors.resellPurple)
+                                .background(!filtersVM.hasActiveFilters ? Constants.Colors.resellPurple.opacity(0.4) : Constants.Colors.resellPurple)
                                 .cornerRadius(20)
                         }
-                        .disabled(filtersVM.categoryFilters.isEmpty && filtersVM.conditionFilters.isEmpty)
+                        .disabled(!filtersVM.hasActiveFilters)
                     }
                     .padding(.horizontal, 40)
                     .padding(.vertical, 16)

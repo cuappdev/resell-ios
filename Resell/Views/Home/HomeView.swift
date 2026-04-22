@@ -59,9 +59,10 @@ struct HomeView: View {
         }
         .onAppear {
             // Only fetch if we don't have cached data
-            if viewModel.filteredItems.isEmpty {
-                    viewModel.getAllPosts() //only get all posts if no filters are applied
-                }
+            if !viewModel.hasActiveFilters {
+                viewModel.getAllPosts() //only get all posts if no filters are applied
+            } else {
+            }
             viewModel.getBlockedUsers()
             withAnimation { mainViewModel.hidesTabBar = false }
         }

@@ -90,6 +90,7 @@ class FiltersViewModel: ObservableObject {
             let postsResponse = try await NetworkManager.shared.getUnifiedFilteredPosts(filters: unifiedFilter)
             if isHome {
                 homeViewModel.filteredItems = postsResponse.posts
+                homeViewModel.hasActiveFilters = true
             } else {
                 detailedFilterItems = postsResponse.posts
                 clearFilterSearch()
@@ -109,6 +110,7 @@ class FiltersViewModel: ObservableObject {
         selectedSort = nil
         
         if isHome {
+            homeViewModel.hasActiveFilters = false
             homeViewModel.selectedFilter = ["Recent"]
         } else if let category = baseCategory {
             // For detailed view, reset to just the base category
@@ -118,4 +120,13 @@ class FiltersViewModel: ObservableObject {
             }
         }
     }
+    
+    var hasActiveFilters: Bool {
+        !categoryFilters.isEmpty ||
+        !conditionFilters.isEmpty ||
+        lowValue != 0 ||
+        highValue != 1000 ||
+        (selectedSort != nil && selectedSort != .any)
+    }
+    
 }
