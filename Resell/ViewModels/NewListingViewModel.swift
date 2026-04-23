@@ -13,7 +13,7 @@ class NewListingViewModel: ObservableObject {
     
     // MARK: - Properties
 
-    @Published var didShowActionSheet: Bool = false
+    @Published var didShowImageSourceDialog: Bool = false
     @Published var didShowCamera: Bool = false
     @Published var didShowPhotosPicker: Bool = false
     @Published var isLoading: Bool = false
@@ -83,7 +83,7 @@ class NewListingViewModel: ObservableObject {
         }
 
     func clear() {
-        didShowActionSheet = false
+        didShowImageSourceDialog = false
         didShowCamera = false
         didShowPhotosPicker = false
         selectedImages = []

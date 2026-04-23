@@ -12,11 +12,13 @@ struct PaginatedImageView: View {
 
     // MARK: - Properties
 
-    @Binding var didShowActionSheet: Bool
     @Binding var images: [UIImage]
     @State private var currentPage: Int = 0
+    @State private var isImageSourceDialogPresented = false
 
     let maxImages: Int
+    let onPickPhotoLibrary: () -> Void
+    let onPickCamera: () -> Void
 
     // MARK: - UI
 
@@ -69,11 +71,24 @@ struct PaginatedImageView: View {
     private var addImageView: some View {
         VStack {
             Button {
-                didShowActionSheet = true
+                isImageSourceDialogPresented = true
             } label: {
                 Image("addNewListing")
                     .resizable()
                     .frame(width: 64, height: 64)
+            }
+            .confirmationDialog(
+                "Select Image Source",
+                isPresented: $isImageSourceDialogPresented,
+                titleVisibility: .visible
+            ) {
+                Button("Photo Library") {
+                    onPickPhotoLibrary()
+                }
+                Button("Camera") {
+                    onPickCamera()
+                }
+                Button("Cancel", role: .cancel) {}
             }
         }
         .shadow(radius: 5)
