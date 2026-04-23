@@ -82,11 +82,7 @@ class ProductDetailsViewModel: ObservableObject {
 
             do {
                 let postsResponse = try await NetworkManager.shared.getSimilarPostsByID(id: id)
-                if postsResponse.posts.count >= 4 {
-                    similarPosts = Array(postsResponse.posts.prefix(4))
-                } else {
-                    similarPosts = postsResponse.posts
-                }
+                similarPosts = Array(postsResponse.posts)
              
             } catch {
                 NetworkManager.shared.logger.error("Errror in ProductDetailsViewModel.getSimilarPosts: \(error)")

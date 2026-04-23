@@ -44,6 +44,16 @@ struct NewRequestView: View {
                         mainViewModel.hidesTabBar = false
                     }
                 }
+            LabeledTextField(label: "Item Description", maxCharacters: 1000, frameHeight: 250, isMultiLine: true, placeholder: "Enter item details... \nCondition \nDimensions", text: $viewModel.descriptionText)
+
+            Spacer()
+
+            PurpleButton(isLoading: viewModel.isLoading, isActive: viewModel.checkInputIsValid(), text: "Continue") {
+                viewModel.createNewRequest()
+                router.pop()
+                withAnimation {
+                    mainViewModel.hidesTabBar = false
+                }
             }
             .padding(.horizontal, 24)
         }

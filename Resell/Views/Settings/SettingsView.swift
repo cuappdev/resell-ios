@@ -175,6 +175,7 @@ struct SettingsView: View {
                 }
 
             Button {
+                guard viewModel.confirmUsernameText == CurrentUserProfileManager.shared.username else { return }
                 viewModel.deleteAccount()
                 mainViewModel.selection = 0
                 mainViewModel.userDidLogin = false
@@ -184,9 +185,13 @@ struct SettingsView: View {
                     .foregroundStyle(Constants.Colors.white)
                     .padding(.horizontal, 70)
                     .padding(.vertical, 14)
-                    .background(Constants.Colors.errorRed)
+                    .background(viewModel.confirmUsernameText == CurrentUserProfileManager.shared.username
+                        ? Constants.Colors.errorRed
+                        : Constants.Colors.errorRed.opacity(0.4))
                     .clipShape(.capsule)
             }
+            .disabled(viewModel.confirmUsernameText != CurrentUserProfileManager.shared.username)
+            
 
             Button {
                 viewModel.togglePopup(isPresenting: false)

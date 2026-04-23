@@ -20,38 +20,47 @@ struct NewListingDetailsView: View {
     // MARK: - UI
 
     var body: some View {
-        VStack(spacing: 32) {
-            LabeledTextField(label: "Title", text: $viewModel.titleText)
-                .padding(.top, 32)
+        ScrollView {
+            VStack(spacing: 32) {
+                LabeledTextField(label: "Title", text: $viewModel.titleText)
+                    .padding(.top, 32)
 
-            priceTextField
-                .background {
-                    GeometryReader { geometry in
-                        Color.clear
-                            .preference(key: PriceFieldPositionKey.self, value: geometry.frame(in: .global).maxY)
+                priceTextField
+                    .background {
+                        GeometryReader { geometry in
+                            Color.clear
+                                .preference(key: PriceFieldPositionKey.self, value: geometry.frame(in: .global).maxY)
+                        }
+                    }
+                    .onPreferenceChange(PriceFieldPositionKey.self) { value in
+                        self.priceFieldPosition = value
+                    }
+
+                LabeledTextField(label: "Item Description", maxCharacters: 1000, frameHeight: 120, isMultiLine: true, placeholder: "Enter item details... \nCondition \nDimensions", text: $viewModel.descriptionText)
+
+                filtersView
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 24)
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .background(Constants.Colors.white)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 0) {
+                PurpleButton(isLoading: viewModel.isLoading, isActive: viewModel.checkInputIsValid(), text: "Continue") {
+                    viewModel.createNewListing()
+
+                    withAnimation {
+                        mainViewModel.hidesTabBar = false
                     }
                 }
-                .onPreferenceChange(PriceFieldPositionKey.self) { value in
-                    self.priceFieldPosition = value
-                }
-
-            LabeledTextField(label: "Item Description", maxCharacters: 1000, frameHeight: 120, isMultiLine: true, placeholder: "Enter item details... \nCondition \nDimensions", text: $viewModel.descriptionText)
-
-            filtersView
-
-            Spacer()
-
-            PurpleButton(isLoading: viewModel.isLoading, isActive: viewModel.checkInputIsValid(), text: "Continue") {
-                // Create New Listing
-                viewModel.createNewListing()
-
-                withAnimation {
-                    mainViewModel.hidesTabBar = false
-                }
             }
+            .padding(.horizontal, 24)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
+            .frame(maxWidth: .infinity)
+            .background(Constants.Colors.white)
         }
-        .padding(.horizontal, 24)
-        .background(Constants.Colors.white)
         .endEditingOnTap()
         .toolbar {
             ToolbarItem(placement: .principal) {

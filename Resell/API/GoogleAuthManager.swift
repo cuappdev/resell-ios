@@ -134,9 +134,10 @@ class GoogleAuthManager {
 
     private func authorizeUser() async throws {
         // Send FCM token to backend
-        guard let fcmToken = await FirebaseNotificationService.shared.getFCMRegToken() else {
-            throw GoogleAuthError.noFCMToken
-        }
+//        guard let fcmToken = await FirebaseNotificationService.shared.getFCMRegToken() else {
+//            throw GoogleAuthError.noFCMToken
+//        }
+        let fcmToken = await FirebaseNotificationService.shared.getFCMRegToken() ?? ""
 
         let body = AuthorizeBody(token: fcmToken)
         self.user = try await NetworkManager.shared.authorize(authorizeBody: body)
