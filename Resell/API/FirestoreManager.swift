@@ -6,6 +6,7 @@
 //
 
 import FirebaseFirestore
+import Foundation
 import os
 
 class FirestoreManager {
@@ -23,6 +24,39 @@ class FirestoreManager {
     private let chatsCollection = Firestore.firestore().collection("chats_refactored")
     var listeners: [String: ListenerRegistration] = [:]
     let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.cornellappdev.Resell", category: "FirestoreManager")
+
+    /// Ensures overlapping async rebuilds from rapid snapshots cannot deliver stale UI:
+    /// only the latest snapshot per list query (or per single-chat stream) may call `onSnapshotUpdate`.
+    private let snapshotEpochLock = NSLock()
+    private var chatListSnapshotEpoch: [String: UInt64] = [:]
+    private var detailChatSnapshotEpoch: UInt64 = 0
+
+    private func bumpChatListSnapshotEpoch(for field: String) -> UInt64 {
+        snapshotEpochLock.lock()
+        defer { snapshotEpochLock.unlock() }
+        let next = (chatListSnapshotEpoch[field] ?? 0) &+ 1
+        chatListSnapshotEpoch[field] = next
+        return next
+    }
+
+    private func chatListSnapshotEpochStillCurrent(field: String, epoch: UInt64) -> Bool {
+        snapshotEpochLock.lock()
+        defer { snapshotEpochLock.unlock() }
+        return chatListSnapshotEpoch[field] == epoch
+    }
+
+    private func bumpDetailChatSnapshotEpoch() -> UInt64 {
+        snapshotEpochLock.lock()
+        defer { snapshotEpochLock.unlock() }
+        detailChatSnapshotEpoch &+= 1
+        return detailChatSnapshotEpoch
+    }
+
+    private func detailChatSnapshotEpochStillCurrent(_ epoch: UInt64) -> Bool {
+        snapshotEpochLock.lock()
+        defer { snapshotEpochLock.unlock() }
+        return detailChatSnapshotEpoch == epoch
+    }
 
     // MARK: - Chat Functions
 
@@ -50,18 +84,21 @@ class FirestoreManager {
 
             if let error = error {
                 logger.error("Error loading chat previews: \(error)")
+                _ = self.bumpChatListSnapshotEpoch(for: field)
                 onSnapshotUpdate([])
                 return
             }
 
             guard let documents = querySnapshot?.documents else {
                 logger.log("No documents found.")
+                _ = self.bumpChatListSnapshotEpoch(for: field)
                 onSnapshotUpdate([])
                 return
             }
 
             guard let user = GoogleAuthManager.shared.user else {
                 GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User not available.")
+                _ = self.bumpChatListSnapshotEpoch(for: field)
                 onSnapshotUpdate([])
                 return
             }
@@ -75,6 +112,8 @@ class FirestoreManager {
                 }
                 return (doc.documentID, parsed)
             }
+
+            let epoch = self.bumpChatListSnapshotEpoch(for: field)
 
             Task {
                 // Make sure subsequent lookups for the current user are cache hits.
@@ -93,6 +132,8 @@ class FirestoreManager {
                     }
                     return collected
                 }
+
+                guard self.chatListSnapshotEpochStillCurrent(field: field, epoch: epoch) else { return }
 
                 let sortedChats = chats.sorted(by: { $0.updatedAt > $1.updatedAt })
                 await MainActor.run { onSnapshotUpdate(sortedChats) }
@@ -185,18 +226,22 @@ class FirestoreManager {
 
         listeners = [:]
 
+        _ = bumpDetailChatSnapshotEpoch()
+
         // add a new listener
         listeners["chat"] = messagesQuery.addSnapshotListener { [weak self] messagesSnapshot, error in
             guard let self = self else { return }
 
             if let error = error {
                 logger.error("Error loading chat: \(error)")
+                _ = self.bumpDetailChatSnapshotEpoch()
                 onSnapshotUpdate([])
                 return
             }
 
             guard let messages = messagesSnapshot else {
                 logger.log("No document found.")
+                _ = self.bumpDetailChatSnapshotEpoch()
                 onSnapshotUpdate([])
                 return
             }
@@ -211,16 +256,22 @@ class FirestoreManager {
                 return nil
             })
 
+            let epoch = self.bumpDetailChatSnapshotEpoch()
+
             Task {
                 guard let chatDocument = try? await self.chatsCollection.document(id).getDocument(as: ChatDocument.self) else {
                     self.logger.error("Unable to get chat document from collection")
-                    onSnapshotUpdate([])
+                    if self.detailChatSnapshotEpochStillCurrent(epoch) {
+                        onSnapshotUpdate([])
+                    }
                     return
                 }
 
                 guard let currentUser = GoogleAuthManager.shared.user else {
                     self.logger.error("Unable to get current user")
-                    onSnapshotUpdate([])
+                    if self.detailChatSnapshotEpochStillCurrent(epoch) {
+                        onSnapshotUpdate([])
+                    }
                     return
                 }
 
@@ -249,6 +300,8 @@ class FirestoreManager {
                         seller: seller,
                         messages: messageDocuments
                     )
+
+                    guard self.detailChatSnapshotEpochStillCurrent(epoch) else { return }
 
                     await MainActor.run { onSnapshotUpdate([chat]) }
                 } catch {
