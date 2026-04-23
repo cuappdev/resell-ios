@@ -22,8 +22,17 @@ struct MessagesView: View {
     @State private var availabilityProposerName: String = ""
     @State private var selectedCells: Set<CellIdentifier> = []
     @State private var priceText: String = ""
-    @State private var locallyRespondedProposals: Set<Int> = []  // Track proposals we've responded to locally
-    @State private var locallyAcceptedMeeting: Bool = false  // Track if we just accepted a meeting (immediate UI feedback)
+    /// Firestore messageIds of proposal messages the user has locally tapped
+    /// Accept/Decline on. Keyed by messageId (not slot) so that a brand-new
+    /// proposal at the same slot as an older, already-handled proposal does not
+    /// inherit the old "already responded" state.
+    @State private var locallyRespondedMessageIds: Set<String> = []
+    /// Optimistic slot-level overrides applied on top of Firestore. The value
+    /// is the latest local decision for the slot: `isAccepted: true` when the
+    /// user tapped Accept (slot becomes "active"), `false` when they tapped
+    /// Cancel (slot becomes "cancelled"). Decline has no slot-level effect
+    /// (only the specific message is hidden, via `locallyRespondedMessageIds`).
+    @State private var localSlotOverrides: [ProposalSlot: (isAccepted: Bool, endDate: Date)] = [:]
     @StateObject private var viewModel: ViewModel
     
 
@@ -200,58 +209,59 @@ struct MessagesView: View {
         )
     }
 
-    /// Get all proposal times that have been responded to (accepted != nil)
-    /// Combines local tracking (immediate) with Firestore messages
-    private var respondedProposalTimeIntervals: Set<Int> {
-        var times = locallyRespondedProposals  // Start with locally tracked responses
-        for cluster in viewModel.messageClusters {
-            for message in cluster.messages {
-                if let proposal = message as? ProposalMessage,
-                   proposal.accepted != nil {
-                    // Round to nearest minute for reliable comparison
-                    let roundedTime = Int(proposal.startDate.timeIntervalSince1970 / 60)
-                    times.insert(roundedTime)
-                }
+    /// Latest accept/cancel state for each slot, derived from all proposal
+    /// messages in the chat (sorted by timestamp — the most recent event
+    /// determines the slot's current state) with local optimistic overrides
+    /// layered on top.
+    ///
+    /// Why latest-event-per-slot instead of aggregating? A slot can legitimately
+    /// cycle through accepted → cancelled → accepted → cancelled → accepted as
+    /// both parties re-propose the same time. Aggregating would permanently
+    /// poison the slot's state once a cancel exists anywhere in history.
+    private var latestSlotStates: [ProposalSlot: (isAccepted: Bool, endDate: Date)] {
+        var states: [ProposalSlot: (isAccepted: Bool, endDate: Date)] = [:]
+
+        let allMessages = viewModel.messageClusters
+            .flatMap(\.messages)
+            .sorted { $0.timestamp < $1.timestamp }
+
+        for message in allMessages {
+            guard let proposal = message as? ProposalMessage else { continue }
+            let slot = ProposalSlot(startDate: proposal.startDate, endDate: proposal.endDate)
+
+            // A cancellation message always represents the most recent
+            // intent on its slot, regardless of whether `accepted` is also
+            // set on the same document.
+            if proposal.cancellation == true {
+                states[slot] = (false, proposal.endDate)
+            } else if proposal.accepted == true {
+                states[slot] = (true, proposal.endDate)
             }
         }
-        return times
+
+        // Local optimistic actions are always newer than any Firestore event.
+        for (slot, override) in localSlotOverrides {
+            states[slot] = (override.isAccepted, override.endDate)
+        }
+
+        return states
     }
-    
-    /// Check if there's an active confirmed meeting (accepted=true, not cancelled)
-    /// If true, no other proposals can be accepted until this one is cancelled
+
+    /// Slots whose most recent state is "cancelled". Passed into bubbles so a
+    /// previously-confirmed-then-cancelled meeting hides its Cancel button.
+    /// Importantly, if that same slot is later accepted again (new proposal,
+    /// user accepts), the slot is NO LONGER in this set — so the new meeting's
+    /// Cancel button correctly appears.
+    private var currentlyCancelledSlots: Set<ProposalSlot> {
+        Set(latestSlotStates.compactMap { slot, state in state.isAccepted ? nil : slot })
+    }
+
+    /// Whether any slot in this chat has an active, future confirmed meeting.
+    /// Past meetings auto-expire so users aren't permanently locked out of
+    /// accepting future proposals.
     private var hasActiveConfirmedMeeting: Bool {
-        // Check local state first
-        if locallyAcceptedMeeting {
-            return true
-        }
-        
-        // Track which meeting times have been accepted vs cancelled
-        var acceptedTimes = Set<Int>()
-        var cancelledTimes = Set<Int>()
-        
-        for cluster in viewModel.messageClusters {
-            for message in cluster.messages {
-                if let proposal = message as? ProposalMessage {
-                    let roundedTime = Int(proposal.startDate.timeIntervalSince1970 / 60)
-                    
-                    if proposal.accepted == true {
-                        acceptedTimes.insert(roundedTime)
-                    }
-                    if proposal.cancellation == true {
-                        cancelledTimes.insert(roundedTime)
-                    }
-                }
-            }
-        }
-        
-        // There's an active meeting if any accepted time hasn't been cancelled
-        for acceptedTime in acceptedTimes {
-            if !cancelledTimes.contains(acceptedTime) {
-                return true
-            }
-        }
-        
-        return false
+        let now = Date()
+        return latestSlotStates.values.contains { $0.isAccepted && $0.endDate > now }
     }
     
     private func messageCluster(cluster: MessageCluster) -> some View {
@@ -270,16 +280,19 @@ struct MessagesView: View {
                     selectedAvailabilities: $viewModel.availability, 
                     message: message,
                     chatInfo: viewModel.chatInfo,
-                    onProposalResponse: { startDate, endDate, accepted in
-                        // Immediately track this proposal as responded to hide Accept/Decline
-                        let roundedTime = Int(startDate.timeIntervalSince1970 / 60)
-                        locallyRespondedProposals.insert(roundedTime)
-                        
-                        // If accepting, mark that we have an active meeting
+                    onProposalResponse: { messageId, startDate, endDate, accepted in
+                        // Optimistically hide Accept/Decline on this specific
+                        // bubble so the UI feels snappy. If the request fails
+                        // we roll these back below.
+                        let slot = ProposalSlot(startDate: startDate, endDate: endDate)
+                        let hadSlotOverride = localSlotOverrides[slot]
+                        locallyRespondedMessageIds.insert(messageId)
                         if accepted {
-                            locallyAcceptedMeeting = true
+                            // Accept makes the slot active for the whole chat
+                            // so other pending proposals' Accept/Decline hide.
+                            localSlotOverrides[slot] = (true, endDate)
                         }
-                        
+
                         Task {
                             do {
                                 let transactionId = try await viewModel.respondToProposal(
@@ -291,11 +304,53 @@ struct MessagesView: View {
                                     print("Transaction created: \(txId)")
                                 }
                             } catch {
+                                // The network call failed – undo the optimistic UI
+                                // update so the user can try again. Without this
+                                // rollback the Accept button disappears locally
+                                // but nothing was persisted server-side, so the
+                                // proposal re-appears the next time the chat
+                                // is reopened.
                                 NetworkManager.shared.logger.error("Error responding to proposal: \(error)")
+                                await MainActor.run {
+                                    locallyRespondedMessageIds.remove(messageId)
+                                    if accepted {
+                                        // Restore whatever override was there
+                                        // before we set it (usually nil).
+                                        if let prior = hadSlotOverride {
+                                            localSlotOverrides[slot] = prior
+                                        } else {
+                                            localSlotOverrides.removeValue(forKey: slot)
+                                        }
+                                    }
+                                }
                             }
                         }
                     },
-                    respondedProposalTimeIntervals: respondedProposalTimeIntervals,
+                    onProposalCancel: { startDate, endDate in
+                        let slot = ProposalSlot(startDate: startDate, endDate: endDate)
+                        let priorOverride = localSlotOverrides[slot]
+                        // Optimistically mark this slot as cancelled so the
+                        // Cancel button hides on this bubble and Accept/Decline
+                        // re-enable on any other pending proposals in the chat.
+                        localSlotOverrides[slot] = (false, endDate)
+
+                        Task {
+                            do {
+                                try await viewModel.cancelProposal(startDate: startDate, endDate: endDate)
+                            } catch {
+                                NetworkManager.shared.logger.error("Error cancelling proposal: \(error)")
+                                await MainActor.run {
+                                    if let prior = priorOverride {
+                                        localSlotOverrides[slot] = prior
+                                    } else {
+                                        localSlotOverrides.removeValue(forKey: slot)
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    respondedMessageIds: locallyRespondedMessageIds,
+                    currentlyCancelledSlots: currentlyCancelledSlots,
                     hasActiveConfirmedMeeting: hasActiveConfirmedMeeting
                 )
             }
@@ -945,12 +1000,26 @@ struct MessageBubbleView: View {
     let message: any Message
     let chatInfo: ChatInfo
     
-    /// Callback for responding to proposals (startDate, endDate, accepted)
-    var onProposalResponse: ((Date, Date, Bool) -> Void)?
-    
-    /// Set of proposal times that have already been responded to (startDate as minutes since epoch)
-    var respondedProposalTimeIntervals: Set<Int> = []
-    
+    /// Callback for responding to proposals (messageId, startDate, endDate, accepted).
+    /// The messageId lets the parent hide Accept/Decline on this exact bubble
+    /// without affecting sibling proposals at the same slot.
+    var onProposalResponse: ((String, Date, Date, Bool) -> Void)?
+
+    /// Callback for cancelling an already-confirmed proposal (startDate, endDate).
+    /// Slot-level because the backend identifies cancellations by slot.
+    var onProposalCancel: ((Date, Date) -> Void)?
+
+    /// messageIds the user has locally tapped Accept/Decline on. Used to
+    /// instantly hide the action row on that specific bubble while the
+    /// network request is in flight.
+    var respondedMessageIds: Set<String> = []
+
+    /// Slots whose latest state is "cancelled" (either in Firestore or
+    /// optimistically). Used to hide the Cancel button once a cancel is in
+    /// flight / confirmed. A slot that was cancelled but later re-accepted
+    /// is NOT in this set, so the new confirmed meeting keeps its Cancel button.
+    var currentlyCancelledSlots: Set<ProposalSlot> = []
+
     /// Whether there's an active confirmed meeting in this chat (blocks accepting other proposals)
     var hasActiveConfirmedMeeting: Bool = false
 
@@ -1085,7 +1154,7 @@ struct MessageBubbleView: View {
             VStack(spacing: 8) {
                 // Icon and title
                 HStack(spacing: 8) {
-                    Image(systemName: message.messageType == .proposal ? "" : "calendar")
+                    Image(systemName: "calendar")
                         .font(.system(size: 18))
                         .foregroundColor(Constants.Colors.black)
                     
@@ -1095,23 +1164,29 @@ struct MessageBubbleView: View {
                         .multilineTextAlignment(.center)
                 }
                 
-                // Action buttons (only show if pending, not cancelled, I'm not the proposer, not already responded, and no active confirmed meeting)
-                let roundedTime = Int(message.startDate.timeIntervalSince1970 / 60)
-                let alreadyResponded = respondedProposalTimeIntervals.contains(roundedTime)
-                // Can't accept/decline if there's already an active confirmed meeting
-                let canShowActions = message.accepted == nil && message.cancellation != true && !message.mine && !alreadyResponded && !hasActiveConfirmedMeeting
+                // Action buttons on a pending, incoming proposal. Hidden as
+                // soon as the user taps Accept/Decline on *this* bubble
+                // (tracked per-messageId, not per-slot), or when another
+                // proposal in the chat is an active confirmed meeting.
+                let slot = ProposalSlot(startDate: message.startDate, endDate: message.endDate)
+                let alreadyResponded = respondedMessageIds.contains(message.messageId)
+                let canShowActions = message.accepted == nil
+                    && message.cancellation != true
+                    && !message.mine
+                    && !alreadyResponded
+                    && !hasActiveConfirmedMeeting
                 if canShowActions {
                     HStack(spacing: 32) {
                         Button {
-                            onProposalResponse?(message.startDate, message.endDate, true)
+                            onProposalResponse?(message.messageId, message.startDate, message.endDate, true)
                         } label: {
                             Text("Accept")
                                 .font(Constants.Fonts.title2)
                                 .foregroundColor(Constants.Colors.resellPurple)
                         }
-                        
+
                         Button {
-                            onProposalResponse?(message.startDate, message.endDate, false)
+                            onProposalResponse?(message.messageId, message.startDate, message.endDate, false)
                         } label: {
                             Text("Decline")
                                 .font(Constants.Fonts.title2)
@@ -1119,15 +1194,34 @@ struct MessageBubbleView: View {
                         }
                     }
                 }
-                
-                // View Details button for confirmed meetings
+
+                // Actions for confirmed meetings. Cancel shows while the
+                // meeting is in the future AND this slot's latest state is
+                // still "accepted" (not cancelled elsewhere in the timeline
+                // or optimistically in this session).
                 if message.accepted == true {
-                    Button {
-                        // TODO: Show meeting details
-                    } label: {
-                        Text("View Details")
-                            .font(Constants.Fonts.title2)
-                            .foregroundColor(Constants.Colors.resellPurple)
+                    let isSlotCancelled = message.cancellation == true
+                        || currentlyCancelledSlots.contains(slot)
+                    let isUpcoming = message.endDate > Date()
+
+                    HStack(spacing: 32) {
+                        Button {
+                            // TODO: Show meeting details
+                        } label: {
+                            Text("View Details")
+                                .font(Constants.Fonts.title2)
+                                .foregroundColor(Constants.Colors.resellPurple)
+                        }
+
+                        if isUpcoming && !isSlotCancelled {
+                            Button {
+                                onProposalCancel?(message.startDate, message.endDate)
+                            } label: {
+                                Text("Cancel")
+                                    .font(Constants.Fonts.title2)
+                                    .foregroundColor(Constants.Colors.errorRed)
+                            }
+                        }
                     }
                 }
             }

@@ -40,6 +40,43 @@ class NetworkManager {
         }
         return encoder
     }()
+
+    /// Shared JSON decoder with a flexible date-decoding strategy that mirrors the
+    /// backend's behavior (ISO8601 strings, with or without fractional seconds) and
+    /// also gracefully falls back to numeric timestamps. This must match
+    /// `jsonEncoder` so request/response round-trips work correctly.
+    private let jsonDecoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+
+            if let dateString = try? container.decode(String.self) {
+                let formatter = ISO8601DateFormatter()
+                formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                if let date = formatter.date(from: dateString) {
+                    return date
+                }
+                formatter.formatOptions = [.withInternetDateTime]
+                if let date = formatter.date(from: dateString) {
+                    return date
+                }
+            }
+
+            if let timestamp = try? container.decode(Double.self) {
+                // Heuristic: values larger than ~year 33658 are clearly milliseconds.
+                if timestamp > 1_000_000_000_000 {
+                    return Date(timeIntervalSince1970: timestamp / 1000)
+                }
+                return Date(timeIntervalSince1970: timestamp)
+            }
+
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Could not decode Date from any supported format"
+            )
+        }
+        return decoder
+    }()
     
     
     // MARK: - Init
@@ -100,7 +137,7 @@ class NetworkManager {
         ///
         func get<T: Decodable>(url: URL) async throws -> T {
             let (data, _) = try await perform { try await createRequest(url: url, method: "GET") }
-            return try JSONDecoder().decode(T.self, from: data)
+            return try jsonDecoder.decode(T.self, from: data)
         }
     
         /// Template function to POST data to a specified URL with an encodable body and decodes the response into a specified type `T`.
@@ -118,7 +155,7 @@ class NetworkManager {
         func post<T: Decodable, U: Encodable>(url: URL, body: U) async throws -> T {
             let requestData = try jsonEncoder.encode(body)
             let (data, _) = try await perform { try await createRequest(url: url, method: "POST", body: requestData) }
-            return try JSONDecoder().decode(T.self, from: data)
+            return try jsonDecoder.decode(T.self, from: data)
         }
         
         /// Overloaded post function for requests without a return
@@ -130,7 +167,7 @@ class NetworkManager {
         /// Overloaded post function for requests without a body
         func post<T: Decodable>(url: URL) async throws -> T {
             let (data, _) = try await perform { try await createRequest(url: url, method: "POST") }
-            return try JSONDecoder().decode(T.self, from: data)
+            return try jsonDecoder.decode(T.self, from: data)
         }
             
         /// Template function to DELETE data to a specified URL
@@ -539,34 +576,13 @@ class NetworkManager {
         
     
         // MARK: - Availability Networking Functions
-        
-    
-        /// ISO8601 decoder for availability endpoints (dates come as strings like "2026-01-23T16:00:00Z")
-        private var iso8601Decoder: JSONDecoder {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            return decoder
-        }
-        
-        /// ISO8601 encoder for availability endpoints (sends dates as ISO8601 strings)
-        private var iso8601Encoder: JSONEncoder {
-            let encoder = JSONEncoder()
-            // Backend expects ISO8601 strings like "2026-01-28T03:12:55.810Z"
-            encoder.dateEncodingStrategy = .custom { date, encoder in
-                var container = encoder.singleValueContainer()
-                let formatter = ISO8601DateFormatter()
-                formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-                try container.encode(formatter.string(from: date))
-            }
-            return encoder
-        }
-        
+
         func getAvailability() async throws -> AvailabilityResponse {
             let url = try constructURL(endpoint: "/availability/")
             let request = try await createRequest(url: url, method: "GET")
             let (data, response) = try await URLSession.shared.data(for: request)
             try handleResponse(data: data, response: response)
-            return try iso8601Decoder.decode(AvailabilityResponse.self, from: data)
+            return try jsonDecoder.decode(AvailabilityResponse.self, from: data)
         }
         
         func getAvailabilityByUserID(id: String) async throws -> AvailabilityResponse {
@@ -574,12 +590,12 @@ class NetworkManager {
             let request = try await createRequest(url: url, method: "GET")
             let (data, response) = try await URLSession.shared.data(for: request)
             try handleResponse(data: data, response: response)
-            return try iso8601Decoder.decode(AvailabilityResponse.self, from: data)
+            return try jsonDecoder.decode(AvailabilityResponse.self, from: data)
         }
         
         func updateAvailability(schedule: [String: [AvailabilitySlot]]) async throws -> AvailabilityResponse {
             let url = try constructURL(endpoint: "/availability/update/")
-            let requestData = try iso8601Encoder.encode(UpdateAvailabilityBody(schedule: schedule))
+            let requestData = try jsonEncoder.encode(UpdateAvailabilityBody(schedule: schedule))
             
             // Debug: Log full URL and request body
             print("📅 Update availability URL: \(url.absoluteString)")
@@ -599,7 +615,7 @@ class NetworkManager {
             }
             
             try handleResponse(data: data, response: response)
-            return try iso8601Decoder.decode(AvailabilityResponse.self, from: data)
+            return try jsonDecoder.decode(AvailabilityResponse.self, from: data)
         }
         
         // MARK: - Transaction Networking Functions
@@ -609,7 +625,7 @@ class NetworkManager {
             let request = try await createRequest(url: url, method: "GET")
             let (data, response) = try await URLSession.shared.data(for: request)
             try handleResponse(data: data, response: response)
-            return try iso8601Decoder.decode(TransactionsResponse.self, from: data)
+            return try jsonDecoder.decode(TransactionsResponse.self, from: data)
         }
         
         func getTransactionsBySellerId(userId: String) async throws -> TransactionsResponse {
@@ -617,7 +633,7 @@ class NetworkManager {
             let request = try await createRequest(url: url, method: "GET")
             let (data, response) = try await URLSession.shared.data(for: request)
             try handleResponse(data: data, response: response)
-            return try iso8601Decoder.decode(TransactionsResponse.self, from: data)
+            return try jsonDecoder.decode(TransactionsResponse.self, from: data)
         }
         
         func getTransactionById(transactionId: String) async throws -> TransactionResponse {
@@ -625,7 +641,7 @@ class NetworkManager {
             let request = try await createRequest(url: url, method: "GET")
             let (data, response) = try await URLSession.shared.data(for: request)
             try handleResponse(data: data, response: response)
-            return try iso8601Decoder.decode(TransactionResponse.self, from: data)
+            return try jsonDecoder.decode(TransactionResponse.self, from: data)
         }
         
         func completeTransaction(transactionId: String) async throws -> TransactionResponse {
@@ -641,7 +657,7 @@ class NetworkManager {
             }
             
             do {
-                return try iso8601Decoder.decode(TransactionResponse.self, from: data)
+                return try jsonDecoder.decode(TransactionResponse.self, from: data)
             } catch let decodingError as DecodingError {
                 print("❌ Transaction decoding error: \(decodingError)")
                 throw decodingError
@@ -671,13 +687,13 @@ class NetworkManager {
             // Try different response formats
             do {
                 // Try wrapped format first: { "review": {...} }
-                return try iso8601Decoder.decode(TransactionReviewResponse.self, from: data)
+                return try jsonDecoder.decode(TransactionReviewResponse.self, from: data)
             } catch {
                 print("❌ Review decoding error (wrapped): \(error)")
                 
                 // Try direct format: {...}
                 do {
-                    let review = try iso8601Decoder.decode(TransactionReview.self, from: data)
+                    let review = try jsonDecoder.decode(TransactionReview.self, from: data)
                     return TransactionReviewResponse(review: review)
                 } catch {
                     print("❌ Review decoding error (direct): \(error)")
@@ -691,7 +707,7 @@ class NetworkManager {
             let request = try await createRequest(url: url, method: "GET")
             let (data, response) = try await URLSession.shared.data(for: request)
             try handleResponse(data: data, response: response)
-            return try iso8601Decoder.decode(TransactionReviewResponse.self, from: data)
+            return try jsonDecoder.decode(TransactionReviewResponse.self, from: data)
         }
         
         /// Get all transaction reviews for a seller
@@ -710,13 +726,13 @@ class NetworkManager {
             
             // Try wrapped format first: { "reviews": [...] }
             do {
-                let wrapped = try iso8601Decoder.decode(TransactionReviewsResponse.self, from: data)
+                let wrapped = try jsonDecoder.decode(TransactionReviewsResponse.self, from: data)
                 allReviews = wrapped.reviews
             } catch {
                 print("❌ Wrapped decode failed: \(error)")
                 // Try direct array
                 do {
-                    allReviews = try iso8601Decoder.decode([TransactionReview].self, from: data)
+                    allReviews = try jsonDecoder.decode([TransactionReview].self, from: data)
                 } catch {
                     print("❌ Array decode failed: \(error)")
                     throw error
@@ -903,18 +919,18 @@ class NetworkManager {
             }
             
             // Try decoding as array first (direct response)
-            if let notifications = try? iso8601Decoder.decode([Notifications].self, from: data) {
+            if let notifications = try? jsonDecoder.decode([Notifications].self, from: data) {
                 return notifications
             }
             
             // Try decoding as wrapped response { "notifications": [...] }
-            if let wrapped = try? iso8601Decoder.decode(NotificationsResponse.self, from: data) {
+            if let wrapped = try? jsonDecoder.decode(NotificationsResponse.self, from: data) {
                 return wrapped.notifications
             }
             
             // If both fail, print detailed error and throw
             do {
-                return try iso8601Decoder.decode([Notifications].self, from: data)
+                return try jsonDecoder.decode([Notifications].self, from: data)
             } catch let decodingError as DecodingError {
                 print("❌ Notification decoding error: \(decodingError)")
                 throw decodingError
@@ -926,10 +942,10 @@ class NetworkManager {
             let (data, _) = try await perform {
                 var request = try await createRequest(url: url, method: "POST")
                 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                request.httpBody = try iso8601Encoder.encode(body)
+                request.httpBody = try jsonEncoder.encode(body)
                 return request
             }
-            return try iso8601Decoder.decode(T.self, from: data)
+            return try jsonDecoder.decode(T.self, from: data)
         }
         
         /// Get unread notifications
@@ -972,16 +988,16 @@ class NetworkManager {
             }
             
             // Try different response formats
-            if let wrapped = try? iso8601Decoder.decode(MarkReadResponse.self, from: data) {
+            if let wrapped = try? jsonDecoder.decode(MarkReadResponse.self, from: data) {
                 return wrapped.notification
             }
             
-            if let wrapped = try? iso8601Decoder.decode(SingleNotificationResponse.self, from: data) {
+            if let wrapped = try? jsonDecoder.decode(SingleNotificationResponse.self, from: data) {
                 return wrapped.notification
             }
             
             // Try direct notification
-            return try iso8601Decoder.decode(Notifications.self, from: data)
+            return try jsonDecoder.decode(Notifications.self, from: data)
         }
         
         /// Delete a notification

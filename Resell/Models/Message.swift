@@ -95,6 +95,24 @@ struct Availability: Codable, Hashable {
     let endDate: Date
 }
 
+/// Identity for a meeting "slot" in a chat.
+///
+/// A slot is uniquely defined by its `(startDate, endDate)` pair — the backend's
+/// `respondToProposal` and `cancelProposal` endpoints also identify proposals
+/// this way, so we mirror that here. Multiple proposal messages can exist at
+/// the same slot over time (e.g. an accept event then a later cancel event,
+/// or a fresh re-proposal of the same time after a previous cancel). Two
+/// `ProposalSlot` values are equal — and hash identically — iff their dates
+/// match exactly, which is what lets us correlate accept/cancel pairs and
+/// recognise re-proposals of the same time.
+///
+/// Slot-level state is therefore derived from the *latest* event at that slot,
+/// not from aggregating the whole history.
+struct ProposalSlot: Hashable {
+    let startDate: Date
+    let endDate: Date
+}
+
 enum MessageType: String, Codable {
     
     case chat = "message"
