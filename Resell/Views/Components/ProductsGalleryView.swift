@@ -131,21 +131,26 @@ struct ProductGalleryCell: View {
                 }
             }
 
-            HStack {
+            HStack(spacing: 4) {
                 Text(post.title)
                     .font(Constants.Fonts.title3)
                     .foregroundStyle(isSold ? Constants.Colors.secondaryGray : Constants.Colors.black)
-                
-                Spacer()
-                
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+
+                Spacer(minLength: 4)
+
                 Text("$\(post.originalPrice)")
                     .font(Constants.Fonts.title4)
                     .foregroundStyle(isSold ? Constants.Colors.secondaryGray : Constants.Colors.black)
+                    .lineLimit(1)
+                    .fixedSize()
             }
             .padding(8)
             .background(Constants.Colors.white)
         }
         .frame(width: cellWidth)
+        .contentShape(.rect(cornerRadius: 8))
         .clipped()
         .clipShape(.rect(cornerRadius: 8))
         .overlay {
