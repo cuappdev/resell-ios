@@ -53,7 +53,18 @@ struct EditProfileView: View {
             
         }
         .padding(.top, 40)
+        .navigationBarBackButtonHidden(true)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    router.pop()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(Constants.Colors.black)
+                }
+            }
+
             ToolbarItem(placement: .principal) {
                 Text("Edit Profile")
                     .font(Constants.Fonts.h3)

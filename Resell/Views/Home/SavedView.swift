@@ -37,10 +37,9 @@ struct SavedView: View {
                 Button {
                     router.pop()
                 } label: {
-                    Image("chevron.left")
-                        .resizable()
-                        .frame(width: 36, height: 24)
-                        .foregroundStyle(.black)
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(Constants.Colors.black)
                 }
             }
             
