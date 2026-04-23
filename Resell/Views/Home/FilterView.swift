@@ -12,7 +12,7 @@ import Flow
 struct FilterView: View {
     @Binding var isPresented: Bool
     @State var presentPopup = false
-    @EnvironmentObject var filtersVM: FiltersViewModel  // Change to @EnvironmentObject
+    @EnvironmentObject var filtersVM: FiltersViewModel
 
     private var categories : [String] = ["Clothing", "Books", "School", "Electronics", "Handmade", "Sports & Outdoors", "Other"]
     private var conditions : [String] = ["Gently Used", "Worn", "Never Used"]
@@ -234,9 +234,8 @@ struct FilterView: View {
                         Button{
                             Task {
                                 try await filtersVM.applyFilters(homeViewModel: homeViewModel)
+                                isPresented = false
                             }
-                            // MARK: This should wait for the above request to complete
-                            isPresented = false
                         } label: {
                             Text("Apply filters")
                                 .font(.custom("Rubik-Medium", size: 20))

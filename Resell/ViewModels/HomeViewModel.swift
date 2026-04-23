@@ -38,11 +38,15 @@ class HomeViewModel: ObservableObject {
 
     @Published var isLoading: Bool = false
     @Published var filteredItems: [Post] = []
-    @Published var hasActiveFilters: Bool = false
+    /// True when the home feed is currently showing results from an applied
+    /// filter sheet (as opposed to the default "Recent" feed or a category
+    /// chip). Distinct from `FiltersViewModel.hasActiveFilters`, which reflects
+    /// the in-progress selection inside the filter sheet.
+    @Published var isFilteredFeed: Bool = false
     @Published var cardsLoaded: Bool = false
     @Published var selectedFilter: [String] = ["Recent"] {
         didSet {
-            if (selectedFilter == ["Recent"] && !hasActiveFilters) {
+            if (selectedFilter == ["Recent"] && !isFilteredFeed) {
                 filteredItems = allItems
             } else {
                 filterPosts()
@@ -143,7 +147,7 @@ class HomeViewModel: ObservableObject {
                 
                 allItems.append(contentsOf: newPosts)
                 
-                if selectedFilter == ["Recent"] && !hasActiveFilters {
+                if selectedFilter == ["Recent"] && !isFilteredFeed {
                     filteredItems = allItems
                 }
                 
@@ -198,6 +202,15 @@ class HomeViewModel: ObservableObject {
         }
     }
     
+    /// Clear any applied filter-sheet results and return the home feed to the
+    /// default "Recent" state. Explicitly resets `filteredItems` to the full
+    /// cached `allItems` rather than depending on `selectedFilter`'s `didSet`.
+    func clearFilters() {
+        isFilteredFeed = false
+        selectedFilter = ["Recent"]
+        filteredItems = allItems
+    }
+
     func filterPosts() {
         Task {
             isLoading = true

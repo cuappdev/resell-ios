@@ -59,9 +59,8 @@ struct HomeView: View {
         }
         .onAppear {
             // Only fetch if we don't have cached data
-            if !viewModel.hasActiveFilters {
+            if !viewModel.isFilteredFeed {
                 viewModel.getAllPosts() //only get all posts if no filters are applied
-            } else {
             }
             viewModel.getBlockedUsers()
             withAnimation { mainViewModel.hidesTabBar = false }
@@ -76,7 +75,7 @@ struct HomeView: View {
         }
         .refreshable {
             // Force refresh when user pulls to refresh
-            if viewModel.hasActiveFilters {
+            if viewModel.isFilteredFeed {
                 Task {
                     try? await filtersViewModel.applyFilters(homeViewModel: viewModel)
                 }
