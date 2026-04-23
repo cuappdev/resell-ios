@@ -42,6 +42,7 @@
 		2C6410942C9A70B400E4B390 /* String + Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6410932C9A70B400E4B390 /* String + Extensions.swift */; };
 		2C6410982C9DFD8B00E4B390 /* UIApplication + Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6410972C9DFD8B00E4B390 /* UIApplication + Extensions.swift */; };
 		2C6FB1772CFACB2500B35FF8 /* FirestoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6FB1762CFACB2500B35FF8 /* FirestoreManager.swift */; };
+		2C6FB1A02CFACB2500B35FF8 /* ChatProfileCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6FB1A12CFACB2500B35FF8 /* ChatProfileCache.swift */; };
 		2C6FB17E2CFADD5200B35FF8 /* ChatDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6FB17D2CFADD5200B35FF8 /* ChatDocument.swift */; };
 		2C6FB1882CFF8ECD00B35FF8 /* FirebaseNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6FB1872CFF8ECD00B35FF8 /* FirebaseNotificationService.swift */; };
 		2C6FB18C2CFFBE7C00B35FF8 /* GoogleAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6FB18B2CFFBE7C00B35FF8 /* GoogleAuthManager.swift */; };
@@ -217,6 +218,7 @@
 		2C6410932C9A70B400E4B390 /* String + Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String + Extensions.swift"; sourceTree = "<group>"; };
 		2C6410972C9DFD8B00E4B390 /* UIApplication + Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIApplication + Extensions.swift"; sourceTree = "<group>"; };
 		2C6FB1762CFACB2500B35FF8 /* FirestoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirestoreManager.swift; sourceTree = "<group>"; };
+		2C6FB1A12CFACB2500B35FF8 /* ChatProfileCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatProfileCache.swift; sourceTree = "<group>"; };
 		2C6FB17D2CFADD5200B35FF8 /* ChatDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatDocument.swift; sourceTree = "<group>"; };
 		2C6FB1832CFAEC9400B35FF8 /* Resell.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Resell.entitlements; sourceTree = "<group>"; };
 		2C6FB1872CFF8ECD00B35FF8 /* FirebaseNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseNotificationService.swift; sourceTree = "<group>"; };
@@ -683,6 +685,7 @@
 			children = (
 				2CDCEE602CD6BEAD008DF5E8 /* APIClient.swift */,
 				2C6FB1762CFACB2500B35FF8 /* FirestoreManager.swift */,
+				2C6FB1A12CFACB2500B35FF8 /* ChatProfileCache.swift */,
 				2C6FB18B2CFFBE7C00B35FF8 /* GoogleAuthManager.swift */,
 				2C41BB822CD8718600EFF69E /* KeychainManager.swift */,
 				2CDCEE5E2CD6BE99008DF5E8 /* NetworkManager.swift */,
@@ -952,6 +955,7 @@
 				2E9F758E2EB6D680003FE0E0 /* MessagesViewModel.swift in Sources */,
 				2C16928D2CE41727009D2291 /* ErrorResponse.swift in Sources */,
 				2C6FB1772CFACB2500B35FF8 /* FirestoreManager.swift in Sources */,
+				2C6FB1A02CFACB2500B35FF8 /* ChatProfileCache.swift in Sources */,
 				2CE4739E2CC4575F00BD7E2C /* ReportOptionsView.swift in Sources */,
 				2EBB64182D8B783800CCAC48 /* Filter.swift in Sources */,
 				2C9337482C92AAEE00818C8E /* HomeViewModel.swift in Sources */,
