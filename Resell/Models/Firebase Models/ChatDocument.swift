@@ -17,18 +17,14 @@ struct ChatDocument: Codable {
     let updatedAt: Date
     let userIDs: [String]
 
-    /// Convert chat document to chat, using the current users user id
-    func toChat(userId: String, messages: [MessageDocument]) async throws -> Chat {
-        let post = try await NetworkManager.shared.getPostByID(id: listingID).post
-        let buyer = try await NetworkManager.shared.getUserByID(id: buyerID).user
-        let seller = try await NetworkManager.shared.getUserByID(id: sellerID).user
-
-        guard let post else { throw ErrorResponse.userNotFound }
-
+    /// Build a Chat from already-resolved post/buyer/seller. Pure: no network, no throws.
+    /// Callers (e.g. `FirestoreManager`) are responsible for resolving these via
+    /// `ChatProfileCache` so concurrent chats sharing a user/post share one fetch.
+    func toChat(currentUserId: String, post: Post, buyer: User, seller: User, messages: [MessageDocument]) -> Chat {
         return Chat(
             id: id,
             post: post,
-            other: userId == buyerID ? seller : buyer,
+            other: currentUserId == buyerID ? seller : buyer,
             lastMessage: lastMessage,
             updatedAt: updatedAt,
             messages: messages.map { $0.toMessage(buyer: buyer, seller: seller) }

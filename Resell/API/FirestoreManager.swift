@@ -66,42 +66,83 @@ class FirestoreManager {
                 return
             }
 
-            var chats: [Chat] = []
-            let group = DispatchGroup()
+            // Snapshot what we need from the documents synchronously so we don't
+            // capture Firestore document handles across the concurrent boundary.
+            let chatDocuments: [(id: String, document: ChatDocument)] = documents.compactMap { doc in
+                guard let parsed = try? doc.data(as: ChatDocument.self) else {
+                    self.logger.error("Failed to decode ChatDocument \(doc.documentID)")
+                    return nil
+                }
+                return (doc.documentID, parsed)
+            }
 
-            for document in documents {
-                group.enter()
+            Task {
+                // Make sure subsequent lookups for the current user are cache hits.
+                await ChatProfileCache.shared.setUser(user)
 
-                let chatDocument = try? document.data(as: ChatDocument.self)
-                let chatId = document.documentID
-
-                Task {
-                    // Fetch messages for this chat
-                    let messagesQuery = self.chatsCollection.document(chatId).collection("messages")
-
-                    do {
-                        let messagesSnapshot = try await messagesQuery.getDocuments()
-                        let messageDocuments = try messagesSnapshot.documents.compactMap({ doc in
-                            return try doc.data(as: MessageDocument.self)
-                        })
-
-                        // Create chat with messages
-                        if let chatDocument = chatDocument {
-                            let chat = try await chatDocument.toChat(userId: user.firebaseUid, messages: messageDocuments)
-                            chats.append(chat)
+                let chats = await withTaskGroup(of: Chat?.self, returning: [Chat].self) { group in
+                    for (chatId, chatDocument) in chatDocuments {
+                        group.addTask {
+                            await self.buildChat(chatId: chatId, chatDocument: chatDocument, currentUser: user)
                         }
-                    } catch {
-                        self.logger.error("Error fetching messages for chat \(chatId): \(error)")
                     }
 
-                    group.leave()
+                    var collected: [Chat] = []
+                    for await chat in group {
+                        if let chat { collected.append(chat) }
+                    }
+                    return collected
                 }
+
+                let sortedChats = chats.sorted(by: { $0.updatedAt > $1.updatedAt })
+                await MainActor.run { onSnapshotUpdate(sortedChats) }
+            }
+        }
+    }
+
+    /// Resolve post/buyer/seller in parallel (skipping the network for the current user)
+    /// and assemble a Chat. Returns nil if the chat can't be built (e.g. missing post).
+    private func buildChat(chatId: String, chatDocument: ChatDocument, currentUser: User) async -> Chat? {
+        do {
+            let messagesQuery = chatsCollection.document(chatId).collection("messages")
+
+            async let messagesTask: [MessageDocument] = {
+                let snapshot = try await messagesQuery.getDocuments()
+                return snapshot.documents.compactMap { doc in
+                    do {
+                        return try doc.data(as: MessageDocument.self)
+                    } catch {
+                        self.logger.error("Error decoding message in chat \(chatId): \(error.localizedDescription)")
+                        return nil
+                    }
+                }
+            }()
+
+            async let postTask = ChatProfileCache.shared.post(id: chatDocument.listingID)
+            async let buyerTask: User = (chatDocument.buyerID == currentUser.firebaseUid)
+                ? currentUser
+                : ChatProfileCache.shared.user(id: chatDocument.buyerID)
+            async let sellerTask: User = (chatDocument.sellerID == currentUser.firebaseUid)
+                ? currentUser
+                : ChatProfileCache.shared.user(id: chatDocument.sellerID)
+
+            let (post, buyer, seller, messages) = try await (postTask, buyerTask, sellerTask, messagesTask)
+
+            guard let post else {
+                logger.error("Skipping chat \(chatId): post \(chatDocument.listingID) not available")
+                return nil
             }
 
-            group.notify(queue: .main) {
-                let sortedChats = chats.sorted(by: { $0.updatedAt > $1.updatedAt })
-                onSnapshotUpdate(sortedChats)
-            }
+            return chatDocument.toChat(
+                currentUserId: currentUser.firebaseUid,
+                post: post,
+                buyer: buyer,
+                seller: seller,
+                messages: messages
+            )
+        } catch {
+            logger.error("Error building chat \(chatId): \(error.localizedDescription)")
+            return nil
         }
     }
 
@@ -177,15 +218,42 @@ class FirestoreManager {
                     return
                 }
 
-                guard let userId = GoogleAuthManager.shared.user?.firebaseUid else {
-                    self.logger.error("Unable to get user id")
+                guard let currentUser = GoogleAuthManager.shared.user else {
+                    self.logger.error("Unable to get current user")
                     onSnapshotUpdate([])
                     return
                 }
 
-                let chat = try? await chatDocument.toChat(userId: userId, messages: messageDocuments)
+                await ChatProfileCache.shared.setUser(currentUser)
 
-                if let chat { onSnapshotUpdate([chat]) }
+                do {
+                    async let postTask = ChatProfileCache.shared.post(id: chatDocument.listingID)
+                    async let buyerTask: User = (chatDocument.buyerID == currentUser.firebaseUid)
+                        ? currentUser
+                        : ChatProfileCache.shared.user(id: chatDocument.buyerID)
+                    async let sellerTask: User = (chatDocument.sellerID == currentUser.firebaseUid)
+                        ? currentUser
+                        : ChatProfileCache.shared.user(id: chatDocument.sellerID)
+
+                    let (post, buyer, seller) = try await (postTask, buyerTask, sellerTask)
+
+                    guard let post else {
+                        self.logger.error("Skipping chat \(id): post \(chatDocument.listingID) not available")
+                        return
+                    }
+
+                    let chat = chatDocument.toChat(
+                        currentUserId: currentUser.firebaseUid,
+                        post: post,
+                        buyer: buyer,
+                        seller: seller,
+                        messages: messageDocuments
+                    )
+
+                    await MainActor.run { onSnapshotUpdate([chat]) }
+                } catch {
+                    self.logger.error("Error building chat \(id): \(error.localizedDescription)")
+                }
             }
         }
     }
