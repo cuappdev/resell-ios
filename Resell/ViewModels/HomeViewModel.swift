@@ -20,6 +20,16 @@ class HomeViewModel: ObservableObject {
 
     private init() {
         configureImageCache()
+        
+        NotificationCenter.default.addObserver(
+            forName: Constants.Notifications.NewListingCreated,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.getAllPosts(forceRefresh: true)
+            }
+        }
     }
 
     func configure(mainViewModel: MainViewModel) {
@@ -28,10 +38,15 @@ class HomeViewModel: ObservableObject {
 
     @Published var isLoading: Bool = false
     @Published var filteredItems: [Post] = []
+    /// True when the home feed is currently showing results from an applied
+    /// filter sheet (as opposed to the default "Recent" feed or a category
+    /// chip). Distinct from `FiltersViewModel.hasActiveFilters`, which reflects
+    /// the in-progress selection inside the filter sheet.
+    @Published var isFilteredFeed: Bool = false
     @Published var cardsLoaded: Bool = false
     @Published var selectedFilter: [String] = ["Recent"] {
         didSet {
-            if selectedFilter == ["Recent"] {
+            if (selectedFilter == ["Recent"] && !isFilteredFeed) {
                 filteredItems = allItems
             } else {
                 filterPosts()
@@ -132,7 +147,7 @@ class HomeViewModel: ObservableObject {
                 
                 allItems.append(contentsOf: newPosts)
                 
-                if selectedFilter == ["Recent"] {
+                if selectedFilter == ["Recent"] && !isFilteredFeed {
                     filteredItems = allItems
                 }
                 
@@ -143,11 +158,13 @@ class HomeViewModel: ObservableObject {
         }
     }
 
-    func getSavedPosts() async  {
-        if let lastFetch = lastSavedFetchTime,
-           Date().timeIntervalSince(lastFetch) < cacheValidityDuration,
-           !savedItems.isEmpty {
-            return
+    func getSavedPosts(forceRefresh: Bool = false) async  {
+        if !forceRefresh{
+            if let lastFetch = lastSavedFetchTime,
+               Date().timeIntervalSince(lastFetch) < cacheValidityDuration,
+               !savedItems.isEmpty {
+                return
+            }
         }
         
         isLoading = true
@@ -162,23 +179,38 @@ class HomeViewModel: ObservableObject {
             NetworkManager.shared.logger.error("Error in HomeViewModel.getSavedPosts: \(error)")
         }
     }
-
-    func getSavedPosts(completion: @escaping () -> Void)  {
-        isLoading = true
-
-        Task {
-            defer { Task { @MainActor in isLoading = false } }
-
-            do {
-                let postsResponse = try await NetworkManager.shared.getSavedPosts()
-                savedItems = Post.sortPostsByDate(postsResponse.posts)
-                lastSavedFetchTime = Date()
-            } catch {
-                NetworkManager.shared.logger.error("Error in HomeViewModel.getSavedPosts: \(error)")
+    
+    func toggleLocalSaveStatus(for post: Post, isSaving: Bool) async {
+        let prevSavedItems = self.savedItems
+    
+        if isSaving {
+            if !savedItems.contains(where: { $0.id == post.id }) {
+                savedItems.insert(post, at: 0)
             }
+        } else {
+            savedItems.removeAll(where: { $0.id == post.id })
+        }
+        
+        do {
+            let postsResponse = try await NetworkManager.shared.getSavedPosts()
+            self.savedItems = Post.sortPostsByDate(postsResponse.posts)
+            self.lastSavedFetchTime = Date()
+        } catch {
+            print("Network failed, rolling back local state...")
+            self.savedItems = prevSavedItems
+            NetworkManager.shared.logger.error("Sync failed: \(error)")
         }
     }
     
+    /// Clear any applied filter-sheet results and return the home feed to the
+    /// default "Recent" state. Explicitly resets `filteredItems` to the full
+    /// cached `allItems` rather than depending on `selectedFilter`'s `didSet`.
+    func clearFilters() {
+        isFilteredFeed = false
+        selectedFilter = ["Recent"]
+        filteredItems = allItems
+    }
+
     func filterPosts() {
         Task {
             isLoading = true

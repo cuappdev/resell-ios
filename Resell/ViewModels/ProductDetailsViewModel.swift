@@ -82,11 +82,7 @@ class ProductDetailsViewModel: ObservableObject {
 
             do {
                 let postsResponse = try await NetworkManager.shared.getSimilarPostsByID(id: id)
-                if postsResponse.posts.count >= 4 {
-                    similarPosts = Array(postsResponse.posts.prefix(4))
-                } else {
-                    similarPosts = postsResponse.posts
-                }
+                similarPosts = Array(postsResponse.posts)
              
             } catch {
                 NetworkManager.shared.logger.error("Errror in ProductDetailsViewModel.getSimilarPosts: \(error)")
@@ -116,19 +112,17 @@ class ProductDetailsViewModel: ObservableObject {
         }
     }
 
-    func updateItemSaved() {
-        Task {
-            do {
-                if let id = item?.id {
-                    if !isSaved {
-                        let _ = try await NetworkManager.shared.unsavePostByID(id: id)
-                    } else {
-                        let _ = try await NetworkManager.shared.savePostByID(id: id)
-                    }
+    func updateItemSaved() async {
+        do {
+            if let id = item?.id {
+                if !isSaved {
+                    let _ = try await NetworkManager.shared.unsavePostByID(id: id)
+                } else {
+                    let _ = try await NetworkManager.shared.savePostByID(id: id)
                 }
-            } catch {
-                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel:.updateItemSaved \(error)")
             }
+        } catch {
+            NetworkManager.shared.logger.error("Error in ProductDetailsViewModel:.updateItemSaved \(error)")
         }
     }
 

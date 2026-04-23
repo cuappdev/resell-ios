@@ -18,7 +18,7 @@ class MainViewModel: ObservableObject {
     @Published var userDidLogin: Bool = false
     @Published var selection = 0
 
-    var hidesSignInButton = true
+    @Published var hidesSignInButton = true
 
     // MARK: - Persistent Storage
 
@@ -115,6 +115,7 @@ class MainViewModel: ObservableObject {
         
         // Update UI state
         withAnimation { userDidLogin = false }
+        withAnimation { hidesSignInButton = false }
         
         // Reset to home tab
         selection = 0

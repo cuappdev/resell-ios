@@ -41,7 +41,12 @@ struct NewListingImagesView: View {
                         .padding(.horizontal, Constants.Spacing.horizontalPadding)
                         .padding(.bottom, 16)
 
-                    PaginatedImageView(didShowActionSheet: $viewModel.didShowActionSheet, images: $viewModel.selectedImages, maxImages: 9)
+                    PaginatedImageView(
+                        images: $viewModel.selectedImages,
+                        maxImages: 9,
+                        onPickPhotoLibrary: { viewModel.didShowPhotosPicker = true },
+                        onPickCamera: { viewModel.didShowCamera = true }
+                    )
                         .padding(.horizontal, Constants.Spacing.horizontalPadding)
                 }
                 .padding(.top, 48)
@@ -51,7 +56,20 @@ struct NewListingImagesView: View {
 
             if viewModel.selectedImages.isEmpty {
                 PurpleButton(text: "Add Images") {
-                    viewModel.didShowActionSheet = true
+                    viewModel.didShowImageSourceDialog = true
+                }
+                .confirmationDialog(
+                    "Select Image Source",
+                    isPresented: $viewModel.didShowImageSourceDialog,
+                    titleVisibility: .visible
+                ) {
+                    Button("Photo Library") {
+                        viewModel.didShowPhotosPicker = true
+                    }
+                    Button("Camera") {
+                        viewModel.didShowCamera = true
+                    }
+                    Button("Cancel", role: .cancel) {}
                 }
             } else {
                 PurpleButton(text: "Continue") {
@@ -83,20 +101,6 @@ struct NewListingImagesView: View {
                         .tint(Constants.Colors.black)
                 }
             }
-        }
-        .actionSheet(isPresented: $viewModel.didShowActionSheet) {
-            ActionSheet(
-                title: Text("Select Image Source"),
-                buttons: [
-                    .default(Text("Photo Library")) {
-                        viewModel.didShowPhotosPicker = true
-                    },
-                    .default(Text("Camera")) {
-                        viewModel.didShowCamera = true
-                    },
-                    .cancel()
-                ]
-            )
         }
         .photosPicker(isPresented: $viewModel.didShowPhotosPicker, selection: $viewModel.selectedItem, matching: .images, photoLibrary: .shared())
         .sheet(isPresented: $viewModel.didShowCamera) {

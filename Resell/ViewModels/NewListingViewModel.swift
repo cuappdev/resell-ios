@@ -13,7 +13,7 @@ class NewListingViewModel: ObservableObject {
     
     // MARK: - Properties
 
-    @Published var didShowActionSheet: Bool = false
+    @Published var didShowImageSourceDialog: Bool = false
     @Published var didShowCamera: Bool = false
     @Published var didShowPhotosPicker: Bool = false
     @Published var isLoading: Bool = false
@@ -67,6 +67,9 @@ class NewListingViewModel: ObservableObject {
                         let postBody = PostBody(title: titleText, description: descriptionText, categories: [selectedFilter], condition: selectedCondition, original_price: Double(priceText) ?? 0, imagesBase64: imagesBase64, userId: user.firebaseUid)
                         
                         let _ = try await NetworkManager.shared.createPost(postBody: postBody)
+                        
+                        NotificationCenter.default.post(name: Constants.Notifications.NewListingCreated, object: nil)
+                        
                         clear()
                     } else {
                         GoogleAuthManager.shared.logger.error("Error in \(#file) \(#function): User not available.")
@@ -80,7 +83,7 @@ class NewListingViewModel: ObservableObject {
         }
 
     func clear() {
-        didShowActionSheet = false
+        didShowImageSourceDialog = false
         didShowCamera = false
         didShowPhotosPicker = false
         selectedImages = []

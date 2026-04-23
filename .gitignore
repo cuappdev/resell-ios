@@ -1,10 +1,19 @@
 ## Build generated
+**/.DS_Store
 *.DS_Store
 .build/
 xcuserdata/
 build/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcscmblueprint
+*.xccheckout
 
 ## Secrets
 Resell/Supporting/*
 Keys.xcconfig
+Resell/Supporting/**
+**/Keys.xcconfig
+*.xcconfig.local
 .DS_Store

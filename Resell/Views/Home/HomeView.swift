@@ -15,7 +15,7 @@ struct HomeView: View {
     @EnvironmentObject private var searchViewModel: SearchViewModel
     @EnvironmentObject var router: Router
     
-    @StateObject private var viewModel = HomeViewModel.shared
+    @ObservedObject private var viewModel = HomeViewModel.shared
     @StateObject private var filtersViewModel = FiltersViewModel(isHome: true)
     
     @State var forYouPosts: [[Post]] = []
@@ -59,7 +59,9 @@ struct HomeView: View {
         }
         .onAppear {
             // Only fetch if we don't have cached data
-            viewModel.getAllPosts()
+            if !viewModel.isFilteredFeed {
+                viewModel.getAllPosts() //only get all posts if no filters are applied
+            }
             viewModel.getBlockedUsers()
             withAnimation { mainViewModel.hidesTabBar = false }
         }
@@ -73,7 +75,13 @@ struct HomeView: View {
         }
         .refreshable {
             // Force refresh when user pulls to refresh
-            viewModel.getAllPosts(forceRefresh: true)
+            if viewModel.isFilteredFeed {
+                Task {
+                    try? await filtersViewModel.applyFilters(homeViewModel: viewModel)
+                }
+            } else {
+                viewModel.getAllPosts(forceRefresh: true)
+            }
         }
         .loadingView(isLoading: viewModel.isLoading)
         .navigationBarBackButtonHidden()

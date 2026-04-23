@@ -12,7 +12,7 @@ import Flow
 struct FilterView: View {
     @Binding var isPresented: Bool
     @State var presentPopup = false
-    @EnvironmentObject var filtersVM: FiltersViewModel  // Change to @EnvironmentObject
+    @EnvironmentObject var filtersVM: FiltersViewModel
 
     private var categories : [String] = ["Clothing", "Books", "School", "Electronics", "Handmade", "Sports & Outdoors", "Other"]
     private var conditions : [String] = ["Gently Used", "Worn", "Never Used"]
@@ -24,7 +24,7 @@ struct FilterView: View {
         _isPresented = isPresented
     }
     
-    @StateObject private var homeViewModel = HomeViewModel.shared
+    @ObservedObject private var homeViewModel = HomeViewModel.shared
     
     var body: some View {
         ZStack {
@@ -109,20 +109,6 @@ struct FilterView: View {
                         RangeSlider(lowValue: $filtersVM.lowValue, highValue: $filtersVM.highValue, range: 0...1000)
                             .padding(.trailing, -28)
                         
-                        HStack {
-                            Text("Items On Sale")
-                                .font(.custom("Rubik-Regular", size: 20))
-                                .foregroundStyle(.gray)
-                            
-                            Spacer()
-                            
-                            Button {
-                                filtersVM.showSale.toggle()
-                            } label: {
-                                Image(filtersVM.showSale ? "toggle-set" : "toggle")
-                            }
-                        }
-                        .offset(y: -8)
                         
                         if home {
                             Divider()
@@ -248,18 +234,18 @@ struct FilterView: View {
                         Button{
                             Task {
                                 try await filtersVM.applyFilters(homeViewModel: homeViewModel)
+                                isPresented = false
                             }
-                            // MARK: This should wait for the above request to complete
-                            isPresented = false
                         } label: {
                             Text("Apply filters")
                                 .font(.custom("Rubik-Medium", size: 20))
                                 .foregroundStyle(Color.white)
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 8)
-                                .background(filtersVM.categoryFilters.isEmpty && filtersVM.conditionFilters.isEmpty ? Constants.Colors.resellPurple.opacity(0.4) : Constants.Colors.resellPurple)
+                                .background(!filtersVM.hasActiveFilters ? Constants.Colors.resellPurple.opacity(0.4) : Constants.Colors.resellPurple)
                                 .cornerRadius(20)
                         }
+                        .disabled(!filtersVM.hasActiveFilters)
                     }
                     .padding(.horizontal, 40)
                     .padding(.vertical, 16)

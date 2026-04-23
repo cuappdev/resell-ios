@@ -20,18 +20,30 @@ struct NewRequestView: View {
     // MARK: - UI
 
     var body: some View {
-        VStack(spacing: 32) {
-            LabeledTextField(label: "Title", text: $viewModel.titleText)
-                .padding(.top, 32)
-
-            minMaxTextFields
-                .background {
-                    GeometryReader { geometry in
-                        Color.clear
-                            .preference(key: PriceFieldPositionKey.self, value: geometry.frame(in: .global).maxY)
+        ScrollView {
+            VStack(spacing: 32) {
+                LabeledTextField(label: "Title", text: $viewModel.titleText)
+                    .padding(.top, 32)
+                
+                minMaxTextFields
+                    .background {
+                        GeometryReader { geometry in
+                            Color.clear
+                                .preference(key: PriceFieldPositionKey.self, value: geometry.frame(in: .global).maxY)
+                        }
+                    }
+                
+                LabeledTextField(label: "Item Description", maxCharacters: 1000, frameHeight: 250, isMultiLine: true, placeholder: "Enter item details... \nCondition \nDimensions", text: $viewModel.descriptionText)
+                
+                Spacer()
+                
+                PurpleButton(isLoading: viewModel.isLoading, isActive: viewModel.checkInputIsValid(), text: "Continue") {
+                    viewModel.createNewRequest()
+                    router.pop()
+                    withAnimation {
+                        mainViewModel.hidesTabBar = false
                     }
                 }
-
             LabeledTextField(label: "Item Description", maxCharacters: 1000, frameHeight: 250, isMultiLine: true, placeholder: "Enter item details... \nCondition \nDimensions", text: $viewModel.descriptionText)
 
             Spacer()
@@ -43,6 +55,7 @@ struct NewRequestView: View {
                     mainViewModel.hidesTabBar = false
                 }
             }
+            .padding(.horizontal, 24)
         }
         .ignoresSafeArea(.keyboard)
         .padding(.horizontal, 24)

@@ -25,13 +25,15 @@ struct ExternalProfileView: View {
     var body: some View {
         VStack(spacing: 0) {
             customToolbar
-            
+            ScrollView {
+                
+                
                 ZStack {
                     VStack(alignment: .leading) {
                         profileView
                             .padding(.top, 25)
                             .padding(.leading, 26)
-                                                
+                        
                         profileTabBar
                         
                         if listingViewIsPresented {
@@ -91,7 +93,7 @@ struct ExternalProfileView: View {
                         .presentationDragIndicator(.visible)
                 }
                 // MARK: We should not be able to click into our own posts...
-           
+            }
         }
         .toolbar(.hidden, for: .navigationBar)
     }
