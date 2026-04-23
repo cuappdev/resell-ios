@@ -14,13 +14,20 @@ class FiltersViewModel: ObservableObject {
     @Published var conditionFilters: Set<String> = []
     @Published var lowValue: Double = 0
     @Published var highValue: Double = 1000
-    @Published var showSale: Bool = false
     @Published var selectedSort: SortOption? = nil
     @Published var detailedFilterItems: [Post] = []
     @Published var searchedDetailedFilterItems: [Post] = []
     @Published var isSearching: Bool = false
     
     private var baseCategory: String? = nil // Store the base category for detailed view
+
+    var hasActiveFilters: Bool {
+        !categoryFilters.isEmpty ||
+        !conditionFilters.isEmpty ||
+        lowValue != 0 ||
+        highValue != 1000 ||
+        (selectedSort != nil && selectedSort != .any)
+    }
 
     func initializeDetailedFilter(category: String) async throws {
         baseCategory = category
@@ -90,6 +97,7 @@ class FiltersViewModel: ObservableObject {
             let postsResponse = try await NetworkManager.shared.getUnifiedFilteredPosts(filters: unifiedFilter)
             if isHome {
                 homeViewModel.filteredItems = postsResponse.posts
+                homeViewModel.isFilteredFeed = hasActiveFilters
             } else {
                 detailedFilterItems = postsResponse.posts
                 clearFilterSearch()
@@ -105,11 +113,10 @@ class FiltersViewModel: ObservableObject {
         conditionFilters.removeAll()
         lowValue = 0
         highValue = 1000
-        showSale = false
         selectedSort = nil
-        
+
         if isHome {
-            homeViewModel.selectedFilter = ["Recent"]
+            homeViewModel.clearFilters()
         } else if let category = baseCategory {
             // For detailed view, reset to just the base category
             categoryFilters = [category]
