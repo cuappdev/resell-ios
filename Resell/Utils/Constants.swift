@@ -88,6 +88,10 @@ struct Constants {
     enum Notifications {
         static let LogoutUser = Notification.Name("LogoutUser")
         static let NewListingCreated = Notification.Name("NewListingCreated")
+        /// Fired by `FirebaseNotificationService` whenever Firebase hands us a
+        /// (new) FCM registration token. `userInfo["token"]` holds the string.
+        /// Subscribers are responsible for syncing the value with the backend.
+        static let FCMTokenUpdated = Notification.Name("FCMTokenUpdated")
     }
 
     /// Chat  categories used in Resell's design system
