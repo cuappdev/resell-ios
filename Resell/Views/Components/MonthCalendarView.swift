@@ -214,6 +214,10 @@ struct MonthCalendarView: View {
     
     /// Called when user taps a date to change the grid start
     var onDateSelected: ((Date) -> Void)?
+
+    /// Called when the user swipes up on the calendar to dismiss it
+    /// (Google Calendar style collapse).
+    var onDismiss: (() -> Void)?
     
     private var monthData: CalendarMonthData {
         CalendarHelper.generateMonthData(monthOffset: currentMonthOffset)
@@ -249,20 +253,24 @@ struct MonthCalendarView: View {
         .gesture(
             DragGesture(minimumDistance: 20)
                 .onEnded { value in
+                    let horizontalDrag = value.translation.width
                     let verticalDrag = value.translation.height
-                    let horizontalDrag = abs(value.translation.width)
-                    
-                    if abs(verticalDrag) > horizontalDrag {
-                        if verticalDrag < -50 {
+
+                    if abs(horizontalDrag) > abs(verticalDrag) {
+                        // Horizontal swipe → change month (Google Calendar style).
+                        if horizontalDrag < -50 {
                             withAnimation(.easeInOut(duration: 0.25)) {
                                 currentMonthOffset += 1
                             }
-                        } else if verticalDrag > 50 {
-                            if currentMonthOffset > 0 {
-                                withAnimation(.easeInOut(duration: 0.25)) {
-                                    currentMonthOffset -= 1
-                                }
+                        } else if horizontalDrag > 50, currentMonthOffset > 0 {
+                            withAnimation(.easeInOut(duration: 0.25)) {
+                                currentMonthOffset -= 1
                             }
+                        }
+                    } else {
+                        // Vertical swipe up → dismiss the mini calendar.
+                        if verticalDrag < -50 {
+                            onDismiss?()
                         }
                     }
                 }
@@ -437,49 +445,55 @@ struct MonthPickerHeader: View {
     }
     
     var body: some View {
-        HStack(spacing: 16) {
-//            Button {
-//                showSettings.toggle()
-//                $showCalendar.wrappedValue = false
-//            } label: {
-//                Image(systemName: "line.3.horizontal")
-//                    .font(.title2)
-//                    .foregroundStyle(Constants.Colors.black)
-//            }
-            
+        HStack(spacing: 16) {            
             Button {
-                showCalendar.toggle()
-                $showSettings.wrappedValue = false
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    showCalendar.toggle()
+                    showSettings = false
+                }
             } label: {
                 ZStack {
                     if showCalendar {
                         RoundedRectangle(cornerRadius: 8)
-                            .frame(width: 116, height: 28)
                             .foregroundStyle(Constants.Colors.secondaryGray.opacity(0.25))
+                            .transition(.opacity)
                     }
-                    
-                    Text(monthName)
-                        .font(Constants.Fonts.h2)
-                        .foregroundStyle(Constants.Colors.black)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .gesture(
-                            DragGesture()
-                                .onEnded { value in
-                                    if value.translation.width < -50 {
-                                        withAnimation { currentMonthOffset += 1 }
-                                    } else if value.translation.width > 50 {
-                                        if currentMonthOffset > 0 {
-                                            withAnimation { currentMonthOffset -= 1 }
-                                        }
-                                    }
-                                }
-                        )
+
+                    HStack(spacing: 6) {
+                        Text(monthName)
+                            .font(Constants.Fonts.h2)
+                            .foregroundStyle(Constants.Colors.black)
+                            .contentTransition(.numericText())
+
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Constants.Colors.black)
+                            .rotationEffect(.degrees(showCalendar ? 180 : 0))
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
                 }
+                .fixedSize()
             }
-            
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 20)
+                    .onEnded { value in
+                        if value.translation.width < -50 {
+                            withAnimation(.easeInOut(duration: 0.25)) {
+                                currentMonthOffset += 1
+                            }
+                        } else if value.translation.width > 50, currentMonthOffset > 0 {
+                            withAnimation(.easeInOut(duration: 0.25)) {
+                                currentMonthOffset -= 1
+                            }
+                        }
+                    }
+            )
+            .padding(.top, 6)
+
             Spacer()
         }
         .padding(.horizontal)
+        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: showCalendar)
     }
 }

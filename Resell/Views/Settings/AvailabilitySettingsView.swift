@@ -23,6 +23,17 @@ struct AvailabilitySettingsView: View {
     @State private var isLoading: Bool = false
     @State private var isSaving: Bool = false
     @State private var errorMessage: String? = nil
+
+    /// Dates (yyyy-MM-dd) that exist in the saved schedule on the backend.
+    /// Tracked so we can send empty arrays for them on save when the user clears cells,
+    /// since the backend merges schedule entries instead of replacing the whole dict.
+    @State private var knownScheduleDates: Set<String> = []
+
+    /// Set to true when `currentMonthOffset` is being updated as a side effect of
+    /// horizontally paging the AvailabilityGridView. Prevents `onChange` from
+    /// snapping `gridStartDate` back to the first of the new month, which would
+    /// make it impossible to swipe back to the previous month.
+    @State private var isMonthChangeFromGridScroll: Bool = false
     
     private var monthName: String {
         CalendarHelper.monthName(for: currentMonthOffset)
@@ -31,73 +42,85 @@ struct AvailabilitySettingsView: View {
     // MARK: - Body
     
     var body: some View {
+        // ScrollView with scrolling disabled gives us a reliable
+        // top-anchored layout — content always starts at the top of the
+        // safe area and any overflow at the bottom is simply clipped.
         ScrollView(.vertical, showsIndicators: false) {
-        VStack(spacing: 0) {
-            MonthPickerHeader(
-                currentMonthOffset: $currentMonthOffset,
-                showCalendar: $showCalendar,
-                showSettings: $showSettings
-            )
-            
-            if showCalendar {
-                MonthCalendarView(
+            VStack(spacing: 0) {
+                MonthPickerHeader(
                     currentMonthOffset: $currentMonthOffset,
-                    gridStartDate: $gridStartDate,
-                    visibleGridDates: visibleGridDates,
-                    onDateSelected: { selectedDate in
-                        gridCurrentPage = 0
-                        gridStartDate = selectedDate
-                        updateVisibleDates(from: selectedDate, page: 0)
-                    }
+                    showCalendar: $showCalendar,
+                    showSettings: $showSettings
                 )
-                .padding(.horizontal)
-                .padding(.vertical, 12)
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            } else if showSettings {
-                AvailabilitySettingsMenu()
-            }
-            
-            Text("Mark when you're free")
-                .font(Constants.Fonts.body2)
-                .foregroundColor(Constants.Colors.secondaryGray)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.leading, 28)
-            
-            
-            AvailabilityGridView(
-                selectedCells: $selectedCells,
-                currentPage: $gridCurrentPage,
-                isEditing: true,
-                startDate: gridStartDate,
-                onVisibleDatesChanged: { dates in
-                    visibleGridDates = dates
 
-                    if let firstDate = dates.first {
-                        let newMonthOffset = CalendarHelper.monthOffset(for: firstDate)
-                        if newMonthOffset != currentMonthOffset && newMonthOffset >= 0 {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                currentMonthOffset = newMonthOffset
+                if showCalendar {
+                    MonthCalendarView(
+                        currentMonthOffset: $currentMonthOffset,
+                        gridStartDate: $gridStartDate,
+                        visibleGridDates: visibleGridDates,
+                        onDateSelected: { selectedDate in
+                            gridCurrentPage = 0
+                            gridStartDate = selectedDate
+                            updateVisibleDates(from: selectedDate, page: 0)
+                        },
+                        onDismiss: {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                showCalendar = false
+                            }
+                        }
+                    )
+                    .padding(.horizontal)
+                    .padding(.vertical, 12)
+                    .transition(.asymmetric(
+                        insertion: .opacity.combined(with: .move(edge: .top)),
+                        removal: .opacity.combined(with: .move(edge: .top))
+                    ))
+                } else if showSettings {
+                    AvailabilitySettingsMenu()
+                        .transition(.opacity)
+                }
+
+                Text("Mark when you're free")
+                    .font(Constants.Fonts.body2)
+                    .foregroundColor(Constants.Colors.secondaryGray)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.leading, 28)
+
+                AvailabilityGridView(
+                    selectedCells: $selectedCells,
+                    currentPage: $gridCurrentPage,
+                    isEditing: true,
+                    startDate: gridStartDate,
+                    onVisibleDatesChanged: { dates in
+                        visibleGridDates = dates
+
+                        if let firstDate = dates.first {
+                            let newMonthOffset = CalendarHelper.monthOffset(for: firstDate)
+                            if newMonthOffset != currentMonthOffset && newMonthOffset >= 0 {
+                                isMonthChangeFromGridScroll = true
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    currentMonthOffset = newMonthOffset
+                                }
                             }
                         }
                     }
-                }
-            )
-            .id(gridStartDate) // Force rebuild when start date changes
-            
-            if !showCalendar {
-                PurpleButton(isLoading: isSaving, text: isSaving ? "Saving..." : "Save") {
-                    Task {
-                        await saveAvailability()
+                )
+                .id(gridStartDate) // Force rebuild when start date changes
+
+                if !showCalendar {
+                    PurpleButton(isLoading: isSaving, text: isSaving ? "Saving..." : "Save") {
+                        Task {
+                            await saveAvailability()
+                        }
                     }
+                    .disabled(isSaving)
+                    .padding(.top, 16)
+                    .padding(.horizontal)
+                    .padding(.bottom, 24)
                 }
-                .disabled(isSaving)
-                .padding(.top, 16)
-                .padding(.horizontal)
-                .padding(.bottom, 24)
             }
         }
-        }
-        .scrollDisabled(!showCalendar)
+        .scrollDisabled(true)
         .background(Constants.Colors.white)
         .overlay {
             if isLoading {
@@ -109,6 +132,8 @@ struct AvailabilitySettingsView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
+        .toolbarBackground(Constants.Colors.white, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text("Availability Settings")
@@ -141,25 +166,30 @@ struct AvailabilitySettingsView: View {
             }
         }
         .onChange(of: currentMonthOffset) { newOffset in
-            // When user swipes to change month on calendar, update grid to first day of that month
+            // If the month changed because the grid was scrolled horizontally,
+            // don't snap the grid back — the user is mid-scroll and we'd lose
+            // the ability to scroll back to the previous month's dates.
+            if isMonthChangeFromGridScroll {
+                isMonthChangeFromGridScroll = false
+                return
+            }
+
+            // Otherwise, the change came from the calendar (swipe or month picker)
+            // and we should jump the grid to the first day of that month.
             let calendar = Calendar.current
             let today = Date()
-            
-            // Calculate the first day of the target month
+
             if let targetMonth = calendar.date(byAdding: .month, value: newOffset, to: today),
                let firstOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: targetMonth)) {
-                
-                // If it's the current month, start from today; otherwise start from 1st of month
+
                 let startOfToday = calendar.startOfDay(for: today)
                 let newStartDate = (newOffset == 0 && firstOfMonth < startOfToday) ? startOfToday : firstOfMonth
-                
-                // Only update if the change came from calendar swipe (not from grid scroll)
-                // We detect this by checking if current gridStartDate is NOT in the new month
+
                 let gridMonth = calendar.component(.month, from: gridStartDate)
                 let gridYear = calendar.component(.year, from: gridStartDate)
                 let targetMonthComponent = calendar.component(.month, from: firstOfMonth)
                 let targetYearComponent = calendar.component(.year, from: firstOfMonth)
-                
+
                 if gridMonth != targetMonthComponent || gridYear != targetYearComponent {
                     gridStartDate = newStartDate
                     gridCurrentPage = 0
@@ -186,8 +216,10 @@ struct AvailabilitySettingsView: View {
         do {
             let response = try await NetworkManager.shared.getAvailability()
             let cells = scheduleToSelectedCells(response.availability.schedule)
+            let scheduleDates = Set(response.availability.schedule.keys)
             await MainActor.run {
                 selectedCells = cells
+                knownScheduleDates = scheduleDates
             }
         } catch {
             print("Failed to load availability: \(error)")
@@ -203,6 +235,11 @@ struct AvailabilitySettingsView: View {
         do {
             _ = try await NetworkManager.shared.updateAvailability(schedule: schedule)
             print("Successfully saved availability with \(schedule.count) days")
+            // After a successful save, the new set of known dates is whatever
+            // we just sent (excluding the explicit empty-array clears).
+            await MainActor.run {
+                knownScheduleDates = Set(schedule.compactMap { $0.value.isEmpty ? nil : $0.key })
+            }
         } catch {
             await MainActor.run {
                 errorMessage = "Failed to save availability: \(error.localizedDescription)"
@@ -215,23 +252,31 @@ struct AvailabilitySettingsView: View {
     /// Converts selected cells to API schedule format [DateKey: [AvailabilitySlot]]
     private func selectedCellsToSchedule(_ cells: Set<CellIdentifier>) -> [String: [AvailabilitySlot]] {
         let availabilities = AvailabilityGridView.cellsToAvailabilities(cells)
-        
-        // Group availabilities by date
-        var schedule: [String: [AvailabilitySlot]] = [:]
+
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
-        
+
+        // Seed the schedule with empty arrays for every date that previously
+        // had availability on the backend. Any of these dates that the user
+        // didn't re-select will stay as `[]`, signaling the backend to clear
+        // them. Without this, clearing all cells would send `{}` which the
+        // server merges (i.e., no-op) instead of treating as a wipe.
+        var schedule: [String: [AvailabilitySlot]] = [:]
+        for dateKey in knownScheduleDates {
+            schedule[dateKey] = []
+        }
+
         for availability in availabilities {
             let dateKey = dateFormatter.string(from: availability.startDate)
             let slot = AvailabilitySlot(startDate: availability.startDate, endDate: availability.endDate)
-            
+
             if schedule[dateKey] != nil {
                 schedule[dateKey]?.append(slot)
             } else {
                 schedule[dateKey] = [slot]
             }
         }
-        
+
         return schedule
     }
     
