@@ -263,6 +263,45 @@ struct MessagesView: View {
         let now = Date()
         return latestSlotStates.values.contains { $0.isAccepted && $0.endDate > now }
     }
+
+    /// messageIds of pending proposal bubbles that already have a *later*
+    /// response event (accept / decline / cancel) at the same slot in the
+    /// Firestore timeline.
+    ///
+    /// Why this exists: the backend never mutates the original pending
+    /// proposal document — `respondToProposal` and `cancelProposal` append a
+    /// new proposal-typed message. So the original bubble's `accepted` stays
+    /// `nil` forever, and on its own can't tell the UI "you already
+    /// responded". `locallyRespondedMessageIds` patches that for the current
+    /// session, but it's `@State` and resets when the chat view is re-created
+    /// (leave + reopen), which is what made Accept/Decline reappear after
+    /// declining (and after accepting a slot whose endDate is in the past, so
+    /// `hasActiveConfirmedMeeting` is false).
+    ///
+    /// Why "later in the timeline" instead of "any event on this slot": users
+    /// can legitimately re-propose the same time after a previous decline /
+    /// cancel. The new pending proposal has a newer timestamp than the prior
+    /// response, so this look-ahead correctly leaves it actionable.
+    private var respondedProposalMessageIds: Set<String> {
+        let proposals = viewModel.messageClusters
+            .flatMap(\.messages)
+            .compactMap { $0 as? ProposalMessage }
+            .sorted { $0.timestamp < $1.timestamp }
+
+        var result: Set<String> = []
+        for (index, proposal) in proposals.enumerated() {
+            guard proposal.accepted == nil, proposal.cancellation != true else { continue }
+            let slot = ProposalSlot(startDate: proposal.startDate, endDate: proposal.endDate)
+            let hasLaterResponse = proposals[(index + 1)...].contains { later in
+                ProposalSlot(startDate: later.startDate, endDate: later.endDate) == slot
+                    && (later.accepted != nil || later.cancellation == true)
+            }
+            if hasLaterResponse {
+                result.insert(proposal.messageId)
+            }
+        }
+        return result
+    }
     
     private func messageCluster(cluster: MessageCluster) -> some View {
         return VStack(spacing: 2) {
@@ -349,7 +388,7 @@ struct MessagesView: View {
                             }
                         }
                     },
-                    respondedMessageIds: locallyRespondedMessageIds,
+                    respondedMessageIds: locallyRespondedMessageIds.union(respondedProposalMessageIds),
                     currentlyCancelledSlots: currentlyCancelledSlots,
                     hasActiveConfirmedMeeting: hasActiveConfirmedMeeting
                 )
