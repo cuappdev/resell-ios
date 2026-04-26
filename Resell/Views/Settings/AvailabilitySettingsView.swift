@@ -59,9 +59,41 @@ struct AvailabilitySettingsView: View {
                         gridStartDate: $gridStartDate,
                         visibleGridDates: visibleGridDates,
                         onDateSelected: { selectedDate in
-                            gridCurrentPage = 0
-                            gridStartDate = selectedDate
-                            updateVisibleDates(from: selectedDate, page: 0)
+                            // Anchor `gridStartDate` earlier than the selected
+                            // date so the user can still swipe LEFT in the
+                            // time grid to see prior days. Without this the
+                            // grid would be pinned at page 0 with nothing to
+                            // its left.
+                            let calendar = Calendar.current
+                            let startOfToday = calendar.startOfDay(for: Date())
+                            let selected = calendar.startOfDay(for: selectedDate)
+                            let daysFromToday = calendar.dateComponents(
+                                [.day], from: startOfToday, to: selected
+                            ).day ?? 0
+
+                            let newStartDate: Date
+                            let pageIndex: Int
+
+                            if daysFromToday >= 0 && daysFromToday < 30 {
+                                // Selected date is within the 30-day window
+                                // starting from today — anchor at today and
+                                // jump to the page containing it.
+                                newStartDate = startOfToday
+                                pageIndex = daysFromToday / 3
+                            } else {
+                                // Selected date is far in the future — anchor
+                                // a few pages before it so backward scrolling
+                                // still has somewhere to go.
+                                let bufferDays = 9 // 3 pages
+                                newStartDate = calendar.date(
+                                    byAdding: .day, value: -bufferDays, to: selected
+                                ) ?? selected
+                                pageIndex = bufferDays / 3
+                            }
+
+                            gridStartDate = newStartDate
+                            gridCurrentPage = pageIndex
+                            updateVisibleDates(from: newStartDate, page: pageIndex)
                         },
                         onDismiss: {
                             withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {

@@ -479,11 +479,11 @@ struct MonthPickerHeader: View {
                 DragGesture(minimumDistance: 20)
                     .onEnded { value in
                         if value.translation.width < -50 {
-                            withAnimation(.easeInOut(duration: 0.25)) {
+                            withAnimation(.easeInOut(duration: 0.1)) {
                                 currentMonthOffset += 1
                             }
                         } else if value.translation.width > 50, currentMonthOffset > 0 {
-                            withAnimation(.easeInOut(duration: 0.25)) {
+                            withAnimation(.easeInOut(duration: 0.1)) {
                                 currentMonthOffset -= 1
                             }
                         }
