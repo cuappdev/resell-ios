@@ -185,6 +185,15 @@ struct ChatsView: View {
                 return
             }
 
+            // Optimistically clear unread state so the row indicator, filter
+            // badges, and tab bar badge update immediately when the user opens
+            // a chat. The Firestore chat-list listener does not re-fire on
+            // message subcollection changes, so without this the count would
+            // remain stale until pull-to-refresh.
+            if let chatId = chat.id {
+                viewModel.markChatAsLocallyRead(chatId: chatId)
+            }
+
             viewModel.selectedChat = chat
             viewModel.getSelectedChatPost { listing in
                 guard let seller = listing.user else {

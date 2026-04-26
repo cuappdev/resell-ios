@@ -92,6 +92,15 @@ class ChatsViewModel: ObservableObject {
 
     func getAllChats() {
         guard !isListening else { return }
+        // The Firestore subscriptions read `GoogleAuthManager.shared.user` to
+        // build the buyer/seller queries. If we set `isListening = true` while
+        // the user is still nil (e.g. when MainTabView's logged-in branch
+        // mounts a tick before `restoreSignIn` finishes populating the user)
+        // the subscriptions never attach, and every later caller is short-
+        // circuited by the guard above. Bail out instead so callers like
+        // `ChatsView.onAppear` or the `userDidLogin` `.onChange` can retry
+        // once the user is actually loaded.
+        guard GoogleAuthManager.shared.user != nil else { return }
         isListening = true
         
         getPurchaceChats()
@@ -168,6 +177,48 @@ class ChatsViewModel: ObservableObject {
 
     func countUnviewedChats(chats: [Chat]) -> Int {
         return chats.reduce(into: 0) { $0 += ($1.messages.filter { !$0.read && !$0.mine }.count) }
+    }
+
+    /// Total unread messages across both purchase and offer chats. Used to drive
+    /// the unread badge on the messages tab in the bottom tab bar.
+    var totalUnread: Int {
+        purchaseUnread + offerUnread
+    }
+
+    /// Optimistically mark every "their" message in the given chat as read in our
+    /// local cache and recompute unread counts.
+    ///
+    /// The Firestore listener in `subscribeToChatsWhereField` only re-fires when
+    /// the parent chat document changes, not when documents in the `messages`
+    /// subcollection are mutated. As a result, the network mark-as-read calls
+    /// triggered from `MessagesViewModel.subscribeToChat` would not propagate
+    /// back to the chat list until the user pulled to refresh. This method lets
+    /// the chat list reflect "I've opened and read this conversation" instantly,
+    /// staying consistent with the actual mark-as-read network calls fired from
+    /// the messages view.
+    func markChatAsLocallyRead(chatId: String) {
+        purchaseChats = purchaseChats.map { markRead(chat: $0, ifMatching: chatId) }
+        offerChats = offerChats.map { markRead(chat: $0, ifMatching: chatId) }
+        purchaseUnread = countUnviewedChats(chats: purchaseChats)
+        offerUnread = countUnviewedChats(chats: offerChats)
+    }
+
+    private func markRead(chat: Chat, ifMatching chatId: String) -> Chat {
+        guard chat.id == chatId else { return chat }
+        let updatedMessages: [any Message] = chat.messages.map { msg in
+            guard !msg.mine, !msg.read else { return msg }
+            var copy = msg
+            copy.read = true
+            return copy
+        }
+        return Chat(
+            id: chat.id,
+            post: chat.post,
+            other: chat.other,
+            lastMessage: chat.lastMessage,
+            updatedAt: chat.updatedAt,
+            messages: updatedMessages
+        )
     }
 
     func getSelectedChatPost(completion: @escaping (Post) -> Void) {
