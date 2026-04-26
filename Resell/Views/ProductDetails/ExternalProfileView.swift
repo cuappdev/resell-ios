@@ -120,9 +120,23 @@ struct ExternalProfileView: View {
             }
             
             // bio
+            //
+            // `fixedSize(vertical: true)` pins the bio's height to its
+            // content. Without it the bio's line count drifts when the tab
+            // switches between Listings and Reviews: the Reviews tab's
+            // `UserReviewCard` has a hard `.frame(width: 366)`, which
+            // forces this VStack to be re-measured at a different proposed
+            // width on the second layout pass. Combined with the nested
+            // ScrollView inside the outer ScrollView (no defined ideal
+            // height for an inner vertical ScrollView), SwiftUI ends up
+            // giving the unconstrained Text a smaller vertical budget on
+            // the Reviews tab and it truncates to one line with an
+            // ellipsis. Locking the vertical ideal size makes the bio
+            // render identically regardless of which tab is selected.
             Text(viewModel.displayBio)
                 .font(Constants.Fonts.body2)
                 .foregroundStyle(.black)
+                .fixedSize(horizontal: false, vertical: true)
             
             // metrics bar
             HStack {

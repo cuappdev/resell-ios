@@ -41,6 +41,18 @@ struct MainTabView: View {
                         .transition(.opacity)
                         .background(.white)
                         .environmentObject(router)
+                        .onAppear {
+                            // Start listening to chat updates as soon as the
+                            // user lands on the main shell so the tab-bar
+                            // unread badge is populated even if they never
+                            // open the messages tab.
+                            chatsViewModel.getAllChats()
+                        }
+                        .onChange(of: mainViewModel.userDidLogin) { didLogin in
+                            if didLogin {
+                                chatsViewModel.getAllChats()
+                            }
+                        }
                     } else {
                         LoginView()
                             .transition(.opacity)
@@ -132,7 +144,11 @@ struct MainTabView: View {
     private var tabBarView: some View {
         HStack {
             ForEach(0..<3, id: \.self) { index in
-                TabViewIcon(selectionIndex: $selection, itemIndex: index)
+                TabViewIcon(
+                    selectionIndex: $selection,
+                    itemIndex: index,
+                    badgeCount: index == 1 ? chatsViewModel.totalUnread : 0
+                )
                     .frame(width: 28, height: 28)
 
                 if index != 2 {
