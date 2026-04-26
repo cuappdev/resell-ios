@@ -590,7 +590,13 @@ struct MessagesAvailabilitySheet: View {
     @State private var gridStartDate: Date = Calendar.current.startOfDay(for: Date())
     @State private var showCalendar: Bool = false
     @State private var visibleGridDates: [Date] = []
-    
+    /// Mirrors the AvailabilitySettingsView fix: when the grid scrolls across a
+    /// month boundary it bumps `currentMonthOffset` itself, so we must skip the
+    /// snap-back logic in `onChange(of: currentMonthOffset)` for that one tick.
+    /// Otherwise the grid resets to the first of the new month and the user
+    /// can't scroll backward across month boundaries.
+    @State private var isMonthChangeFromGridScroll: Bool = false
+
     // Unavailability states
     @State private var buyerUnavailableCells: Set<CellIdentifier> = []
     @State private var sellerUnavailableCells: Set<CellIdentifier> = []
@@ -599,123 +605,141 @@ struct MessagesAvailabilitySheet: View {
     /// Maximum month offset allowed (1 = can only go one month ahead)
     private let maxMonthOffset: Int = 1
 
+    /// Number of days the availability grid should render: from today through
+    /// the last day of the capped month. With `maxMonthOffset = 1` this is
+    /// "today → end of next month", so users can never page past the cap.
+    private var gridDayCount: Int {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let comps = calendar.dateComponents([.year, .month], from: today)
+        guard let firstOfThisMonth = calendar.date(from: comps),
+              let firstOfMonthAfterCap = calendar.date(
+                byAdding: .month,
+                value: maxMonthOffset + 1,
+                to: firstOfThisMonth
+              ) else {
+            return 30
+        }
+        let days = calendar.dateComponents(
+            [.day], from: today, to: firstOfMonthAfterCap
+        ).day ?? 30
+        return max(days, 1)
+    }
+
     let isEditing: Bool
     let proposerName: String
     let buyerId: String
     let sellerId: String
     /// Called when user proposes a meeting time with (startDate, endDate)
     let onPropose: (Date, Date) -> Void
-    
-    private var monthName: String {
-        CalendarHelper.monthName(for: currentMonthOffset)
-    }
 
     var body: some View {
-        VStack(spacing: 16) {
-            RoundedRectangle(cornerRadius: 10)
-                .frame(width: 66, height: 6)
-                .foregroundStyle(Constants.Colors.filterGray)
-            
-            // Header
-            VStack(alignment: .leading, spacing: 8) {
-                Button {
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        showCalendar.toggle()
-                    }
-                } label: {
-                    HStack(spacing: 8) {
-                        Text(monthName)
-                            .font(Constants.Fonts.title1)
-                            .foregroundColor(Constants.Colors.black)
-                        
-                        Image(systemName: showCalendar ? "chevron.up" : "chevron.down")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 12, height: 8)
-                            .foregroundColor(Constants.Colors.black)
-                    }
-                    .padding(.top)
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: 0) {
+                RoundedRectangle(cornerRadius: 10)
+                    .frame(width: 66, height: 6)
+                    .foregroundStyle(Constants.Colors.filterGray)
+                    .padding(.top, 12)
+                    .padding(.bottom, 16)
+
+                MonthPickerHeader(
+                    currentMonthOffset: $currentMonthOffset,
+                    showCalendar: $showCalendar,
+                    showSettings: .constant(false),
+                    maxMonthOffset: maxMonthOffset
+                )
+
+                proposeSubheader
+                    .padding(.horizontal)
+                    .padding(.top, 4)
+                    .padding(.bottom, 8)
+
+                if showCalendar {
+                    MonthCalendarView(
+                        currentMonthOffset: $currentMonthOffset,
+                        gridStartDate: $gridStartDate,
+                        visibleGridDates: visibleGridDates,
+                        onDateSelected: { selectedDate in
+                            // The grid is sized (via `gridDayCount`) to cover
+                            // exactly today → end-of-capped-month, so the
+                            // picked date is always reachable from a
+                            // today-anchored grid. Anchoring there means the
+                            // user can also scroll backward to any earlier
+                            // valid day, and they can never scroll forward
+                            // past the cap.
+                            let calendar = Calendar.current
+                            let startOfToday = calendar.startOfDay(for: Date())
+                            let selected = calendar.startOfDay(for: selectedDate)
+                            let daysFromToday = max(
+                                calendar.dateComponents(
+                                    [.day], from: startOfToday, to: selected
+                                ).day ?? 0,
+                                0
+                            )
+                            let pageIndex = daysFromToday / 3
+
+                            gridStartDate = startOfToday
+                            gridCurrentPage = pageIndex
+                            updateVisibleDates(from: startOfToday, page: pageIndex)
+                        },
+                        onDismiss: {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                showCalendar = false
+                            }
+                        },
+                        maxMonthOffset: maxMonthOffset
+                    )
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+                    .transition(.asymmetric(
+                        insertion: .opacity.combined(with: .move(edge: .top)),
+                        removal: .opacity.combined(with: .move(edge: .top))
+                    ))
                 }
 
-                HStack {
-                    Text("Propose a time to meet")
-                        .font(Constants.Fonts.body2)
-                        .foregroundColor(Constants.Colors.secondaryGray)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                    
-                    Divider()
-                        .frame(height: 16)
-                    
-                    Button {
-                        isPresented = false
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            router.push(.availability)
-                        }
-                    } label: {
-                        Text("Edit Availability")
-                            .font(Constants.Fonts.title2)
-                            .foregroundColor(Constants.Colors.resellPurple)
-                    }
-                }
-            }
-            
-            // Month calendar - collapsible
-            if showCalendar {
-                MessagesMonthCalendarView(
-                    currentMonthOffset: $currentMonthOffset,
-                    gridStartDate: $gridStartDate,
-                    visibleGridDates: visibleGridDates,
-                    maxMonthOffset: maxMonthOffset,
-                    onDateSelected: { selectedDate in
-                        gridCurrentPage = 0
-                        gridStartDate = selectedDate
-                        updateVisibleDates(from: selectedDate, page: 0)
-                    }
-                )
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            }
-            
-            // Grid - single selection mode for proposing a 30-min meeting slot
-            AvailabilityGridView(
-                selectedCells: $selectedCells,
-                currentPage: $gridCurrentPage,
-                isEditing: isEditing,
-                singleSelectionMode: true,
-                startDate: gridStartDate,
-                onVisibleDatesChanged: { dates in
-                    visibleGridDates = dates
-                    if let firstDate = dates.first {
-                        let newMonthOffset = CalendarHelper.monthOffset(for: firstDate)
-                        // Clamp to max offset
-                        let clampedOffset = min(max(newMonthOffset, 0), maxMonthOffset)
-                        if clampedOffset != currentMonthOffset {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                currentMonthOffset = clampedOffset
+                AvailabilityGridView(
+                    selectedCells: $selectedCells,
+                    currentPage: $gridCurrentPage,
+                    isEditing: isEditing,
+                    singleSelectionMode: true,
+                    startDate: gridStartDate,
+                    dayCount: gridDayCount,
+                    onVisibleDatesChanged: { dates in
+                        visibleGridDates = dates
+                        if let firstDate = dates.first {
+                            let newMonthOffset = CalendarHelper.monthOffset(for: firstDate)
+                            let clampedOffset = min(max(newMonthOffset, 0), maxMonthOffset)
+                            if clampedOffset != currentMonthOffset {
+                                isMonthChangeFromGridScroll = true
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    currentMonthOffset = clampedOffset
+                                }
                             }
                         }
+                    },
+                    buyerUnavailableCells: buyerUnavailableCells,
+                    sellerUnavailableCells: sellerUnavailableCells
+                )
+                .id(gridStartDate)
+                .fixedSize(horizontal: false, vertical: true)
+
+                PurpleButton(isActive: !selectedCells.isEmpty, text: "Propose") {
+                    if let selectedCell = selectedCells.first,
+                       let availability = AvailabilityGridView.cellsToAvailabilities([selectedCell]).first {
+                        onPropose(availability.startDate, availability.endDate)
+                        isPresented = false
                     }
-                },
-                buyerUnavailableCells: buyerUnavailableCells,
-                sellerUnavailableCells: sellerUnavailableCells
-            )
-            .id(gridStartDate)
-            
-            Spacer()
-            
-            // Action Button - only enabled when a time slot is selected
-            PurpleButton(isActive: !selectedCells.isEmpty, text: "Propose") {
-                if let selectedCell = selectedCells.first,
-                   let availability = AvailabilityGridView.cellsToAvailabilities([selectedCell]).first {
-                    onPropose(availability.startDate, availability.endDate)
-                    isPresented = false
                 }
+                .padding(.horizontal)
+                .padding(.top, 16)
+                .padding(.bottom, 24)
+
+                Spacer(minLength: 0)
             }
+            .frame(maxWidth: .infinity, alignment: .top)
         }
-        .padding(.horizontal)
-        .padding(.top, 32)
+        .scrollDisabled(true)
+        .clipped()
         .background(Constants.Colors.white)
         .onAppear {
             updateVisibleDates(from: gridStartDate, page: 0)
@@ -724,26 +748,60 @@ struct MessagesAvailabilitySheet: View {
             }
         }
         .onChange(of: currentMonthOffset) { newOffset in
+            // The grid horizontally scrolling across a month boundary mutates
+            // currentMonthOffset itself. Re-anchoring gridStartDate in that
+            // case would cancel the scroll mid-gesture and prevent the user
+            // from going back. Skip exactly one onChange tick in that case.
+            if isMonthChangeFromGridScroll {
+                isMonthChangeFromGridScroll = false
+                return
+            }
+
             let calendar = Calendar.current
             let today = Date()
-            
+
             if let targetMonth = calendar.date(byAdding: .month, value: newOffset, to: today),
                let firstOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: targetMonth)) {
-                
+
                 let startOfToday = calendar.startOfDay(for: today)
                 let newStartDate = (newOffset == 0 && firstOfMonth < startOfToday) ? startOfToday : firstOfMonth
-                
+
                 let gridMonth = calendar.component(.month, from: gridStartDate)
                 let gridYear = calendar.component(.year, from: gridStartDate)
                 let targetMonthComponent = calendar.component(.month, from: firstOfMonth)
                 let targetYearComponent = calendar.component(.year, from: firstOfMonth)
-                
+
                 if gridMonth != targetMonthComponent || gridYear != targetYearComponent {
                     gridStartDate = newStartDate
                     gridCurrentPage = 0
                     updateVisibleDates(from: newStartDate, page: 0)
                 }
             }
+        }
+    }
+
+    private var proposeSubheader: some View {
+        HStack(spacing: 8) {
+            Text("Propose a time to meet")
+                .font(Constants.Fonts.body2)
+                .foregroundColor(Constants.Colors.secondaryGray)
+                .lineLimit(2)
+
+            Divider()
+                .frame(height: 16)
+
+            Button {
+                isPresented = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    router.push(.availability)
+                }
+            } label: {
+                Text("Edit Availability")
+                    .font(Constants.Fonts.title2)
+                    .foregroundColor(Constants.Colors.resellPurple)
+            }
+
+            Spacer()
         }
     }
     
@@ -807,8 +865,13 @@ struct MessagesAvailabilitySheet: View {
     private func computeUnavailableCells(from availableCells: Set<CellIdentifier>) -> Set<CellIdentifier> {
         var unavailableCells = Set<CellIdentifier>()
         
-        // Generate all possible cells for the grid's date range
-        let allDates = CalendarHelper.generateGridDates(startingFrom: Calendar.current.startOfDay(for: Date()))
+        // Generate all possible cells for the grid's date range. Match the
+        // visible grid's day count so cells beyond the first 30 days still
+        // show buyer/seller unavailability shading.
+        let allDates = CalendarHelper.generateGridDates(
+            startingFrom: Calendar.current.startOfDay(for: Date()),
+            count: gridDayCount
+        )
         let times = generateTimes()
         
         for date in allDates {
@@ -827,164 +890,6 @@ struct MessagesAvailabilitySheet: View {
         }
         
         return unavailableCells
-    }
-}
-
-// MARK: - Messages Month Calendar View (with max offset restriction)
-
-struct MessagesMonthCalendarView: View {
-    @Binding var currentMonthOffset: Int
-    @Binding var gridStartDate: Date
-    
-    var visibleGridDates: [Date] = []
-    var maxMonthOffset: Int = 1
-    var onDateSelected: ((Date) -> Void)?
-    
-    private var monthData: CalendarMonthData {
-        CalendarHelper.generateMonthData(monthOffset: currentMonthOffset)
-    }
-    
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)
-    private let cellHeight: CGFloat = 36
-    private let rowSpacing: CGFloat = 6
-    
-    var body: some View {
-        VStack(spacing: 10) {
-            weekdayHeader
-            
-            GeometryReader { geometry in
-                let cellWidth = geometry.size.width / 7
-                
-                ZStack(alignment: .topLeading) {
-                    selectionBackgroundLayer(cellWidth: cellWidth)
-                    
-                    LazyVGrid(columns: columns, spacing: rowSpacing) {
-                        ForEach(monthData.days) { day in
-                            dayCell(for: day)
-                        }
-                    }
-                }
-            }
-            .frame(height: CGFloat(5) * cellHeight + CGFloat(4) * rowSpacing)
-        }
-        .contentShape(Rectangle())
-        .gesture(
-            DragGesture(minimumDistance: 20)
-                .onEnded { value in
-                    let verticalDrag = value.translation.height
-                    let horizontalDrag = abs(value.translation.width)
-                    
-                    if abs(verticalDrag) > horizontalDrag {
-                        if verticalDrag < -50 {
-                            // Swipe up - next month (respect max offset)
-                            if currentMonthOffset < maxMonthOffset {
-                                withAnimation(.easeInOut(duration: 0.25)) {
-                                    currentMonthOffset += 1
-                                }
-                            }
-                        } else if verticalDrag > 50 {
-                            // Swipe down - previous month (don't go before current)
-                            if currentMonthOffset > 0 {
-                                withAnimation(.easeInOut(duration: 0.25)) {
-                                    currentMonthOffset -= 1
-                                }
-                            }
-                        }
-                    }
-                }
-        )
-    }
-    
-    private var weekdayHeader: some View {
-        HStack(spacing: 0) {
-            ForEach(CalendarMonthData.weekdaySymbols, id: \.self) { symbol in
-                Text(symbol)
-                    .font(Constants.Fonts.body2)
-                    .foregroundStyle(Constants.Colors.secondaryGray)
-                    .frame(maxWidth: .infinity)
-            }
-        }
-    }
-    
-    private func selectionBackgroundLayer(cellWidth: CGFloat) -> some View {
-        let visibleDaysInMonth = monthData.days.filter { day in
-            visibleGridDates.contains { Calendar.current.isDate($0, inSameDayAs: day.date) }
-        }
-        
-        let rowGroups = Dictionary(grouping: visibleDaysInMonth) { $0.rowIndex }
-        let sortedRowIndices = rowGroups.keys.sorted()
-        
-        return ZStack(alignment: .topLeading) {
-            ForEach(sortedRowIndices, id: \.self) { rowIndex in
-                if let daysInRow = rowGroups[rowIndex] {
-                    let sortedDays = daysInRow.sorted { $0.weekdayIndex < $1.weekdayIndex }
-                    if let firstDay = sortedDays.first, let lastDay = sortedDays.last {
-                        let startX = CGFloat(firstDay.weekdayIndex) * cellWidth
-                        let width = CGFloat(lastDay.weekdayIndex - firstDay.weekdayIndex + 1) * cellWidth
-                        let y = CGFloat(rowIndex) * (cellHeight + rowSpacing)
-                        
-                        let isFirstRow = rowIndex == sortedRowIndices.first
-                        let isLastRow = rowIndex == sortedRowIndices.last
-                        let continuesFromAbove = sortedRowIndices.contains(rowIndex - 1)
-                        let continuesToBelow = sortedRowIndices.contains(rowIndex + 1)
-                        
-                        let rowAboveEndedAtSaturday: Bool = {
-                            if let aboveRow = rowGroups[rowIndex - 1] {
-                                return aboveRow.contains { $0.weekdayIndex == 6 }
-                            }
-                            return false
-                        }()
-                        
-                        let startsAtSunday = firstDay.weekdayIndex == 0
-                        let endsAtSaturday = lastDay.weekdayIndex == 6
-                        
-                        SelectionRowShape(
-                            cornerRadius: 10,
-                            roundTopLeft: isFirstRow || (startsAtSunday && !rowAboveEndedAtSaturday),
-                            roundTopRight: isFirstRow || !endsAtSaturday,
-                            roundBottomLeft: isLastRow || !startsAtSunday,
-                            roundBottomRight: isLastRow || !continuesToBelow
-                        )
-                        .fill(Constants.Colors.wash)
-                        .frame(width: width, height: cellHeight)
-                        .offset(x: startX, y: y)
-                    }
-                }
-            }
-        }
-    }
-    
-    private func dayCell(for day: CalendarDay) -> some View {
-        Text("\(day.dayNumber)")
-            .font(Constants.Fonts.body2)
-            .foregroundStyle(dayTextColor(for: day))
-            .frame(maxWidth: .infinity)
-            .frame(height: cellHeight)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                guard day.isSelectable else { return }
-                // Check if the date is within allowed range (current month or next month)
-                let dateMonthOffset = CalendarHelper.monthOffset(for: day.date)
-                guard dateMonthOffset <= maxMonthOffset else { return }
-                
-                let selectedDate = Calendar.current.startOfDay(for: day.date)
-                gridStartDate = selectedDate
-                onDateSelected?(selectedDate)
-            }
-    }
-    
-    private func dayTextColor(for day: CalendarDay) -> Color {
-        if day.isToday && day.isCurrentMonth {
-            return Constants.Colors.errorRed
-        }
-        
-        if !day.isCurrentMonth {
-            return Constants.Colors.secondaryGray.opacity(0.5)
-        } else if day.isPast {
-            return Constants.Colors.secondaryGray.opacity(0.5)
-        } else {
-            return Constants.Colors.black
-        }
     }
 }
 
