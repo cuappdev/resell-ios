@@ -62,16 +62,10 @@ struct FollowListView: View {
     
     private var customToolbar: some View {
         HStack {
-            Button {
-                router.pop()
-            } label: {
-                Image(systemName: "chevron.left")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 20)
-                    .foregroundStyle(Constants.Colors.black)
-            }
-            .frame(width: 24, alignment: .leading)
+            BackButton(
+                style: .systemChevronResizable(width: 12, height: 20),
+                hitTargetSize: CGSize(width: 24, height: 44)
+            )
             
             Spacer()
             

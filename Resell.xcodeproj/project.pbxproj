@@ -67,6 +67,7 @@
 		2C9B4CFE2C8FBC580029DF61 /* ReemKufi-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2C9B4CFD2C8FBC580029DF61 /* ReemKufi-Regular.ttf */; };
 		2C9B4D042C8FC8250029DF61 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4CCC2C8FB7B70029DF61 /* LoginView.swift */; };
 		2C9B4D072C8FCB070029DF61 /* PurpleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4D062C8FCB070029DF61 /* PurpleButton.swift */; };
+		2EBACBBA0000000000BB0001 /* BackButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EBACBBA0000000000BB0002 /* BackButton.swift */; };
 		2C9B4D092C8FD8200029DF61 /* LoginViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4D082C8FD8200029DF61 /* LoginViewModel.swift */; };
 		2C9B4D0E2C90F54D0029DF61 /* LoginGradient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4D0D2C90F54D0029DF61 /* LoginGradient.swift */; };
 		2C9B4D102C90F69C0029DF61 /* UIScreen + Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4D0F2C90F69C0029DF61 /* UIScreen + Extensions.swift */; };
@@ -248,6 +249,7 @@
 		2C9B4CFD2C8FBC580029DF61 /* ReemKufi-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "ReemKufi-Regular.ttf"; sourceTree = "<group>"; };
 		2C9B4CFF2C8FBC860029DF61 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2C9B4D062C8FCB070029DF61 /* PurpleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurpleButton.swift; sourceTree = "<group>"; };
+		2EBACBBA0000000000BB0002 /* BackButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackButton.swift; sourceTree = "<group>"; };
 		2C9B4D082C8FD8200029DF61 /* LoginViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewModel.swift; sourceTree = "<group>"; };
 		2C9B4D0D2C90F54D0029DF61 /* LoginGradient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginGradient.swift; sourceTree = "<group>"; };
 		2C9B4D0F2C90F69C0029DF61 /* UIScreen + Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIScreen + Extensions.swift"; sourceTree = "<group>"; };
@@ -616,6 +618,7 @@
 				2C02B3A42CC097AB0020DF90 /* OptionsMenuView.swift */,
 				2CBC6B662CBDDB6400C842A4 /* PaginatedImageView.swift */,
 				2C9B4D062C8FCB070029DF61 /* PurpleButton.swift */,
+				2EBACBBA0000000000BB0002 /* BackButton.swift */,
 				2C02B3982CC040AE0020DF90 /* PriceInputView.swift */,
 				2C9337492C92AD2D00818C8E /* ProductsGalleryView.swift */,
 				2C41BB8B2CD9276E00EFF69E /* ShimmerView.swift */,
@@ -940,6 +943,7 @@
 				2CF3561B2CDDD65F0045A173 /* SwipeableRow.swift in Sources */,
 				2CE473AC2CC5FF8A00BD7E2C /* Router.swift in Sources */,
 				2C9B4D072C8FCB070029DF61 /* PurpleButton.swift in Sources */,
+				2EBACBBA0000000000BB0001 /* BackButton.swift in Sources */,
 				2CBC6B652CB7A5A000C842A4 /* BlockedUsersView.swift in Sources */,
 				2CE473952CC2204500BD7E2C /* DraggableSheetView.swift in Sources */,
 				2ECB2F672E74E03700CAACA2 /* (null) in Sources */,
