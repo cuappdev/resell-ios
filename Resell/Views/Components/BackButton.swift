@@ -35,22 +35,32 @@ struct BackButton: View {
     // MARK: - UI
 
     var body: some View {
-        let button = Button {
+        Button {
             if let action {
                 action()
             } else {
                 router.pop()
             }
         } label: {
-            label
-                .frame(width: hitTargetSize.width, height: hitTargetSize.height)
-                .contentShape(Circle())
+            chevronWithGlass
         }
+        .buttonStyle(.plain)
+    }
 
-        if #available(iOS 17.0, *) {
-            button.buttonBorderShape(.circle)
+    /// On iOS 26 we apply our own circular Liquid Glass to the chevron and use a `.plain` button
+    /// style above so the system's automatic toolbar capsule bubble does NOT also wrap us
+    /// (which is what was producing the rectangular pill shape). On older OSes we just show
+    /// the chevron at the standard hit-target size.
+    @ViewBuilder
+    private var chevronWithGlass: some View {
+        let sized = label
+            .frame(width: hitTargetSize.width, height: hitTargetSize.height)
+            .contentShape(Circle())
+
+        if #available(iOS 26.0, *) {
+            sized.glassEffect(.regular.interactive(), in: Circle())
         } else {
-            button
+            sized
         }
     }
 
