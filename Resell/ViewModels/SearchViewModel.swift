@@ -74,9 +74,7 @@ class SearchViewModel: ObservableObject {
                 } else {
                     searchedItems = postsResponse.posts
                 }
-                
-                print("📝 Recent searches: \(recentlySearched)")
-                
+                                
                 if saveQuery {
                     await MainActor.run {
                         mainViewModel?.saveSearchQuery(searchText)
@@ -123,6 +121,7 @@ class SearchViewModel: ObservableObject {
         return posts
     }
     
+    // TODO: This is getting called way too much, in places it shouldn't be called.
     /// Load posts for recently searched card (fetch just enough to display)
     func loadRecentlySearchedPosts() async -> [Post] {
         if let lastFetch = lastRecentlySearchedFetchTime,
@@ -132,12 +131,8 @@ class SearchViewModel: ObservableObject {
             return cachedRecentlySearchedPosts
         }
         
-        print("🔍 Loading recently searched posts...")
-        print("📋 Recent searches count: \(recentlySearched.count)")
-        print("📋 Recent searchIds: \(recentlySearched)")
-        
+        print("Called Recent Searches")
         guard !recentlySearched.isEmpty else {
-            print("❌ No recent searches found")
             return []
         }
         
