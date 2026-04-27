@@ -22,10 +22,9 @@ class NetworkManager {
     // MARK: - Properties
 
     #if DEBUG
-    // SWITCH
-        private let hostURL: String = Keys.prodServerURL
-    #else
         private let hostURL: String = Keys.devServerURL
+    #else
+        private let hostURL: String = Keys.prodServerURL
     #endif
     private let maxAttempts = 2
     
