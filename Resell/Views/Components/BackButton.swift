@@ -46,6 +46,7 @@ struct BackButton: View {
                 .frame(width: hitTargetSize.width, height: hitTargetSize.height)
                 .contentShape(Circle())
         }
+        .buttonBorderShape(.circle)
     }
 
     @ViewBuilder
