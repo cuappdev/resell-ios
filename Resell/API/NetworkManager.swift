@@ -204,7 +204,9 @@ class NetworkManager {
             }
             
             
-            if httpResponse.statusCode != 200 {
+            // Many endpoints (especially DELETE) return 204 No Content on success; prod
+            // stacks often differ from dev here. Treat any 2xx as success.
+            if !(200...299).contains(httpResponse.statusCode) {
                 if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
                     throw errorResponse
                 }
