@@ -267,9 +267,9 @@ enum ReviewValidationError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingParticipants:
-            return "Cannot create a review without both a buyer and a seller."
+            return "This transaction doesn’t have both a buyer and a seller on file, so a review can’t be sent yet."
         case .sameBuyerAndSeller:
-            return "A user cannot review themselves."
+            return "Buyer and seller can’t be the same person, so this review can’t be submitted."
         }
     }
 }

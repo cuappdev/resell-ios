@@ -547,7 +547,7 @@ struct ReviewTestingView: View {
         } catch {
             await MainActor.run {
                 isSubmitting = false
-                submitResult = "❌ Error: \(error.localizedDescription)"
+                submitResult = "❌ \(error.resellUserFacingDescription)"
             }
             print("❌ Quick review submit error: \(error)")
         }

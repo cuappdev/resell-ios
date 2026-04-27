@@ -148,7 +148,7 @@ struct CompletedTransactionView: View {
         } message: {
             Text("Thank you for your feedback!")
         }
-        .alert("Error", isPresented: $showErrorAlert) {
+        .alert("Couldn’t submit review", isPresented: $showErrorAlert) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(errorMessage)
@@ -333,7 +333,7 @@ struct CompletedTransactionView: View {
             } catch {
                 await MainActor.run {
                     isSubmitting = false
-                    errorMessage = "Failed to submit review. Please try again."
+                    errorMessage = error.resellUserFacingDescription
                     showErrorAlert = true
                 }
                 NetworkManager.shared.logger.error("Error submitting review: \(error.localizedDescription)")

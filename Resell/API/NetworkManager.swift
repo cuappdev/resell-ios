@@ -207,9 +207,25 @@ class NetworkManager {
             if httpResponse.statusCode != 200 {
                 if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
                     throw errorResponse
-                } else {
-                    throw URLError(.init(rawValue: httpResponse.statusCode))
                 }
+                if let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    let msg = (obj["error"] as? String)
+                        ?? (obj["message"] as? String)
+                        ?? (obj["detail"] as? String)
+                    if let msg, !msg.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        throw ErrorResponse(error: msg, httpCode: httpResponse.statusCode)
+                    }
+                }
+                if let raw = String(data: data, encoding: .utf8) {
+                    let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !trimmed.isEmpty, trimmed.count < 400, !trimmed.hasPrefix("<") {
+                        throw ErrorResponse(error: trimmed, httpCode: httpResponse.statusCode)
+                    }
+                }
+                throw ErrorResponse(
+                    error: ErrorResponse.fallbackMessage(forHTTPStatus: httpResponse.statusCode),
+                    httpCode: httpResponse.statusCode
+                )
             }
         }
             
