@@ -35,7 +35,7 @@ struct BackButton: View {
     // MARK: - UI
 
     var body: some View {
-        Button {
+        let button = Button {
             if let action {
                 action()
             } else {
@@ -46,7 +46,12 @@ struct BackButton: View {
                 .frame(width: hitTargetSize.width, height: hitTargetSize.height)
                 .contentShape(Circle())
         }
-        .buttonBorderShape(.circle)
+
+        if #available(iOS 17.0, *) {
+            button.buttonBorderShape(.circle)
+        } else {
+            button
+        }
     }
 
     @ViewBuilder
