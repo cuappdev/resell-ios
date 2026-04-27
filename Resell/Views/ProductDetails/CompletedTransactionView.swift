@@ -291,7 +291,21 @@ struct CompletedTransactionView: View {
         
         Task {
             do {
-                // Create transaction review
+                // Require buyer and seller before doing anything — this prevents
+                // creating an orphan transaction review for a transaction that
+                // can't produce a valid (filterable) user review.
+                guard let buyerId = transaction.buyer?.firebaseUid,
+                      let sellerId = transaction.seller?.firebaseUid,
+                      !buyerId.isEmpty, !sellerId.isEmpty else {
+                    NetworkManager.shared.logger.error("submitReview aborted: transaction \(transaction.id) is missing buyer or seller info")
+                    await MainActor.run {
+                        isSubmitting = false
+                        errorMessage = "This transaction is missing buyer or seller info, so it can't be reviewed yet."
+                        showErrorAlert = true
+                    }
+                    return
+                }
+                
                 let reviewBody = CreateTransactionReviewBody(
                     transactionId: transaction.id,
                     stars: stars,
@@ -303,18 +317,14 @@ struct CompletedTransactionView: View {
                 
                 _ = try await NetworkManager.shared.createTransactionReview(review: reviewBody)
                 
-                // Also create a user review for the seller (only if we have buyer/seller info)
-                if let buyerId = transaction.buyer?.firebaseUid,
-                   let sellerId = transaction.seller?.firebaseUid {
-                    let userReviewBody = CreateUserReviewBody(
-                        buyerId: buyerId,
-                        sellerId: sellerId,
-                        fulfilled: true,
-                        stars: stars,
-                        comments: reviewFeedback.isEmpty ? "Great transaction!" : reviewFeedback
-                    )
-                    _ = try await NetworkManager.shared.createUserReview(review: userReviewBody)
-                }
+                let userReviewBody = CreateUserReviewBody(
+                    buyerId: buyerId,
+                    sellerId: sellerId,
+                    fulfilled: true,
+                    stars: stars,
+                    comments: reviewFeedback.isEmpty ? "Great transaction!" : reviewFeedback
+                )
+                _ = try await NetworkManager.shared.createUserReview(review: userReviewBody)
                 
                 await MainActor.run {
                     isSubmitting = false

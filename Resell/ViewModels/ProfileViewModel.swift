@@ -131,6 +131,7 @@ class ProfileViewModel: ObservableObject {
                 if let firebaseUid = externalUser?.firebaseUid {
                 do {
                         externalUserReviews = try await NetworkManager.shared.getUserReviewsBySeller(sellerId: firebaseUid)
+                    print("Current Firebase UID: \(firebaseUid)")
                 } catch {
                         NetworkManager.shared.logger.error("Error fetching user reviews: \(error)")
                         externalUserReviews = []

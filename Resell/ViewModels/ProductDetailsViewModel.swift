@@ -33,27 +33,6 @@ class ProductDetailsViewModel: ObservableObject {
 
     // MARK: - Functions
 
-    func getPost(id: String) {
-        isLoading = true
-
-        Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
-
-            do {
-                let postResponse = try await NetworkManager.shared.getPostByID(id: id)
-                item = postResponse.post
-                if let post = postResponse.post {
-                    images = post.images.compactMap { URL(string: $0) }
-                }
-
-                await calculateMaxImgRatio()
-                getIsSaved()
-                getSimilarPosts(id: id)
-            } catch {
-                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getPost: \(error)")
-            }
-        }
-    }
 
     func isMyPost() -> Bool {
         if let userID = GoogleAuthManager.shared.user?.firebaseUid {
@@ -115,31 +94,10 @@ class ProductDetailsViewModel: ObservableObject {
             do {
                 let postsResponse = try await NetworkManager.shared.getSimilarPostsByID(id: id)
                 similarPosts = Array(postsResponse.posts)
-             
+                print("# of similar posts: \(similarPosts.count)")
+                
             } catch {
                 NetworkManager.shared.logger.error("Errror in ProductDetailsViewModel.getSimilarPosts: \(error)")
-            }
-        }
-    }
-
-    func getSimilarPostsNaive(post: Post) {
-        Task {
-            do {
-                // idk if this is what the endpoint even wants...
-                let postsResponse = try await NetworkManager.shared.getFilteredPosts(by: post.category != nil ? post.category! : "")
-                var otherPosts = postsResponse.posts
-                otherPosts.removeAll { $0.id == post.id }
-
-                if otherPosts.count >= 4 {
-                    similarPosts = Array(otherPosts.prefix(4))
-                } else {
-                    similarPosts = otherPosts
-                }
-
-                isLoadingImages = false
-            } catch {
-                NetworkManager.shared.logger.error("Errror in ProductDetailsViewModel.getSimilarPostsNaive: \(error)")
-                isLoadingImages = false
             }
         }
     }
