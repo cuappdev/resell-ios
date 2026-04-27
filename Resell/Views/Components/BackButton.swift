@@ -44,7 +44,7 @@ struct BackButton: View {
         } label: {
             label
                 .frame(width: hitTargetSize.width, height: hitTargetSize.height)
-                .contentShape(Rectangle())
+                .contentShape(Circle())
         }
     }
 
