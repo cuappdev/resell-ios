@@ -499,7 +499,18 @@ struct ReviewTestingView: View {
         }
         
         do {
-            // 1. Create transaction review
+            // Require buyer + seller up front so test data can't pollute the
+            // reviews collection with orphaned entries that lack a seller.
+            guard let buyerId = tx.buyer?.firebaseUid,
+                  let sellerId = tx.seller?.firebaseUid,
+                  !buyerId.isEmpty, !sellerId.isEmpty else {
+                await MainActor.run {
+                    isSubmitting = false
+                    submitResult = "❌ Error: transaction \(tx.id) is missing buyer or seller info — fix the test transaction before reviewing."
+                }
+                return
+            }
+            
             let reviewBody = CreateTransactionReviewBody(
                 transactionId: tx.id,
                 stars: quickStars,
@@ -511,21 +522,15 @@ struct ReviewTestingView: View {
             
             let txReviewResponse = try await NetworkManager.shared.createTransactionReview(review: reviewBody)
             
-            var userReviewResult = "skipped (no buyer/seller IDs)"
-            
-            // 2. Create user review if we have IDs
-            if let buyerId = tx.buyer?.firebaseUid,
-               let sellerId = tx.seller?.firebaseUid {
-                let userReviewBody = CreateUserReviewBody(
-                    buyerId: buyerId,
-                    sellerId: sellerId,
-                    fulfilled: true,
-                    stars: quickStars,
-                    comments: quickComment.isEmpty ? "Test review" : quickComment
-                )
-                let userResponse = try await NetworkManager.shared.createUserReview(review: userReviewBody)
-                userReviewResult = "created (id: \(userResponse.review.id))"
-            }
+            let userReviewBody = CreateUserReviewBody(
+                buyerId: buyerId,
+                sellerId: sellerId,
+                fulfilled: true,
+                stars: quickStars,
+                comments: quickComment.isEmpty ? "Test review" : quickComment
+            )
+            let userResponse = try await NetworkManager.shared.createUserReview(review: userReviewBody)
+            let userReviewResult = "created (id: \(userResponse.review.id))"
             
             await MainActor.run {
                 isSubmitting = false
@@ -537,7 +542,6 @@ struct ReviewTestingView: View {
                 """
             }
             
-            // Refresh reviews list
             await fetchReviews()
             
         } catch {

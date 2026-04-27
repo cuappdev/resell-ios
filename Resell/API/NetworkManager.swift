@@ -22,9 +22,10 @@ class NetworkManager {
     // MARK: - Properties
 
     #if DEBUG
-        private let hostURL: String = Keys.devServerURL
-    #else
+    // SWITCH
         private let hostURL: String = Keys.prodServerURL
+    #else
+        private let hostURL: String = Keys.devServerURL
     #endif
     private let maxAttempts = 2
     
@@ -712,10 +713,26 @@ class NetworkManager {
         
         /// Get all transaction reviews for a seller
         func getReviewsForSeller(sellerId: String) async throws -> [TransactionReview] {
-            let url = try constructURL(endpoint: "/transactionReview/")
+            // Prefer server-side filtering when available.
+            let endpoint = "/transactionReview/?sellerId=\(sellerId)"
+            let url = try constructURL(endpoint: endpoint)
             let request = try await createRequest(url: url, method: "GET")
             let (data, response) = try await URLSession.shared.data(for: request)
-            try handleResponse(data: data, response: response)
+            
+            // Some environments may not support query params on this route yet.
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 404 {
+                print("⚠️ Transaction review query endpoint returned 404, trying base endpoint...")
+                return try await getReviewsForSellerFallback(sellerId: sellerId)
+            }
+            
+            do {
+                try handleResponse(data: data, response: response)
+            } catch {
+                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 404 {
+                    return try await getReviewsForSellerFallback(sellerId: sellerId)
+                }
+                throw error
+            }
             
             // Debug: print raw response
             if let jsonString = String(data: data, encoding: .utf8) {
@@ -739,17 +756,58 @@ class NetworkManager {
                 }
             }
             
-            print("⭐ Found \(allReviews.count) total transaction reviews")
+            let filteredReviews = filterTransactionReviewsBySeller(allReviews, sellerId: sellerId)
+            print("⭐ Found \(filteredReviews.count) transaction reviews for seller \(sellerId) out of \(allReviews.count) total")
+            return filteredReviews
+        }
+        
+        private func getReviewsForSellerFallback(sellerId: String) async throws -> [TransactionReview] {
+            let url = try constructURL(endpoint: "/transactionReview/")
+            let request = try await createRequest(url: url, method: "GET")
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try handleResponse(data: data, response: response)
             
-            // NOTE: Backend doesn't include seller in transaction review response
-            // For now, return all reviews. Backend should be updated to include seller info for proper filtering.
-            // TODO: Filter by seller once backend includes seller in transaction object
-            return allReviews
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("⭐ Transaction reviews raw response (fallback): \(jsonString.prefix(1000))")
+            }
+            
+            var allReviews: [TransactionReview] = []
+            
+            do {
+                let wrapped = try jsonDecoder.decode(TransactionReviewsResponse.self, from: data)
+                allReviews = wrapped.reviews
+            } catch {
+                print("❌ Wrapped decode failed (fallback): \(error)")
+                do {
+                    allReviews = try jsonDecoder.decode([TransactionReview].self, from: data)
+                } catch {
+                    print("❌ Array decode failed (fallback): \(error)")
+                    throw error
+                }
+            }
+            
+            let filteredReviews = filterTransactionReviewsBySeller(allReviews, sellerId: sellerId)
+            print("⭐ Found \(filteredReviews.count) transaction reviews for seller \(sellerId) out of \(allReviews.count) total (fallback)")
+            return filteredReviews
         }
         
         // MARK: - User Review Functions
         
         func createUserReview(review: CreateUserReviewBody) async throws -> UserReviewResponse {
+            // Refuse to create a user review without both participants.
+            // Prevents seller-less or buyer-less reviews from being persisted,
+            // which would later be unfilterable by seller on the client.
+            let trimmedBuyer = review.buyerId.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedSeller = review.sellerId.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedBuyer.isEmpty, !trimmedSeller.isEmpty else {
+                logger.error("createUserReview rejected: missing buyerId or sellerId (buyer='\(trimmedBuyer)', seller='\(trimmedSeller)')")
+                throw ReviewValidationError.missingParticipants
+            }
+            guard trimmedBuyer != trimmedSeller else {
+                logger.error("createUserReview rejected: buyer and seller are the same user (\(trimmedBuyer))")
+                throw ReviewValidationError.sameBuyerAndSeller
+            }
+            
             let url = try constructURL(endpoint: "/userReview/")
             let requestData = try jsonEncoder.encode(review)
             
@@ -816,7 +874,7 @@ class NetworkManager {
             }
             
             if let jsonString = String(data: data, encoding: .utf8) {
-                print("👤 User reviews raw response (with query): \(jsonString.prefix(1000))")
+                print("👤 User reviews raw response (with query): \(jsonString.prefix(10000))")
             }
             
             var allReviews: [UserReview] = []
@@ -835,8 +893,9 @@ class NetworkManager {
                 }
             }
             
-            print("✅ Found \(allReviews.count) user reviews for seller \(sellerId) (query parameter worked)")
-            return allReviews
+            let filteredReviews = filterUserReviewsBySeller(allReviews, sellerId: sellerId)
+            print("✅ Found \(filteredReviews.count) user reviews for seller \(sellerId) out of \(allReviews.count) total (query parameter worked)")
+            return filteredReviews
         }
         
         private func getUserReviewsBySellerFallback(sellerId: String) async throws -> [UserReview] {
@@ -872,30 +931,39 @@ class NetworkManager {
                 }
             }
             
-            // Debug: Check what seller info we have
             print("🔍 Debugging reviews for sellerId: \(sellerId)")
-            var reviewsWithSeller = 0
-            for review in allReviews {
-                if review.seller != nil {
-                    reviewsWithSeller += 1
-                }
-            }
-            print("  Total reviews: \(allReviews.count), Reviews with seller info: \(reviewsWithSeller)")
+            print("  Total reviews decoded with required seller info: \(allReviews.count)")
             
-            // Filter by sellerId (only works if backend returns seller info)
-            let filteredReviews = allReviews.filter { review in
-                guard let sellerUid = review.seller?.firebaseUid else {
-                    return false
-                }
-                return sellerUid == sellerId
-            }
-            
-            if filteredReviews.isEmpty && !allReviews.isEmpty {
-                print("⚠️ WARNING: Backend is not returning 'seller' field in UserReview response. Cannot filter reviews by seller.")
-                print("⚠️ This is a backend issue - the response should include seller info for each review.")
-            }
+            let filteredReviews = filterUserReviewsBySeller(allReviews, sellerId: sellerId)
             
             print("✅ Found \(filteredReviews.count) user reviews for seller \(sellerId) out of \(allReviews.count) total")
+            return filteredReviews
+        }
+        
+        private func filterUserReviewsBySeller(_ reviews: [UserReview], sellerId: String) -> [UserReview] {
+            let filteredReviews = reviews.filter { review in
+                review.seller.firebaseUid == sellerId
+            }
+            
+            if filteredReviews.isEmpty && !reviews.isEmpty {
+                print("⚠️ UserReview seller filtering returned 0 matches for seller \(sellerId).")
+                print("⚠️ All decoded reviews include seller info, but none match this seller id.")
+            }
+            
+            return filteredReviews
+        }
+        
+        private func filterTransactionReviewsBySeller(_ reviews: [TransactionReview], sellerId: String) -> [TransactionReview] {
+            let filteredReviews = reviews.filter { review in
+                review.transaction?.seller?.firebaseUid == sellerId
+            }
+            
+            if filteredReviews.isEmpty && !reviews.isEmpty {
+                let reviewsWithSellerInfo = reviews.filter { $0.transaction?.seller != nil }.count
+                print("⚠️ TransactionReview seller filtering returned 0 matches for seller \(sellerId).")
+                print("⚠️ Reviews with transaction.seller info: \(reviewsWithSellerInfo)/\(reviews.count)")
+            }
+            
             return filteredReviews
         }
         
