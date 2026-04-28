@@ -140,7 +140,12 @@ struct TransactionConfirmationPopup: View {
                     onConfirm(completed, transaction)
                     
                     if completed, let tx = transaction {
-                        router.push(.completedTransaction(tx))
+                        let uid = GoogleAuthManager.shared.user?.firebaseUid
+                        let isBuyer = (tx.buyer?.firebaseUid == uid)
+                            || (notification.data.buyerId == uid)
+                        if isBuyer {
+                            router.push(.completedTransaction(tx))
+                        }
                     }
                 }
             } catch {
