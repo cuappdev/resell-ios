@@ -92,6 +92,11 @@ struct Constants {
         /// (new) FCM registration token. `userInfo["token"]` holds the string.
         /// Subscribers are responsible for syncing the value with the backend.
         static let FCMTokenUpdated = Notification.Name("FCMTokenUpdated")
+
+        /// Posted when the user opens a push notification that includes a `transactionId`
+        /// (same key in FCM `userInfo`). `userInfo["transactionId"]` is the backend id string.
+        /// `MainTabView` routes to reviews if the sale is already completed, else Notifications.
+        static let OpenTransactionDeepLink = Notification.Name("ResellOpenTransactionDeepLink")
     }
 
     /// Chat  categories used in Resell's design system

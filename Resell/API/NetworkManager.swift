@@ -661,7 +661,11 @@ class NetworkManager {
             try handleResponse(data: data, response: response)
             return try jsonDecoder.decode(TransactionResponse.self, from: data)
         }
-        
+
+        /// Marks a transaction as completed (meetup happened). Backend is authoritative: which
+        /// roles may call, when (e.g. after meeting window), and duplicate/idempotent behavior are
+        /// enforced server-side. Callers: `TransactionConfirmationPopup` (notification-driven)
+        /// and chat “Mark sale complete” after a proposal is accepted—both use this endpoint.
         func completeTransaction(transactionId: String) async throws -> TransactionResponse {
             let url = try constructURL(endpoint: "/transaction/complete/id/\(transactionId)/")
             let requestData = try jsonEncoder.encode(CompleteTransactionBody(completed: true))

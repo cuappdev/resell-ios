@@ -126,6 +126,26 @@ struct MainTabView: View {
                 }
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: Constants.Notifications.OpenTransactionDeepLink)) { output in
+            guard mainViewModel.userDidLogin else { return }
+            guard let tid = output.userInfo?["transactionId"] as? String, !tid.isEmpty else { return }
+            Task {
+                do {
+                    let response = try await NetworkManager.shared.getTransactionById(transactionId: tid)
+                    await MainActor.run {
+                        if response.transaction.completed {
+                            router.push(.completedTransaction(response.transaction))
+                        } else {
+                            router.push(.notifications)
+                        }
+                    }
+                } catch {
+                    await MainActor.run {
+                        router.push(.notifications)
+                    }
+                }
+            }
+        }
     }
 
     private var mainView: some View {
