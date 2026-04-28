@@ -13,6 +13,7 @@ struct Keys {
     static let sshdevServerURL = Keys.mainKeyDict(key: "RESELL_SSHDEV_URL")
     static let prodServerURL = Keys.mainKeyDict(key: "RESELL_PROD_URL")
     static let firebaseURL = Keys.mainKeyDict(key: "FIREBASE_URL")
+    static let appStoreId = Keys.mainKeyDict(key: "RESELL_APP_STORE_ID")
 
     static let googleClientID = Keys.googleKeyDict["CLIENT_ID"] as? String ?? ""
     static let googlePlacesKey = Keys.googleKeyDict["GOOGLE_API_KEY"] as? String ?? ""

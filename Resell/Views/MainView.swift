@@ -11,6 +11,7 @@ import SwiftUI
 struct MainView: View {
 
     // MARK: - Properties
+    @Environment(\.scenePhase) private var scenePhase
 
     @EnvironmentObject private var mainViewModel: MainViewModel
     @StateObject private var router = Router()
@@ -19,6 +20,7 @@ struct MainView: View {
     @StateObject private var onboardingViewModel = SetupProfileViewModel()
     @StateObject private var reportViewModel = ReportViewModel()
     @StateObject private var searchViewModel = SearchViewModel()
+    @StateObject private var appVersionService = AppVersionService()
 
     // MARK: - UI
 
@@ -39,6 +41,27 @@ struct MainView: View {
                 mainViewModel.restoreSignIn()
                 mainViewModel.setupNavBar()
                 mainViewModel.hidesTabBar = false
+            }
+            .task {
+                await appVersionService.checkIfUpdateRequired()
+            }
+            .onChange(of: scenePhase) { newValue in
+                guard newValue == .active else { return }
+                Task { await appVersionService.checkIfUpdateRequired() }
+            }
+            .fullScreenCover(isPresented: Binding(
+                get: { appVersionService.isUpdateRequired },
+                set: { _ in }
+            )) {
+                ForceUpdateView(
+                    installedVersion: appVersionService.installedVersion,
+                    requiredVersion: appVersionService.requiredVersion,
+                    appStoreId: Keys.appStoreId,
+                    onTryAgain: {
+                        Task { await appVersionService.checkIfUpdateRequired() }
+                    }
+                )
+                .interactiveDismissDisabled(true)
             }
             .onOpenURL { url in
                 GIDSignIn.sharedInstance.handle(url)

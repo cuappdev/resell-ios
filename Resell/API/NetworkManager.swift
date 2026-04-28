@@ -91,13 +91,28 @@ class NetworkManager {
         
         private func shouldRetryOn401(_ request: URLRequest) -> Bool {
             guard let path = request.url?.path else { return true }
+            // Public app-version check: no Bearer token; don't spin on refresh if backend returns 401.
+            if path.hasSuffix("/version") || path.hasSuffix("/version/") { return false }
             return !authEstablishingPathSuffixes.contains { path.hasSuffix($0) }
         }
         
         /// Central request execution with 401 interceptor: refreshes token and retries when eligible.
         private func perform(requestBuilder: () async throws -> URLRequest, attempt: Int = 1) async throws -> (Data, URLResponse) {
             let request = try await requestBuilder()
+            let isVersionPath = request.url?.path.hasSuffix("/version") == true
+                || request.url?.path.hasSuffix("/version/") == true
+            #if DEBUG
+            if isVersionPath {
+                print("[AppVersion] URLSession starting request…")
+            }
+            #endif
             let (data, response) = try await URLSession.shared.data(for: request)
+            #if DEBUG
+            if isVersionPath {
+                let code = (response as? HTTPURLResponse)?.statusCode ?? -1
+                print("[AppVersion] URLSession finished — status=\(code) bodyBytes=\(data.count)")
+            }
+            #endif
             
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 401 {
                 let error = (try? JSONDecoder().decode(ErrorResponse.self, from: data)) ?? ErrorResponse(error: "Unauthorized", httpCode: 401)
@@ -137,6 +152,12 @@ class NetworkManager {
         ///
         func get<T: Decodable>(url: URL) async throws -> T {
             let (data, _) = try await perform { try await createRequest(url: url, method: "GET") }
+            return try jsonDecoder.decode(T.self, from: data)
+        }
+
+        /// GET without Authorization. Used for public endpoints (e.g. app version check before login).
+        func getPublic<T: Decodable>(url: URL) async throws -> T {
+            let (data, _) = try await perform { createPublicGETRequest(url: url) }
             return try jsonDecoder.decode(T.self, from: data)
         }
     
@@ -187,6 +208,15 @@ class NetworkManager {
             request.httpBody = body
             return request
         }
+
+        private func createPublicGETRequest(url: URL, timeout: TimeInterval = 15) -> URLRequest {
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.timeoutInterval = timeout
+            request.cachePolicy = .reloadIgnoringLocalCacheData
+            return request
+        }
             
         private func constructURL(endpoint: String) throws -> URL {
             guard let url = URL(string: "\(hostURL)\(endpoint)") else {
@@ -233,6 +263,21 @@ class NetworkManager {
             
             
         // MARK: - Auth Networking Functions
+
+        // MARK: - App Version
+
+        struct AppVersionResponse: Decodable {
+            let version: String
+        }
+
+        /// Returns the minimum required app version (e.g. "1.0.7") from `GET .../version/`.
+        func getRequiredAppVersion() async throws -> AppVersionResponse {
+            let url = try constructURL(endpoint: "/version/")
+            #if DEBUG
+            print("[AppVersion] GET (no auth) \(url.absoluteString) timeout=15s")
+            #endif
+            return try await getPublic(url: url)
+        }
         
         func authorize(authorizeBody: AuthorizeBody) async throws -> User? {
             let url = try constructURL(endpoint: "/auth")
