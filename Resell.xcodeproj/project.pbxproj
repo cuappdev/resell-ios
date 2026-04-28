@@ -163,8 +163,8 @@
 		2EEAAB2D2F2311620006FF5C /* Availability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEAAB2C2F23115E0006FF5C /* Availability.swift */; };
 		2EEB57262F03C704008D2DF3 /* ReviewSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E02D3802F03C48200CCABE6 /* ReviewSection.swift */; };
 		C607480B2F90643700825192 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C607480A2F90643200825192 /* ShareSheet.swift */; };
-		C6F1BDB72FA14C0B004886F8 /* SemanticVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F1BDB62FA14C0B004886F8 /* SemanticVersion.swift */; };
-		C6F1BDB82FA14C0B004886F8 /* AppVersionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F1BDB52FA14C0B004886F8 /* AppVersionService.swift */; };
+		C6235EDD2FA1587E00395FD7 /* SemanticVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6235EDB2FA1587E00395FD7 /* SemanticVersion.swift */; };
+		C6235EDE2FA1587E00395FD7 /* AppVersionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6235EDA2FA1587E00395FD7 /* AppVersionService.swift */; };
 		C6F1BDBB2FA14CC1004886F8 /* ForceUpdateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F1BDBA2FA14CC1004886F8 /* ForceUpdateView.swift */; };
 /* End PBXBuildFile section */
 
@@ -323,8 +323,8 @@
 		2EEAAB272F1ADA1B0006FF5C /* AvailabilitySettingsMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailabilitySettingsMenu.swift; sourceTree = "<group>"; };
 		2EEAAB2C2F23115E0006FF5C /* Availability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Availability.swift; sourceTree = "<group>"; };
 		C607480A2F90643200825192 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
-		C6F1BDB52FA14C0B004886F8 /* AppVersionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppVersionService.swift; sourceTree = "<group>"; };
-		C6F1BDB62FA14C0B004886F8 /* SemanticVersion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SemanticVersion.swift; sourceTree = "<group>"; };
+		C6235EDA2FA1587E00395FD7 /* AppVersionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppVersionService.swift; sourceTree = "<group>"; };
+		C6235EDB2FA1587E00395FD7 /* SemanticVersion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SemanticVersion.swift; sourceTree = "<group>"; };
 		C6F1BDBA2FA14CC1004886F8 /* ForceUpdateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForceUpdateView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -640,8 +640,7 @@
 			isa = PBXGroup;
 			children = (
 				2C9B4CCA2C8FB7B70029DF61 /* ResellApp.swift */,
-				C6F1BDB52FA14C0B004886F8 /* AppVersionService.swift */,
-				C6F1BDB62FA14C0B004886F8 /* SemanticVersion.swift */,
+				C6235EDC2FA1587E00395FD7 /* Versioning */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -731,6 +730,15 @@
 			children = (
 			);
 			name = "Recovered References";
+			sourceTree = "<group>";
+		};
+		C6235EDC2FA1587E00395FD7 /* Versioning */ = {
+			isa = PBXGroup;
+			children = (
+				C6235EDA2FA1587E00395FD7 /* AppVersionService.swift */,
+				C6235EDB2FA1587E00395FD7 /* SemanticVersion.swift */,
+			);
+			path = Versioning;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -963,12 +971,12 @@
 				2C9337562C935CB600818C8E /* ProfileView.swift in Sources */,
 				2E9F758B2EB6D680003FE0E0 /* SearchViewModel.swift in Sources */,
 				2E9F758C2EB6D680003FE0E0 /* EditProfileViewModel.swift in Sources */,
-				C6F1BDB72FA14C0B004886F8 /* SemanticVersion.swift in Sources */,
-				C6F1BDB82FA14C0B004886F8 /* AppVersionService.swift in Sources */,
 				2E9F758D2EB6D680003FE0E0 /* CurrentUserProfileManager.swift in Sources */,
 				2E9E04312F270210005D9256 /* NotificationsView.swift in Sources */,
 				2E9F758E2EB6D680003FE0E0 /* MessagesViewModel.swift in Sources */,
 				2C16928D2CE41727009D2291 /* ErrorResponse.swift in Sources */,
+				C6235EDD2FA1587E00395FD7 /* SemanticVersion.swift in Sources */,
+				C6235EDE2FA1587E00395FD7 /* AppVersionService.swift in Sources */,
 				2C6FB1772CFACB2500B35FF8 /* FirestoreManager.swift in Sources */,
 				2C6FB1A02CFACB2500B35FF8 /* ChatProfileCache.swift in Sources */,
 				2CE4739E2CC4575F00BD7E2C /* ReportOptionsView.swift in Sources */,
