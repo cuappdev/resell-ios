@@ -56,6 +56,28 @@ extension UIImage {
         guard let imageData = self.jpegData(compressionQuality: compressionQuality) else { return nil }
         return "data:image/jpeg;base64,\(imageData.base64EncodedString())"
     }
+
+    /// Safe placeholder for an empty/loading user profile image.
+    ///
+    /// Previously the codebase scattered `UIImage(named: "emptyProfile")!`
+    /// across view models and views. That force-unwrap is a launch-time crash
+    /// hazard if the asset catalog drops `emptyProfile` (target membership
+    /// changed, asset compilation failed for the device's iOS version, SVG
+    /// rendering fallback issue, etc.). Use this single resolver so we always
+    /// get a usable image: bundled asset → SF Symbol fallback → blank UIImage.
+    ///
+    /// Named `profilePlaceholder` rather than `emptyProfile` because Xcode 15+
+    /// auto-synthesizes a `UIImage.emptyProfile` symbol from the asset
+    /// catalog, which would collide with this extension.
+    static let profilePlaceholder: UIImage = {
+        if let asset = UIImage(named: "emptyProfile") {
+            return asset
+        }
+        if let symbol = UIImage(systemName: "person.crop.circle") {
+            return symbol
+        }
+        return UIImage()
+    }()
 }
 
 

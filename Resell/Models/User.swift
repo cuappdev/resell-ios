@@ -57,10 +57,18 @@ struct User: Codable, Equatable, Hashable {
             throw URLError(.badServerResponse)
         }
 
+        // Safely derive the netid from the email's local-part. The previous
+        // implementation force-subscripted `[0]` on the result of `split`,
+        // which traps with "Index out of range" when the email is empty
+        // (`"".split(separator: "@") == []`). Use `.first` instead so an
+        // empty/odd profile email simply produces an empty netid.
+        let email = user.profile?.email ?? ""
+        let netid = email.split(separator: "@").first.map(String.init) ?? ""
+
         return User(
             firebaseUid: firebaseUserId,
             username: user.profile?.email ?? "",
-            netid: String(user.profile?.email.split(separator: "@")[0] ?? ""),
+            netid: netid,
             givenName: user.profile?.givenName ?? "",
             familyName: user.profile?.familyName ?? "",
             admin: false,

@@ -38,6 +38,10 @@ struct MainView: View {
             .onAppear {
                 let signInConfig = GIDConfiguration.init(clientID: Keys.googleClientID)
                 GIDSignIn.sharedInstance.configuration = signInConfig
+                // Wire the singleton to the *real* `MainViewModel` instance
+                // SwiftUI is using for this view tree. Doing this in
+                // `ResellApp.init()` was unsafe (see note there).
+                HomeViewModel.shared.configure(mainViewModel: mainViewModel)
                 mainViewModel.restoreSignIn()
                 mainViewModel.setupNavBar()
                 mainViewModel.hidesTabBar = false

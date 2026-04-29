@@ -111,11 +111,12 @@ class SearchViewModel: ObservableObject {
         // If you have a bulk fetch endpoint:
         // return try? await NetworkManager.shared.getPostsByIds(postIds)
         
-        // Otherwise, fetch individually (less efficient):
+        // Otherwise, fetch individually (less efficient).
         var posts: [Post] = []
         for postId in postIds {
-            if let post = try? await NetworkManager.shared.getPostByID(id: postId) {
-                posts.append(post.post!) // should be fine...
+            if let response = try? await NetworkManager.shared.getPostByID(id: postId),
+               let post = response.post {
+                posts.append(post)
             }
         }
         return posts

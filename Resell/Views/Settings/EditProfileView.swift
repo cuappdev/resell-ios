@@ -18,7 +18,7 @@ struct EditProfileView: View {
     @State private var editedUsername: String = ""
     @State private var editedBio: String = ""
     @State private var editedVenmo: String = ""
-    @State private var editedProfilePic: UIImage = UIImage(named: "emptyProfile")!
+    @State private var editedProfilePic: UIImage = .profilePlaceholder
     
     @State private var selectedItem: PhotosPickerItem? = nil
     @State private var didShowPhotosPicker: Bool = false
