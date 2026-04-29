@@ -1201,7 +1201,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Resell/Info.plist;
-				INFOPLIST_KEY_NSCameraUsageDescription = "This app requires camera access to work properly";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Resell needs access to your camera so you can take photos of items you want to list for sale.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Resell needs access to your photo library so you can attach images to chats with other students or items you want to list for sale.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -1235,7 +1236,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Resell/Info.plist;
-				INFOPLIST_KEY_NSCameraUsageDescription = "This app requires camera access to work properly";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Resell needs access to your camera so you can take photos of items you want to list for sale.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Resell needs access to your photo library so you can attach images to item you want to list for sale or chats with other students.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
