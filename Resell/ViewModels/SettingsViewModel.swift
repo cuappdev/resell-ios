@@ -24,7 +24,6 @@ class SettingsViewModel: ObservableObject {
         .sendFeedback,
         .blockedUsers,
         .eula,
-        .reviewTesting,  // Debug: test review creation & date inspection
         .logout
     ]
 
@@ -88,6 +87,5 @@ enum Settings {
     case sendFeedback
     case blockedUsers
     case eula
-    case reviewTesting
     case logout
 }
