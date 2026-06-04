@@ -27,7 +27,16 @@ struct RangeSlider: View {
                 let lowX = position(for: lowValue) + handleDiameter / 2
                 let highX = position(for: highValue) + handleDiameter / 2
                 Rectangle()
-                    .fill(Constants.Colors.resellPurple)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Constants.Colors.resellPurple.opacity(0.5),
+                                Constants.Colors.resellPurple
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
                     .frame(width: max(0, highX - lowX), height: 4)
                     .offset(x: lowX)
                 
