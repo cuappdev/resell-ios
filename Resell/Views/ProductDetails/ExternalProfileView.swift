@@ -16,88 +16,80 @@ struct ExternalProfileView: View {
     @StateObject private var viewModel = ProfileViewModel()
     @State var listingViewIsPresented: Bool = true
     @State private var didShowUnfollowPopup: Bool = false
-    @State private var toolbarHeight: CGFloat = 0
-
     var userID: String
 
     // MARK: - UI
     // TODO: It should be impossible for the externalUser to be inactive/null
 
     var body: some View {
-        ZStack(alignment: .top) {
+        ZStack {
             ScrollView {
-                ZStack {
-                    VStack(alignment: .leading) {
-                        // Spacer so content starts below the floating glass toolbar
-                        Color.clear.frame(height: toolbarHeight)
+                LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                    // Toolbar + profile header scroll away naturally
+                    VStack(alignment: .leading, spacing: 0) {
+                        customToolbar
 
                         profileView
                             .padding(.top, 12)
                             .padding(.leading, 26)
-                        
-                        profileTabBar
-                        
-                        if listingViewIsPresented {
-                            ScrollView {
-                                ProductsGalleryView(items: viewModel.externalUserPosts)
-                                    .loadingView(isLoading: viewModel.isLoadingExternalUser)
-                                    .padding(.top, 16)
-                            }
-                            .background(Constants.Colors.white)
-                        } else {
-                            ScrollView {
-                                ReviewSection(reviews: viewModel.externalUserReviews)
-                                    .loadingView(isLoading: viewModel.isLoadingExternalUser)
-                            }
-                            .background(Constants.Colors.white)
-                        }
                     }
                     .background(Constants.Colors.white)
-                    .onAppear {
-                        viewModel.loadExternalUser(id: userID)
-                    }
-                    
-                    if viewModel.sellerIsBlocked {
-                        ZStack {
-                            Constants.Colors.black
-                                .opacity(0.75)
-                                .ignoresSafeArea()
-                            
-                            Text("This profile is blocked")
-                                .font(Constants.Fonts.title1)
-                                .foregroundStyle(Constants.Colors.white)
+
+                    // Tab bar pins to the top once the header scrolls off
+                    Section {
+                        if listingViewIsPresented {
+                            ProductsGalleryView(items: viewModel.externalUserPosts)
+                                .loadingView(isLoading: viewModel.isLoadingExternalUser)
+                                .padding(.top, 16)
+                        } else {
+                            ReviewSection(reviews: viewModel.externalUserReviews)
+                                .loadingView(isLoading: viewModel.isLoadingExternalUser)
                         }
-                        .animation(.easeInOut, value: viewModel.sellerIsBlocked)
+                    } header: {
+                        profileTabBar
+                            .background(Constants.Colors.white)
                     }
-                    
-                    if viewModel.didShowOptionsMenu {
-                        OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowBlockView: $viewModel.didShowBlockView, options: {
-                            var options: [Option] = [
-                                .report(type: "User", id: userID),
-                            ]
-                            if viewModel.sellerIsBlocked {
-                                options.append(.unblock)
-                            } else {
-                                options.append(.block)
-                            }
-                            return options
-                        }())
-                        .zIndex(1)
-                    }
-                }
-                .popupModal(isPresented: $viewModel.didShowBlockView) {
-                    popupModalContent
-                }
-                .sheet(isPresented: $didShowUnfollowPopup) {
-                    unfollowSheetContent
-                        .presentationDetents([.height(375)])
-                        .presentationDragIndicator(.visible)
                 }
             }
+            .onAppear {
+                viewModel.loadExternalUser(id: userID)
+            }
 
-            // Glass toolbar floats above the scroll content
-            customToolbar
-                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { toolbarHeight = $0 }
+            if viewModel.sellerIsBlocked {
+                ZStack {
+                    Constants.Colors.black
+                        .opacity(0.75)
+                        .ignoresSafeArea()
+
+                    Text("This profile is blocked")
+                        .font(Constants.Fonts.title1)
+                        .foregroundStyle(Constants.Colors.white)
+                }
+                .animation(.easeInOut, value: viewModel.sellerIsBlocked)
+            }
+
+            if viewModel.didShowOptionsMenu {
+                OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowBlockView: $viewModel.didShowBlockView, options: {
+                    var options: [Option] = [
+                        .report(type: "User", id: userID),
+                    ]
+                    if viewModel.sellerIsBlocked {
+                        options.append(.unblock)
+                    } else {
+                        options.append(.block)
+                    }
+                    return options
+                }())
+                .zIndex(1)
+            }
+        }
+        .popupModal(isPresented: $viewModel.didShowBlockView) {
+            popupModalContent
+        }
+        .sheet(isPresented: $didShowUnfollowPopup) {
+            unfollowSheetContent
+                .presentationDetents([.height(375)])
+                .presentationDragIndicator(.visible)
         }
         .toolbar(.hidden, for: .navigationBar)
     }
@@ -273,10 +265,10 @@ struct ExternalProfileView: View {
         .padding(.horizontal, 24)
         .padding(.bottom, 14)
         .padding(.top, 10)
-        .background(.ultraThinMaterial)
         .overlay(alignment: .bottom) {
-            Divider().opacity(0.5)
+            Divider()
         }
+        .background(Constants.Colors.white)
     }
     
     private var profileTabBar: some View {
