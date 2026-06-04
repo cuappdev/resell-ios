@@ -16,6 +16,7 @@ struct ExternalProfileView: View {
     @StateObject private var viewModel = ProfileViewModel()
     @State var listingViewIsPresented: Bool = true
     @State private var didShowUnfollowPopup: Bool = false
+    @State private var toolbarHeight: CGFloat = 0
 
     var userID: String
 
@@ -23,15 +24,15 @@ struct ExternalProfileView: View {
     // TODO: It should be impossible for the externalUser to be inactive/null
 
     var body: some View {
-        VStack(spacing: 0) {
-            customToolbar
+        ZStack(alignment: .top) {
             ScrollView {
-                
-                
                 ZStack {
                     VStack(alignment: .leading) {
+                        // Spacer so content starts below the floating glass toolbar
+                        Color.clear.frame(height: toolbarHeight)
+
                         profileView
-                            .padding(.top, 25)
+                            .padding(.top, 12)
                             .padding(.leading, 26)
                         
                         profileTabBar
@@ -92,8 +93,11 @@ struct ExternalProfileView: View {
                         .presentationDetents([.height(375)])
                         .presentationDragIndicator(.visible)
                 }
-                // MARK: We should not be able to click into our own posts...
             }
+
+            // Glass toolbar floats above the scroll content
+            customToolbar
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { toolbarHeight = $0 }
         }
         .toolbar(.hidden, for: .navigationBar)
     }
@@ -267,12 +271,12 @@ struct ExternalProfileView: View {
             .frame(width: 24, alignment: .trailing)
         }
         .padding(.horizontal, 24)
-        .padding(.bottom, 26)
+        .padding(.bottom, 14)
         .padding(.top, 10)
+        .background(.ultraThinMaterial)
         .overlay(alignment: .bottom) {
-            Divider()
+            Divider().opacity(0.5)
         }
-        .background(Constants.Colors.white)
     }
     
     private var profileTabBar: some View {
