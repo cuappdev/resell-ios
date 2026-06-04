@@ -22,9 +22,9 @@ class NetworkManager {
     // MARK: - Properties
 
     #if DEBUG
-        private let hostURL: String = Keys.devServerURL
+        private let hostURL: String = Keys.prodServerURL // dont push, testing
     #else
-        private let hostURL: String = Keys.prodServerURL
+        private let hostURL: String = Keys.devServerURL
     #endif
     private let maxAttempts = 2
     

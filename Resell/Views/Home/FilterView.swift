@@ -132,21 +132,25 @@ struct FilterView: View {
                                                 filtersVM.categoryFilters.insert(category)
                                             }
                                         } label: {
-                                            if filtersVM.categoryFilters.contains(category) {
-                                                HStack {
-                                                    Text(category)
-                                                        .font(.custom("Rubik-Medium", size: 14))
-                                                        .foregroundStyle(Constants.Colors.resellPurple)
-                                                    
-                                                    Image(systemName: "xmark")
-                                                        .font(.custom("Rubik-Medium", size: 14))
-                                                        .foregroundStyle(Constants.Colors.resellPurple)
-                                                }
-                                            } else {
+                                            let isSelected = filtersVM.categoryFilters.contains(category)
+                                            HStack(spacing: 4) {
                                                 Text(category)
                                                     .font(.custom("Rubik-Medium", size: 14))
-                                                    .foregroundStyle(Color.black)
+                                                    .foregroundStyle(isSelected ? Constants.Colors.resellPurple : Color.black)
+                                                
+                                                // if isSelected {
+                                                //     Image(systemName: "xmark")
+                                                //         .font(.system(size: 11, weight: .semibold))
+                                                //         .foregroundStyle(Constants.Colors.resellPurple)
+                                                //         .transition(
+                                                //             .asymmetric(
+                                                //                 insertion: .scale(scale: 0.3).combined(with: .opacity),
+                                                //                 removal: .scale(scale: 0.3).combined(with: .opacity)
+                                                //             )
+                                                //         )
+                                                // }
                                             }
+                                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
                                         }
                                         .padding(.horizontal, 14)
                                         .padding(.vertical, 8)
