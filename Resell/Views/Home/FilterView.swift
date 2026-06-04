@@ -137,18 +137,6 @@ struct FilterView: View {
                                                 Text(category)
                                                     .font(.custom("Rubik-Medium", size: 14))
                                                     .foregroundStyle(isSelected ? Constants.Colors.resellPurple : Color.black)
-                                                
-                                                // if isSelected {
-                                                //     Image(systemName: "xmark")
-                                                //         .font(.system(size: 11, weight: .semibold))
-                                                //         .foregroundStyle(Constants.Colors.resellPurple)
-                                                //         .transition(
-                                                //             .asymmetric(
-                                                //                 insertion: .scale(scale: 0.3).combined(with: .opacity),
-                                                //                 removal: .scale(scale: 0.3).combined(with: .opacity)
-                                                //             )
-                                                //         )
-                                                // }
                                             }
                                             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
                                         }
