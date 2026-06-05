@@ -30,9 +30,13 @@ struct MainTabView: View {
         NavigationStack(path: $router.path) {
                 Group {
                     if mainViewModel.userDidLogin {
-                        VStack(spacing: 0) {
+                        ZStack(alignment: .bottom) {
                             mainView
-                            
+                                .safeAreaInset(edge: .bottom, spacing: 0) {
+                                    Color.clear.frame(height: isHidden ? 0 : 90)
+                                }
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
                             if !isHidden {
                                 tabBarView
                             }
@@ -203,7 +207,7 @@ struct MainTabView: View {
                     .foregroundStyle(isSelected ? Color.white : Constants.Colors.inactiveGray)
                     .padding(.vertical, 10)
                     .padding(.horizontal, isSelected ? 18 : 14)
-                    .background(isSelected ? Color.black : Color.clear)
+                    .background(isSelected ? AnyShapeStyle(Constants.Colors.resellGradient) : AnyShapeStyle(Color.clear))
                     .clipShape(Capsule())
                     .overlay(alignment: .topTrailing) {
                         if badgeCount > 0 {
