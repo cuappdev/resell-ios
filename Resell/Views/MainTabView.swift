@@ -179,8 +179,8 @@ struct MainTabView: View {
         TabBarConfig(label: "Home",     icon: "house",    activeIcon: "house.fill"),
         TabBarConfig(label: "Explore",  icon: "safari",   activeIcon: "safari.fill"),
         TabBarConfig(label: "Sell",     icon: "tag",      activeIcon: "tag.fill"),
-        TabBarConfig(label: "Messages", icon: "message",  activeIcon: "message.fill"),
-        TabBarConfig(label: "Profile",  icon: "person",   activeIcon: "person.fill"),
+        TabBarConfig(label: "Messages", icon: "paperplane",  activeIcon: "paperplane.fill"),
+        TabBarConfig(label: "Profile",  icon: "person.crop.circle",   activeIcon: "person.crop.circle.fill"),
     ]
 
     private var tabBarView: some View {
@@ -207,7 +207,13 @@ struct MainTabView: View {
                     .foregroundStyle(isSelected ? Color.white : Constants.Colors.tabBarInactive)
                     .padding(.vertical, 10)
                     .padding(.horizontal, isSelected ? 18 : 14)
-                    .background(isSelected ? AnyShapeStyle(Constants.Colors.resellGradient) : AnyShapeStyle(Color.clear))
+                    .background {
+                        if isSelected {
+                            Capsule()
+                                .fill(Constants.Colors.resellGradient)
+                                .opacity(0.7)
+                        }
+                    }
                     .clipShape(Capsule())
                     .overlay(alignment: .topTrailing) {
                         if badgeCount > 0 {
