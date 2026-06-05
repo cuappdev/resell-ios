@@ -70,9 +70,6 @@ struct HomeView: View {
             viewModel.cleanupMemory()
         }
         .background(Constants.Colors.white)
-        .overlay(alignment: .bottomTrailing) {
-            ExpandableAddButton().padding(.bottom, 40)
-        }
         .refreshable {
             // Force refresh when user pulls to refresh
             if viewModel.isFilteredFeed {

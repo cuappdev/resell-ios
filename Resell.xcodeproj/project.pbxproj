@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2E5E11712FA1BC4000000002 /* SellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E5E11702FA1BC4000000001 /* SellView.swift */; };
 		2C02B3952CC031D00020DF90 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C02B3942CC031D00020DF90 /* ImagePicker.swift */; };
 		2C02B3972CC0336B0020DF90 /* NewListingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C02B3962CC0336B0020DF90 /* NewListingViewModel.swift */; };
 		2C02B3992CC040AE0020DF90 /* PriceInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C02B3982CC040AE0020DF90 /* PriceInputView.swift */; };
@@ -183,6 +184,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		2E5E11702FA1BC4000000001 /* SellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SellView.swift; sourceTree = "<group>"; };
 		2C02B3942CC031D00020DF90 /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		2C02B3962CC0336B0020DF90 /* NewListingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewListingViewModel.swift; sourceTree = "<group>"; };
 		2C02B3982CC040AE0020DF90 /* PriceInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriceInputView.swift; sourceTree = "<group>"; };
@@ -582,6 +584,7 @@
 				2C6FB1842CFBC0D600B35FF8 /* Chats */,
 				2C02B3A02CC073340020DF90 /* Home */,
 				2CBC6B6A2CBDF74700C842A4 /* NewListing */,
+				2E5E11722FA1BC4000000003 /* Sell */,
 				2C02B3A12CC0734F0020DF90 /* Onboarding */,
 				2CD7CABA2CE94EAE0056209E /* ProductDetails */,
 				2CE4739A2CC456EB00BD7E2C /* Report */,
@@ -660,6 +663,14 @@
 				2C4DD97C2C98D45B0055D0AB /* SetupProfileViewModel.swift */,
 			);
 			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		2E5E11722FA1BC4000000003 /* Sell */ = {
+			isa = PBXGroup;
+			children = (
+				2E5E11702FA1BC4000000001 /* SellView.swift */,
+			);
+			path = Sell;
 			sourceTree = "<group>";
 		};
 		2CBC6B6A2CBDF74700C842A4 /* NewListing */ = {
@@ -891,6 +902,7 @@
 				2E87F6FB2F270A0D007C228E /* NotificationsViewModel.swift in Sources */,
 				2EEB57262F03C704008D2DF3 /* ReviewSection.swift in Sources */,
 				2C02B39D2CC069530020DF90 /* NewListingImagesView.swift in Sources */,
+				2E5E11712FA1BC4000000002 /* SellView.swift in Sources */,
 				2C52E4F12C926C4B0042312C /* HomeView.swift in Sources */,
 				2E9F75842EB6D66D003FE0E0 /* ForYouView.swift in Sources */,
 				2E9F75922EB6D95E003FE0E0 /* MessageCluster.swift in Sources */,

@@ -129,42 +129,113 @@ struct MainTabView: View {
     }
 
     private var mainView: some View {
-        ZStack() {
+        ZStack {
             if selection == 0 {
                 HomeView()
             } else if selection == 1 {
+                explorePlaceholder
+            } else if selection == 2 {
+                SellView()
+            } else if selection == 3 {
                 ChatsView()
                     .environmentObject(chatsViewModel)
-            } else if selection == 2 {
+            } else if selection == 4 {
                 ProfileView()
             }
         }
     }
 
-    private var tabBarView: some View {
-        HStack {
-            ForEach(0..<3, id: \.self) { index in
-                TabViewIcon(
-                    selectionIndex: $selection,
-                    itemIndex: index,
-                    badgeCount: index == 1 ? chatsViewModel.totalUnread : 0
-                )
-                    .frame(width: 28, height: 28)
+    private var explorePlaceholder: some View {
+        VStack(spacing: 12) {
+            Spacer()
+            Image(systemName: "safari")
+                .font(.system(size: 48))
+                .foregroundStyle(Constants.Colors.inactiveGray)
+            Text("Explore")
+                .font(Constants.Fonts.h2)
+                .foregroundStyle(Constants.Colors.black)
+            Text("Coming soon")
+                .font(Constants.Fonts.body2)
+                .foregroundStyle(Constants.Colors.secondaryGray)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Constants.Colors.white)
+    }
 
-                if index != 2 {
-                    Spacer()
+    // MARK: - Tab Bar
+
+    private struct TabBarConfig {
+        let label: String
+        let icon: String
+        let activeIcon: String
+    }
+
+    private let tabBarConfigs: [TabBarConfig] = [
+        TabBarConfig(label: "Home",     icon: "house",    activeIcon: "house.fill"),
+        TabBarConfig(label: "Explore",  icon: "safari",   activeIcon: "safari.fill"),
+        TabBarConfig(label: "Sell",     icon: "tag",      activeIcon: "tag.fill"),
+        TabBarConfig(label: "Messages", icon: "message",  activeIcon: "message.fill"),
+        TabBarConfig(label: "Profile",  icon: "person",   activeIcon: "person.fill"),
+    ]
+
+    private var tabBarView: some View {
+        HStack(spacing: 0) {
+            ForEach(tabBarConfigs.indices, id: \.self) { index in
+                let config = tabBarConfigs[index]
+                let isSelected = selection == index
+                let badgeCount = index == 3 ? chatsViewModel.totalUnread : 0
+
+                Button {
+                    selection = index
+                } label: {
+                    HStack(spacing: isSelected ? 6 : 0) {
+                        Image(systemName: isSelected ? config.activeIcon : config.icon)
+                            .font(.system(size: 17, weight: isSelected ? .semibold : .regular))
+
+                        if isSelected {
+                            Text(config.label)
+                                .font(.custom("Rubik-Medium", size: 13))
+                                .fixedSize()
+                                .transition(.opacity.combined(with: .scale(scale: 0.8)))
+                        }
+                    }
+                    .foregroundStyle(isSelected ? Color.white : Constants.Colors.inactiveGray)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, isSelected ? 18 : 14)
+                    .background(isSelected ? Color.black : Color.clear)
+                    .clipShape(Capsule())
+                    .overlay(alignment: .topTrailing) {
+                        if badgeCount > 0 {
+                            Text(badgeCount > 99 ? "99+" : "\(badgeCount)")
+                                .font(.custom("Roboto-Medium", size: 10))
+                                .foregroundStyle(Constants.Colors.white)
+                                .padding(.horizontal, 5)
+                                .frame(minWidth: 16, minHeight: 16)
+                                .background(Constants.Colors.errorRed)
+                                .clipShape(.capsule)
+                                .offset(x: isSelected ? 0 : 8, y: -6)
+                        }
+                    }
+                }
+                .buttonStyle(PlainButtonStyle())
+                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
+
+                if index < tabBarConfigs.count - 1 {
+                    Spacer(minLength: 0)
                 }
             }
         }
-        .ignoresSafeArea(edges: .bottom)
-        .padding(.horizontal, 40)
-        .padding(.top, 16)
-        .padding(.bottom, 46)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 50, style: .continuous))
+        .shadow(color: Color.black.opacity(0.10), radius: 20, x: 0, y: 6)
+        .padding(.horizontal, 24)
+        .padding(.bottom, 20)
         .frame(width: UIScreen.width)
-        .background(Constants.Colors.white)
-        .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
-        .shadow(radius: 4)
-        .transition(.move(edge: .bottom))
+        .background(Color.clear)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
         .animation(.easeInOut, value: isHidden)
     }
 }
