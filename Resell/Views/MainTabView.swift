@@ -204,7 +204,7 @@ struct MainTabView: View {
                                 .transition(.opacity.combined(with: .scale(scale: 0.8)))
                         }
                     }
-                    .foregroundStyle(isSelected ? Color.white : Constants.Colors.inactiveGray)
+                    .foregroundStyle(isSelected ? Color.white : Constants.Colors.tabBarInactive)
                     .padding(.vertical, 10)
                     .padding(.horizontal, isSelected ? 18 : 14)
                     .background(isSelected ? AnyShapeStyle(Constants.Colors.resellGradient) : AnyShapeStyle(Color.clear))
@@ -232,9 +232,19 @@ struct MainTabView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 50, style: .continuous))
-        .shadow(color: Color.black.opacity(0.10), radius: 20, x: 0, y: 6)
+        .background {
+            RoundedRectangle(cornerRadius: 50, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 50, style: .continuous)
+                        .fill(Color.white.opacity(0.6))
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: 50, style: .continuous)
+                        .strokeBorder(Color.black.opacity(0.06), lineWidth: 1)
+                }
+                .shadow(color: Color.black.opacity(0.12), radius: 16, x: 0, y: 8)
+        }
         .padding(.horizontal, 24)
         .padding(.bottom, 20)
         .frame(width: UIScreen.width)

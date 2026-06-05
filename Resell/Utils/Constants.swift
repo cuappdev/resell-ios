@@ -16,6 +16,7 @@ struct Constants {
         static let black = Color(red: 0/255, green: 0/255, blue: 0/255)
         static let errorRed = Color(red: 242/255, green: 0/255, blue: 0/255)
         static let inactiveGray = Color(red: 190/255, green: 190/255, blue: 190/255)
+        static let tabBarInactive = Color(red: 99/255, green: 99/255, blue: 108/255)
         static let purpleWash = Color(red: 250/255, green: 247/255, blue: 255/255)
         static let resellPurple = Color(red: 158/255, green: 112/255, blue: 246/255)
         static let secondaryGray = Color(red: 77/255, green: 77/255, blue: 77/255)
