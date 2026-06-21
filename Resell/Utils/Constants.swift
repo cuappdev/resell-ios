@@ -116,10 +116,10 @@ struct Constants {
         FilterCategory(id: 2, title: "Books", color: Constants.Colors.filterGreen) ,
         FilterCategory(id: 3, title: "School", color: Constants.Colors.filterLightGreen),
         FilterCategory(id: 4, title: "Electronics", color: Constants.Colors.filterPink),
-        FilterCategory(id: 5, title: "Household"),
+        FilterCategory(id: 5, title: "Household", color: Constants.Colors.purpleWash),
         FilterCategory(id: 6, title: "Handmade", color: Constants.Colors.filterYellow),
-        FilterCategory(id: 7, title: "Sports & Outdoors", color: Constants.Colors.filterBlue),
-        FilterCategory(id: 8, title: "Other")
+        FilterCategory(id: 7, title: "Active", color: Constants.Colors.filterBlue),
+        FilterCategory(id: 8, title: "Other", color: Constants.Colors.filterGray)
     ]
     
     static let notificationFilters = [

@@ -14,7 +14,7 @@ struct FilterView: View {
     @State var presentPopup = false
     @EnvironmentObject var filtersVM: FiltersViewModel
 
-    private var categories : [String] = ["Clothing", "Books", "School", "Electronics", "Handmade", "Sports & Outdoors", "Other"]
+    private var categories : [String] = ["Clothing", "Books", "School", "Household", "Electronics", "Handmade", "Active", "Other"]
     private var conditions : [String] = ["Gently Used", "Worn", "Never Used"]
 
     let home : Bool

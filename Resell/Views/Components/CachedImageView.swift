@@ -12,7 +12,18 @@ import SwiftUI
 struct CachedImageView: View {
     
     @Binding var isImageLoaded: Bool
+    @Binding var aspectRatio: CGFloat?
     let imageURL: URL?
+
+    init(
+        isImageLoaded: Binding<Bool>,
+        imageURL: URL?,
+        aspectRatio: Binding<CGFloat?> = .constant(nil)
+    ) {
+        self._isImageLoaded = isImageLoaded
+        self._aspectRatio = aspectRatio
+        self.imageURL = imageURL
+    }
     
     private let targetSize: CGSize = {
         let cellWidth = (UIScreen.main.bounds.width - 68) / 2
@@ -29,8 +40,11 @@ struct CachedImageView: View {
             )
             .cacheOriginalImage()
             .fade(duration: 0.2)
-            .onSuccess { _ in
+            .onSuccess { result in
                 isImageLoaded = true
+                if result.image.size.width > 0 {
+                    aspectRatio = result.image.size.height / result.image.size.width
+                }
             }
             .onFailure { _ in
                 isImageLoaded = false

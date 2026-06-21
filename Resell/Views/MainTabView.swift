@@ -204,14 +204,13 @@ struct MainTabView: View {
                                 .transition(.opacity.combined(with: .scale(scale: 0.8)))
                         }
                     }
-                    .foregroundStyle(isSelected ? Color.white : Constants.Colors.tabBarInactive)
+                    .foregroundStyle(Color.black)
                     .padding(.vertical, 10)
                     .padding(.horizontal, isSelected ? 18 : 14)
                     .background {
                         if isSelected {
                             Capsule()
-                                .fill(Constants.Colors.resellGradient)
-                                .opacity(0.7)
+                                .fill(Color.black.opacity(0.08))
                         }
                     }
                     .clipShape(Capsule())
@@ -238,20 +237,9 @@ struct MainTabView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background {
-            RoundedRectangle(cornerRadius: 50, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 50, style: .continuous)
-                        .fill(Color.white.opacity(0.6))
-                }
-                .overlay {
-                    RoundedRectangle(cornerRadius: 50, style: .continuous)
-                        .strokeBorder(Color.black.opacity(0.06), lineWidth: 1)
-                }
-                .shadow(color: Color.black.opacity(0.12), radius: 16, x: 0, y: 8)
-        }
-        .padding(.horizontal, 24)
+        .modifier(TabBarGlassModifier())
+        .shadow(color: Color.black.opacity(0.1), radius: 16, x: 0, y: 6)
+        .padding(.horizontal, Constants.Spacing.horizontalPadding)
         .padding(.bottom, 20)
         .frame(width: UIScreen.width)
         .background(Color.clear)
@@ -259,3 +247,19 @@ struct MainTabView: View {
         .animation(.easeInOut, value: isHidden)
     }
 }
+
+private struct TabBarGlassModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        let shape = Capsule()
+        if #available(iOS 26, *) {
+            content
+                .background(shape.fill(Color.white.opacity(0.45)))
+                .glassEffect(.regular, in: shape)
+        } else {
+            content
+                .background(.ultraThinMaterial, in: shape)
+                .overlay(shape.strokeBorder(Color.black.opacity(0.06), lineWidth: 1))
+        }
+    }
+}
+ 
