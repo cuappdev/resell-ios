@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E00100012FA2000100000011 /* ExploreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00100012FA2000100000001 /* ExploreView.swift */; };
+		E00100012FA2000100000012 /* ExploreCollageCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00100012FA2000100000002 /* ExploreCollageCard.swift */; };
+		E00100012FA2000100000013 /* ExploreSkeletonSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00100012FA2000100000003 /* ExploreSkeletonSections.swift */; };
+		E00100012FA2000100000014 /* RecentlyViewedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00100012FA2000100000004 /* RecentlyViewedView.swift */; };
+		E00100012FA2000100000015 /* CategoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00100012FA2000100000005 /* CategoriesView.swift */; };
+		E00100012FA2000100000016 /* RecentlyViewedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00100012FA2000100000006 /* RecentlyViewedViewModel.swift */; };
 		2E5E11712FA1BC4000000002 /* SellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E5E11702FA1BC4000000001 /* SellView.swift */; };
 		2C02B3952CC031D00020DF90 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C02B3942CC031D00020DF90 /* ImagePicker.swift */; };
 		2C02B3972CC0336B0020DF90 /* NewListingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C02B3962CC0336B0020DF90 /* NewListingViewModel.swift */; };
@@ -584,6 +590,7 @@
 				2C6FB1842CFBC0D600B35FF8 /* Chats */,
 				2C02B3A02CC073340020DF90 /* Home */,
 				2CBC6B6A2CBDF74700C842A4 /* NewListing */,
+				E00100012FA200010000000A /* Explore */,
 				2E5E11722FA1BC4000000003 /* Sell */,
 				2C02B3A12CC0734F0020DF90 /* Onboarding */,
 				2CD7CABA2CE94EAE0056209E /* ProductDetails */,
@@ -663,6 +670,17 @@
 				2C4DD97C2C98D45B0055D0AB /* SetupProfileViewModel.swift */,
 			);
 			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		E00100012FA200010000000A /* Explore */ = {
+			isa = PBXGroup;
+			children = (
+				E00100012FA2000100000001 /* ExploreView.swift */,
+				E00100012FA2000100000002 /* ExploreCollageCard.swift */,
+				E00100012FA2000100000003 /* ExploreSkeletonSections.swift */,
+				E00100012FA2000100000004 /* RecentlyViewedView.swift */,
+			);
+			path = Explore;
 			sourceTree = "<group>";
 		};
 		2E5E11722FA1BC4000000003 /* Sell */ = {

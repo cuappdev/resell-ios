@@ -104,6 +104,8 @@ struct MainTabView: View {
                     DetailedFilterView(filter: filter)
                 case .saved:
                     SavedView()
+                case .recentlyViewed:
+                    RecentlyViewedView()
                 case .availability:
                     AvailabilitySettingsView()
                case .notifications:
@@ -137,7 +139,7 @@ struct MainTabView: View {
             if selection == 0 {
                 HomeView()
             } else if selection == 1 {
-                explorePlaceholder
+                ExploreView()
             } else if selection == 2 {
                 SellView()
             } else if selection == 3 {
@@ -147,24 +149,6 @@ struct MainTabView: View {
                 ProfileView()
             }
         }
-    }
-
-    private var explorePlaceholder: some View {
-        VStack(spacing: 12) {
-            Spacer()
-            Image(systemName: "safari")
-                .font(.system(size: 48))
-                .foregroundStyle(Constants.Colors.inactiveGray)
-            Text("Explore")
-                .font(Constants.Fonts.h2)
-                .foregroundStyle(Constants.Colors.black)
-            Text("Coming soon")
-                .font(Constants.Fonts.body2)
-                .foregroundStyle(Constants.Colors.secondaryGray)
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Constants.Colors.white)
     }
 
     // MARK: - Tab Bar
