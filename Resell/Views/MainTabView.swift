@@ -23,131 +23,172 @@ struct MainTabView: View {
     @EnvironmentObject private var newListingViewModel: NewListingViewModel
     @EnvironmentObject private var onboardingViewModel: SetupProfileViewModel
     @EnvironmentObject private var reportViewModel: ReportViewModel
+    @ObservedObject private var currentUser = CurrentUserProfileManager.shared
 
     // MARK: - UI
 
     var body: some View {
-        NavigationStack(path: $router.path) {
-                Group {
-                    if mainViewModel.userDidLogin {
-                        ZStack(alignment: .bottom) {
-                            mainView
-                                .safeAreaInset(edge: .bottom, spacing: 0) {
-                                    Color.clear.frame(height: isHidden ? 0 : 90)
-                                }
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                            if !isHidden {
-                                tabBarView
-                            }
-                        }
-                        .ignoresSafeArea(edges: .bottom)
+        ZStack(alignment: .bottom) {
+            Group {
+                if mainViewModel.userDidLogin {
+                    tabNavigation
                         .transition(.opacity)
-                        .background(.white)
-                        .environmentObject(router)
-                        .onAppear {
-                            // Start listening to chat updates as soon as the
-                            // user lands on the main shell so the tab-bar
-                            // unread badge is populated even if they never
-                            // open the messages tab.
-                            chatsViewModel.getAllChats()
-                        }
-                        .onChange(of: mainViewModel.userDidLogin) { didLogin in
-                            if didLogin {
-                                chatsViewModel.getAllChats()
-                            }
-                        }
-                    } else {
-                        LoginView()
-                            .transition(.opacity)
-                            .environmentObject(onboardingViewModel)
-                            .environmentObject(router)
-                    }
-            }
-            .navigationDestination(for: Router.Route.self) { route in
-                switch route {
-                case .newListingDetails:
-                    NewListingDetailsView()
-                        .environmentObject(newListingViewModel)
-                case .newListingImages:
-                    NewListingImagesView()
-                        .environmentObject(newListingViewModel)
-                case .newRequest:
-                    NewRequestView()
-                case .messages(let chatInfo):
-                    MessagesView(chatInfo: chatInfo)
-                case .discover:
-                    SuggestionsView()
-                case .productDetails(let item):
-                    ProductDetailsView(post: item)
-                        .ignoresSafeArea(edges: .top)
-                case .reportConfirmation:
-                    ReportConfirmationView()
-                        .environmentObject(reportViewModel)
-                case .reportDetails:
-                    ReportDetailsView()
-                        .environmentObject(reportViewModel)
-                case .reportOptions(let type, let id):
-                    ReportOptionsView(type: type, id: id)
-                        .environmentObject(reportViewModel)
-                case .search(let id):
-                    SearchView(userID: id)
-                case .settings(let isAccountSettings):
-                    SettingsView(isAccountSettings: isAccountSettings)
-                case .blockedUsers:
-                    BlockedUsersView()
-                case .editProfile:
-                    EditProfileView()
-                case .feedback:
-                    SendFeedbackView()
-                case .detailedFilter(let filter):
-                    DetailedFilterView(filter: filter)
-                case .saved:
-                    SavedView()
-                case .recentlyViewed:
-                    RecentlyViewedView()
-                case .availability:
-                    AvailabilitySettingsView()
-               case .notifications:
-                   NotificationsView()
-                case .login:
-                    LoginView()
-                        .environmentObject(onboardingViewModel)
-                case .profile(let id):
-                    ExternalProfileView(userID: id)
-                case .followList(let userID, let username, let initialTab):
-                    FollowListView(userID: userID, username: username, initialTab: initialTab)
-                case .setupProfile:
-                    SetupProfileView(userDidLogin: $mainViewModel.userDidLogin, user: GoogleAuthManager.shared.user)
-                        .environmentObject(onboardingViewModel)
-                case .venmo:
-                    VenmoView(userDidLogin: $mainViewModel.userDidLogin)
-                        .environmentObject(onboardingViewModel)
-                case .completedTransaction(let transaction):
-                    CompletedTransactionView(transaction: transaction)
-                case .reviewTesting:
-                    ReviewTestingView()
-                default:
-                    EmptyView()
+                } else {
+                    loginNavigation
+                        .transition(.opacity)
                 }
             }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                Color.clear.frame(height: showsTabBar ? 90 : 0)
+            }
+
+            if showsTabBar {
+                tabBarView
+            }
+        }
+        .ignoresSafeArea(edges: .bottom)
+        .onAppear {
+            router.activeTab = selection
+            if mainViewModel.userDidLogin {
+                // Start listening to chat updates as soon as the user lands
+                // on the main shell so the unread badge stays populated.
+                chatsViewModel.getAllChats()
+                currentUser.loadProfile()
+            }
+        }
+        .onChange(of: mainViewModel.userDidLogin) { didLogin in
+            if didLogin {
+                chatsViewModel.getAllChats()
+                currentUser.loadProfile(forceRefresh: true)
+            } else {
+                router.reset()
+            }
+        }
+        .onChange(of: selection) { newSelection in
+            router.activeTab = newSelection
         }
     }
 
-    private var mainView: some View {
-        ZStack {
-            if selection == 0 {
-                HomeView()
-            } else if selection == 1 {
-                ExploreView()
-            } else if selection == 2 {
-                SellView()
-            } else if selection == 3 {
-                ChatsView()
-                    .environmentObject(chatsViewModel)
-            } else if selection == 4 {
-                ProfileView()
+    private var showsTabBar: Bool {
+        mainViewModel.userDidLogin && !isHidden
+    }
+
+    private var tabNavigation: some View {
+        TabView(selection: $selection) {
+            ForEach(tabBarConfigs.indices, id: \.self) { tab in
+                NavigationStack(path: router.pathBinding(for: tab)) {
+                    tabRoot(for: tab)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Constants.Colors.white)
+                        .navigationDestination(for: Router.Route.self) { route in
+                            destination(for: route)
+                        }
+                }
+                .tag(tab)
             }
+        }
+        .toolbar(.hidden, for: .tabBar)
+    }
+
+    private var loginNavigation: some View {
+        NavigationStack(path: router.pathBinding(for: 0)) {
+            LoginView()
+                .environmentObject(onboardingViewModel)
+                .navigationDestination(for: Router.Route.self) { route in
+                    destination(for: route)
+                }
+        }
+    }
+
+    @ViewBuilder
+    private func tabRoot(for tab: Int) -> some View {
+        switch tab {
+        case 0:
+            HomeView()
+        case 1:
+            ExploreView()
+        case 2:
+            SellView()
+        case 3:
+            ChatsView()
+                .environmentObject(chatsViewModel)
+        case 4:
+            ProfileView()
+        default:
+            EmptyView()
+        }
+    }
+
+    @ViewBuilder
+    private func destination(for route: Router.Route) -> some View {
+        switch route {
+        case .newListingDetails:
+            NewListingDetailsView()
+                .environmentObject(newListingViewModel)
+        case .newListingImages:
+            NewListingImagesView()
+                .environmentObject(newListingViewModel)
+        case .newRequest:
+            NewRequestView()
+        case .messages(let chatInfo):
+            MessagesView(chatInfo: chatInfo)
+        case .discover:
+            SuggestionsView()
+        case .productDetails(let item):
+            ProductDetailsView(post: item)
+                .ignoresSafeArea(edges: .top)
+        case .reportConfirmation:
+            ReportConfirmationView()
+                .environmentObject(reportViewModel)
+        case .reportDetails:
+            ReportDetailsView()
+                .environmentObject(reportViewModel)
+        case .reportOptions(let type, let id):
+            ReportOptionsView(type: type, id: id)
+                .environmentObject(reportViewModel)
+        case .search(let id):
+            SearchView(userID: id)
+        case .settings(let isAccountSettings):
+            SettingsView(isAccountSettings: isAccountSettings)
+        case .blockedUsers:
+            BlockedUsersView()
+        case .editProfile:
+            EditProfileView()
+        case .feedback:
+            SendFeedbackView()
+        case .detailedFilter(let filter):
+            DetailedFilterView(filter: filter)
+        case .saved:
+            SavedView()
+        case .recentlyViewed:
+            RecentlyViewedView()
+        case .dailyPicks:
+            DailyPicksView()
+        case .trending(let category):
+            TrendingView(category: category)
+        case .availability:
+            AvailabilitySettingsView()
+        case .notifications:
+            NotificationsView()
+        case .login:
+            LoginView()
+                .environmentObject(onboardingViewModel)
+        case .profile(let id):
+            ExternalProfileView(userID: id)
+        case .followList(let userID, let username, let initialTab):
+            FollowListView(userID: userID, username: username, initialTab: initialTab)
+        case .setupProfile:
+            SetupProfileView(userDidLogin: $mainViewModel.userDidLogin, user: GoogleAuthManager.shared.user)
+                .environmentObject(onboardingViewModel)
+        case .venmo:
+            VenmoView(userDidLogin: $mainViewModel.userDidLogin)
+                .environmentObject(onboardingViewModel)
+        case .completedTransaction(let transaction):
+            CompletedTransactionView(transaction: transaction)
+        case .reviewTesting:
+            ReviewTestingView()
+        default:
+            EmptyView()
         }
     }
 
@@ -175,11 +216,20 @@ struct MainTabView: View {
                 let badgeCount = index == 3 ? chatsViewModel.totalUnread : 0
 
                 Button {
-                    selection = index
+                    if selection == index {
+                        router.popToRoot()
+                    } else {
+                        router.activeTab = index
+                        selection = index
+                    }
                 } label: {
                     HStack(spacing: isSelected ? 6 : 0) {
-                        Image(systemName: isSelected ? config.activeIcon : config.icon)
-                            .font(.system(size: 17, weight: isSelected ? .semibold : .regular))
+                        if index == 4 && currentUser.hasProfilePicture {
+                            profileTabImage
+                        } else {
+                            Image(systemName: isSelected ? config.activeIcon : config.icon)
+                                .font(.system(size: 17, weight: isSelected ? .semibold : .regular))
+                        }
 
                         if isSelected {
                             Text(config.label)
@@ -222,13 +272,21 @@ struct MainTabView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
         .modifier(TabBarGlassModifier())
-        .shadow(color: Color.black.opacity(0.1), radius: 16, x: 0, y: 6)
+        .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
         .padding(.bottom, 20)
         .frame(width: UIScreen.width)
         .background(Color.clear)
         .transition(.move(edge: .bottom).combined(with: .opacity))
         .animation(.easeInOut, value: isHidden)
+    }
+
+    private var profileTabImage: some View {
+        Image(uiImage: currentUser.profilePic)
+            .resizable()
+            .scaledToFill()
+            .frame(width: 20, height: 20)
+            .clipShape(Circle())
     }
 }
 
@@ -237,7 +295,6 @@ private struct TabBarGlassModifier: ViewModifier {
         let shape = Capsule()
         if #available(iOS 26, *) {
             content
-                .background(shape.fill(Color.white.opacity(0.45)))
                 .glassEffect(.regular, in: shape)
         } else {
             content

@@ -133,6 +133,11 @@ struct ProductGalleryCell: View {
         guard let condition = post.condition, !condition.isEmpty else { return nil }
         return condition
     }
+
+    private var detailsLabel: String {
+        guard let conditionLabel else { return categoryLabel }
+        return "\(categoryLabel) • \(conditionLabel)"
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -159,12 +164,13 @@ struct ProductGalleryCell: View {
                             .foregroundColor(.white)
                     }
                 }
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
             .buttonStyle(.plain)
 
             HStack(alignment: .top, spacing: 8) {
                 infoButton
-                VStack(alignment: .trailing, spacing: 4) {
+                VStack(alignment: .trailing, spacing: 2) {
                     priceLabel
                     if !savedCell { saveButton }
                 }
@@ -200,17 +206,15 @@ struct ProductGalleryCell: View {
             selectedItem = post
         } label: {
             VStack(alignment: .leading, spacing: 2) {
-                Text(categoryLabel)
+                Text(post.title)
                     .font(Constants.Fonts.title3)
                     .foregroundStyle(isSold ? Constants.Colors.secondaryGray : Constants.Colors.black)
                     .lineLimit(1)
 
-                if let conditionLabel {
-                    Text(conditionLabel)
-                        .font(Constants.Fonts.subtitle1)
-                        .foregroundStyle(Constants.Colors.secondaryGray)
-                        .lineLimit(1)
-                }
+                Text(detailsLabel)
+                    .font(Constants.Fonts.subtitle1)
+                    .foregroundStyle(Constants.Colors.secondaryGray)
+                    .lineLimit(1)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -219,17 +223,17 @@ struct ProductGalleryCell: View {
 
     private var priceLabel: some View {
         Text("$\(post.originalPrice)")
-            .font(Constants.Fonts.title4)
+            .font(Constants.Fonts.title3)
             .foregroundStyle(isSold ? Constants.Colors.secondaryGray : Constants.Colors.black)
             .lineLimit(1)
     }
 
     private var saveButton: some View {
         Button(action: toggleSave) {
-            Image(systemName: isSaved ? "heart.fill" : "heart")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(isSaved ? Constants.Colors.filterPink : Constants.Colors.black)
-                .frame(width: 16, height: 16)
+            Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(Constants.Colors.black)
+                .frame(width: 14, height: 14)
         }
         .buttonStyle(.plain)
     }

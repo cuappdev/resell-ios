@@ -22,9 +22,9 @@ class NetworkManager {
     // MARK: - Properties
 
     #if DEBUG
-        private let hostURL: String = Keys.prodServerURL // dont push, testing
-    #else
         private let hostURL: String = Keys.devServerURL
+    #else
+        private let hostURL: String = Keys.prodServerURL
     #endif
     private let maxAttempts = 2
     
@@ -168,6 +168,11 @@ class NetworkManager {
         func post<T: Decodable>(url: URL) async throws -> T {
             let (data, _) = try await perform { try await createRequest(url: url, method: "POST") }
             return try jsonDecoder.decode(T.self, from: data)
+        }
+
+        /// Overloaded post for requests with no body and no decoded response (e.g. 204).
+        func post(url: URL) async throws {
+            _ = try await perform { try await createRequest(url: url, method: "POST") }
         }
             
         /// Template function to DELETE data to a specified URL
@@ -397,6 +402,24 @@ class NetworkManager {
         func getSimilarPostsByID(id: String) async throws -> PostsResponse {
             let url = try constructURL(endpoint: "/post/similar/postId/\(id)/")
             
+            return try await get(url: url)
+        }
+
+        /// Idempotent view upsert for the viewer + post + UTC day. Skips own posts server-side.
+        func recordPostView(id: String) async throws {
+            let url = try constructURL(endpoint: "/post/view/postId/\(id)/")
+            try await post(url: url)
+        }
+
+        func getDailyPicks(limit: Int = 10) async throws -> PostsResponse {
+            let url = try constructURL(endpoint: "/post/dailyPicks/?limit=\(limit)")
+            return try await get(url: url)
+        }
+
+        /// Category must match seed names (e.g. `ELECTRONICS`, `CLOTHING`).
+        func getTrendingPosts(category: String, page: Int = 1, limit: Int = 10) async throws -> PostsResponse {
+            let encoded = category.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? category
+            let url = try constructURL(endpoint: "/post/trending/?category=\(encoded)&page=\(page)&limit=\(limit)")
             return try await get(url: url)
         }
         

@@ -49,6 +49,9 @@ class ProductDetailsViewModel: ObservableObject {
         images = post.images.compactMap { URL(string: $0) }
 
         RecentlyViewedViewModel.shared.recordView(postId: post.id)
+        Task {
+            try? await NetworkManager.shared.recordPostView(id: post.id)
+        }
 
         maxImgRatioTask?.cancel()
         maxImgRatioTask = Task { [weak self] in

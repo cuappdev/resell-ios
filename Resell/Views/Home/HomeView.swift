@@ -101,8 +101,6 @@ struct HomeView: View {
 
     private var homeFeedContent: some View {
         VStack(spacing: 12) {
-            CategoriesView()
-
             HStack {
                 Text("Recent Listings")
                     .font(.custom("Rubik-Medium", size: 22))
@@ -110,14 +108,14 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.leading, 24)
 
-                Button(action: { presentPopup = true }) {
-                    Image("filters")
-                        .resizable()
-                        .frame(width: 24, height: 21)
-                        .padding(12)
-                        .contentShape(Rectangle())
-                }
-                .padding(.trailing, 12)
+//                Button(action: { presentPopup = true }) {
+//                    Image("filters")
+//                        .resizable()
+//                        .frame(width: 24, height: 21)
+//                        .padding(12)
+//                        .contentShape(Rectangle())
+//                }
+//                .padding(.trailing, 12)
             }
             .padding(.bottom, 4)
             .background(

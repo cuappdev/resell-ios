@@ -5,7 +5,7 @@
 
 import SwiftUI
 
-/// Square collage preview showing `min(posts.count, 10)` listing images.
+/// Collage preview showing either one image or a four-image grid.
 struct ExploreCollageCard: View {
 
     let title: String
@@ -13,62 +13,54 @@ struct ExploreCollageCard: View {
     let posts: [Post]
     let action: () -> Void
 
-    private let maxImages = 10
     private let spacing: CGFloat = 2
 
-    @State private var loadedStates: [Bool] = Array(repeating: false, count: 10)
+    @State private var loadedStates: [Bool] = Array(repeating: false, count: 4)
 
     private var previewPosts: [Post] {
-        Array(posts.prefix(maxImages))
+        Array(posts.prefix(posts.count >= 4 ? 4 : 1))
     }
 
     var body: some View {
         Button(action: action) {
-            GeometryReader { geo in
-                ZStack(alignment: .bottomLeading) {
+            VStack(alignment: .leading, spacing: 8) {
+                GeometryReader { geo in
                     collage(size: geo.size)
-
-                    LinearGradient(
-                        colors: [
-                            Color.black.opacity(0.75),
-                            Color.black.opacity(0.35),
-                            Color.clear
-                        ],
-                        startPoint: .bottom,
-                        endPoint: .top
-                    )
-                    .frame(height: geo.size.height * 0.45)
-                    .frame(maxHeight: .infinity, alignment: .bottom)
-
-                    titleLabel
-                        .padding(.horizontal, 12)
-                        .padding(.bottom, 12)
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .clipped()
                 }
+                // Slightly wider than tall so cards sit a bit shorter than a square.
+                .aspectRatio(1.12, contentMode: .fit)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                titleLabel
             }
-            .aspectRatio(1, contentMode: .fit)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(.plain)
         .onChange(of: previewPosts.map(\.id)) { _ in
-            loadedStates = Array(repeating: false, count: 10)
+            loadedStates = Array(repeating: false, count: 4)
         }
     }
 
     private var titleLabel: some View {
         Group {
             if let subtitle, !subtitle.isEmpty {
-                (
-                    Text(title)
-                        .font(Constants.Fonts.title1)
-                        .foregroundStyle(.white)
-                    + Text(" • \(subtitle)")
-                        .font(Constants.Fonts.title4)
-                        .foregroundStyle(.white.opacity(0.9))
-                )
+                if #available(iOS 17.0, *) {
+                    (
+                        Text(title)
+                            .font(Constants.Fonts.title1)
+                            .foregroundStyle(Constants.Colors.black)
+                        + Text(" • \(subtitle)")
+                            .font(Constants.Fonts.title4)
+                            .foregroundStyle(Constants.Colors.secondaryGray)
+                    )
+                } else {
+                    // Fallback on earlier versions
+                }
             } else {
                 Text(title)
                     .font(Constants.Fonts.title1)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Constants.Colors.black)
             }
         }
         .lineLimit(1)
@@ -78,52 +70,29 @@ struct ExploreCollageCard: View {
     private func collage(size: CGSize) -> some View {
         let urls = previewPosts.map { URL(string: $0.images.first ?? "") }
         let count = urls.count
+        let cellWidth = (size.width - spacing) / 2
+        let cellHeight = (size.height - spacing) / 2
 
         if count == 0 {
             Constants.Colors.wash
         } else if count == 1 {
             imageCell(url: urls[0], index: 0)
-        } else if count == 2 {
-            HStack(spacing: spacing) {
-                imageCell(url: urls[0], index: 0)
-                imageCell(url: urls[1], index: 1)
-            }
-        } else if count == 3 {
-            HStack(spacing: spacing) {
-                imageCell(url: urls[0], index: 0)
-                VStack(spacing: spacing) {
-                    imageCell(url: urls[1], index: 1)
-                    imageCell(url: urls[2], index: 2)
-                }
-            }
-        } else if count == 4 {
+                .frame(width: size.width, height: size.height)
+        } else {
             VStack(spacing: spacing) {
                 HStack(spacing: spacing) {
                     imageCell(url: urls[0], index: 0)
+                        .frame(width: cellWidth, height: cellHeight)
                     imageCell(url: urls[1], index: 1)
+                        .frame(width: cellWidth, height: cellHeight)
                 }
                 HStack(spacing: spacing) {
                     imageCell(url: urls[2], index: 2)
+                        .frame(width: cellWidth, height: cellHeight)
                     imageCell(url: urls[3], index: 3)
+                        .frame(width: cellWidth, height: cellHeight)
                 }
             }
-        } else {
-            // 5–10: dense 3-column grid, clipped to the card
-            let columns = [
-                GridItem(.flexible(), spacing: spacing),
-                GridItem(.flexible(), spacing: spacing),
-                GridItem(.flexible(), spacing: spacing)
-            ]
-            let cellHeight = (size.height - spacing * 2) / 3
-
-            LazyVGrid(columns: columns, spacing: spacing) {
-                ForEach(Array(urls.enumerated()), id: \.offset) { index, url in
-                    imageCell(url: url, index: index)
-                        .frame(height: cellHeight)
-                }
-            }
-            .frame(width: size.width, height: size.height, alignment: .top)
-            .clipped()
         }
     }
 

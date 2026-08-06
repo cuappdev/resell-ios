@@ -22,12 +22,14 @@ struct Post: Codable, Equatable, Identifiable, Hashable {
     let archive: Bool
     let user: User?
     let sold: Bool?
+    var savedCount: Int? = nil
+    var saveCount: Int? = nil
 
     enum CodingKeys: String, CodingKey {
         case id, title, description, categories, category, condition
         case originalPrice = "originalPrice"
         case alteredPrice = "alteredPrice"
-        case images, created, location, archive, user, sold
+        case images, created, location, archive, user, sold, savedCount, saveCount
     }
 
     static func == (lhs: Post, rhs: Post) -> Bool {

@@ -18,7 +18,7 @@ final class RecentlyViewedViewModel: ObservableObject {
     private var lastFetchTime: Date?
     private let cacheValidityDuration: TimeInterval = 180
     private let maxStoredIds = 40
-    private let previewLimit = 10
+    private let previewLimit = 4
 
     private var recentlyViewedIds: [String] {
         get {
@@ -79,12 +79,35 @@ final class RecentlyViewedViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        var fetched: [Post] = []
-        for id in ids {
-            if let response = try? await NetworkManager.shared.getPostByID(id: id),
-               let post = response.post {
-                fetched.append(post)
+        let fetched: [Post]
+        if limit == previewLimit {
+            fetched = await withTaskGroup(of: (Int, Post?).self) { group in
+                for (index, id) in ids.enumerated() {
+                    group.addTask {
+                        let response = try? await NetworkManager.shared.getPostByID(id: id)
+                        return (index, response?.post)
+                    }
+                }
+
+                var indexedPosts: [(Int, Post)] = []
+                for await (index, post) in group {
+                    if let post {
+                        indexedPosts.append((index, post))
+                    }
+                }
+                return indexedPosts
+                    .sorted { $0.0 < $1.0 }
+                    .map(\.1)
             }
+        } else {
+            var allPosts: [Post] = []
+            for id in ids {
+                if let response = try? await NetworkManager.shared.getPostByID(id: id),
+                   let post = response.post {
+                    allPosts.append(post)
+                }
+            }
+            fetched = allPosts
         }
 
         posts = fetched

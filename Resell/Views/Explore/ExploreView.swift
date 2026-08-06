@@ -10,19 +10,20 @@ struct ExploreView: View {
     @EnvironmentObject var router: Router
     @ObservedObject private var homeViewModel = HomeViewModel.shared
     @ObservedObject private var recentlyViewed = RecentlyViewedViewModel.shared
+    @ObservedObject private var exploreViewModel = ExploreViewModel.shared
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: true) {
             VStack(alignment: .leading, spacing: 28) {
-                ExploreEventsSkeleton()
+//                ExploreEventsSkeleton()
 
                 CategoriesView()
 
                 justForYouSection
 
-                ExploreDailyPicksSkeleton()
+                ExploreDailyPicksSection()
 
-                ExploreTrendingSkeleton()
+                ExploreTrendingSection()
             }
             .padding(.top, 12)
             .padding(.bottom, 24)
@@ -33,15 +34,19 @@ struct ExploreView: View {
             Task {
                 async let saved: () = homeViewModel.getSavedPosts()
                 async let recent: () = recentlyViewed.loadPreviewPosts()
+                async let explore: () = exploreViewModel.loadAll()
                 await saved
                 await recent
+                await explore
             }
         }
         .refreshable {
             async let saved: () = homeViewModel.getSavedPosts(forceRefresh: true)
             async let recent: () = recentlyViewed.loadPreviewPosts(forceRefresh: true)
+            async let explore: () = exploreViewModel.loadAll(forceRefresh: true)
             await saved
             await recent
+            await explore
         }
     }
 
@@ -108,6 +113,7 @@ struct ExploreView: View {
     private var collageCardWidth: CGFloat {
         let horizontalPadding = Constants.Spacing.horizontalPadding * 2
         let spacing: CGFloat = 12
-        return (UIScreen.main.bounds.width - horizontalPadding - spacing) / 2
+        // A bit wider than half-screen so the pair peeks into horizontal scroll.
+        return (UIScreen.main.bounds.width - horizontalPadding - spacing) / 2 + 14
     }
 }
