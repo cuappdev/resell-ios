@@ -14,6 +14,9 @@ struct CustomPageControlIndicatorView: View {
 
     @Binding var currentPage: Int
     var numberOfPages: Int
+    /// Draws a Liquid Glass capsule behind the dots. Enable when the indicator
+    /// floats over imagery; disable when it sits on a plain screen background.
+    var showsGlassBackground: Bool = true
 
     // MARK: - UI
 
@@ -26,6 +29,9 @@ struct CustomPageControlIndicatorView: View {
                     .animation(.easeInOut, value: currentPage)
             }
         }
-        .padding(.vertical, 10)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .glassEffect(showsGlassBackground ? .regular : .identity, in: .capsule)
+        .padding(.vertical, 4)
     }
 }

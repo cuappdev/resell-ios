@@ -25,7 +25,7 @@ struct MainView: View {
     // MARK: - UI
 
     var body: some View {
-        MainTabView(isHidden: $mainViewModel.hidesTabBar, selection: $mainViewModel.selection)
+        MainTabView(selection: $mainViewModel.selection)
             .environmentObject(searchViewModel)
             .environmentObject(router)
             .environmentObject(mainViewModel)
@@ -43,8 +43,6 @@ struct MainView: View {
                 // `ResellApp.init()` was unsafe (see note there).
                 HomeViewModel.shared.configure(mainViewModel: mainViewModel)
                 mainViewModel.restoreSignIn()
-                mainViewModel.setupNavBar()
-                mainViewModel.hidesTabBar = false
             }
             .task {
                 await appVersionService.checkIfUpdateRequired()

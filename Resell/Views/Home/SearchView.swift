@@ -23,15 +23,27 @@ struct SearchView: View {
     // MARK: - UI
 
     var body: some View {
-        VStack(spacing: 0) {
+        contentView
+            .safeAreaInset(edge: .top, spacing: 0) {
+                searchHeader
+            }
+        .navigationBarBackButtonHidden()
+        .background(Constants.Colors.white)
+        .loadingView(isLoading: searchViewModel.isLoading)
+        .onChange(of: isFocused) { newValue in
+            searchViewModel.isSearching = newValue
+        }
+    }
+
+    private var searchHeader: some View {
+        GlassEffectContainer(spacing: 16) {
             HStack(alignment: .center, spacing: 16) {
                 TextField("", text: $searchText, prompt: Text("What are you looking for?").foregroundColor(Constants.Colors.secondaryGray))
                     .font(Constants.Fonts.body2)
                     .foregroundStyle(Constants.Colors.black)
                     .submitLabel(.search)
                     .padding(12)
-                    .background(Constants.Colors.wash)
-                    .clipShape(.capsule)
+                    .glassEffect(.regular, in: .capsule)
                     .focused($isFocused)
                     .onSubmit {
                         searchViewModel.searchItems(with: searchText, userID: userID, saveQuery: false, mainViewModel: mainViewModel) {}
@@ -44,37 +56,29 @@ struct SearchView: View {
                         .resizable()
                         .frame(width: 14, height: 14)
                         .foregroundStyle(Constants.Colors.black)
+                        .padding(14)
                 }
+                .glassEffect(.regular.interactive(), in: .circle)
             }
             .padding(Constants.Spacing.horizontalPadding)
+        }
+    }
 
+    private var contentView: some View {
+        Group {
             if searchViewModel.isSearching {
                 searchHistoryView
-
-                Spacer()
             } else if searchViewModel.isLoading {
-                Spacer()
-
                 ProgressView()
-
-                Spacer()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if searchViewModel.searchedItems.isEmpty {
+                emptyState
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                if searchViewModel.searchedItems.isEmpty {
-                    Spacer()
-                    emptyState
-                    Spacer()
-                } else {
-                    ScrollView(.vertical) {
-                        ProductsGalleryView(items: searchViewModel.searchedItems)
-                    }
+                ScrollView(.vertical) {
+                    ProductsGalleryView(items: searchViewModel.searchedItems)
                 }
             }
-        }
-        .navigationBarBackButtonHidden()
-        .background(Constants.Colors.white)
-        .loadingView(isLoading: searchViewModel.isLoading)
-        .onChange(of: isFocused) { newValue in
-            searchViewModel.isSearching = newValue
         }
     }
 

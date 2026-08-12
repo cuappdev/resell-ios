@@ -65,68 +65,52 @@ struct ProductDetailsView: View {
                     .zIndex(2)
             }
 
-            if viewModel.didShowOptionsMenu {
-                OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowDeleteView: $viewModel.didShowDeleteView, options: {
-                    var options: [Option] = []
-                            
-                    let urlString = "resell://product/\(post.id)"
-                    if let shareUrl = URL(string: urlString) {
-                        options.append(
-                            .share(
-                                url: shareUrl,
-                                itemName: viewModel.item?.title ?? "Check out this AWESOME item on Resell!"
-                            ))
-                    }
-                    
-                    options.append(.report(type: "Post", id: post.id))
-                    
-                    if viewModel.isUserPost() {
-                        options.append(.delete)
-                    }
-                    
-                    return options
-                }())
-                .padding(.top, topSafeArea * 2 + 30)
-                .zIndex(2)
-            }
-
             // Custom navigation buttons overlay
             VStack {
-                HStack {
-                    Button {
-                        router.pop()
-                    } label: {
-                        Image("chevron.left.white")
-                            .resizable()
-                            .frame(width: 36, height: 24)
-                            .frame(width: 44, height: 44)
-                            .contentShape(Rectangle())
-                            .offset(x: -10)
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(Constants.Colors.black)
-                    }
-                    .background(.ultraThinMaterial, in: Circle())
-                    .padding(.leading, 12)
-                    
-                    Spacer()
-
-                    Button {
-                        withAnimation {
-                            viewModel.didShowOptionsMenu.toggle()
+                GlassEffectContainer(spacing: 12) {
+                    HStack {
+                        Button {
+                            router.pop()
+                        } label: {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 17, weight: .semibold))
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
                         }
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .resizable()
-                            .frame(width: 24, height: 6)
-                            .foregroundStyle(Constants.Colors.white)
-                            .frame(width: 44, height: 44)
-                            .contentShape(Rectangle())
-                            
-                    }
-                    .background(.ultraThinMaterial, in: Circle())
-                    .padding(.trailing, 12)
-                    
+                        .glassEffect(.regular.interactive(), in: .circle)
+                        .padding(.leading, 12)
 
+                        Spacer()
+
+                        Menu {
+                            ShareLink(
+                                item: "Check out this AWESOME \(viewModel.item?.title ?? "item") on Resell!\nresell://product/\(post.id)"
+                            ) {
+                                Label("Share", systemImage: "square.and.arrow.up")
+                            }
+
+                            Button {
+                                router.push(.reportOptions(type: "Post", id: post.id))
+                            } label: {
+                                Label("Report", systemImage: "flag")
+                            }
+
+                            if viewModel.isUserPost() {
+                                Button(role: .destructive) {
+                                    viewModel.didShowDeleteView = true
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis")
+                                .font(.system(size: 17, weight: .semibold))
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
+                        }
+                        .glassEffect(.regular.interactive(), in: .circle)
+                        .padding(.trailing, 12)
+                    }
                 }
                 .padding(.top, topSafeArea * 2 + 4)
 
@@ -143,25 +127,13 @@ struct ProductDetailsView: View {
         .sheet(isPresented: $viewModel.didShowDeleteView) {
                 deletePostView
             }
-            .onChange(of: viewModel.didShowDeleteView) { isPresented in
-                if isPresented {
-                    viewModel.didShowOptionsMenu = false
-                }
-            }
         .onAppear {
             viewModel.setPost(post: post)
-
-            withAnimation {
-                mainViewModel.hidesTabBar = true
-            }
 
             viewModel.maxDrag = imageHeight
         }
         .onDisappear {
             viewModel.didShowOptionsMenu = false
-            withAnimation {
-                mainViewModel.hidesTabBar = false
-            }
         }
     }
 
@@ -192,7 +164,6 @@ struct ProductDetailsView: View {
             }
 
             CustomPageControlIndicatorView(currentPage: $viewModel.currentPage, numberOfPages: $viewModel.images.count)
-                .frame(height: 20)
                 .padding()
         }
     }
@@ -341,10 +312,6 @@ struct ProductDetailsView: View {
         viewModel.clear()
         viewModel.setPost(post: post)
 
-        withAnimation {
-            mainViewModel.hidesTabBar = true
-        }
-
         viewModel.maxDrag = imageHeight
 
         if let existingIndex = router.path.lastIndex(where: {
@@ -375,13 +342,6 @@ struct ProductDetailsView: View {
         }
         .frame(width: UIScreen.width, height: 50)
         .padding(.bottom, 24)
-        .background(
-            LinearGradient(stops: [
-                .init(color: Color.clear, location: 0.0),
-                .init(color: Constants.Colors.white.opacity(0.8), location: 0.5),
-                .init(color: Constants.Colors.white, location: 1.0)
-            ], startPoint: .top, endPoint: .bottom)
-        )
     }
 
     // TODO: FIX
@@ -426,53 +386,27 @@ struct ProductDetailsView: View {
     @AppStorage("isNotificationAuthorized") var isNotificationAuthorized = false
 
     private var saveButton: some View {
-        if isNotificationAuthorized {
-            Button {
-                viewModel.isSaved.toggle()
-                
-                Task {
-                    await viewModel.updateItemSaved()
-                    await homeViewModel.toggleLocalSaveStatus(for: post, isSaving: viewModel.isSaved)
-                }
-                
+        Button {
+            viewModel.isSaved.toggle()
+
+            Task {
+                await viewModel.updateItemSaved()
+                await homeViewModel.toggleLocalSaveStatus(for: post, isSaving: viewModel.isSaved)
+            }
+
+            if isNotificationAuthorized {
                 sendNotification()
-            } label: {
-                ZStack {
-                    Circle()
-                        .frame(width: 72, height: 72)
-                        .foregroundStyle(Constants.Colors.white)
-                        .opacity(viewModel.isSaved ? 1.0 : 0.9)
-                        .shadow(radius: 2)
-
-                    Image(viewModel.isSaved ? "saved.fill" : "saved")
-                        .resizable()
-                        .frame(width: 21, height: 27)
-                }
-            }
-        } else {
-            Button {
-                viewModel.isSaved.toggle()
-                
-                Task {
-                    await viewModel.updateItemSaved()
-                    await homeViewModel.toggleLocalSaveStatus(for: post, isSaving: viewModel.isSaved)
-                }
-                
+            } else {
                 requestNotificationAuthorization()
-            } label: {
-                ZStack {
-                    Circle()
-                        .frame(width: 72, height: 72)
-                        .foregroundStyle(Constants.Colors.white)
-                        .opacity(viewModel.isSaved ? 1.0 : 0.9)
-                        .shadow(radius: 2)
-
-                    Image(viewModel.isSaved ? "saved.fill" : "saved")
-                        .resizable()
-                        .frame(width: 21, height: 27)
-                }
             }
+        } label: {
+            Image(viewModel.isSaved ? "saved.fill" : "saved")
+                .resizable()
+                .frame(width: 21, height: 27)
+                .frame(width: 72, height: 72)
+                .contentShape(Circle())
         }
+        .glassEffect(.regular.interactive(), in: .circle)
     }
 
     private var deletePostView: some View {
@@ -499,11 +433,9 @@ struct ProductDetailsView: View {
                     .foregroundStyle(Constants.Colors.black)
             }
         }
-        .background(Constants.Colors.white)
         .presentationDetents([.height(200)])
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(25)
-        .presentationBackground(Constants.Colors.white)
     }
 
     // MARK: - Functions

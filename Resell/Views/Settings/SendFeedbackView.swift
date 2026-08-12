@@ -40,11 +40,7 @@ struct SendFeedbackView: View {
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
         .padding(.top, 40)
         .background(Constants.Colors.white)
-        .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                BackButton()
-            }
             ToolbarItem(placement: .principal) {
                 Text("Send Feedback")
                     .font(Constants.Fonts.h3)

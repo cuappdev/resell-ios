@@ -13,7 +13,6 @@ struct NewListingImagesView: View {
 
     @EnvironmentObject var router: Router
     @EnvironmentObject var viewModel: NewListingViewModel
-    @EnvironmentObject var mainViewModel: MainViewModel
 
     // MARK: - UI
     
@@ -90,15 +89,10 @@ struct NewListingImagesView: View {
                 Button {
                     router.pop()
                     viewModel.clear()
-
-                    withAnimation {
-                        mainViewModel.hidesTabBar = false
-                    }
                 } label: {
                     Image(systemName: "xmark")
-                        .resizable()
-                        .frame(width: 20, height: 20)
-                        .tint(Constants.Colors.black)
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(Constants.Colors.black)
                 }
             }
         }

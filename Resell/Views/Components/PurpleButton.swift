@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-/// Reusable purple button
+/// Reusable primary CTA rendered as prominent Liquid Glass tinted with the Resell brand color
 struct PurpleButton: View {
 
     // MARK: - Properties
@@ -22,12 +22,14 @@ struct PurpleButton: View {
     // MARK: - UI
 
     var body: some View {
-        VStack {
-            Button(action: { if isActive { action() } }, label: {
-                buttonContent
-                    .opacity(isActive ? 1.0 : 0.4)
-            })
-        }
+        Button(action: { if isActive { action() } }, label: {
+            buttonContent
+        })
+        .buttonStyle(.glassProminent)
+        .buttonBorderShape(.capsule)
+        .tint(isAlert ? Constants.Colors.errorRed : Constants.Colors.resellPurple)
+        .opacity(isActive ? 1.0 : 0.4)
+        .disabled(!isActive)
     }
 
     private var buttonContent: some View {
@@ -38,18 +40,15 @@ struct PurpleButton: View {
 
             Text(text)
                 .font(Constants.Fonts.title1)
-
                 .foregroundStyle(Constants.Colors.white)
         }
-        .padding(.horizontal, horizontalPadding)
-        .padding(.vertical, 14)
-        .background(isAlert ? Constants.Colors.errorRed : Constants.Colors.resellPurple)
-        .clipShape(.capsule)
+        .padding(.horizontal, max(horizontalPadding - 20, 0))
+        .padding(.vertical, 6)
     }
 
 }
 
-/// Reusable purple button that works as a NavigationLink
+/// Reusable primary CTA that works as a NavigationLink
 struct NavigationPurpleButton<Destination: View>: View {
 
     // MARK: - Properties
@@ -64,19 +63,16 @@ struct NavigationPurpleButton<Destination: View>: View {
 
     var body: some View {
         NavigationLink(destination: destination) {
-            buttonContent
-                .opacity(isActive ? 1.0 : 0.4)
+            Text(text)
+                .font(Constants.Fonts.title1)
+                .foregroundStyle(Constants.Colors.white)
+                .padding(.horizontal, max(horizontalPadding - 20, 0))
+                .padding(.vertical, 6)
         }
+        .buttonStyle(.glassProminent)
+        .buttonBorderShape(.capsule)
+        .tint(isAlert ? Constants.Colors.errorRed : Constants.Colors.resellPurple)
+        .opacity(isActive ? 1.0 : 0.4)
         .disabled(!isActive)
-    }
-
-    private var buttonContent: some View {
-        Text(text)
-            .font(Constants.Fonts.title1)
-            .padding(.horizontal, horizontalPadding)
-            .padding(.vertical, 14)
-            .background(isAlert ? Constants.Colors.errorRed : Constants.Colors.resellPurple)
-            .foregroundColor(Constants.Colors.white)
-            .clipShape(Capsule())
     }
 }

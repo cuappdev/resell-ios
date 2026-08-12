@@ -163,17 +163,11 @@ struct AvailabilitySettingsView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbarBackground(Constants.Colors.white, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text("Availability Settings")
                     .font(Constants.Fonts.h3)
                     .foregroundStyle(Constants.Colors.black)
-            }
-            ToolbarItem(placement: .navigationBarLeading) {
-                BackButton()
             }
         }
         .alert("Error", isPresented: .constant(errorMessage != nil)) {

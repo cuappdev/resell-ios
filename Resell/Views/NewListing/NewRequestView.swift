@@ -12,7 +12,6 @@ struct NewRequestView: View {
     // MARK: - Properties
 
     @EnvironmentObject var router: Router
-    @EnvironmentObject var mainViewModel: MainViewModel
     @StateObject private var viewModel = NewRequestViewModel()
 
     @State private var sheetHeight: CGFloat? = nil
@@ -40,9 +39,6 @@ struct NewRequestView: View {
                 PurpleButton(isLoading: viewModel.isLoading, isActive: viewModel.checkInputIsValid(), text: "Continue") {
                     viewModel.createNewRequest()
                     router.pop()
-                    withAnimation {
-                        mainViewModel.hidesTabBar = false
-                    }
                 }
             }
             .padding(.horizontal, 24)
@@ -60,15 +56,10 @@ struct NewRequestView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     router.pop()
-                    withAnimation {
-                        mainViewModel.hidesTabBar = false
-                    }
                 } label: {
-                    //TODO: Place this in constants
                     Image(systemName: "xmark")
-                        .resizable()
-                        .frame(width: 20, height: 20)
-                        .tint(Constants.Colors.black)
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(Constants.Colors.black)
                 }
             }
         }
@@ -84,11 +75,6 @@ struct NewRequestView: View {
                 ])
                 .presentationDragIndicator(.visible)
                 .presentationCornerRadius(25)
-        }
-        .onAppear {
-            withAnimation {
-                mainViewModel.hidesTabBar = true
-            }
         }
         .onChange(of: viewModel.isLoading) { newValue in
             router.pop()

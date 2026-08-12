@@ -14,14 +14,12 @@ struct ChatsView: View {
 
     @EnvironmentObject var router: Router
     @EnvironmentObject var viewModel: ChatsViewModel
-    @EnvironmentObject var mainViewModel: MainViewModel
+    @EnvironmentObject private var mainViewModel: MainViewModel
 
     // MARK: - UI
 
     var body: some View {
         VStack(alignment: .leading) {
-            headerView
-
             filtersView
 
             chatsView
@@ -29,6 +27,11 @@ struct ChatsView: View {
             Spacer()
         }
         .background(Constants.Colors.white)
+        .onScrollGeometryChange(for: CGFloat.self) { geometry in
+            geometry.contentOffset.y
+        } action: { oldValue, newValue in
+            mainViewModel.updateTabBarForScroll(offset: newValue, previousOffset: oldValue)
+        }
         .emptyState(isEmpty: viewModel.checkEmptyState(), title: viewModel.emptyStateTitle(), text: viewModel.emptyStateMessage())
         .refreshable {
             viewModel.refreshChats()
@@ -37,17 +40,6 @@ struct ChatsView: View {
             viewModel.getAllChats()
         }
         .loadingView(isLoading: viewModel.isLoading)
-    }
-
-    private var headerView: some View {
-        HStack {
-            Text("Messages")
-                .font(Constants.Fonts.h1)
-                .foregroundStyle(Constants.Colors.black)
-
-            Spacer()
-        }
-        .padding(.horizontal, 25)
     }
 
     private var filtersView: some View {

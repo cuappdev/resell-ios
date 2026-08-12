@@ -18,6 +18,74 @@ class MainViewModel: ObservableObject {
     @Published var userDidLogin: Bool = false
     @Published var selection = 0
 
+    /// When true, the tab bar minimize behavior is .never, which forces the bar to
+    /// expand. Kept false ("armed", .onScrollDown) at rest so any downward scroll
+    /// minimizes the bar natively at any speed; crossing back above the top
+    /// breakpoint fires a short .never pulse to force expansion, then re-arms.
+    @Published var expandsTabBar: Bool = false
+
+    /// Mirrors the tab bar's actual expanded/minimized presentation so floating
+    /// controls (the add button) stay exactly in sync with it.
+    @Published var isTabBarMinimized = false
+
+    /// Scroll offset below which the bar expands / above which it minimizes.
+    static let tabBarExpandBreakpoint: CGFloat = 16
+    static let tabBarMinimizeBreakpoint: CGFloat = 24
+
+    private var scrollIsAtTop = true
+    private var rearmTask: Task<Void, Never>?
+
+    /// Forces the tab bar to expand, then re-arms minimize-on-scroll shortly after.
+    func pulseExpandTabBar() {
+        rearmTask?.cancel()
+        if isTabBarMinimized {
+            isTabBarMinimized = false
+        }
+        if !expandsTabBar {
+            expandsTabBar = true
+        }
+        rearmTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(0.45))
+            guard !Task.isCancelled else { return }
+            self?.expandsTabBar = false
+        }
+    }
+
+    /// Called when the user taps the minimized tab bar pill — the system expands
+    /// the bar itself; this keeps our mirrored state (and the add button) in sync.
+    func handleManualTabBarExpansion() {
+        if isTabBarMinimized {
+            isTabBarMinimized = false
+        }
+    }
+
+    /// Drives the tab bar from a tab root's scroll offset: expand when the scroll
+    /// crosses above the top breakpoint; past the breakpoint, minimize only on
+    /// downward movement (mirroring .onScrollDown, so a manually expanded bar
+    /// stays expanded until the user actually scrolls down again).
+    func updateTabBarForScroll(offset: CGFloat, previousOffset: CGFloat) {
+        if offset < Self.tabBarExpandBreakpoint {
+            if isTabBarMinimized {
+                isTabBarMinimized = false
+            }
+            if !scrollIsAtTop {
+                scrollIsAtTop = true
+                pulseExpandTabBar()
+            }
+        } else if offset > Self.tabBarMinimizeBreakpoint {
+            if scrollIsAtTop {
+                scrollIsAtTop = false
+            }
+            rearmTask?.cancel()
+            if expandsTabBar {
+                expandsTabBar = false
+            }
+            if offset > previousOffset + 2, !isTabBarMinimized {
+                isTabBarMinimized = true
+            }
+        }
+    }
+
     @Published var hidesSignInButton = true
 
     // MARK: - Persistent Storage
@@ -83,27 +151,6 @@ class MainViewModel: ObservableObject {
             return []
         }
         return history
-    }
-
-    func setupNavBar() {
-        let backButtonImage = UIImage(named: "chevron.left")?
-            .resized(to: CGSize(width: 38, height: 24))
-            .withRenderingMode(.alwaysOriginal)
-            .withTintColor(.black)
-            
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = .white
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.black]
-        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.black]
-        
-        appearance.backButtonAppearance.normal.titlePositionAdjustment = UIOffset(horizontal: -100, vertical: 0)
-        appearance.backButtonAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.clear]
-        appearance.setBackIndicatorImage(backButtonImage, transitionMaskImage: backButtonImage)
-        
-        UINavigationBar.appearance().standardAppearance = appearance
-        UINavigationBar.appearance().compactAppearance = appearance
-        UINavigationBar.appearance().scrollEdgeAppearance = appearance
     }
 
     @objc func logout() {

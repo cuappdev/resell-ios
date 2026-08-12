@@ -23,11 +23,11 @@ struct DetailedFilterView: View {
     }
 
     var body: some View {
-            VStack(spacing: 0) {
-                headerView
-                ScrollView(.vertical) {
-                    ProductsGalleryView(items: displayedItems)
-                }
+        ScrollView(.vertical) {
+            ProductsGalleryView(items: displayedItems)
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            headerView
         }
         .background(Constants.Colors.white)
         .loadingView(isLoading: viewModel.isLoading)
@@ -43,42 +43,40 @@ struct DetailedFilterView: View {
                 filtersViewModel.clearFilterSearch()
             }
         }
-        .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                BackButton(style: .systemChevronResizable(width: 12, height: 20))
-            }
-            
             ToolbarItem(placement: .principal) {
                 Text(filter.title)
                     .font(Constants.Fonts.h1)
                     .foregroundStyle(Constants.Colors.black)
             }
         }
-        .toolbarBackground(.hidden, for: .navigationBar)
         .sheet(isPresented: $presentPopup) {
             FilterView(home: false, isPresented: $presentPopup)
                 .environmentObject(filtersViewModel)
+                .presentationDragIndicator(.visible)
         }
     }
 
     private var headerView: some View {
-            HStack {
+        GlassEffectContainer(spacing: 12) {
+            HStack(spacing: 16) {
                 SearchBar(text: $searchText, placeholder: "Search in \(filter.title)", isEditable: true)
                     .onChange(of: searchText) { newValue in
                         filtersViewModel.searchWithinFilter(query: newValue)
                     }
-                
+
                 Button(action: {
                     presentPopup = true
                 }, label: {
-                    Image("filters") 
+                    Image("filters")
                         .resizable()
                         .frame(width: 24, height: 21)
+                        .padding(10)
                 })
+                .glassEffect(.regular.interactive(), in: .circle)
             }
             .padding(.bottom, 12)
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
-        
+        }
     }
 }
