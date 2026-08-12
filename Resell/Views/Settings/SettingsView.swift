@@ -65,12 +65,6 @@ struct SettingsView: View {
         .background(Constants.Colors.white)
         .navigationTitle(isAccountSettings ? "Account Settings" : "Settings")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                BackButton()
-            }
-        }
         .sheet(isPresented: $viewModel.didShowWebView) {
             WebView(url: URL(string: "https://www.cornellappdev.com/license/resell")!)
                 .edgesIgnoringSafeArea(.all)
@@ -135,11 +129,9 @@ struct SettingsView: View {
                     .foregroundStyle(Constants.Colors.black)
             }
         }
-        .background(Constants.Colors.white)
         .presentationDetents([.height(200)])
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(25)
-        .presentationBackground(Constants.Colors.white)
     }
 
     private var popupModalContent: some View {

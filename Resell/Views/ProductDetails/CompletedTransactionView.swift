@@ -102,13 +102,6 @@ struct CompletedTransactionView: View {
         .background(Constants.Colors.white)
         .navigationTitle("Completed Transaction")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbarBackground(Constants.Colors.white, for: .automatic)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                BackButton(style: .systemChevronResizable(width: 12, height: 20))
-            }
-        }
         .task {
             await loadBuyerReviewStateIfNeeded()
         }

@@ -19,45 +19,42 @@ struct SearchBar: View {
     }
     
     var body: some View {
-        RoundedRectangle(cornerRadius: 40)
-            .frame(width: 309, height: 43)
-            .overlay {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.black)
-                        .padding(.leading, 16)
-                    
-                    if isEditable {
-                        ZStack(alignment: .leading) {
-                           if textBinding.wrappedValue.isEmpty {
-                               Text(placeholder)
-                                   .font(Constants.Fonts.body1)
-                                   .foregroundColor(Constants.Colors.secondaryGray) // Use a visible gray
-                           }
-                           
-                           TextField("", text: textBinding)
-                               .font(Constants.Fonts.body1)
-                               .foregroundColor(Constants.Colors.black)
-                       }
-                        
-                        if !textBinding.wrappedValue.isEmpty {
-                            Button(action: {
-                                textBinding.wrappedValue = ""
-                            }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(Constants.Colors.stroke)
-                            }
-                            .padding(.trailing, 8)
-                        }
-                    } else {
-                        Text(placeholder)
-                            .font(Constants.Fonts.body1)
-                            .foregroundColor(Constants.Colors.black)
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(Constants.Colors.secondaryGray)
+
+            if isEditable {
+                ZStack(alignment: .leading) {
+                   if textBinding.wrappedValue.isEmpty {
+                       Text(placeholder)
+                           .font(Constants.Fonts.body1)
+                           .foregroundColor(Constants.Colors.secondaryGray) // Use a visible gray
+                   }
+
+                   TextField("", text: textBinding)
+                       .font(Constants.Fonts.body1)
+                       .foregroundColor(Constants.Colors.black)
+               }
+
+                if !textBinding.wrappedValue.isEmpty {
+                    Button(action: {
+                        textBinding.wrappedValue = ""
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(Constants.Colors.stroke)
                     }
-                    
-                    Spacer()
                 }
+            } else {
+                Text(placeholder)
+                    .font(Constants.Fonts.body1)
+                    .foregroundColor(Constants.Colors.black)
             }
-            .foregroundColor(Constants.Colors.wash)
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity)
+        .glassEffect(.regular, in: .capsule)
     }
 }

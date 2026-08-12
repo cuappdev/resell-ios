@@ -37,12 +37,7 @@ struct BlockedUsersView: View {
         }
         .frame(width: UIScreen.width)
         .background(Constants.Colors.white)
-        .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                BackButton()
-            }
-            
             ToolbarItem(placement: .principal) {
                 Text("Blocked Users")
                     .font(Constants.Fonts.h3)

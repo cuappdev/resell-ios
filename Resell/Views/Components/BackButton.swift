@@ -46,10 +46,6 @@ struct BackButton: View {
                 .frame(width: hitTargetSize.width, height: hitTargetSize.height)
                 .contentShape(Circle())
         }
-        // `.plain` opts out of the system's automatic button chrome (the rounded-rect
-        // background that toolbar items pick up on iOS 26 when built against an older
-        // SDK), so only our chevron is drawn — no rectangle behind it.
-        .buttonStyle(.plain)
     }
 
     @ViewBuilder

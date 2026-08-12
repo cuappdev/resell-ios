@@ -106,12 +106,7 @@ struct NotificationsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Constants.Colors.white)
-        .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                BackButton()
-            }
-            
             ToolbarItem(placement: .principal) {
                 Text("Notifications")
                     .font(Constants.Fonts.h3)

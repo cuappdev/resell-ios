@@ -24,7 +24,6 @@ struct ExternalProfileView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            customToolbar
             ScrollView {
                 
                 
@@ -69,20 +68,6 @@ struct ExternalProfileView: View {
                         .animation(.easeInOut, value: viewModel.sellerIsBlocked)
                     }
                     
-                    if viewModel.didShowOptionsMenu {
-                        OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowBlockView: $viewModel.didShowBlockView, options: {
-                            var options: [Option] = [
-                                .report(type: "User", id: userID),
-                            ]
-                            if viewModel.sellerIsBlocked {
-                                options.append(.unblock)
-                            } else {
-                                options.append(.block)
-                            }
-                            return options
-                        }())
-                        .zIndex(1)
-                    }
                 }
                 .popupModal(isPresented: $viewModel.didShowBlockView) {
                     popupModalContent
@@ -95,7 +80,33 @@ struct ExternalProfileView: View {
                 // MARK: We should not be able to click into our own posts...
             }
         }
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("@\(viewModel.externalUser?.username ?? "username")")
+                    .font(Constants.Fonts.h3)
+                    .foregroundStyle(viewModel.sellerIsBlocked ? Constants.Colors.white : Constants.Colors.black)
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button {
+                        router.push(.reportOptions(type: "User", id: userID))
+                    } label: {
+                        Label("Report", systemImage: "flag")
+                    }
+
+                    Button {
+                        viewModel.didShowBlockView = true
+                    } label: {
+                        Label(viewModel.sellerIsBlocked ? "Unblock" : "Block", systemImage: "nosign")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .foregroundStyle(viewModel.sellerIsBlocked ? Constants.Colors.white : Constants.Colors.black)
+                }
+            }
+        }
     }
     
     private var profileView: some View {
@@ -239,42 +250,6 @@ struct ExternalProfileView: View {
 
     }
 
-    private var customToolbar: some View {
-        HStack {
-            BackButton(
-                style: .systemChevronResizable(width: 12, height: 20),
-                hitTargetSize: CGSize(width: 24, height: 44)
-            )
-            
-            Spacer()
-            
-            Text("@\(viewModel.externalUser?.username ?? "username")")
-                .font(Constants.Fonts.h3)
-                .foregroundStyle(Constants.Colors.black)
-            
-            Spacer()
-            
-            Button {
-                withAnimation {
-                    viewModel.didShowOptionsMenu.toggle()
-                }
-            } label: {
-                Image(systemName: "ellipsis")
-                    .resizable()
-                    .frame(width: 24, height: 6)
-                    .foregroundStyle(viewModel.sellerIsBlocked ? Constants.Colors.white : Constants.Colors.black)
-            }
-            .frame(width: 24, alignment: .trailing)
-        }
-        .padding(.horizontal, 24)
-        .padding(.bottom, 26)
-        .padding(.top, 10)
-        .overlay(alignment: .bottom) {
-            Divider()
-        }
-        .background(Constants.Colors.white)
-    }
-    
     private var profileTabBar: some View {
         HStack {
             // Listings tab

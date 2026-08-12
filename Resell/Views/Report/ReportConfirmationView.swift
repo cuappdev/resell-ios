@@ -79,9 +79,8 @@ struct ReportConfirmationView: View {
                     viewModel.clear()
                 } label: {
                     Image(systemName: "xmark")
-                        .resizable()
-                        .frame(width: 20, height: 20)
-                        .tint(Constants.Colors.black)
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(Constants.Colors.black)
                 }
             }
         }
