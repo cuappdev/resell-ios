@@ -44,6 +44,8 @@
 	<string>$(RESELL_LOCAL_URL)</string>
 	<key>RESELL_PROD_URL</key>
 	<string>$(RESELL_PROD_URL)</string>
+	<key>RESELL_APP_STORE_ID</key>
+	<string>$(RESELL_APP_STORE_ID)</string>
 	<key>RESELL_SSHDEV_URL</key>
 	<string>$(RESELL_SSHDEV_URL)</string>
 	<key>UIAppFonts</key>

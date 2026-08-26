@@ -40,6 +40,43 @@ class NetworkManager {
         }
         return encoder
     }()
+
+    /// Shared JSON decoder with a flexible date-decoding strategy that mirrors the
+    /// backend's behavior (ISO8601 strings, with or without fractional seconds) and
+    /// also gracefully falls back to numeric timestamps. This must match
+    /// `jsonEncoder` so request/response round-trips work correctly.
+    private let jsonDecoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+
+            if let dateString = try? container.decode(String.self) {
+                let formatter = ISO8601DateFormatter()
+                formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                if let date = formatter.date(from: dateString) {
+                    return date
+                }
+                formatter.formatOptions = [.withInternetDateTime]
+                if let date = formatter.date(from: dateString) {
+                    return date
+                }
+            }
+
+            if let timestamp = try? container.decode(Double.self) {
+                // Heuristic: values larger than ~year 33658 are clearly milliseconds.
+                if timestamp > 1_000_000_000_000 {
+                    return Date(timeIntervalSince1970: timestamp / 1000)
+                }
+                return Date(timeIntervalSince1970: timestamp)
+            }
+
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Could not decode Date from any supported format"
+            )
+        }
+        return decoder
+    }()
     
     
     // MARK: - Init
@@ -54,13 +91,28 @@ class NetworkManager {
         
         private func shouldRetryOn401(_ request: URLRequest) -> Bool {
             guard let path = request.url?.path else { return true }
+            // Public app-version check: no Bearer token; don't spin on refresh if backend returns 401.
+            if path.hasSuffix("/version") || path.hasSuffix("/version/") { return false }
             return !authEstablishingPathSuffixes.contains { path.hasSuffix($0) }
         }
         
         /// Central request execution with 401 interceptor: refreshes token and retries when eligible.
         private func perform(requestBuilder: () async throws -> URLRequest, attempt: Int = 1) async throws -> (Data, URLResponse) {
             let request = try await requestBuilder()
+            let isVersionPath = request.url?.path.hasSuffix("/version") == true
+                || request.url?.path.hasSuffix("/version/") == true
+            #if DEBUG
+            if isVersionPath {
+                print("[AppVersion] URLSession starting request…")
+            }
+            #endif
             let (data, response) = try await URLSession.shared.data(for: request)
+            #if DEBUG
+            if isVersionPath {
+                let code = (response as? HTTPURLResponse)?.statusCode ?? -1
+                print("[AppVersion] URLSession finished — status=\(code) bodyBytes=\(data.count)")
+            }
+            #endif
             
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 401 {
                 let error = (try? JSONDecoder().decode(ErrorResponse.self, from: data)) ?? ErrorResponse(error: "Unauthorized", httpCode: 401)
@@ -100,7 +152,13 @@ class NetworkManager {
         ///
         func get<T: Decodable>(url: URL) async throws -> T {
             let (data, _) = try await perform { try await createRequest(url: url, method: "GET") }
-            return try JSONDecoder().decode(T.self, from: data)
+            return try jsonDecoder.decode(T.self, from: data)
+        }
+
+        /// GET without Authorization. Used for public endpoints (e.g. app version check before login).
+        func getPublic<T: Decodable>(url: URL) async throws -> T {
+            let (data, _) = try await perform { createPublicGETRequest(url: url) }
+            return try jsonDecoder.decode(T.self, from: data)
         }
     
         /// Template function to POST data to a specified URL with an encodable body and decodes the response into a specified type `T`.
@@ -118,7 +176,7 @@ class NetworkManager {
         func post<T: Decodable, U: Encodable>(url: URL, body: U) async throws -> T {
             let requestData = try jsonEncoder.encode(body)
             let (data, _) = try await perform { try await createRequest(url: url, method: "POST", body: requestData) }
-            return try JSONDecoder().decode(T.self, from: data)
+            return try jsonDecoder.decode(T.self, from: data)
         }
         
         /// Overloaded post function for requests without a return
@@ -130,7 +188,7 @@ class NetworkManager {
         /// Overloaded post function for requests without a body
         func post<T: Decodable>(url: URL) async throws -> T {
             let (data, _) = try await perform { try await createRequest(url: url, method: "POST") }
-            return try JSONDecoder().decode(T.self, from: data)
+            return try jsonDecoder.decode(T.self, from: data)
         }
             
         /// Template function to DELETE data to a specified URL
@@ -150,6 +208,15 @@ class NetworkManager {
             request.httpBody = body
             return request
         }
+
+        private func createPublicGETRequest(url: URL, timeout: TimeInterval = 15) -> URLRequest {
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.timeoutInterval = timeout
+            request.cachePolicy = .reloadIgnoringLocalCacheData
+            return request
+        }
             
         private func constructURL(endpoint: String) throws -> URL {
             guard let url = URL(string: "\(hostURL)\(endpoint)") else {
@@ -167,17 +234,50 @@ class NetworkManager {
             }
             
             
-            if httpResponse.statusCode != 200 {
+            // Many endpoints (especially DELETE) return 204 No Content on success; prod
+            // stacks often differ from dev here. Treat any 2xx as success.
+            if !(200...299).contains(httpResponse.statusCode) {
                 if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
                     throw errorResponse
-                } else {
-                    throw URLError(.init(rawValue: httpResponse.statusCode))
                 }
+                if let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    let msg = (obj["error"] as? String)
+                        ?? (obj["message"] as? String)
+                        ?? (obj["detail"] as? String)
+                    if let msg, !msg.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        throw ErrorResponse(error: msg, httpCode: httpResponse.statusCode)
+                    }
+                }
+                if let raw = String(data: data, encoding: .utf8) {
+                    let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !trimmed.isEmpty, trimmed.count < 400, !trimmed.hasPrefix("<") {
+                        throw ErrorResponse(error: trimmed, httpCode: httpResponse.statusCode)
+                    }
+                }
+                throw ErrorResponse(
+                    error: ErrorResponse.fallbackMessage(forHTTPStatus: httpResponse.statusCode),
+                    httpCode: httpResponse.statusCode
+                )
             }
         }
             
             
         // MARK: - Auth Networking Functions
+
+        // MARK: - App Version
+
+        struct AppVersionResponse: Decodable {
+            let version: String
+        }
+
+        /// Returns the minimum required app version (e.g. "1.0.7") from `GET .../version/`.
+        func getRequiredAppVersion() async throws -> AppVersionResponse {
+            let url = try constructURL(endpoint: "/version/")
+            #if DEBUG
+            print("[AppVersion] GET (no auth) \(url.absoluteString) timeout=15s")
+            #endif
+            return try await getPublic(url: url)
+        }
         
         func authorize(authorizeBody: AuthorizeBody) async throws -> User? {
             let url = try constructURL(endpoint: "/auth")
@@ -539,34 +639,13 @@ class NetworkManager {
         
     
         // MARK: - Availability Networking Functions
-        
-    
-        /// ISO8601 decoder for availability endpoints (dates come as strings like "2026-01-23T16:00:00Z")
-        private var iso8601Decoder: JSONDecoder {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            return decoder
-        }
-        
-        /// ISO8601 encoder for availability endpoints (sends dates as ISO8601 strings)
-        private var iso8601Encoder: JSONEncoder {
-            let encoder = JSONEncoder()
-            // Backend expects ISO8601 strings like "2026-01-28T03:12:55.810Z"
-            encoder.dateEncodingStrategy = .custom { date, encoder in
-                var container = encoder.singleValueContainer()
-                let formatter = ISO8601DateFormatter()
-                formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-                try container.encode(formatter.string(from: date))
-            }
-            return encoder
-        }
-        
+
         func getAvailability() async throws -> AvailabilityResponse {
             let url = try constructURL(endpoint: "/availability/")
             let request = try await createRequest(url: url, method: "GET")
             let (data, response) = try await URLSession.shared.data(for: request)
             try handleResponse(data: data, response: response)
-            return try iso8601Decoder.decode(AvailabilityResponse.self, from: data)
+            return try jsonDecoder.decode(AvailabilityResponse.self, from: data)
         }
         
         func getAvailabilityByUserID(id: String) async throws -> AvailabilityResponse {
@@ -574,12 +653,12 @@ class NetworkManager {
             let request = try await createRequest(url: url, method: "GET")
             let (data, response) = try await URLSession.shared.data(for: request)
             try handleResponse(data: data, response: response)
-            return try iso8601Decoder.decode(AvailabilityResponse.self, from: data)
+            return try jsonDecoder.decode(AvailabilityResponse.self, from: data)
         }
         
         func updateAvailability(schedule: [String: [AvailabilitySlot]]) async throws -> AvailabilityResponse {
             let url = try constructURL(endpoint: "/availability/update/")
-            let requestData = try iso8601Encoder.encode(UpdateAvailabilityBody(schedule: schedule))
+            let requestData = try jsonEncoder.encode(UpdateAvailabilityBody(schedule: schedule))
             
             // Debug: Log full URL and request body
             print("📅 Update availability URL: \(url.absoluteString)")
@@ -599,7 +678,7 @@ class NetworkManager {
             }
             
             try handleResponse(data: data, response: response)
-            return try iso8601Decoder.decode(AvailabilityResponse.self, from: data)
+            return try jsonDecoder.decode(AvailabilityResponse.self, from: data)
         }
         
         // MARK: - Transaction Networking Functions
@@ -609,7 +688,7 @@ class NetworkManager {
             let request = try await createRequest(url: url, method: "GET")
             let (data, response) = try await URLSession.shared.data(for: request)
             try handleResponse(data: data, response: response)
-            return try iso8601Decoder.decode(TransactionsResponse.self, from: data)
+            return try jsonDecoder.decode(TransactionsResponse.self, from: data)
         }
         
         func getTransactionsBySellerId(userId: String) async throws -> TransactionsResponse {
@@ -617,7 +696,7 @@ class NetworkManager {
             let request = try await createRequest(url: url, method: "GET")
             let (data, response) = try await URLSession.shared.data(for: request)
             try handleResponse(data: data, response: response)
-            return try iso8601Decoder.decode(TransactionsResponse.self, from: data)
+            return try jsonDecoder.decode(TransactionsResponse.self, from: data)
         }
         
         func getTransactionById(transactionId: String) async throws -> TransactionResponse {
@@ -625,9 +704,13 @@ class NetworkManager {
             let request = try await createRequest(url: url, method: "GET")
             let (data, response) = try await URLSession.shared.data(for: request)
             try handleResponse(data: data, response: response)
-            return try iso8601Decoder.decode(TransactionResponse.self, from: data)
+            return try jsonDecoder.decode(TransactionResponse.self, from: data)
         }
-        
+
+        /// Marks a transaction as completed (meetup happened). Backend is authoritative: which
+        /// roles may call, when (e.g. after meeting window), and duplicate/idempotent behavior are
+        /// enforced server-side. Callers: `TransactionConfirmationPopup` (notification-driven)
+        /// and chat “Mark sale complete” after a proposal is accepted—both use this endpoint.
         func completeTransaction(transactionId: String) async throws -> TransactionResponse {
             let url = try constructURL(endpoint: "/transaction/complete/id/\(transactionId)/")
             let requestData = try jsonEncoder.encode(CompleteTransactionBody(completed: true))
@@ -641,7 +724,7 @@ class NetworkManager {
             }
             
             do {
-                return try iso8601Decoder.decode(TransactionResponse.self, from: data)
+                return try jsonDecoder.decode(TransactionResponse.self, from: data)
             } catch let decodingError as DecodingError {
                 print("❌ Transaction decoding error: \(decodingError)")
                 throw decodingError
@@ -671,13 +754,13 @@ class NetworkManager {
             // Try different response formats
             do {
                 // Try wrapped format first: { "review": {...} }
-                return try iso8601Decoder.decode(TransactionReviewResponse.self, from: data)
+                return try jsonDecoder.decode(TransactionReviewResponse.self, from: data)
             } catch {
                 print("❌ Review decoding error (wrapped): \(error)")
                 
                 // Try direct format: {...}
                 do {
-                    let review = try iso8601Decoder.decode(TransactionReview.self, from: data)
+                    let review = try jsonDecoder.decode(TransactionReview.self, from: data)
                     return TransactionReviewResponse(review: review)
                 } catch {
                     print("❌ Review decoding error (direct): \(error)")
@@ -691,49 +774,40 @@ class NetworkManager {
             let request = try await createRequest(url: url, method: "GET")
             let (data, response) = try await URLSession.shared.data(for: request)
             try handleResponse(data: data, response: response)
-            return try iso8601Decoder.decode(TransactionReviewResponse.self, from: data)
+            return try jsonDecoder.decode(TransactionReviewResponse.self, from: data)
         }
         
-        /// Get all transaction reviews for a seller
+        /// Get all transaction reviews for a seller. Filtering is handled server-side.
         func getReviewsForSeller(sellerId: String) async throws -> [TransactionReview] {
-            let url = try constructURL(endpoint: "/transactionReview/")
+            let url = try constructURL(endpoint: "/transactionReview/?sellerId=\(sellerId)")
             let request = try await createRequest(url: url, method: "GET")
             let (data, response) = try await URLSession.shared.data(for: request)
             try handleResponse(data: data, response: response)
             
-            // Debug: print raw response
-            if let jsonString = String(data: data, encoding: .utf8) {
-                print("⭐ Transaction reviews raw response: \(jsonString.prefix(1000))")
-            }
-            
-            var allReviews: [TransactionReview] = []
-            
-            // Try wrapped format first: { "reviews": [...] }
             do {
-                let wrapped = try iso8601Decoder.decode(TransactionReviewsResponse.self, from: data)
-                allReviews = wrapped.reviews
+                return try jsonDecoder.decode(TransactionReviewsResponse.self, from: data).reviews
             } catch {
-                print("❌ Wrapped decode failed: \(error)")
-                // Try direct array
-                do {
-                    allReviews = try iso8601Decoder.decode([TransactionReview].self, from: data)
-                } catch {
-                    print("❌ Array decode failed: \(error)")
-                    throw error
-                }
+                return try jsonDecoder.decode([TransactionReview].self, from: data)
             }
-            
-            print("⭐ Found \(allReviews.count) total transaction reviews")
-            
-            // NOTE: Backend doesn't include seller in transaction review response
-            // For now, return all reviews. Backend should be updated to include seller info for proper filtering.
-            // TODO: Filter by seller once backend includes seller in transaction object
-            return allReviews
         }
         
         // MARK: - User Review Functions
         
         func createUserReview(review: CreateUserReviewBody) async throws -> UserReviewResponse {
+            // Refuse to create a user review without both participants.
+            // Prevents seller-less or buyer-less reviews from being persisted,
+            // which would later be unfilterable by seller on the client.
+            let trimmedBuyer = review.buyerId.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedSeller = review.sellerId.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedBuyer.isEmpty, !trimmedSeller.isEmpty else {
+                logger.error("createUserReview rejected: missing buyerId or sellerId (buyer='\(trimmedBuyer)', seller='\(trimmedSeller)')")
+                throw ReviewValidationError.missingParticipants
+            }
+            guard trimmedBuyer != trimmedSeller else {
+                logger.error("createUserReview rejected: buyer and seller are the same user (\(trimmedBuyer))")
+                throw ReviewValidationError.sameBuyerAndSeller
+            }
+            
             let url = try constructURL(endpoint: "/userReview/")
             let requestData = try jsonEncoder.encode(review)
             
@@ -775,112 +849,18 @@ class NetworkManager {
             }
         }
         
+        /// Get all user reviews for a seller. Filtering is handled server-side.
         func getUserReviewsBySeller(sellerId: String) async throws -> [UserReview] {
-            // Try with query parameter first
-            let endpoint = "/userReview/?sellerId=\(sellerId)"
-            let url = try constructURL(endpoint: endpoint)
+            let url = try constructURL(endpoint: "/userReview/?sellerId=\(sellerId)")
             let request = try await createRequest(url: url, method: "GET")
             let (data, response) = try await URLSession.shared.data(for: request)
-            
-            // Check if 404 - try without query parameter (fetch all)
-            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 404 {
-                print("⚠️ Query parameter endpoint returned 404, trying base endpoint...")
-                return try await getUserReviewsBySellerFallback(sellerId: sellerId)
-            }
-            
-            // Handle other errors
-            do {
-                try handleResponse(data: data, response: response)
-            } catch {
-                // If handleResponse throws, try fallback
-                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 404 {
-                    return try await getUserReviewsBySellerFallback(sellerId: sellerId)
-                }
-                throw error
-            }
-            
-            if let jsonString = String(data: data, encoding: .utf8) {
-                print("👤 User reviews raw response (with query): \(jsonString.prefix(1000))")
-            }
-            
-            var allReviews: [UserReview] = []
-            
-            // Try wrapped format first: { "reviews": [...] }
-            do {
-                let wrapped = try JSONDecoder().decode(UserReviewsResponse.self, from: data)
-                allReviews = wrapped.reviews
-            } catch {
-                // Try direct array
-                do {
-                    allReviews = try JSONDecoder().decode([UserReview].self, from: data)
-                } catch {
-                    print("❌ User reviews decode failed: \(error)")
-                    throw error
-                }
-            }
-            
-            print("✅ Found \(allReviews.count) user reviews for seller \(sellerId) (query parameter worked)")
-            return allReviews
-        }
-        
-        private func getUserReviewsBySellerFallback(sellerId: String) async throws -> [UserReview] {
-            // Fallback: fetch all and filter client-side (if seller info is available)
-            let url = try constructURL(endpoint: "/userReview/")
-            let request = try await createRequest(url: url, method: "GET")
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 404 {
-                print("⚠️ User reviews endpoint returned 404 - no reviews exist yet")
-                return []
-            }
-            
             try handleResponse(data: data, response: response)
             
-            if let jsonString = String(data: data, encoding: .utf8) {
-                print("👤 User reviews raw response (fallback): \(jsonString.prefix(1000))")
-            }
-            
-            var allReviews: [UserReview] = []
-            
-            // Try wrapped format first: { "reviews": [...] }
             do {
-                let wrapped = try JSONDecoder().decode(UserReviewsResponse.self, from: data)
-                allReviews = wrapped.reviews
+                return try jsonDecoder.decode(UserReviewsResponse.self, from: data).reviews
             } catch {
-                // Try direct array
-                do {
-                    allReviews = try JSONDecoder().decode([UserReview].self, from: data)
-                } catch {
-                    print("❌ User reviews decode failed: \(error)")
-                    throw error
-                }
+                return try jsonDecoder.decode([UserReview].self, from: data)
             }
-            
-            // Debug: Check what seller info we have
-            print("🔍 Debugging reviews for sellerId: \(sellerId)")
-            var reviewsWithSeller = 0
-            for review in allReviews {
-                if review.seller != nil {
-                    reviewsWithSeller += 1
-                }
-            }
-            print("  Total reviews: \(allReviews.count), Reviews with seller info: \(reviewsWithSeller)")
-            
-            // Filter by sellerId (only works if backend returns seller info)
-            let filteredReviews = allReviews.filter { review in
-                guard let sellerUid = review.seller?.firebaseUid else {
-                    return false
-                }
-                return sellerUid == sellerId
-            }
-            
-            if filteredReviews.isEmpty && !allReviews.isEmpty {
-                print("⚠️ WARNING: Backend is not returning 'seller' field in UserReview response. Cannot filter reviews by seller.")
-                print("⚠️ This is a backend issue - the response should include seller info for each review.")
-            }
-            
-            print("✅ Found \(filteredReviews.count) user reviews for seller \(sellerId) out of \(allReviews.count) total")
-            return filteredReviews
         }
         
         // MARK: - Other Networking Functions
@@ -903,18 +883,18 @@ class NetworkManager {
             }
             
             // Try decoding as array first (direct response)
-            if let notifications = try? iso8601Decoder.decode([Notifications].self, from: data) {
+            if let notifications = try? jsonDecoder.decode([Notifications].self, from: data) {
                 return notifications
             }
             
             // Try decoding as wrapped response { "notifications": [...] }
-            if let wrapped = try? iso8601Decoder.decode(NotificationsResponse.self, from: data) {
+            if let wrapped = try? jsonDecoder.decode(NotificationsResponse.self, from: data) {
                 return wrapped.notifications
             }
             
             // If both fail, print detailed error and throw
             do {
-                return try iso8601Decoder.decode([Notifications].self, from: data)
+                return try jsonDecoder.decode([Notifications].self, from: data)
             } catch let decodingError as DecodingError {
                 print("❌ Notification decoding error: \(decodingError)")
                 throw decodingError
@@ -926,10 +906,10 @@ class NetworkManager {
             let (data, _) = try await perform {
                 var request = try await createRequest(url: url, method: "POST")
                 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                request.httpBody = try iso8601Encoder.encode(body)
+                request.httpBody = try jsonEncoder.encode(body)
                 return request
             }
-            return try iso8601Decoder.decode(T.self, from: data)
+            return try jsonDecoder.decode(T.self, from: data)
         }
         
         /// Get unread notifications
@@ -972,16 +952,16 @@ class NetworkManager {
             }
             
             // Try different response formats
-            if let wrapped = try? iso8601Decoder.decode(MarkReadResponse.self, from: data) {
+            if let wrapped = try? jsonDecoder.decode(MarkReadResponse.self, from: data) {
                 return wrapped.notification
             }
             
-            if let wrapped = try? iso8601Decoder.decode(SingleNotificationResponse.self, from: data) {
+            if let wrapped = try? jsonDecoder.decode(SingleNotificationResponse.self, from: data) {
                 return wrapped.notification
             }
             
             // Try direct notification
-            return try iso8601Decoder.decode(Notifications.self, from: data)
+            return try jsonDecoder.decode(Notifications.self, from: data)
         }
         
         /// Delete a notification

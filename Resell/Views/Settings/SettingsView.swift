@@ -45,10 +45,6 @@ struct SettingsView: View {
                     settingsRow(title: "Send Feedback", icon: "feedback") {
                         router.push(.feedback)
                     }
-                case .reviewTesting:
-                    settingsRow(title: "Test Reviews", icon: "feedback") {
-                        router.push(.reviewTesting)
-                    }
                 case .blockedUsers:
                     settingsRow(title: "Blocked Users", icon: "slash") {
                         router.push(.blockedUsers)
@@ -72,13 +68,7 @@ struct SettingsView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    router.pop()
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 17, weight: .medium))
-                        .foregroundStyle(Constants.Colors.black)
-                }
+                BackButton()
             }
         }
         .sheet(isPresented: $viewModel.didShowWebView) {

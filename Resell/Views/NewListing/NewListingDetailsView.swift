@@ -62,22 +62,26 @@ struct NewListingDetailsView: View {
             .background(Constants.Colors.white)
         }
         .endEditingOnTap()
+        .navigationBarBackButtonHidden(true)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                BackButton()
+            }
+
             ToolbarItem(placement: .principal) {
                 Text("New Listing")
                     .font(Constants.Fonts.h3)
                     .foregroundStyle(Constants.Colors.black)
             }
-            
+
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     router.popToRoot()
                     viewModel.clear()
                 } label: {
                     Image(systemName: "xmark")
-                        .resizable()
-                        .frame(width: 20, height: 20)
-                        .tint(Constants.Colors.black)
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(Constants.Colors.black)
                 }
             }
         }

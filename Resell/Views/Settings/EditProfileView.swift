@@ -18,7 +18,7 @@ struct EditProfileView: View {
     @State private var editedUsername: String = ""
     @State private var editedBio: String = ""
     @State private var editedVenmo: String = ""
-    @State private var editedProfilePic: UIImage = UIImage(named: "emptyProfile")!
+    @State private var editedProfilePic: UIImage = .profilePlaceholder
     
     @State private var selectedItem: PhotosPickerItem? = nil
     @State private var didShowPhotosPicker: Bool = false
@@ -55,15 +55,10 @@ struct EditProfileView: View {
         .padding(.top, 40)
         .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    router.pop()
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 17, weight: .medium))
-                        .foregroundStyle(Constants.Colors.black)
-                }
+            ToolbarItem(placement: .topBarLeading) {
+                BackButton()
             }
+
             ToolbarItem(placement: .principal) {
                 Text("Edit Profile")
                     .font(Constants.Fonts.h3)

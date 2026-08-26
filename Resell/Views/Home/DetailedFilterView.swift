@@ -46,16 +46,7 @@ struct DetailedFilterView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    router.pop()
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 12, height: 20)
-                        .fontWeight(.medium)
-                        .foregroundStyle(Constants.Colors.black)
-                }
+                BackButton(style: .systemChevronResizable(width: 12, height: 20))
             }
             
             ToolbarItem(placement: .principal) {

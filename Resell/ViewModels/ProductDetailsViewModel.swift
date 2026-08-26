@@ -28,29 +28,11 @@ class ProductDetailsViewModel: ObservableObject {
     @Published var item: Post?
     @Published var similarPosts: [Post] = []
 
+    private var refetchTask: Task<Void, Never>?
+    private var maxImgRatioTask: Task<Void, Never>?
+
     // MARK: - Functions
 
-    func getPost(id: String) {
-        isLoading = true
-
-        Task {
-            defer { Task { @MainActor in withAnimation { isLoading = false } } }
-
-            do {
-                let postResponse = try await NetworkManager.shared.getPostByID(id: id)
-                item = postResponse.post
-                if let post = postResponse.post {
-                    images = post.images.compactMap { URL(string: $0) }
-                }
-
-                await calculateMaxImgRatio()
-                getIsSaved()
-                getSimilarPosts(id: id)
-            } catch {
-                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getPost: \(error)")
-            }
-        }
-    }
 
     func isMyPost() -> Bool {
         if let userID = GoogleAuthManager.shared.user?.firebaseUid {
@@ -66,12 +48,41 @@ class ProductDetailsViewModel: ObservableObject {
         item = post
         images = post.images.compactMap { URL(string: $0) }
 
-        Task {
-            await calculateMaxImgRatio()
+        maxImgRatioTask?.cancel()
+        maxImgRatioTask = Task { [weak self] in
+            await self?.calculateMaxImgRatio()
         }
 
         getIsSaved()
         getSimilarPosts(id: post.id)
+
+        // Always refetch the full post in the background so the view shows
+        // current data (e.g. user info missing from the saved-posts endpoint,
+        // updated sold status, price, description, images, etc.). The local
+        // copy is used for an immediate optimistic render above.
+        refetchTask?.cancel()
+        refetchTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                let postResponse = try await NetworkManager.shared.getPostByID(id: post.id)
+                try Task.checkCancellation()
+                guard let fullPost = postResponse.post, fullPost.id == self.item?.id else { return }
+
+                self.item = fullPost
+                let newImageURLs = fullPost.images.compactMap { URL(string: $0) }
+                if newImageURLs != self.images {
+                    self.images = newImageURLs
+                    self.maxImgRatioTask?.cancel()
+                    self.maxImgRatioTask = Task { [weak self] in
+                        await self?.calculateMaxImgRatio()
+                    }
+                }
+            } catch is CancellationError {
+                return
+            } catch {
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.setPost (refetch): \(error)")
+            }
+        }
     }
 
     // Replace once backend endpoint is fix. Currently, making this call blocks all other incoming requests to our backend :(
@@ -83,31 +94,10 @@ class ProductDetailsViewModel: ObservableObject {
             do {
                 let postsResponse = try await NetworkManager.shared.getSimilarPostsByID(id: id)
                 similarPosts = Array(postsResponse.posts)
-             
+                print("# of similar posts: \(similarPosts.count)")
+                
             } catch {
                 NetworkManager.shared.logger.error("Errror in ProductDetailsViewModel.getSimilarPosts: \(error)")
-            }
-        }
-    }
-
-    func getSimilarPostsNaive(post: Post) {
-        Task {
-            do {
-                // idk if this is what the endpoint even wants...
-                let postsResponse = try await NetworkManager.shared.getFilteredPosts(by: post.category != nil ? post.category! : "")
-                var otherPosts = postsResponse.posts
-                otherPosts.removeAll { $0.id == post.id }
-
-                if otherPosts.count >= 4 {
-                    similarPosts = Array(otherPosts.prefix(4))
-                } else {
-                    similarPosts = otherPosts
-                }
-
-                isLoadingImages = false
-            } catch {
-                NetworkManager.shared.logger.error("Errror in ProductDetailsViewModel.getSimilarPostsNaive: \(error)")
-                isLoadingImages = false
             }
         }
     }
@@ -176,6 +166,11 @@ class ProductDetailsViewModel: ObservableObject {
     }
 
     func clear() {
+        refetchTask?.cancel()
+        refetchTask = nil
+        maxImgRatioTask?.cancel()
+        maxImgRatioTask = nil
+
         isSaved = false
         maxDrag = UIScreen.height / 2
         currentPage = 0
@@ -192,8 +187,10 @@ class ProductDetailsViewModel: ObservableObject {
 
 
     private func calculateMaxImgRatio() async {
+        let urls = images
         var maxRatio = 0.0
-        for imageUrl in images {
+        for imageUrl in urls {
+            if Task.isCancelled { return }
             guard let data = try? await URLSession.shared.data(from: imageUrl).0,
                   let image = UIImage(data: data) else { continue }
 
@@ -202,6 +199,7 @@ class ProductDetailsViewModel: ObservableObject {
             maxRatio = max(maxRatio, aspectRatio)
         }
 
+        if Task.isCancelled { return }
         withAnimation {
             maxImgRatio = maxRatio
         }

@@ -68,7 +68,7 @@ struct SetupProfileView: View {
 
     private var profileImageView: some View {
         ZStack(alignment: .bottomTrailing) {
-            Image(uiImage: viewModel.selectedImage ?? UIImage(named: "emptyProfile")!)
+            Image(uiImage: viewModel.selectedImage ?? .profilePlaceholder)
                 .resizable()
                 .frame(width: 132, height: 132)
                 .background(Constants.Colors.stroke)

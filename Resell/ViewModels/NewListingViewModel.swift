@@ -89,10 +89,11 @@ class NewListingViewModel: ObservableObject {
         selectedImages = []
         selectedItem = nil
         didShowPriceInput = false
+        titleText = ""
         descriptionText = ""
         priceText = ""
         selectedFilter = "Clothing"
-        selectedCondition = "Never Worn"
+        selectedCondition = "Never Used"
         isLoading = false
     }
 }

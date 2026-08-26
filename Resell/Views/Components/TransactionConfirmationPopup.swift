@@ -113,7 +113,10 @@ struct TransactionConfirmationPopup: View {
     }
     
     // MARK: - Functions
-    
+
+    /// In-app / push **transaction_confirmation** notifications remain the dedicated “remind
+    /// user to confirm the meetup” path; chat **Mark sale complete** is an additional entry
+    /// point that calls the same `completeTransaction` API when `completed == true`.
     private func handleConfirmation(completed: Bool) {
         guard let transactionId = notification.data.transactionId else {
             isPresented = false
@@ -137,7 +140,12 @@ struct TransactionConfirmationPopup: View {
                     onConfirm(completed, transaction)
                     
                     if completed, let tx = transaction {
-                        router.push(.completedTransaction(tx))
+                        let uid = GoogleAuthManager.shared.user?.firebaseUid
+                        let isBuyer = (tx.buyer?.firebaseUid == uid)
+                            || (notification.data.buyerId == uid)
+                        if isBuyer {
+                            router.push(.completedTransaction(tx))
+                        }
                     }
                 }
             } catch {

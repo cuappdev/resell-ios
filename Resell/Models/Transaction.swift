@@ -231,8 +231,8 @@ struct UserReview: Codable, Identifiable {
     let fulfilled: Bool
     let stars: Int
     let comments: String?
-    let buyer: UserSummary?
-    let seller: UserSummary?
+    let buyer: UserSummary
+    let seller: UserSummary
     let date: String?  // Backend returns "date" field
 }
 
@@ -258,4 +258,18 @@ struct CreateUserReviewBody: Codable {
     let fulfilled: Bool
     let stars: Int
     let comments: String
+}
+
+enum ReviewValidationError: LocalizedError {
+    case missingParticipants
+    case sameBuyerAndSeller
+    
+    var errorDescription: String? {
+        switch self {
+        case .missingParticipants:
+            return "This transaction doesn’t have both a buyer and a seller on file, so a review can’t be sent yet."
+        case .sameBuyerAndSeller:
+            return "Buyer and seller can’t be the same person, so this review can’t be submitted."
+        }
+    }
 }

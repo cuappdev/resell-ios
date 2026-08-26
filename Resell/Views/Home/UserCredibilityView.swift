@@ -26,14 +26,9 @@ struct UserCredibilityView: View {
     var headerView: some View {
         VStack {
             HStack {
-                Button {
-                    router.pop()
-                } label: {
-                    Image("chevron.left")
-                        .resizable()
-                        .frame(width: 36, height: 24)
-                        .foregroundStyle(.black)
-                }
+                BackButton(
+                    style: .assetChevron(name: "chevron.left", size: CGSize(width: 36, height: 24))
+                )
                 
                 Spacer()
                 

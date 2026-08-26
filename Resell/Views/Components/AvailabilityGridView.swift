@@ -31,8 +31,14 @@ struct AvailabilityGridView: View {
     
     /// Optional start date for the grid. If nil, starts from today.
     var startDate: Date? = nil
-    
-    
+
+    /// Number of days the grid renders. Defaults to 30 to preserve existing
+    /// callers (e.g. AvailabilitySettingsView). Callers that need a different
+    /// range — like the messages flow, which caps navigation at "end of next
+    /// month" — can pass a larger or smaller count and the grid will clamp
+    /// horizontal pagination to that range.
+    var dayCount: Int = 30
+
     /// Called when the visible dates change (page swipe)
     var onVisibleDatesChanged: (([Date]) -> Void)?
     
@@ -44,14 +50,14 @@ struct AvailabilityGridView: View {
     
     private var dates: [String] {
         if let start = startDate {
-            return CalendarHelper.generateGridDates(startingFrom: start)
+            return CalendarHelper.generateGridDates(startingFrom: start, count: dayCount)
         }
         return generateDates()
     }
     
     private var shortDates: [String] {
         if let start = startDate {
-            return CalendarHelper.generateShortGridDates(startingFrom: start)
+            return CalendarHelper.generateShortGridDates(startingFrom: start, count: dayCount)
         }
         return generateShortDates()
     }
@@ -94,29 +100,16 @@ struct AvailabilityGridView: View {
                     if dragStartLocation == .zero {
                         dragStartLocation = value.startLocation
                     }
-                    
+
                     let startedInCellArea = dragStartLocation.x > timeColumnWidth
-                    
+
+                    // In single-selection mode, defer everything to onEnded so
+                    // we can disambiguate "tap → select cell" vs "horizontal
+                    // swipe → change page". Selecting eagerly on first
+                    // onChanged (as we did before) eats the swipe gesture.
+                    if singleSelectionMode { return }
+
                     if startedInCellArea && isEditing {
-                        if let identifier = mapDragLocationToCell(
-                            location: singleSelectionMode ? value.startLocation : value.location,
-                            dates: Array(paginatedDates[currentPage]),
-                            times: times,
-                            cellHeight: cellHeight
-                        ) {
-                            guard !isPastTime(identifier) else { return }
-                            
-                            if singleSelectionMode {
-                                if selectedCells.contains(identifier) {
-                                    selectedCells.remove(identifier)
-                                } else {
-                                    selectedCells.removeAll()
-                                    selectedCells.insert(identifier)
-                                }
-                                return
-                            }
-                        }
-                        
                         let horizontalDrag = abs(value.translation.width)
                         let verticalDrag = abs(value.translation.height)
                         
@@ -136,7 +129,8 @@ struct AvailabilityGridView: View {
                                 }
                                 
                                 guard identifier.date == dragStartDate else { return }
-                                
+                                guard !isPastTime(identifier) else { return }
+
                                 if toggleSelectionMode == nil {
                                     toggleSelectionMode = selectedCells.contains(identifier) ? false : true
                                 }
@@ -155,13 +149,48 @@ struct AvailabilityGridView: View {
                     }
                 }
                 .onEnded { value in
+                    let horizontalDrag = value.translation.width
+                    let verticalDrag = value.translation.height
+                    let velocity = value.predictedEndTranslation.width - value.translation.width
+                    let startedInCellArea = dragStartLocation.x > timeColumnWidth
+
                     if singleSelectionMode {
+                        let isHorizontalSwipe = abs(horizontalDrag) > abs(verticalDrag)
+                            && (abs(horizontalDrag) > 50 || abs(velocity) > 100)
+
+                        if isHorizontalSwipe {
+                            if (horizontalDrag < 0 || velocity < 0), currentPage < paginatedDates.count - 1 {
+                                currentPage += 1
+                                notifyVisibleDatesChanged()
+                            } else if (horizontalDrag > 0 || velocity > 0), currentPage > 0 {
+                                currentPage -= 1
+                                notifyVisibleDatesChanged()
+                            }
+                        } else if startedInCellArea && isEditing,
+                                  let identifier = mapDragLocationToCell(
+                                    location: value.startLocation,
+                                    dates: Array(paginatedDates[currentPage]),
+                                    times: times,
+                                    cellHeight: cellHeight
+                                  ),
+                                  !isPastTime(identifier) {
+                            if selectedCells.contains(identifier) {
+                                selectedCells.remove(identifier)
+                            } else {
+                                selectedCells.removeAll()
+                                selectedCells.insert(identifier)
+                            }
+                        }
+
+                        draggedCells.removeAll()
+                        toggleSelectionMode = nil
+                        isDraggingCells = false
                         dragStartLocation = .zero
+                        dragStartDate = nil
+                        lastDraggedCell = nil
                         return
                     }
-                    
-                    let startedInCellArea = dragStartLocation.x > timeColumnWidth
-                    
+
                     if isDraggingCells && startedInCellArea {
                         if let toggleSelectionMode = toggleSelectionMode {
                             if toggleSelectionMode {
@@ -171,9 +200,6 @@ struct AvailabilityGridView: View {
                             }
                         }
                     } else if !isDraggingCells {
-                        let horizontalDrag = value.translation.width
-                        let velocity = value.predictedEndTranslation.width - value.translation.width
-                        
                         if horizontalDrag < -50 || velocity < -100 {
                             if currentPage < paginatedDates.count - 1 {
                                 currentPage += 1

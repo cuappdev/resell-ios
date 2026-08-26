@@ -33,14 +33,8 @@ struct SavedView: View {
         .navigationBarBackButtonHidden(true)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    router.pop()
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 17, weight: .medium))
-                        .foregroundStyle(Constants.Colors.black)
-                }
+            ToolbarItem(placement: .topBarLeading) {
+                BackButton()
             }
             
             ToolbarItem(placement: .principal) {

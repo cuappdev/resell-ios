@@ -142,6 +142,34 @@ class GoogleAuthManager {
         let body = AuthorizeBody(token: fcmToken)
         self.user = try await NetworkManager.shared.authorize(authorizeBody: body)
     }
+
+    /// Push an updated FCM token to the backend for the currently logged-in
+    /// user. Safe to call at any time — no-ops if there's no logged-in user
+    /// (the token will be picked up on the next `signIn`/`refreshSignInIfNeeded`
+    /// via `authorizeUser`). Silently logs failures rather than throwing
+    /// because a failed token sync should never force the user out of the app.
+    ///
+    /// This is the self-healing path for the `?? ""` fallback in
+    /// `authorizeUser`: if we sent the backend an empty token at login time
+    /// (APNs hadn't registered yet), Firebase will later deliver the real
+    /// token via `didReceiveRegistrationToken`, which fires
+    /// `Constants.Notifications.FCMTokenUpdated`, which routes here.
+    func updateFCMTokenOnBackend(_ token: String) async {
+        guard user != nil else {
+            logger.info("Skipping FCM token sync: no logged-in user.")
+            return
+        }
+
+        do {
+            let body = AuthorizeBody(token: token)
+            if let refreshed = try await NetworkManager.shared.authorize(authorizeBody: body) {
+                self.user = refreshed
+            }
+            logger.info("FCM token synced to backend.")
+        } catch {
+            logger.error("Failed to sync FCM token to backend: \(error.localizedDescription)")
+        }
+    }
 }
 
 enum GoogleAuthError: Error, LocalizedError {

@@ -74,9 +74,7 @@ class SearchViewModel: ObservableObject {
                 } else {
                     searchedItems = postsResponse.posts
                 }
-                
-                print("📝 Recent searches: \(recentlySearched)")
-                
+                                
                 if saveQuery {
                     await MainActor.run {
                         mainViewModel?.saveSearchQuery(searchText)
@@ -113,16 +111,18 @@ class SearchViewModel: ObservableObject {
         // If you have a bulk fetch endpoint:
         // return try? await NetworkManager.shared.getPostsByIds(postIds)
         
-        // Otherwise, fetch individually (less efficient):
+        // Otherwise, fetch individually (less efficient).
         var posts: [Post] = []
         for postId in postIds {
-            if let post = try? await NetworkManager.shared.getPostByID(id: postId) {
-                posts.append(post.post!) // should be fine...
+            if let response = try? await NetworkManager.shared.getPostByID(id: postId),
+               let post = response.post {
+                posts.append(post)
             }
         }
         return posts
     }
     
+    // TODO: This is getting called way too much, in places it shouldn't be called.
     /// Load posts for recently searched card (fetch just enough to display)
     func loadRecentlySearchedPosts() async -> [Post] {
         if let lastFetch = lastRecentlySearchedFetchTime,
@@ -132,12 +132,8 @@ class SearchViewModel: ObservableObject {
             return cachedRecentlySearchedPosts
         }
         
-        print("🔍 Loading recently searched posts...")
-        print("📋 Recent searches count: \(recentlySearched.count)")
-        print("📋 Recent searchIds: \(recentlySearched)")
-        
+        print("Called Recent Searches")
         guard !recentlySearched.isEmpty else {
-            print("❌ No recent searches found")
             return []
         }
         

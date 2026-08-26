@@ -50,7 +50,7 @@ struct UserReviewCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 4) {
-                Text(review.buyer?.givenName ?? "Anonymous")
+                Text(review.buyer.givenName)
                         .font(Constants.Fonts.title3)
                         .foregroundColor(Constants.Colors.black)
                     

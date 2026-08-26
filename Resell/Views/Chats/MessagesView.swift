@@ -22,8 +22,33 @@ struct MessagesView: View {
     @State private var availabilityProposerName: String = ""
     @State private var selectedCells: Set<CellIdentifier> = []
     @State private var priceText: String = ""
-    @State private var locallyRespondedProposals: Set<Int> = []  // Track proposals we've responded to locally
-    @State private var locallyAcceptedMeeting: Bool = false  // Track if we just accepted a meeting (immediate UI feedback)
+    /// Firestore messageIds of proposal messages the user has locally tapped
+    /// Accept/Decline on. Keyed by messageId (not slot) so that a brand-new
+    /// proposal at the same slot as an older, already-handled proposal does not
+    /// inherit the old "already responded" state.
+    @State private var locallyRespondedMessageIds: Set<String> = []
+    /// Optimistic slot-level overrides applied on top of Firestore. The value
+    /// is the latest local decision for the slot: `isAccepted: true` when the
+    /// user tapped Accept (slot becomes "active"), `false` when they tapped
+    /// Cancel (slot becomes "cancelled"). Decline has no slot-level effect
+    /// (only the specific message is hidden, via `locallyRespondedMessageIds`).
+    @State private var localSlotOverrides: [ProposalSlot: (isAccepted: Bool, endDate: Date)] = [:]
+    /// `transactionId` returned from `respondToProposal` before Firestore echoes it on the proposal message.
+    @State private var pendingTransactionIdBySlot: [ProposalSlot: String] = [:]
+    /// Latest `Transaction` from the API per id (drives “Mark sale complete” vs “Leave review”).
+    @State private var transactionById: [String: Transaction] = [:]
+    /// Buyer-only: whether this user already submitted a transaction review (from API).
+    @State private var buyerHasSubmittedReviewById: [String: Bool] = [:]
+    @State private var transactionCacheRefreshTask: Task<Void, Never>?
+    /// True while `getTransactionById` is in flight for this chat refresh pass.
+    @State private var isHydratingChatTransactions = false
+    /// Transaction ids we’ve already tried to load this session (avoids showing “Mark complete” before the first fetch).
+    @State private var transactionIdsFetchAttempted: Set<String> = []
+    @State private var completingSaleTransactionId: String?
+    @State private var markSaleCompleteError: String?
+    @State private var showSellerMarkedCompleteNotice = false
+    /// Shown when the user tries to propose a new time while a future confirmed meeting exists.
+    @State private var showActiveMeetingBlocksNewProposal = false
     @StateObject private var viewModel: ViewModel
     
 
@@ -49,15 +74,7 @@ struct MessagesView: View {
         .toolbarBackground(Constants.Colors.white, for: .automatic)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    router.pop()
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 12, height: 20)
-                        .foregroundStyle(Constants.Colors.black)
-                }
+                BackButton(style: .systemChevronResizable(width: 12, height: 20))
             }
                 
             ToolbarItem(placement: .principal) {
@@ -80,9 +97,40 @@ struct MessagesView: View {
         .sheet(isPresented: $didShowWebView) {
             webView
         }
-        .onAppear(perform: setupOnAppear)
+        .onAppear {
+            setupOnAppear()
+            scheduleTransactionCacheRefresh()
+        }
         .onDisappear {
+            transactionCacheRefreshTask?.cancel()
+            transactionCacheRefreshTask = nil
+            isHydratingChatTransactions = false
+            transactionIdsFetchAttempted.removeAll()
             FirestoreManager.shared.stopListeningToChat()
+        }
+        .alert("Couldn't complete sale", isPresented: Binding(
+            get: { markSaleCompleteError != nil },
+            set: { if !$0 { markSaleCompleteError = nil } }
+        )) {
+            Button("OK", role: .cancel) {
+                markSaleCompleteError = nil
+            }
+        } message: {
+            Text(markSaleCompleteError ?? "")
+        }
+        .alert("Sale marked complete", isPresented: $showSellerMarkedCompleteNotice) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("The buyer can leave a review from this chat when they’re ready.")
+        }
+        .alert("Meeting already scheduled", isPresented: $showActiveMeetingBlocksNewProposal) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("You already have a scheduled meeting for this listing. Cancel it or wait until it passes before proposing a new time.")
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Constants.Notifications.TransactionReviewSubmitted)) { output in
+            guard let tid = output.userInfo?["transactionId"] as? String else { return }
+            buyerHasSubmittedReviewById[tid] = true
         }
         .endEditingOnTap()
     }
@@ -115,12 +163,22 @@ struct MessagesView: View {
     
     private var calendarButton: some View {
         Button {
-            didShowAvailabilityView.toggle()
+            if hasActiveConfirmedMeeting {
+                showActiveMeetingBlocksNewProposal = true
+            } else {
+                didShowAvailabilityView.toggle()
+            }
         } label: {
             Image("calendar")
                 .resizable()
                 .frame(width: 24, height: 24)
+                .opacity(hasActiveConfirmedMeeting ? 0.45 : 1)
         }
+        .accessibilityHint(
+            hasActiveConfirmedMeeting
+                ? "A meeting is already scheduled. Cancel it or wait until it passes to propose a new time."
+                : "Choose a time to propose meeting the seller."
+        )
     }
     
     private var headerButton: some View {
@@ -170,6 +228,7 @@ struct MessagesView: View {
                 }
                 .background(Constants.Colors.white)
                 .onChange(of: viewModel.messageClusters) { _ in
+                    scheduleTransactionCacheRefresh()
                     withAnimation {
                         proxy.scrollTo("BOTTOM", anchor: .bottom)
                     }
@@ -200,58 +259,181 @@ struct MessagesView: View {
         )
     }
 
-    /// Get all proposal times that have been responded to (accepted != nil)
-    /// Combines local tracking (immediate) with Firestore messages
-    private var respondedProposalTimeIntervals: Set<Int> {
-        var times = locallyRespondedProposals  // Start with locally tracked responses
-        for cluster in viewModel.messageClusters {
-            for message in cluster.messages {
-                if let proposal = message as? ProposalMessage,
-                   proposal.accepted != nil {
-                    // Round to nearest minute for reliable comparison
-                    let roundedTime = Int(proposal.startDate.timeIntervalSince1970 / 60)
-                    times.insert(roundedTime)
-                }
+    /// Latest accept/cancel state for each slot, derived from all proposal
+    /// messages in the chat (sorted by timestamp — the most recent event
+    /// determines the slot's current state) with local optimistic overrides
+    /// layered on top.
+    ///
+    /// Why latest-event-per-slot instead of aggregating? A slot can legitimately
+    /// cycle through accepted → cancelled → accepted → cancelled → accepted as
+    /// both parties re-propose the same time. Aggregating would permanently
+    /// poison the slot's state once a cancel exists anywhere in history.
+    private var latestSlotStates: [ProposalSlot: (isAccepted: Bool, endDate: Date)] {
+        var states: [ProposalSlot: (isAccepted: Bool, endDate: Date)] = [:]
+
+        let allMessages = viewModel.messageClusters
+            .flatMap(\.messages)
+            .sorted { $0.timestamp < $1.timestamp }
+
+        for message in allMessages {
+            guard let proposal = message as? ProposalMessage else { continue }
+            let slot = ProposalSlot(startDate: proposal.startDate, endDate: proposal.endDate)
+
+            // A cancellation message always represents the most recent
+            // intent on its slot, regardless of whether `accepted` is also
+            // set on the same document.
+            if proposal.cancellation == true {
+                states[slot] = (false, proposal.endDate)
+            } else if proposal.accepted == true {
+                states[slot] = (true, proposal.endDate)
             }
         }
-        return times
+
+        // Local optimistic actions are always newer than any Firestore event.
+        for (slot, override) in localSlotOverrides {
+            states[slot] = (override.isAccepted, override.endDate)
+        }
+
+        return states
     }
-    
-    /// Check if there's an active confirmed meeting (accepted=true, not cancelled)
-    /// If true, no other proposals can be accepted until this one is cancelled
+
+    /// Slots whose most recent state is "cancelled". Passed into bubbles so a
+    /// previously-confirmed-then-cancelled meeting hides its Cancel button.
+    /// Importantly, if that same slot is later accepted again (new proposal,
+    /// user accepts), the slot is NO LONGER in this set — so the new meeting's
+    /// Cancel button correctly appears.
+    private var currentlyCancelledSlots: Set<ProposalSlot> {
+        Set(latestSlotStates.compactMap { slot, state in state.isAccepted ? nil : slot })
+    }
+
+    /// Whether any slot in this chat has an active, future confirmed meeting.
+    /// Past meetings auto-expire so users aren't permanently locked out of
+    /// accepting future proposals.
     private var hasActiveConfirmedMeeting: Bool {
-        // Check local state first
-        if locallyAcceptedMeeting {
-            return true
+        let now = Date()
+        return latestSlotStates.values.contains { $0.isAccepted && $0.endDate > now }
+    }
+
+    /// messageIds of pending proposal bubbles that already have a *later*
+    /// response event (accept / decline / cancel) at the same slot in the
+    /// Firestore timeline.
+    ///
+    /// Why this exists: the backend never mutates the original pending
+    /// proposal document — `respondToProposal` and `cancelProposal` append a
+    /// new proposal-typed message. So the original bubble's `accepted` stays
+    /// `nil` forever, and on its own can't tell the UI "you already
+    /// responded". `locallyRespondedMessageIds` patches that for the current
+    /// session, but it's `@State` and resets when the chat view is re-created
+    /// (leave + reopen), which is what made Accept/Decline reappear after
+    /// declining (and after accepting a slot whose endDate is in the past, so
+    /// `hasActiveConfirmedMeeting` is false).
+    ///
+    /// Why "later in the timeline" instead of "any event on this slot": users
+    /// can legitimately re-propose the same time after a previous decline /
+    /// cancel. The new pending proposal has a newer timestamp than the prior
+    /// response, so this look-ahead correctly leaves it actionable.
+    private var respondedProposalMessageIds: Set<String> {
+        let proposals = viewModel.messageClusters
+            .flatMap(\.messages)
+            .compactMap { $0 as? ProposalMessage }
+            .sorted { $0.timestamp < $1.timestamp }
+
+        var result: Set<String> = []
+        for (index, proposal) in proposals.enumerated() {
+            guard proposal.accepted == nil, proposal.cancellation != true else { continue }
+            let slot = ProposalSlot(startDate: proposal.startDate, endDate: proposal.endDate)
+            let hasLaterResponse = proposals[(index + 1)...].contains { later in
+                ProposalSlot(startDate: later.startDate, endDate: later.endDate) == slot
+                    && (later.accepted != nil || later.cancellation == true)
+            }
+            if hasLaterResponse {
+                result.insert(proposal.messageId)
+            }
         }
-        
-        // Track which meeting times have been accepted vs cancelled
-        var acceptedTimes = Set<Int>()
-        var cancelledTimes = Set<Int>()
-        
-        for cluster in viewModel.messageClusters {
-            for message in cluster.messages {
-                if let proposal = message as? ProposalMessage {
-                    let roundedTime = Int(proposal.startDate.timeIntervalSince1970 / 60)
-                    
-                    if proposal.accepted == true {
-                        acceptedTimes.insert(roundedTime)
-                    }
-                    if proposal.cancellation == true {
-                        cancelledTimes.insert(roundedTime)
-                    }
+        return result
+    }
+
+    /// `accepted == true` proposal docs the backend never clears; if any **later** proposal
+    /// message exists for the same time slot, this bubble is stale (e.g. cancel then re-accept same slot).
+    private var staleAcceptedProposalMessageIds: Set<String> {
+        let proposals = viewModel.messageClusters
+            .flatMap(\.messages)
+            .compactMap { $0 as? ProposalMessage }
+            .sorted { $0.timestamp < $1.timestamp }
+
+        var result: Set<String> = []
+        for (index, proposal) in proposals.enumerated() {
+            guard proposal.accepted == true else { continue }
+            let slot = ProposalSlot(startDate: proposal.startDate, endDate: proposal.endDate)
+            let hasLaterSameSlot = proposals[(index + 1)...].contains { later in
+                ProposalSlot(startDate: later.startDate, endDate: later.endDate) == slot
+            }
+            if hasLaterSameSlot {
+                result.insert(proposal.messageId)
+            }
+        }
+        return result
+    }
+
+    private var isViewerBuyer: Bool {
+        guard let uid = GoogleAuthManager.shared.user?.firebaseUid else { return false }
+        return uid == viewModel.chatInfo.buyer.firebaseUid
+    }
+
+    /// Transaction ids for accepted meetups in this chat (includes pending local ids before Firestore echoes).
+    private var resolvedTransactionIdsInChat: Set<String> {
+        var ids = Set<String>()
+        for message in viewModel.messageClusters.flatMap(\.messages) {
+            guard let proposal = message as? ProposalMessage, proposal.accepted == true else { continue }
+            let slot = ProposalSlot(startDate: proposal.startDate, endDate: proposal.endDate)
+            if let tid = proposal.transactionId ?? pendingTransactionIdBySlot[slot] {
+                ids.insert(tid)
+            }
+        }
+        return ids
+    }
+
+    private func scheduleTransactionCacheRefresh() {
+        transactionCacheRefreshTask?.cancel()
+        transactionCacheRefreshTask = Task {
+            try? await Task.sleep(nanoseconds: 400_000_000)
+            guard !Task.isCancelled else { return }
+            await refreshTransactionsAndReviewState()
+        }
+    }
+
+    @MainActor
+    private func refreshTransactionsAndReviewState() async {
+        let ids = resolvedTransactionIdsInChat
+        guard !ids.isEmpty else { return }
+        isHydratingChatTransactions = true
+        defer { isHydratingChatTransactions = false }
+        transactionIdsFetchAttempted.formUnion(ids)
+        let isBuyerViewing = isViewerBuyer
+
+        for tid in ids {
+            do {
+                let response = try await NetworkManager.shared.getTransactionById(transactionId: tid)
+                let tx = response.transaction
+                transactionById[tid] = tx
+                if tx.completed, isBuyerViewing {
+                    buyerHasSubmittedReviewById[tid] = await checkBuyerReviewExists(transactionId: tid)
                 }
+            } catch {
+                NetworkManager.shared.logger.error("Failed to refresh transaction \(tid): \(error.localizedDescription)")
             }
         }
-        
-        // There's an active meeting if any accepted time hasn't been cancelled
-        for acceptedTime in acceptedTimes {
-            if !cancelledTimes.contains(acceptedTime) {
-                return true
-            }
+    }
+
+    private func checkBuyerReviewExists(transactionId: String) async -> Bool {
+        do {
+            _ = try await NetworkManager.shared.getTransactionReview(transactionId: transactionId)
+            return true
+        } catch let error as ErrorResponse where error.httpCode == 404 {
+            return false
+        } catch {
+            return false
         }
-        
-        return false
     }
     
     private func messageCluster(cluster: MessageCluster) -> some View {
@@ -270,16 +452,19 @@ struct MessagesView: View {
                     selectedAvailabilities: $viewModel.availability, 
                     message: message,
                     chatInfo: viewModel.chatInfo,
-                    onProposalResponse: { startDate, endDate, accepted in
-                        // Immediately track this proposal as responded to hide Accept/Decline
-                        let roundedTime = Int(startDate.timeIntervalSince1970 / 60)
-                        locallyRespondedProposals.insert(roundedTime)
-                        
-                        // If accepting, mark that we have an active meeting
+                    onProposalResponse: { messageId, startDate, endDate, accepted in
+                        // Optimistically hide Accept/Decline on this specific
+                        // bubble so the UI feels snappy. If the request fails
+                        // we roll these back below.
+                        let slot = ProposalSlot(startDate: startDate, endDate: endDate)
+                        let hadSlotOverride = localSlotOverrides[slot]
+                        locallyRespondedMessageIds.insert(messageId)
                         if accepted {
-                            locallyAcceptedMeeting = true
+                            // Accept makes the slot active for the whole chat
+                            // so other pending proposals' Accept/Decline hide.
+                            localSlotOverrides[slot] = (true, endDate)
                         }
-                        
+
                         Task {
                             do {
                                 let transactionId = try await viewModel.respondToProposal(
@@ -288,15 +473,75 @@ struct MessagesView: View {
                                     accepted: accepted
                                 )
                                 if accepted, let txId = transactionId {
-                                    print("Transaction created: \(txId)")
+                                    await MainActor.run {
+                                        pendingTransactionIdBySlot[slot] = txId
+                                    }
                                 }
                             } catch {
+                                // The network call failed – undo the optimistic UI
+                                // update so the user can try again. Without this
+                                // rollback the Accept button disappears locally
+                                // but nothing was persisted server-side, so the
+                                // proposal re-appears the next time the chat
+                                // is reopened.
                                 NetworkManager.shared.logger.error("Error responding to proposal: \(error)")
+                                await MainActor.run {
+                                    locallyRespondedMessageIds.remove(messageId)
+                                    if accepted {
+                                        // Restore whatever override was there
+                                        // before we set it (usually nil).
+                                        if let prior = hadSlotOverride {
+                                            localSlotOverrides[slot] = prior
+                                        } else {
+                                            localSlotOverrides.removeValue(forKey: slot)
+                                        }
+                                    }
+                                }
                             }
                         }
                     },
-                    respondedProposalTimeIntervals: respondedProposalTimeIntervals,
-                    hasActiveConfirmedMeeting: hasActiveConfirmedMeeting
+                    onProposalCancel: { startDate, endDate in
+                        let slot = ProposalSlot(startDate: startDate, endDate: endDate)
+                        let priorOverride = localSlotOverrides[slot]
+                        // Optimistically mark this slot as cancelled so the
+                        // Cancel button hides on this bubble and Accept/Decline
+                        // re-enable on any other pending proposals in the chat.
+                        localSlotOverrides[slot] = (false, endDate)
+
+                        // One cancel call: the backend should append a chat-visible cancellation
+                        // so both buyer and seller see the update via Firestore `subscribeToChat`.
+                        Task {
+                            do {
+                                try await viewModel.cancelProposal(startDate: startDate, endDate: endDate)
+                            } catch {
+                                NetworkManager.shared.logger.error("Error cancelling proposal: \(error)")
+                                await MainActor.run {
+                                    if let prior = priorOverride {
+                                        localSlotOverrides[slot] = prior
+                                    } else {
+                                        localSlotOverrides.removeValue(forKey: slot)
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    respondedMessageIds: locallyRespondedMessageIds.union(respondedProposalMessageIds),
+                    currentlyCancelledSlots: currentlyCancelledSlots,
+                    hasActiveConfirmedMeeting: hasActiveConfirmedMeeting,
+                    pendingTransactionIdBySlot: pendingTransactionIdBySlot,
+                    transactionById: transactionById,
+                    buyerHasSubmittedReviewById: buyerHasSubmittedReviewById,
+                    isViewerBuyer: isViewerBuyer,
+                    isHydratingChatTransactions: isHydratingChatTransactions,
+                    transactionIdsFetchAttempted: transactionIdsFetchAttempted,
+                    completingSaleTransactionId: $completingSaleTransactionId,
+                    onMarkSaleComplete: { transactionId in
+                        markSaleCompleteFromChat(transactionId: transactionId)
+                    },
+                    onLeaveReview: { tx in
+                        router.push(.completedTransaction(tx))
+                    },
+                    staleAcceptedProposalMessageIds: staleAcceptedProposalMessageIds
                 )
             }
         }
@@ -333,7 +578,12 @@ struct MessagesView: View {
             sellerId: viewModel.chatInfo.seller.firebaseUid
         ) { startDate, endDate in
             // On propose: send a proposal message with the selected time slot
-            Task {
+            Task { @MainActor in
+                guard !hasActiveConfirmedMeeting else {
+                    didShowAvailabilityView = false
+                    showActiveMeetingBlocksNewProposal = true
+                    return
+                }
                 do {
                     try await viewModel.sendMessage(startDate: startDate, endDate: endDate)
                 } catch {
@@ -367,6 +617,38 @@ struct MessagesView: View {
     }
     
     // MARK: - Helper Methods
+
+    private func markSaleCompleteFromChat(transactionId: String) {
+        if let cached = transactionById[transactionId], cached.completed {
+            return
+        }
+        Task {
+            await MainActor.run {
+                completingSaleTransactionId = transactionId
+                markSaleCompleteError = nil
+            }
+            do {
+                let response = try await NetworkManager.shared.completeTransaction(transactionId: transactionId)
+                await MainActor.run {
+                    completingSaleTransactionId = nil
+                    let tx = response.transaction
+                    transactionById[transactionId] = tx
+                    pendingTransactionIdBySlot = pendingTransactionIdBySlot.filter { $0.value != transactionId }
+                    if isViewerBuyer {
+                        router.push(.completedTransaction(tx))
+                    } else {
+                        showSellerMarkedCompleteNotice = true
+                    }
+                }
+            } catch {
+                NetworkManager.shared.logger.error("Mark sale complete failed: \(error.localizedDescription)")
+                await MainActor.run {
+                    completingSaleTransactionId = nil
+                    markSaleCompleteError = error.resellUserFacingDescription
+                }
+            }
+        }
+    }
     
     private func setupOnAppear() {
         guard GoogleAuthManager.shared.user != nil else {
@@ -535,7 +817,13 @@ struct MessagesAvailabilitySheet: View {
     @State private var gridStartDate: Date = Calendar.current.startOfDay(for: Date())
     @State private var showCalendar: Bool = false
     @State private var visibleGridDates: [Date] = []
-    
+    /// Mirrors the AvailabilitySettingsView fix: when the grid scrolls across a
+    /// month boundary it bumps `currentMonthOffset` itself, so we must skip the
+    /// snap-back logic in `onChange(of: currentMonthOffset)` for that one tick.
+    /// Otherwise the grid resets to the first of the new month and the user
+    /// can't scroll backward across month boundaries.
+    @State private var isMonthChangeFromGridScroll: Bool = false
+
     // Unavailability states
     @State private var buyerUnavailableCells: Set<CellIdentifier> = []
     @State private var sellerUnavailableCells: Set<CellIdentifier> = []
@@ -544,123 +832,141 @@ struct MessagesAvailabilitySheet: View {
     /// Maximum month offset allowed (1 = can only go one month ahead)
     private let maxMonthOffset: Int = 1
 
+    /// Number of days the availability grid should render: from today through
+    /// the last day of the capped month. With `maxMonthOffset = 1` this is
+    /// "today → end of next month", so users can never page past the cap.
+    private var gridDayCount: Int {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let comps = calendar.dateComponents([.year, .month], from: today)
+        guard let firstOfThisMonth = calendar.date(from: comps),
+              let firstOfMonthAfterCap = calendar.date(
+                byAdding: .month,
+                value: maxMonthOffset + 1,
+                to: firstOfThisMonth
+              ) else {
+            return 30
+        }
+        let days = calendar.dateComponents(
+            [.day], from: today, to: firstOfMonthAfterCap
+        ).day ?? 30
+        return max(days, 1)
+    }
+
     let isEditing: Bool
     let proposerName: String
     let buyerId: String
     let sellerId: String
     /// Called when user proposes a meeting time with (startDate, endDate)
     let onPropose: (Date, Date) -> Void
-    
-    private var monthName: String {
-        CalendarHelper.monthName(for: currentMonthOffset)
-    }
 
     var body: some View {
-        VStack(spacing: 16) {
-            RoundedRectangle(cornerRadius: 10)
-                .frame(width: 66, height: 6)
-                .foregroundStyle(Constants.Colors.filterGray)
-            
-            // Header
-            VStack(alignment: .leading, spacing: 8) {
-                Button {
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        showCalendar.toggle()
-                    }
-                } label: {
-                    HStack(spacing: 8) {
-                        Text(monthName)
-                            .font(Constants.Fonts.title1)
-                            .foregroundColor(Constants.Colors.black)
-                        
-                        Image(systemName: showCalendar ? "chevron.up" : "chevron.down")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 12, height: 8)
-                            .foregroundColor(Constants.Colors.black)
-                    }
-                    .padding(.top)
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: 0) {
+                RoundedRectangle(cornerRadius: 10)
+                    .frame(width: 66, height: 6)
+                    .foregroundStyle(Constants.Colors.filterGray)
+                    .padding(.top, 12)
+                    .padding(.bottom, 16)
+
+                MonthPickerHeader(
+                    currentMonthOffset: $currentMonthOffset,
+                    showCalendar: $showCalendar,
+                    showSettings: .constant(false),
+                    maxMonthOffset: maxMonthOffset
+                )
+
+                proposeSubheader
+                    .padding(.horizontal)
+                    .padding(.top, 4)
+                    .padding(.bottom, 8)
+
+                if showCalendar {
+                    MonthCalendarView(
+                        currentMonthOffset: $currentMonthOffset,
+                        gridStartDate: $gridStartDate,
+                        visibleGridDates: visibleGridDates,
+                        onDateSelected: { selectedDate in
+                            // The grid is sized (via `gridDayCount`) to cover
+                            // exactly today → end-of-capped-month, so the
+                            // picked date is always reachable from a
+                            // today-anchored grid. Anchoring there means the
+                            // user can also scroll backward to any earlier
+                            // valid day, and they can never scroll forward
+                            // past the cap.
+                            let calendar = Calendar.current
+                            let startOfToday = calendar.startOfDay(for: Date())
+                            let selected = calendar.startOfDay(for: selectedDate)
+                            let daysFromToday = max(
+                                calendar.dateComponents(
+                                    [.day], from: startOfToday, to: selected
+                                ).day ?? 0,
+                                0
+                            )
+                            let pageIndex = daysFromToday / 3
+
+                            gridStartDate = startOfToday
+                            gridCurrentPage = pageIndex
+                            updateVisibleDates(from: startOfToday, page: pageIndex)
+                        },
+                        onDismiss: {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                showCalendar = false
+                            }
+                        },
+                        maxMonthOffset: maxMonthOffset
+                    )
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+                    .transition(.asymmetric(
+                        insertion: .opacity.combined(with: .move(edge: .top)),
+                        removal: .opacity.combined(with: .move(edge: .top))
+                    ))
                 }
 
-                HStack {
-                    Text("Propose a time to meet")
-                        .font(Constants.Fonts.body2)
-                        .foregroundColor(Constants.Colors.secondaryGray)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                    
-                    Divider()
-                        .frame(height: 16)
-                    
-                    Button {
-                        isPresented = false
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            router.push(.availability)
-                        }
-                    } label: {
-                        Text("Edit Availability")
-                            .font(Constants.Fonts.title2)
-                            .foregroundColor(Constants.Colors.resellPurple)
-                    }
-                }
-            }
-            
-            // Month calendar - collapsible
-            if showCalendar {
-                MessagesMonthCalendarView(
-                    currentMonthOffset: $currentMonthOffset,
-                    gridStartDate: $gridStartDate,
-                    visibleGridDates: visibleGridDates,
-                    maxMonthOffset: maxMonthOffset,
-                    onDateSelected: { selectedDate in
-                        gridCurrentPage = 0
-                        gridStartDate = selectedDate
-                        updateVisibleDates(from: selectedDate, page: 0)
-                    }
-                )
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            }
-            
-            // Grid - single selection mode for proposing a 30-min meeting slot
-            AvailabilityGridView(
-                selectedCells: $selectedCells,
-                currentPage: $gridCurrentPage,
-                isEditing: isEditing,
-                singleSelectionMode: true,
-                startDate: gridStartDate,
-                onVisibleDatesChanged: { dates in
-                    visibleGridDates = dates
-                    if let firstDate = dates.first {
-                        let newMonthOffset = CalendarHelper.monthOffset(for: firstDate)
-                        // Clamp to max offset
-                        let clampedOffset = min(max(newMonthOffset, 0), maxMonthOffset)
-                        if clampedOffset != currentMonthOffset {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                currentMonthOffset = clampedOffset
+                AvailabilityGridView(
+                    selectedCells: $selectedCells,
+                    currentPage: $gridCurrentPage,
+                    isEditing: isEditing,
+                    singleSelectionMode: true,
+                    startDate: gridStartDate,
+                    dayCount: gridDayCount,
+                    onVisibleDatesChanged: { dates in
+                        visibleGridDates = dates
+                        if let firstDate = dates.first {
+                            let newMonthOffset = CalendarHelper.monthOffset(for: firstDate)
+                            let clampedOffset = min(max(newMonthOffset, 0), maxMonthOffset)
+                            if clampedOffset != currentMonthOffset {
+                                isMonthChangeFromGridScroll = true
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    currentMonthOffset = clampedOffset
+                                }
                             }
                         }
+                    },
+                    buyerUnavailableCells: buyerUnavailableCells,
+                    sellerUnavailableCells: sellerUnavailableCells
+                )
+                .id(gridStartDate)
+                .fixedSize(horizontal: false, vertical: true)
+
+                PurpleButton(isActive: !selectedCells.isEmpty, text: "Propose") {
+                    if let selectedCell = selectedCells.first,
+                       let availability = AvailabilityGridView.cellsToAvailabilities([selectedCell]).first {
+                        onPropose(availability.startDate, availability.endDate)
+                        isPresented = false
                     }
-                },
-                buyerUnavailableCells: buyerUnavailableCells,
-                sellerUnavailableCells: sellerUnavailableCells
-            )
-            .id(gridStartDate)
-            
-            Spacer()
-            
-            // Action Button - only enabled when a time slot is selected
-            PurpleButton(isActive: !selectedCells.isEmpty, text: "Propose") {
-                if let selectedCell = selectedCells.first,
-                   let availability = AvailabilityGridView.cellsToAvailabilities([selectedCell]).first {
-                    onPropose(availability.startDate, availability.endDate)
-                    isPresented = false
                 }
+                .padding(.horizontal)
+                .padding(.top, 16)
+                .padding(.bottom, 24)
+
+                Spacer(minLength: 0)
             }
+            .frame(maxWidth: .infinity, alignment: .top)
         }
-        .padding(.horizontal)
-        .padding(.top, 32)
+        .scrollDisabled(true)
+        .clipped()
         .background(Constants.Colors.white)
         .onAppear {
             updateVisibleDates(from: gridStartDate, page: 0)
@@ -669,26 +975,60 @@ struct MessagesAvailabilitySheet: View {
             }
         }
         .onChange(of: currentMonthOffset) { newOffset in
+            // The grid horizontally scrolling across a month boundary mutates
+            // currentMonthOffset itself. Re-anchoring gridStartDate in that
+            // case would cancel the scroll mid-gesture and prevent the user
+            // from going back. Skip exactly one onChange tick in that case.
+            if isMonthChangeFromGridScroll {
+                isMonthChangeFromGridScroll = false
+                return
+            }
+
             let calendar = Calendar.current
             let today = Date()
-            
+
             if let targetMonth = calendar.date(byAdding: .month, value: newOffset, to: today),
                let firstOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: targetMonth)) {
-                
+
                 let startOfToday = calendar.startOfDay(for: today)
                 let newStartDate = (newOffset == 0 && firstOfMonth < startOfToday) ? startOfToday : firstOfMonth
-                
+
                 let gridMonth = calendar.component(.month, from: gridStartDate)
                 let gridYear = calendar.component(.year, from: gridStartDate)
                 let targetMonthComponent = calendar.component(.month, from: firstOfMonth)
                 let targetYearComponent = calendar.component(.year, from: firstOfMonth)
-                
+
                 if gridMonth != targetMonthComponent || gridYear != targetYearComponent {
                     gridStartDate = newStartDate
                     gridCurrentPage = 0
                     updateVisibleDates(from: newStartDate, page: 0)
                 }
             }
+        }
+    }
+
+    private var proposeSubheader: some View {
+        HStack(spacing: 8) {
+            Text("Propose a time to meet")
+                .font(Constants.Fonts.body2)
+                .foregroundColor(Constants.Colors.secondaryGray)
+                .lineLimit(2)
+
+            Divider()
+                .frame(height: 16)
+
+            Button {
+                isPresented = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    router.push(.availability)
+                }
+            } label: {
+                Text("Edit Availability")
+                    .font(Constants.Fonts.title2)
+                    .foregroundColor(Constants.Colors.resellPurple)
+            }
+
+            Spacer()
         }
     }
     
@@ -752,8 +1092,13 @@ struct MessagesAvailabilitySheet: View {
     private func computeUnavailableCells(from availableCells: Set<CellIdentifier>) -> Set<CellIdentifier> {
         var unavailableCells = Set<CellIdentifier>()
         
-        // Generate all possible cells for the grid's date range
-        let allDates = CalendarHelper.generateGridDates(startingFrom: Calendar.current.startOfDay(for: Date()))
+        // Generate all possible cells for the grid's date range. Match the
+        // visible grid's day count so cells beyond the first 30 days still
+        // show buyer/seller unavailability shading.
+        let allDates = CalendarHelper.generateGridDates(
+            startingFrom: Calendar.current.startOfDay(for: Date()),
+            count: gridDayCount
+        )
         let times = generateTimes()
         
         for date in allDates {
@@ -775,164 +1120,6 @@ struct MessagesAvailabilitySheet: View {
     }
 }
 
-// MARK: - Messages Month Calendar View (with max offset restriction)
-
-struct MessagesMonthCalendarView: View {
-    @Binding var currentMonthOffset: Int
-    @Binding var gridStartDate: Date
-    
-    var visibleGridDates: [Date] = []
-    var maxMonthOffset: Int = 1
-    var onDateSelected: ((Date) -> Void)?
-    
-    private var monthData: CalendarMonthData {
-        CalendarHelper.generateMonthData(monthOffset: currentMonthOffset)
-    }
-    
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)
-    private let cellHeight: CGFloat = 36
-    private let rowSpacing: CGFloat = 6
-    
-    var body: some View {
-        VStack(spacing: 10) {
-            weekdayHeader
-            
-            GeometryReader { geometry in
-                let cellWidth = geometry.size.width / 7
-                
-                ZStack(alignment: .topLeading) {
-                    selectionBackgroundLayer(cellWidth: cellWidth)
-                    
-                    LazyVGrid(columns: columns, spacing: rowSpacing) {
-                        ForEach(monthData.days) { day in
-                            dayCell(for: day)
-                        }
-                    }
-                }
-            }
-            .frame(height: CGFloat(5) * cellHeight + CGFloat(4) * rowSpacing)
-        }
-        .contentShape(Rectangle())
-        .gesture(
-            DragGesture(minimumDistance: 20)
-                .onEnded { value in
-                    let verticalDrag = value.translation.height
-                    let horizontalDrag = abs(value.translation.width)
-                    
-                    if abs(verticalDrag) > horizontalDrag {
-                        if verticalDrag < -50 {
-                            // Swipe up - next month (respect max offset)
-                            if currentMonthOffset < maxMonthOffset {
-                                withAnimation(.easeInOut(duration: 0.25)) {
-                                    currentMonthOffset += 1
-                                }
-                            }
-                        } else if verticalDrag > 50 {
-                            // Swipe down - previous month (don't go before current)
-                            if currentMonthOffset > 0 {
-                                withAnimation(.easeInOut(duration: 0.25)) {
-                                    currentMonthOffset -= 1
-                                }
-                            }
-                        }
-                    }
-                }
-        )
-    }
-    
-    private var weekdayHeader: some View {
-        HStack(spacing: 0) {
-            ForEach(CalendarMonthData.weekdaySymbols, id: \.self) { symbol in
-                Text(symbol)
-                    .font(Constants.Fonts.body2)
-                    .foregroundStyle(Constants.Colors.secondaryGray)
-                    .frame(maxWidth: .infinity)
-            }
-        }
-    }
-    
-    private func selectionBackgroundLayer(cellWidth: CGFloat) -> some View {
-        let visibleDaysInMonth = monthData.days.filter { day in
-            visibleGridDates.contains { Calendar.current.isDate($0, inSameDayAs: day.date) }
-        }
-        
-        let rowGroups = Dictionary(grouping: visibleDaysInMonth) { $0.rowIndex }
-        let sortedRowIndices = rowGroups.keys.sorted()
-        
-        return ZStack(alignment: .topLeading) {
-            ForEach(sortedRowIndices, id: \.self) { rowIndex in
-                if let daysInRow = rowGroups[rowIndex] {
-                    let sortedDays = daysInRow.sorted { $0.weekdayIndex < $1.weekdayIndex }
-                    if let firstDay = sortedDays.first, let lastDay = sortedDays.last {
-                        let startX = CGFloat(firstDay.weekdayIndex) * cellWidth
-                        let width = CGFloat(lastDay.weekdayIndex - firstDay.weekdayIndex + 1) * cellWidth
-                        let y = CGFloat(rowIndex) * (cellHeight + rowSpacing)
-                        
-                        let isFirstRow = rowIndex == sortedRowIndices.first
-                        let isLastRow = rowIndex == sortedRowIndices.last
-                        let continuesFromAbove = sortedRowIndices.contains(rowIndex - 1)
-                        let continuesToBelow = sortedRowIndices.contains(rowIndex + 1)
-                        
-                        let rowAboveEndedAtSaturday: Bool = {
-                            if let aboveRow = rowGroups[rowIndex - 1] {
-                                return aboveRow.contains { $0.weekdayIndex == 6 }
-                            }
-                            return false
-                        }()
-                        
-                        let startsAtSunday = firstDay.weekdayIndex == 0
-                        let endsAtSaturday = lastDay.weekdayIndex == 6
-                        
-                        SelectionRowShape(
-                            cornerRadius: 10,
-                            roundTopLeft: isFirstRow || (startsAtSunday && !rowAboveEndedAtSaturday),
-                            roundTopRight: isFirstRow || !endsAtSaturday,
-                            roundBottomLeft: isLastRow || !startsAtSunday,
-                            roundBottomRight: isLastRow || !continuesToBelow
-                        )
-                        .fill(Constants.Colors.wash)
-                        .frame(width: width, height: cellHeight)
-                        .offset(x: startX, y: y)
-                    }
-                }
-            }
-        }
-    }
-    
-    private func dayCell(for day: CalendarDay) -> some View {
-        Text("\(day.dayNumber)")
-            .font(Constants.Fonts.body2)
-            .foregroundStyle(dayTextColor(for: day))
-            .frame(maxWidth: .infinity)
-            .frame(height: cellHeight)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                guard day.isSelectable else { return }
-                // Check if the date is within allowed range (current month or next month)
-                let dateMonthOffset = CalendarHelper.monthOffset(for: day.date)
-                guard dateMonthOffset <= maxMonthOffset else { return }
-                
-                let selectedDate = Calendar.current.startOfDay(for: day.date)
-                gridStartDate = selectedDate
-                onDateSelected?(selectedDate)
-            }
-    }
-    
-    private func dayTextColor(for day: CalendarDay) -> Color {
-        if day.isToday && day.isCurrentMonth {
-            return Constants.Colors.errorRed
-        }
-        
-        if !day.isCurrentMonth {
-            return Constants.Colors.secondaryGray.opacity(0.5)
-        } else if day.isPast {
-            return Constants.Colors.secondaryGray.opacity(0.5)
-        } else {
-            return Constants.Colors.black
-        }
-    }
-}
-
 // MARK: - MessageBubbleView
 
 struct MessageBubbleView: View {
@@ -945,14 +1132,42 @@ struct MessageBubbleView: View {
     let message: any Message
     let chatInfo: ChatInfo
     
-    /// Callback for responding to proposals (startDate, endDate, accepted)
-    var onProposalResponse: ((Date, Date, Bool) -> Void)?
-    
-    /// Set of proposal times that have already been responded to (startDate as minutes since epoch)
-    var respondedProposalTimeIntervals: Set<Int> = []
-    
+    /// Callback for responding to proposals (messageId, startDate, endDate, accepted).
+    /// The messageId lets the parent hide Accept/Decline on this exact bubble
+    /// without affecting sibling proposals at the same slot.
+    var onProposalResponse: ((String, Date, Date, Bool) -> Void)?
+
+    /// Callback for cancelling an already-confirmed proposal (startDate, endDate).
+    /// Slot-level because the backend identifies cancellations by slot.
+    var onProposalCancel: ((Date, Date) -> Void)?
+
+    /// messageIds the user has locally tapped Accept/Decline on. Used to
+    /// instantly hide the action row on that specific bubble while the
+    /// network request is in flight.
+    var respondedMessageIds: Set<String> = []
+
+    /// Slots whose latest state is "cancelled" (either in Firestore or
+    /// optimistically). Used to hide the Cancel button once a cancel is in
+    /// flight / confirmed. A slot that was cancelled but later re-accepted
+    /// is NOT in this set, so the new confirmed meeting keeps its Cancel button.
+    var currentlyCancelledSlots: Set<ProposalSlot> = []
+
     /// Whether there's an active confirmed meeting in this chat (blocks accepting other proposals)
     var hasActiveConfirmedMeeting: Bool = false
+
+    /// Transaction ids from `respondToProposal` until Firestore updates the proposal bubble.
+    var pendingTransactionIdBySlot: [ProposalSlot: String] = [:]
+    var transactionById: [String: Transaction] = [:]
+    var buyerHasSubmittedReviewById: [String: Bool] = [:]
+    var isViewerBuyer: Bool = false
+    var isHydratingChatTransactions: Bool = false
+    var transactionIdsFetchAttempted: Set<String> = []
+    var completingSaleTransactionId: Binding<String?> = .constant(nil)
+    var onMarkSaleComplete: ((String) -> Void)? = nil
+    var onLeaveReview: ((Transaction) -> Void)? = nil
+
+    /// Accepted bubbles superseded by a later same-slot proposal (cancel, new proposal, new accept).
+    var staleAcceptedProposalMessageIds: Set<String> = []
 
     var body: some View {
         if message.messageType == .proposal {
@@ -1085,7 +1300,7 @@ struct MessageBubbleView: View {
             VStack(spacing: 8) {
                 // Icon and title
                 HStack(spacing: 8) {
-                    Image(systemName: message.messageType == .proposal ? "" : "calendar")
+                    Image(systemName: "calendar")
                         .font(.system(size: 18))
                         .foregroundColor(Constants.Colors.black)
                     
@@ -1095,23 +1310,29 @@ struct MessageBubbleView: View {
                         .multilineTextAlignment(.center)
                 }
                 
-                // Action buttons (only show if pending, not cancelled, I'm not the proposer, not already responded, and no active confirmed meeting)
-                let roundedTime = Int(message.startDate.timeIntervalSince1970 / 60)
-                let alreadyResponded = respondedProposalTimeIntervals.contains(roundedTime)
-                // Can't accept/decline if there's already an active confirmed meeting
-                let canShowActions = message.accepted == nil && message.cancellation != true && !message.mine && !alreadyResponded && !hasActiveConfirmedMeeting
+                // Action buttons on a pending, incoming proposal. Hidden as
+                // soon as the user taps Accept/Decline on *this* bubble
+                // (tracked per-messageId, not per-slot), or when another
+                // proposal in the chat is an active confirmed meeting.
+                let slot = ProposalSlot(startDate: message.startDate, endDate: message.endDate)
+                let alreadyResponded = respondedMessageIds.contains(message.messageId)
+                let canShowActions = message.accepted == nil
+                    && message.cancellation != true
+                    && !message.mine
+                    && !alreadyResponded
+                    && !hasActiveConfirmedMeeting
                 if canShowActions {
                     HStack(spacing: 32) {
                         Button {
-                            onProposalResponse?(message.startDate, message.endDate, true)
+                            onProposalResponse?(message.messageId, message.startDate, message.endDate, true)
                         } label: {
                             Text("Accept")
                                 .font(Constants.Fonts.title2)
                                 .foregroundColor(Constants.Colors.resellPurple)
                         }
-                        
+
                         Button {
-                            onProposalResponse?(message.startDate, message.endDate, false)
+                            onProposalResponse?(message.messageId, message.startDate, message.endDate, false)
                         } label: {
                             Text("Decline")
                                 .font(Constants.Fonts.title2)
@@ -1119,15 +1340,112 @@ struct MessageBubbleView: View {
                         }
                     }
                 }
-                
-                // View Details button for confirmed meetings
-                if message.accepted == true {
-                    Button {
-                        // TODO: Show meeting details
-                    } label: {
-                        Text("View Details")
-                            .font(Constants.Fonts.title2)
+
+                // Actions for confirmed meetings. Cancel shows while the
+                // meeting is in the future AND this slot's latest state is
+                // still "accepted" (not cancelled elsewhere in the timeline
+                // or optimistically in this session).
+                let isStaleAccepted = staleAcceptedProposalMessageIds.contains(message.messageId)
+                if message.accepted == true, !isStaleAccepted {
+                    let isSlotCancelled = message.cancellation == true
+                        || currentlyCancelledSlots.contains(slot)
+                    let isUpcoming = message.endDate > Date()
+                    let resolvedTransactionId = message.transactionId ?? pendingTransactionIdBySlot[slot]
+                    let isAnySaleCompleting = completingSaleTransactionId.wrappedValue != nil
+                    let cachedTx = resolvedTransactionId.flatMap { transactionById[$0] }
+                    let hasAttemptedSaleFetch = resolvedTransactionId.map { transactionIdsFetchAttempted.contains($0) } ?? false
+                    let showSaleStatusPlaceholder = !isUpcoming
+                        && !isSlotCancelled
+                        && resolvedTransactionId != nil
+                        && cachedTx == nil
+                        && (!hasAttemptedSaleFetch || isHydratingChatTransactions)
+
+                    if isUpcoming && !isSlotCancelled {
+                        HStack(spacing: 32) {
+                            Button {
+                                onProposalCancel?(message.startDate, message.endDate)
+                            } label: {
+                                Text("Cancel")
+                                    .font(Constants.Fonts.title2)
+                                    .foregroundColor(Constants.Colors.errorRed)
+                            }
+                        }
+                    }
+
+                    // Only show “Mark sale complete” once we know from the API that the sale is still
+                    // incomplete—otherwise the row flashes that label before switching to “Leave review”.
+                    if showSaleStatusPlaceholder {
+                        ProgressView()
+                            .scaleEffect(0.9)
+                            .padding(.top, 4)
+                    }
+
+                    if !isUpcoming,
+                       !isSlotCancelled,
+                       let tid = resolvedTransactionId,
+                       let cachedForMark = transactionById[tid],
+                       !cachedForMark.completed,
+                       let markComplete = onMarkSaleComplete {
+                        let isCompletingThisSale = completingSaleTransactionId.wrappedValue == tid
+                        Button {
+                            markComplete(tid)
+                        } label: {
+                            HStack(spacing: 8) {
+                                if isCompletingThisSale {
+                                    ProgressView()
+                                        .scaleEffect(0.9)
+                                }
+                                Text("Mark sale complete")
+                                    .font(Constants.Fonts.title2)
+                            }
                             .foregroundColor(Constants.Colors.resellPurple)
+                        }
+                        .disabled(isAnySaleCompleting)
+                        .padding(.top, 4)
+                    }
+
+                    // If we finished a fetch pass but this id never landed in the cache (e.g. network error), still allow completing.
+                    if !isUpcoming,
+                       !isSlotCancelled,
+                       let tid = resolvedTransactionId,
+                       transactionById[tid] == nil,
+                       hasAttemptedSaleFetch,
+                       !isHydratingChatTransactions,
+                       let markComplete = onMarkSaleComplete {
+                        let isCompletingThisSale = completingSaleTransactionId.wrappedValue == tid
+                        Button {
+                            markComplete(tid)
+                        } label: {
+                            HStack(spacing: 8) {
+                                if isCompletingThisSale {
+                                    ProgressView()
+                                        .scaleEffect(0.9)
+                                }
+                                Text("Mark sale complete")
+                                    .font(Constants.Fonts.title2)
+                            }
+                            .foregroundColor(Constants.Colors.resellPurple)
+                        }
+                        .disabled(isAnySaleCompleting)
+                        .padding(.top, 4)
+                    }
+
+                    if !isUpcoming,
+                       !isSlotCancelled,
+                       let tid = resolvedTransactionId,
+                       let tx = transactionById[tid],
+                       tx.completed,
+                       isViewerBuyer,
+                       buyerHasSubmittedReviewById[tid] != true,
+                       let openReview = onLeaveReview {
+                        Button {
+                            openReview(tx)
+                        } label: {
+                            Text("Leave review")
+                                .font(Constants.Fonts.title2)
+                                .foregroundColor(Constants.Colors.resellPurple)
+                        }
+                        .padding(.top, 4)
                     }
                 }
             }
@@ -1151,6 +1469,11 @@ struct MessageBubbleView: View {
                 return "\(proposerName) cancelled the meeting"
             }
         }
+
+        if message.accepted == true, staleAcceptedProposalMessageIds.contains(message.messageId) {
+            let range = formatConfirmedMeetingRange(start: message.startDate, end: message.endDate)
+            return "Earlier meetup (updated later):\n\(range)"
+        }
         
         switch message.accepted {
         case nil:
@@ -1160,7 +1483,8 @@ struct MessageBubbleView: View {
                 return "\(proposerName) wants to meet at:\n\(timeString)"
             }
         case true:
-            return "The meeting has been confirmed"
+            let range = formatConfirmedMeetingRange(start: message.startDate, end: message.endDate)
+            return "The meeting has been confirmed for\n\(range)"
         case false:
             return "The meeting was declined"
         default:
@@ -1172,6 +1496,18 @@ struct MessageBubbleView: View {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MMM d, h:mm a"
         return dateFormatter.string(from: start)
+    }
+
+    /// Full start–end range for confirmed meetings (same calendar day uses compact time–time).
+    private func formatConfirmedMeetingRange(start: Date, end: Date) -> String {
+        let dayFormatter = DateFormatter()
+        dayFormatter.dateFormat = "MMM d, yyyy"
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = "h:mm a"
+        if Calendar.current.isDate(start, inSameDayAs: end) {
+            return "\(dayFormatter.string(from: start)), \(timeFormatter.string(from: start)) – \(timeFormatter.string(from: end))"
+        }
+        return "\(dayFormatter.string(from: start)), \(timeFormatter.string(from: start))\n– \(dayFormatter.string(from: end)), \(timeFormatter.string(from: end))"
     }
 
 }

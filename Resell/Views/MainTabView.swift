@@ -41,6 +41,18 @@ struct MainTabView: View {
                         .transition(.opacity)
                         .background(.white)
                         .environmentObject(router)
+                        .onAppear {
+                            // Start listening to chat updates as soon as the
+                            // user lands on the main shell so the tab-bar
+                            // unread badge is populated even if they never
+                            // open the messages tab.
+                            chatsViewModel.getAllChats()
+                        }
+                        .onChange(of: mainViewModel.userDidLogin) { didLogin in
+                            if didLogin {
+                                chatsViewModel.getAllChats()
+                            }
+                        }
                     } else {
                         LoginView()
                             .transition(.opacity)
@@ -107,10 +119,33 @@ struct MainTabView: View {
                         .environmentObject(onboardingViewModel)
                 case .completedTransaction(let transaction):
                     CompletedTransactionView(transaction: transaction)
-                case .reviewTesting:
-                    ReviewTestingView()
                 default:
                     EmptyView()
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Constants.Notifications.OpenTransactionDeepLink)) { output in
+            guard mainViewModel.userDidLogin else { return }
+            guard let tid = output.userInfo?["transactionId"] as? String, !tid.isEmpty else { return }
+            Task {
+                do {
+                    let response = try await NetworkManager.shared.getTransactionById(transactionId: tid)
+                    await MainActor.run {
+                        if response.transaction.completed {
+                            let uid = GoogleAuthManager.shared.user?.firebaseUid
+                            if response.transaction.buyer?.firebaseUid == uid {
+                                router.push(.completedTransaction(response.transaction))
+                            } else {
+                                router.push(.notifications)
+                            }
+                        } else {
+                            router.push(.notifications)
+                        }
+                    }
+                } catch {
+                    await MainActor.run {
+                        router.push(.notifications)
+                    }
                 }
             }
         }
@@ -132,7 +167,11 @@ struct MainTabView: View {
     private var tabBarView: some View {
         HStack {
             ForEach(0..<3, id: \.self) { index in
-                TabViewIcon(selectionIndex: $selection, itemIndex: index)
+                TabViewIcon(
+                    selectionIndex: $selection,
+                    itemIndex: index,
+                    badgeCount: index == 1 ? chatsViewModel.totalUnread : 0
+                )
                     .frame(width: 28, height: 28)
 
                 if index != 2 {
