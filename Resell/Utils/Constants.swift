@@ -16,8 +16,10 @@ struct Constants {
         static let black = Color(red: 0/255, green: 0/255, blue: 0/255)
         static let errorRed = Color(red: 242/255, green: 0/255, blue: 0/255)
         static let inactiveGray = Color(red: 190/255, green: 190/255, blue: 190/255)
+        static let tabBarInactive = Color(red: 99/255, green: 99/255, blue: 108/255)
         static let purpleWash = Color(red: 250/255, green: 247/255, blue: 255/255)
         static let resellPurple = Color(red: 158/255, green: 112/255, blue: 246/255)
+        static let tertiaryGray = Color(red: 45/255, green: 45/255, blue: 45/255)
         static let secondaryGray = Color(red: 77/255, green: 77/255, blue: 77/255)
         static let stroke = Color(red: 214/255, green: 214/255, blue: 214/255)
         static let tint = Color(red: 0/255, green: 0/255, blue: 0/255, opacity: 20/100)
@@ -122,10 +124,10 @@ struct Constants {
         FilterCategory(id: 2, title: "Books", color: Constants.Colors.filterGreen) ,
         FilterCategory(id: 3, title: "School", color: Constants.Colors.filterLightGreen),
         FilterCategory(id: 4, title: "Electronics", color: Constants.Colors.filterPink),
-        FilterCategory(id: 5, title: "Household"),
+        FilterCategory(id: 5, title: "Household", color: Constants.Colors.purpleWash),
         FilterCategory(id: 6, title: "Handmade", color: Constants.Colors.filterYellow),
-        FilterCategory(id: 7, title: "Sports & Outdoors", color: Constants.Colors.filterBlue),
-        FilterCategory(id: 8, title: "Other")
+        FilterCategory(id: 7, title: "Active", color: Constants.Colors.filterBlue),
+        FilterCategory(id: 8, title: "Other", color: Constants.Colors.filterGray)
     ]
     
     static let notificationFilters = [

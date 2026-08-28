@@ -21,10 +21,12 @@ class CurrentUserProfileManager: ObservableObject {
     @Published var givenName: String = ""
     @Published var bio: String = ""
     @Published var venmoHandle: String = ""
+    @Published var hasProfilePicture: Bool = false
     
     @Published var userPosts: [Post] = []
     @Published var archivedPosts: [Post] = []
     @Published var requests: [Request] = []
+    @Published var userReviews: [UserReview] = []
     
     @Published var isLoading: Bool = false
     
@@ -67,17 +69,26 @@ class CurrentUserProfileManager: ObservableObject {
                 async let postsResponse = NetworkManager.shared.getPostsByUserID(id: userId)
                 async let archivedResponse = NetworkManager.shared.getArchivedPostsByUserID(id: userId)
                 async let requestsResponse = NetworkManager.shared.getRequestsByUserID(id: userId)
+                async let reviewsResponse = NetworkManager.shared.getUserReviewsBySeller(sellerId: userId)
 
                 let (posts, archived, reqs) = try await (postsResponse, archivedResponse, requestsResponse)
                 
                 userPosts = Post.sortPostsByDate(posts.posts)
                 archivedPosts = Post.sortPostsByDate(archived.posts)
                 requests = reqs.requests
+
+                do {
+                    userReviews = try await reviewsResponse
+                } catch {
+                    NetworkManager.shared.logger.error("Error loading current user reviews: \(error)")
+                    userReviews = []
+                }
                 
                 username = user.username
                 givenName = user.givenName
                 bio = user.bio.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Hi I'm \(username), looking for great deals and selling even greater items" : user.bio
                 venmoHandle = user.venmoHandle ?? ""
+                hasProfilePicture = user.photoUrl != nil
                 
                 await decodeProfileImage(url: user.photoUrl)
                 
@@ -110,6 +121,7 @@ class CurrentUserProfileManager: ObservableObject {
         self.bio = bio
         self.venmoHandle = venmoHandle
         self.profilePic = profileImage
+        self.hasProfilePicture = true
         
         let updatedUserResponse = try await NetworkManager.shared.updateUserProfile(edit: edit)
         
@@ -130,6 +142,7 @@ class CurrentUserProfileManager: ObservableObject {
         userPosts = []
         archivedPosts = []
         requests = []
+        userReviews = []
         
         // Clear profile data
         profilePic = .profilePlaceholder
@@ -137,6 +150,7 @@ class CurrentUserProfileManager: ObservableObject {
         givenName = ""
         bio = ""
         venmoHandle = ""
+        hasProfilePicture = false
     }
     
     // MARK: - Private Methods

@@ -59,16 +59,15 @@ struct CircularFilterButton: View {
     var body: some View {
         Button(action: action, label: {
             ZStack{
-                Circle()
-                    .frame(width: 80, height: 80)
-                    .foregroundStyle((filter.color?.opacity(0.5)) ?? Constants.Colors.filterGray)
+//                Circle()
+//                    .frame(width: 74, height: 74)
+//                    .foregroundStyle((filter.color?.opacity(0.5)) ?? Constants.Colors.filterGray)
                 
                 Image(filter.title)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 56, height: 56)
+                    .frame(width: 72, height: 72)
             }
         })
     }
 }
-

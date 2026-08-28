@@ -13,12 +13,28 @@ enum FollowListType {
 }
 
 class Router: ObservableObject {
-    @Published var path: [Route] = []
+    @Published private var tabPaths: [[Route]] = Array(repeating: [], count: 5)
+    @Published var activeTab: Int = 0
+
+    var path: [Route] {
+        get { tabPaths[activeTab] }
+        set { tabPaths[activeTab] = newValue }
+    }
+
+    func pathBinding(for tab: Int) -> Binding<[Route]> {
+        Binding(
+            get: { self.tabPaths[tab] },
+            set: { self.tabPaths[tab] = $0 }
+        )
+    }
 
     enum Route: Hashable {
         case login
         case home
         case saved
+        case recentlyViewed
+        case dailyPicks
+        case trending(FilterCategory)
         case chats
         case editProfile
         case messages(chatInfo: ChatInfo)
@@ -64,6 +80,11 @@ class Router: ObservableObject {
 
     func popToRoot() {
         path.removeAll()
+    }
+
+    func reset() {
+        tabPaths = Array(repeating: [], count: tabPaths.count)
+        activeTab = 0
     }
 
     func lastPushedView() -> Route {

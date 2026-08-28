@@ -7,7 +7,6 @@
 
 import Kingfisher
 import SwiftUI
-import UserNotifications
 
 struct ProductDetailsView: View {
 
@@ -17,10 +16,31 @@ struct ProductDetailsView: View {
     @EnvironmentObject var router: Router
 
     @StateObject private var viewModel = ProductDetailsViewModel()
-    
+    @State private var isImageViewerPresented = false
+    /// True while the nav bar still overlays the hero image (vs white details).
+    @State private var isToolbarOverHero: Bool = true
+    /// True when the top-leading hero region is dark enough for light icons.
+    /// Default black so light photos (sky, snow) aren't stuck with white icons
+    /// before sampling finishes.
+    @State private var heroPrefersLightIcons: Bool = false
+
     @ObservedObject private var homeViewModel = HomeViewModel.shared
 
     var post: Post
+
+    private var toolbarIconTint: Color {
+        if isToolbarOverHero {
+            return heroPrefersLightIcons ? Constants.Colors.white : Constants.Colors.black
+        }
+        return Constants.Colors.black
+    }
+
+    private var toolbarIconShadow: Color {
+        guard isToolbarOverHero else { return .clear }
+        return heroPrefersLightIcons
+            ? Color.black.opacity(0.45)
+            : Color.white.opacity(0.7)
+    }
 
     /// Read the true top safe area inset from the window.
     private var topSafeArea: CGFloat {
@@ -29,40 +49,47 @@ struct ProductDetailsView: View {
             .first?.windows.first?.safeAreaInsets.top ?? 0
     }
 
-    // Base image height before adding safe area compensation
-    private var baseImageHeight: CGFloat {
-        UIScreen.main.bounds.width * 1.5
+    // Keep every listing's hero height consistent.
+    private var imageHeight: CGFloat {
+        UIScreen.main.bounds.height * 0.65
     }
 
-    // Total image height including safe area so the image extends behind the status bar
-    private var imageHeight: CGFloat {
-        baseImageHeight + topSafeArea
-    }
+    /// How far the rounded details card overlaps the hero.
+    private let detailsOverlap: CGFloat = 28
+    private let detailsCornerRadius: CGFloat = 24
 
     // MARK: - UI
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            VStack(spacing: 0) {
-                if viewModel.isLoading {
-                    ShimmerView()
-                        .frame(height: imageHeight)
-                } else {
-                    imageGallery
-                        .frame(height: imageHeight)
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 0) {
+                    if viewModel.isLoading {
+                        ShimmerView()
+                            .frame(height: imageHeight)
+                    } else {
+                        imageGallery
+                            .frame(height: imageHeight)
+                    }
+
+                    detailsView
+                        .padding(.top, 8)
+                        .background(Constants.Colors.white)
+                        .clipShape(
+                            UnevenRoundedRectangle(
+                                topLeadingRadius: detailsCornerRadius,
+                                topTrailingRadius: detailsCornerRadius,
+                                style: .continuous
+                            )
+                        )
+                        .padding(.top, -detailsOverlap)
+                        .zIndex(1)
                 }
-
-                Spacer()
             }
-
-            DraggableSheetView(startY: imageHeight) {
-                detailsView
-            }
-            .zIndex(1)
-
-            if !viewModel.isMyPost() {
-                buttonGradientView
-                    .zIndex(2)
+            // Destination pages don't inherit the tab-root bottom inset, so
+            // Similar Items would otherwise sit under the floating tab bar.
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                Color.clear.frame(height: 110)
             }
 
             if viewModel.didShowOptionsMenu {
@@ -86,60 +113,42 @@ struct ProductDetailsView: View {
                     
                     return options
                 }())
-                .padding(.top, topSafeArea * 2 + 30)
+                .padding(.top, topSafeArea + 52)
                 .zIndex(2)
             }
-
-            // Custom navigation buttons overlay
-            VStack {
-                HStack {
-                    Button {
-                        router.pop()
-                    } label: {
-                        Image("chevron.left.white")
-                            .resizable()
-                            .frame(width: 36, height: 24)
-                            .frame(width: 44, height: 44)
-                            .contentShape(Rectangle())
-                            .offset(x: -10)
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(Constants.Colors.black)
-                    }
-                    .background(.ultraThinMaterial, in: Circle())
-                    .padding(.leading, 12)
-                    
-                    Spacer()
-
-                    Button {
-                        withAnimation {
-                            viewModel.didShowOptionsMenu.toggle()
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .resizable()
-                            .frame(width: 24, height: 6)
-                            .foregroundStyle(Constants.Colors.white)
-                            .frame(width: 44, height: 44)
-                            .contentShape(Rectangle())
-                            
-                    }
-                    .background(.ultraThinMaterial, in: Circle())
-                    .padding(.trailing, 12)
-                    
-
-                }
-                .padding(.top, topSafeArea * 2 + 4)
-
-                Spacer()
-            }
-            .zIndex(1)
         }
         .background(Constants.Colors.white)
         // Pull content up to counteract NavigationStack's safe area inset
         .padding(.top, -topSafeArea)
         .ignoresSafeArea(edges: .top)
         .navigationBarBackButtonHidden(true)
-        .toolbar(.hidden, for: .navigationBar)
+        .enableSwipeBack()
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                BackButton(
+                    style: .systemChevron,
+                    tint: toolbarIconTint
+                )
+                .shadow(color: toolbarIconShadow, radius: 2, y: 1)
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    withAnimation {
+                        viewModel.didShowOptionsMenu.toggle()
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(toolbarIconTint)
+                        .shadow(color: toolbarIconShadow, radius: 2, y: 1)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
         .sheet(isPresented: $viewModel.didShowDeleteView) {
                 deletePostView
             }
@@ -148,20 +157,28 @@ struct ProductDetailsView: View {
                     viewModel.didShowOptionsMenu = false
                 }
             }
+        .fullScreenCover(isPresented: $isImageViewerPresented) {
+            ProductImageViewer(
+                images: viewModel.images,
+                selectedIndex: $viewModel.currentPage
+            )
+        }
         .onAppear {
             viewModel.setPost(post: post)
-
-            withAnimation {
-                mainViewModel.hidesTabBar = true
-            }
-
             viewModel.maxDrag = imageHeight
+            updateHeroIconContrast()
+        }
+        .onChange(of: viewModel.currentPage) { _ in
+            updateHeroIconContrast()
+        }
+        .onChange(of: viewModel.images) { _ in
+            updateHeroIconContrast()
+        }
+        .onChange(of: viewModel.item?.sold) { _ in
+            updateHeroIconContrast()
         }
         .onDisappear {
             viewModel.didShowOptionsMenu = false
-            withAnimation {
-                mainViewModel.hidesTabBar = false
-            }
         }
     }
 
@@ -171,34 +188,101 @@ struct ProductDetailsView: View {
 
     @ViewBuilder
     private var imageGallery: some View {
-        ZStack(alignment: .bottom) {
-            TabView(selection: $viewModel.currentPage) {
-                ForEach(viewModel.images.indices, id: \.self) { index in
-                    imageView(index)
-                }
-            }
-            .background(Constants.Colors.white)
-            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+        ZStack(alignment: .bottomTrailing) {
+            imagePager
 
-            // Sold overlay
             if isSold {
                 Rectangle()
                     .fill(Color.black.opacity(0.5))
+                    .allowsHitTesting(false)
 
                 Text("Item Sold")
                     .font(.custom("Rubik-Medium", size: 24))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .allowsHitTesting(false)
             }
 
-            CustomPageControlIndicatorView(currentPage: $viewModel.currentPage, numberOfPages: $viewModel.images.count)
-                .frame(height: 20)
-                .padding()
+            if viewModel.images.count > 0 {
+                imageCountBadge
+                    .padding(.trailing, 16)
+                    .padding(.bottom, detailsOverlap + 14)
+            }
+        }
+        .clipped()
+        // When the hero scrolls out from under the toolbar, flip icons to black.
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.frame(in: .global).maxY
+        } action: { maxY in
+            let toolbarBottom = topSafeArea + 52
+            let overHero = maxY > toolbarBottom
+            guard overHero != isToolbarOverHero else { return }
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isToolbarOverHero = overHero
+            }
+        }
+    }
+
+    /// Horizontal paging carousel — swipe between photos on the listing itself.
+    private var imagePager: some View {
+        TabView(selection: $viewModel.currentPage) {
+            ForEach(viewModel.images.indices, id: \.self) { index in
+                imageView(index)
+                    .onTapGesture {
+                        isImageViewerPresented = true
+                    }
+            }
+        }
+        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+        .background(Constants.Colors.white)
+    }
+
+    private var imageCountBadge: some View {
+        Text("\(viewModel.currentPage + 1) / \(viewModel.images.count)")
+            .font(Constants.Fonts.title3)
+            .foregroundStyle(Color.white)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(.black.opacity(0.55), in: Capsule())
+            .accessibilityLabel("Image \(viewModel.currentPage + 1) of \(viewModel.images.count)")
+    }
+
+    /// Sample the top-leading corner of the current hero image for icon contrast.
+    private func updateHeroIconContrast() {
+        // Sold dimming always reads as a dark surface.
+        if isSold {
+            heroPrefersLightIcons = true
+            return
+        }
+
+        guard viewModel.images.indices.contains(viewModel.currentPage) else {
+            heroPrefersLightIcons = false
+            return
+        }
+
+        let url = viewModel.images[viewModel.currentPage]
+        let sampleSize = CGSize(width: UIScreen.main.bounds.width, height: imageHeight)
+        KingfisherManager.shared.retrieveImage(with: url) { result in
+            let prefersLight: Bool
+            if case .success(let value) = result {
+                prefersLight = value.image.prefersLightToolbarIcons(displayedIn: sampleSize)
+            } else {
+                prefersLight = false
+            }
+
+            Task { @MainActor in
+                guard viewModel.images.indices.contains(viewModel.currentPage),
+                      url == viewModel.images[viewModel.currentPage] else { return }
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    heroPrefersLightIcons = prefersLight
+                }
+            }
         }
     }
 
     private func imageView(_ index: Int) -> some View {
         KFImage(viewModel.images[index])
+            .cacheOriginalImage()
             .placeholder {
                 ShimmerView()
                     .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -214,39 +298,18 @@ struct ProductDetailsView: View {
     }
     
     private var detailsView: some View {
-        ZStack (alignment: .topTrailing) {
-            VStack(alignment: .leading, spacing: 0) {
-                // Drag Handle
-                HStack {
-                    RoundedRectangle(cornerRadius: 4)
-                        .frame(width: 50, height: 8)
-                        .foregroundStyle(Constants.Colors.inactiveGray)
-                        .padding(.top, 12)
-                }
-                .frame(maxWidth: .infinity)
-                
-                VStack(alignment: .leading) {
-                    titlePriceView
-                        .padding(.top, 10)
-                    
-                    sellerProfileView
-                        .padding(.bottom, 24)
-                    
-                    itemDescriptionView
-                        .padding(.bottom, 32)
-                    
-                    similarItemsView
-                    
-                    // This ensures the sheet is tall enough to cover the screen when pulled up
-                    Spacer(minLength: 500)
-                }
-                .padding(.horizontal, Constants.Spacing.horizontalPadding)
-            }
-            
-            saveButton
-                .padding(.trailing, Constants.Spacing.horizontalPadding)
-                .offset(y: -95)
+        VStack(alignment: .leading, spacing: 12) {
+            titlePriceView
+                .padding(.top, 20)
+
+            sellerProfileView
+
+            itemDescriptionView
+
+            similarItemsView
         }
+        .padding(.horizontal, Constants.Spacing.horizontalPadding)
+        .padding(.bottom, 28)
     }
 
     private var titlePriceView: some View {
@@ -264,32 +327,52 @@ struct ProductDetailsView: View {
     }
 
     private var sellerProfileView: some View {
-        Button {
-            if viewModel.isMyPost() {
-                mainViewModel.selection = 2
-                router.popToRoot()
-            } else {
-                router.push(.profile(viewModel.item?.user?.firebaseUid ?? ""))
-            }
-        } label: {
-            HStack {
-                KFImage(viewModel.item?.user?.photoUrl)
-                    .placeholder {
-                        ShimmerView()
-                            .frame(width: 32, height: 32)
-                            .clipShape(Circle())
+        HStack(spacing: 8) {
+            Button {
+                if viewModel.isMyPost() {
+                    router.activeTab = 4
+                    mainViewModel.selection = 4
+                    router.popToRoot()
+                } else {
+                    router.push(.profile(viewModel.item?.user?.firebaseUid ?? ""))
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    KFImage(viewModel.item?.user?.photoUrl)
+                        .placeholder {
+                            ShimmerView()
+                                .frame(width: 32, height: 32)
+                                .clipShape(Circle())
+                        }
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 32, height: 32)
+                        .clipShape(Circle())
+
+                    Text(viewModel.item?.user?.username ?? "")
+                        .font(Constants.Fonts.body2)
+                        .foregroundStyle(Constants.Colors.black)
+                    
+                    if !viewModel.isMyPost() {
+                        Text("•")
+                            .foregroundStyle(.black)
+                            .font(Constants.Fonts.body2)
+                        
+                        Button {
+                            contactSeller()
+                        } label: {
+                            Text("Contact Seller")
+                                .font(Constants.Fonts.body2)
+                                .foregroundStyle(Constants.Colors.resellPurple)
+                        }
                     }
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 32, height: 32)
-                    .clipShape(Circle())
-
-                Text(viewModel.item?.user?.username ?? "")
-                    .font(Constants.Fonts.body2)
-                    .foregroundStyle(Constants.Colors.black)
-
-                Spacer()
+                }
             }
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            saveButton
         }
     }
 
@@ -340,11 +423,6 @@ struct ProductDetailsView: View {
     private func changeItem(post: Post) {
         viewModel.clear()
         viewModel.setPost(post: post)
-
-        withAnimation {
-            mainViewModel.hidesTabBar = true
-        }
-
         viewModel.maxDrag = imageHeight
 
         if let existingIndex = router.path.lastIndex(where: {
@@ -359,120 +437,24 @@ struct ProductDetailsView: View {
         }
     }
 
-    private var buttonGradientView: some View {
-        VStack {
-            PurpleButton(text: "Contact Seller") {
-                if let item = viewModel.item, let user = item.user, let me = GoogleAuthManager.shared.user {
-                    let chatInfo = ChatInfo(
-                        listing: item,
-                        buyer: me,
-                        seller: user
-                    )
-
-                    navigateToChats(chatInfo: chatInfo)
-                }
-            }
-        }
-        .frame(width: UIScreen.width, height: 50)
-        .padding(.bottom, 24)
-        .background(
-            LinearGradient(stops: [
-                .init(color: Color.clear, location: 0.0),
-                .init(color: Constants.Colors.white.opacity(0.8), location: 0.5),
-                .init(color: Constants.Colors.white, location: 1.0)
-            ], startPoint: .top, endPoint: .bottom)
-        )
-    }
-
-    // TODO: FIX
-
-    func sendNotification() {
-        let content = UNMutableNotificationContent()
-        content.title = "New Post"
-        content.subtitle = "Testing bookmarks"
-        content.sound = UNNotificationSound.default
-
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false)
-
-        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
-
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("Error sending notification: \(error.localizedDescription)")
-            } else {
-                print("Push notification sent successfully!")
-            }
-        }
-    }
-
-    func requestNotificationAuthorization() {
-        @AppStorage("isNotificationAuthorized") var isNotificationAuthorized = false
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { (granted, error) in
-            if let error = error {
-                print("Error sending notification: \(error.localizedDescription)")
-                return
-            }
-
-            if granted {
-                isNotificationAuthorized = true
-                print("Notification permission granted.")
-            } else {
-                isNotificationAuthorized = false
-                print("Notification permission denied.")
-            }
-        }
-    }
-
-    @AppStorage("isNotificationAuthorized") var isNotificationAuthorized = false
-
     private var saveButton: some View {
-        if isNotificationAuthorized {
-            Button {
-                viewModel.isSaved.toggle()
-                
-                Task {
-                    await viewModel.updateItemSaved()
-                    await homeViewModel.toggleLocalSaveStatus(for: post, isSaving: viewModel.isSaved)
-                }
-                
-                sendNotification()
-            } label: {
-                ZStack {
-                    Circle()
-                        .frame(width: 72, height: 72)
-                        .foregroundStyle(Constants.Colors.white)
-                        .opacity(viewModel.isSaved ? 1.0 : 0.9)
-                        .shadow(radius: 2)
+        Button {
+            viewModel.isSaved.toggle()
 
-                    Image(viewModel.isSaved ? "saved.fill" : "saved")
-                        .resizable()
-                        .frame(width: 21, height: 27)
-                }
+            Task {
+                await viewModel.updateItemSaved()
+                await homeViewModel.toggleLocalSaveStatus(for: post, isSaving: viewModel.isSaved)
             }
-        } else {
-            Button {
-                viewModel.isSaved.toggle()
-                
-                Task {
-                    await viewModel.updateItemSaved()
-                    await homeViewModel.toggleLocalSaveStatus(for: post, isSaving: viewModel.isSaved)
-                }
-                
-                requestNotificationAuthorization()
-            } label: {
-                ZStack {
-                    Circle()
-                        .frame(width: 72, height: 72)
-                        .foregroundStyle(Constants.Colors.white)
-                        .opacity(viewModel.isSaved ? 1.0 : 0.9)
-                        .shadow(radius: 2)
-
-                    Image(viewModel.isSaved ? "saved.fill" : "saved")
-                        .resizable()
-                        .frame(width: 21, height: 27)
-                }
-            }
+        } label: {
+            Image(viewModel.isSaved ? "saved.fill" : "saved")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 18, height: 22)
+                .foregroundStyle(viewModel.isSaved ? Constants.Colors.resellPurple : Constants.Colors.black)
+                .frame(width: 32, height: 32)
+                .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
     }
 
     private var deletePostView: some View {
@@ -507,6 +489,21 @@ struct ProductDetailsView: View {
     }
 
     // MARK: - Functions
+
+    private func contactSeller() {
+        guard let item = viewModel.item,
+              let user = item.user,
+              let me = GoogleAuthManager.shared.user else {
+            return
+        }
+
+        let chatInfo = ChatInfo(
+            listing: item,
+            buyer: me,
+            seller: user
+        )
+        navigateToChats(chatInfo: chatInfo)
+    }
 
     private func navigateToChats(chatInfo: ChatInfo) {
         if let existingIndex = router.path.firstIndex(where: {

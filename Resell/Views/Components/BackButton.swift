@@ -14,17 +14,21 @@ struct BackButton: View {
     // MARK: - Style
 
     enum Style {
-        /// Default: SF Symbol `chevron.left` at 17pt medium, black tint.
+        /// Default: SF Symbol `chevron.left` at 17pt medium.
         case systemChevron
         /// Resizable SF Symbol `chevron.left` with an explicit content size.
         case systemChevronResizable(width: CGFloat, height: CGFloat)
-        /// Asset image (e.g. `chevron.left`, `chevron.left.white`) with explicit size and tint.
+        /// Asset image (e.g. `chevron.left`, `chevron.left.white`) with explicit size.
+        /// `tint` on the style is used only when the view-level `tint` is nil.
         case assetChevron(name: String, size: CGSize, tint: Color = Constants.Colors.black)
     }
 
     // MARK: - Properties
 
     var style: Style = .systemChevron
+    /// Overrides the chevron color. Defaults to black for light chrome surfaces;
+    /// pass an adaptive color over photo heroes.
+    var tint: Color? = nil
     /// Size of the tappable rect surrounding the chevron. Defaults to 44x44 (Apple HIG minimum).
     /// Pass a smaller width when embedded in a custom HStack header that needs to preserve a narrower visual slot.
     var hitTargetSize: CGSize = CGSize(width: 44, height: 44)
@@ -52,24 +56,34 @@ struct BackButton: View {
         .buttonStyle(.plain)
     }
 
+    private var resolvedTint: Color {
+        if let tint { return tint }
+        switch style {
+        case .assetChevron(_, _, let styleTint):
+            return styleTint
+        case .systemChevron, .systemChevronResizable:
+            return Constants.Colors.black
+        }
+    }
+
     @ViewBuilder
     private var label: some View {
         switch style {
         case .systemChevron:
             Image(systemName: "chevron.left")
                 .font(.system(size: 17, weight: .medium))
-                .foregroundStyle(Constants.Colors.black)
+                .foregroundStyle(resolvedTint)
         case .systemChevronResizable(let width, let height):
             Image(systemName: "chevron.left")
                 .resizable()
                 .scaledToFit()
                 .frame(width: width, height: height)
-                .foregroundStyle(Constants.Colors.black)
-        case .assetChevron(let name, let size, let tint):
+                .foregroundStyle(resolvedTint)
+        case .assetChevron(let name, let size, _):
             Image(name)
                 .resizable()
                 .frame(width: size.width, height: size.height)
-                .foregroundStyle(tint)
+                .foregroundStyle(resolvedTint)
         }
     }
 }

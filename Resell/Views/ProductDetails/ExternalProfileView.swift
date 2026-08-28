@@ -7,6 +7,14 @@
 
 import Kingfisher
 import SwiftUI
+import LucideIcons
+private struct ProfileIdentityMaxYPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = .greatestFiniteMagnitude
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
 
 struct ExternalProfileView: View {
 
@@ -16,86 +24,142 @@ struct ExternalProfileView: View {
     @StateObject private var viewModel = ProfileViewModel()
     @State var listingViewIsPresented: Bool = true
     @State private var didShowUnfollowPopup: Bool = false
-
+    @State private var isProfileIdentityVisible = true
     var userID: String
 
     // MARK: - UI
     // TODO: It should be impossible for the externalUser to be inactive/null
 
     var body: some View {
-        VStack(spacing: 0) {
-            customToolbar
+        ZStack {
             ScrollView {
-                
-                
-                ZStack {
-                    VStack(alignment: .leading) {
+                LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                    // Toolbar + profile header scroll away naturally
+                    VStack(alignment: .leading, spacing: 0) {
+
                         profileView
-                            .padding(.top, 25)
-                            .padding(.leading, 26)
-                        
-                        profileTabBar
-                        
-                        if listingViewIsPresented {
-                            ScrollView {
-                                ProductsGalleryView(items: viewModel.externalUserPosts)
-                                    .loadingView(isLoading: viewModel.isLoadingExternalUser)
-                                    .padding(.top, 16)
-                            }
-                            .background(Constants.Colors.white)
-                        } else {
-                            ScrollView {
-                                ReviewSection(reviews: viewModel.externalUserReviews)
-                                    .loadingView(isLoading: viewModel.isLoadingExternalUser)
-                            }
-                            .background(Constants.Colors.white)
-                        }
+                            .padding(.top, 12)
+                            .padding(.horizontal, Constants.Spacing.horizontalPadding)
+                            .padding(.bottom, 16)
                     }
                     .background(Constants.Colors.white)
-                    .onAppear {
-                        viewModel.loadExternalUser(id: userID)
-                    }
-                    
-                    if viewModel.sellerIsBlocked {
-                        ZStack {
-                            Constants.Colors.black
-                                .opacity(0.75)
-                                .ignoresSafeArea()
-                            
-                            Text("This profile is blocked")
-                                .font(Constants.Fonts.title1)
-                                .foregroundStyle(Constants.Colors.white)
+
+                    // Tab bar pins to the top once the header scrolls off
+                    Section {
+                        if listingViewIsPresented {
+                            ProductsGalleryView(items: viewModel.externalUserPosts)
+                                .loadingView(isLoading: viewModel.isLoadingExternalUser)
+                                .padding(.top, 16)
+                        } else {
+                            ReviewSection(reviews: viewModel.externalUserReviews)
+                                .loadingView(isLoading: viewModel.isLoadingExternalUser)
                         }
-                        .animation(.easeInOut, value: viewModel.sellerIsBlocked)
-                    }
-                    
-                    if viewModel.didShowOptionsMenu {
-                        OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowBlockView: $viewModel.didShowBlockView, options: {
-                            var options: [Option] = [
-                                .report(type: "User", id: userID),
-                            ]
-                            if viewModel.sellerIsBlocked {
-                                options.append(.unblock)
-                            } else {
-                                options.append(.block)
-                            }
-                            return options
-                        }())
-                        .zIndex(1)
+                    } header: {
+                        profileTabBar
+                            .background(Constants.Colors.white)
                     }
                 }
-                .popupModal(isPresented: $viewModel.didShowBlockView) {
-                    popupModalContent
+            }
+            .coordinateSpace(name: "externalProfileScroll")
+            .onPreferenceChange(ProfileIdentityMaxYPreferenceKey.self) { maxY in
+                let isVisible = maxY > 0
+                if isProfileIdentityVisible != isVisible {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isProfileIdentityVisible = isVisible
+                    }
                 }
-                .sheet(isPresented: $didShowUnfollowPopup) {
-                    unfollowSheetContent
-                        .presentationDetents([.height(375)])
-                        .presentationDragIndicator(.visible)
+            }
+            .navigationBarBackButtonHidden(true)
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    BackButton(style: .systemChevron)
                 }
-                // MARK: We should not be able to click into our own posts...
+                
+                ToolbarItem(placement: .principal) {
+                    if isProfileIdentityVisible {
+                        Text("@\(viewModel.externalUser?.username ?? "")")
+                            .font(Constants.Fonts.h3)
+                            .foregroundStyle(Constants.Colors.black)
+                            .transition(.opacity)
+                    } else {
+                        Text("For example, nothing")
+//                        HStack(spacing: 8) {
+//                            profileImageView
+//                            
+//                            VStack(alignment: .leading, spacing: 2) {
+//                                Text(viewModel.externalUser?.givenName ?? "")
+//                                    .font(Constants.Fonts.h2)
+//                                    .foregroundStyle(.black)
+//                                
+//                                HStack {
+//                                    StarRatingView(rating: viewModel.averageStarRating)
+//                                    
+//                                    Text("(\(viewModel.reviewCount))")
+//                                        .font(Constants.Fonts.body2)
+//                                        .underline()
+//                                        .foregroundStyle(Constants.Colors.inactiveGray)
+//                                }
+//                            }
+//                        }
+//                        .transition(.opacity)
+                    }
+                }
+                
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        withAnimation {
+                            viewModel.didShowOptionsMenu.toggle()
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 16, weight: .bold))
+                            .frame(width: 44, height: 44)
+                            .contentShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .onAppear {
+                viewModel.loadExternalUser(id: userID)
+            }
+
+            if viewModel.sellerIsBlocked {
+                ZStack {
+                    Constants.Colors.black
+                        .opacity(0.75)
+                        .ignoresSafeArea()
+
+                    Text("This profile is blocked")
+                        .font(Constants.Fonts.title1)
+                        .foregroundStyle(Constants.Colors.white)
+                }
+                .animation(.easeInOut, value: viewModel.sellerIsBlocked)
+            }
+
+            if viewModel.didShowOptionsMenu {
+                OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowBlockView: $viewModel.didShowBlockView, options: {
+                    var options: [Option] = [
+                        .report(type: "User", id: userID),
+                    ]
+                    if viewModel.sellerIsBlocked {
+                        options.append(.unblock)
+                    } else {
+                        options.append(.block)
+                    }
+                    return options
+                }())
+                .zIndex(1)
             }
         }
-        .toolbar(.hidden, for: .navigationBar)
+        .popupModal(isPresented: $viewModel.didShowBlockView) {
+            popupModalContent
+        }
+        .sheet(isPresented: $didShowUnfollowPopup) {
+            unfollowSheetContent
+                .presentationDetents([.height(375)])
+                .presentationDragIndicator(.visible)
+        }
     }
     
     private var profileView: some View {
@@ -103,19 +167,31 @@ struct ExternalProfileView: View {
             HStack(spacing: 16) {
                 profileImageView
                 
-                VStack (alignment: .leading, spacing: 10.5) {
+                VStack(alignment: .leading, spacing: 10.5) {
                     Text(viewModel.externalUser?.givenName ?? "")
                         .font(Constants.Fonts.h2)
                         .foregroundStyle(.black)
                     
-                    HStack {
-                        StarRatingView(rating: viewModel.averageStarRating)
-                        
-                        Text("(\(viewModel.reviewCount))")
-                            .font(Constants.Fonts.body2)
-                            .underline()
-                            .foregroundStyle(Constants.Colors.inactiveGray)
+                    HStack(spacing: 16) {
+                        HStack {
+                            StarRatingView(rating: viewModel.averageStarRating)
+                            
+                            Text("(\(viewModel.reviewCount))")
+                                .font(Constants.Fonts.body2)
+                                .underline()
+                                .foregroundStyle(Constants.Colors.inactiveGray)
+                        }
+
+                        followButton
                     }
+                }
+            }
+            .background {
+                GeometryReader { proxy in
+                    Color.clear.preference(
+                        key: ProfileIdentityMaxYPreferenceKey.self,
+                        value: proxy.frame(in: .named("externalProfileScroll")).maxY
+                    )
                 }
             }
             
@@ -139,19 +215,7 @@ struct ExternalProfileView: View {
                 .fixedSize(horizontal: false, vertical: true)
             
             // metrics bar
-            HStack {
-                Text("\(viewModel.soldCount)")
-                .font(Constants.Fonts.body2)
-                .fontWeight(.medium)
-                .foregroundColor(.black)
-                + Text(" sold")
-                .font(Constants.Fonts.body2)
-                .foregroundColor(.gray)
-                
-                Divider()
-                    .frame(height: 14)
-                    .padding(.horizontal, 28.75)
-
+            HStack(spacing: 16) {
                 Button {
                     router.push(.followList(
                         userID: userID,
@@ -159,18 +223,17 @@ struct ExternalProfileView: View {
                         initialTab: .followers
                     ))
                 } label: {
-                    Text("\(viewModel.followerCount)")
-                    .font(Constants.Fonts.body2)
-                    .fontWeight(.medium)
-                    .foregroundColor(.black)
-                    + Text(" followers")
-                    .font(Constants.Fonts.body2)
-                    .foregroundColor(.gray)
+                    profileMetric(value: viewModel.followerCount, label: "followers")
                 }
+                .buttonStyle(.plain)
                 
                 Divider()
-                    .frame(height: 14)
-                    .padding(.horizontal, 28.75)
+                    .frame(height: 17)
+
+                profileMetric(value: viewModel.soldCount, label: "sold")
+
+                Divider()
+                    .frame(height: 17)
                 
                 Button {
                     router.push(.followList(
@@ -179,64 +242,72 @@ struct ExternalProfileView: View {
                         initialTab: .following
                     ))
                 } label: {
-                    Text("\(viewModel.followingCount)")
-                    .font(Constants.Fonts.body2)
-                    .fontWeight(.medium)
-                    .foregroundColor(.black)
-                    + Text(" following")
-                    .font(Constants.Fonts.body2)
-                    .foregroundColor(.gray)
+                    profileMetric(value: viewModel.followingCount, label: "following")
                 }
-            }
-            
-            HStack {
-                Button {
-                    if viewModel.isFollowing {
-                        withAnimation {
-                            didShowUnfollowPopup = true
-                        }
-                    } else {
-                        Task {
-                            do {
-                                try await viewModel.followUser(id: userID)
-                            } catch {
-                                NetworkManager.shared.logger.error("Error following user: \(error)")
-                            }
-                        }
-                    }
-                } label: {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 90.79)
-                            .foregroundStyle(viewModel.isFollowing ? Constants.Colors.white : Constants.Colors.resellPurple)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 90.79)
-                                    .stroke(Constants.Colors.resellPurple, lineWidth: viewModel.isFollowing ? 1.5 : 0)
-                            )
-                            .frame(width: 366, height: 38.79)
-                        
-                        if viewModel.isFollowLoading {
-                            ProgressView()
-                                .tint(viewModel.isFollowing ? Constants.Colors.resellPurple : .white)
-                        } else {
-                            HStack {
-                                Image(viewModel.isFollowing ? "following" : "following")
-                                    .renderingMode(.template)
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 13, height: 13)
-                                
-                                Text(viewModel.isFollowing ? "Following" : "Follow")
-                                    .font(Constants.Fonts.title3)
-                            }
-                            .foregroundColor(viewModel.isFollowing ? Constants.Colors.resellPurple : .white)
-                        }
-                    }
-                }
-                .disabled(viewModel.isFollowLoading)
+                .buttonStyle(.plain)
             }
         }
-        .padding(.trailing, 26)
 
+    }
+
+    private var followButton: some View {
+        Button {
+            if viewModel.isFollowing {
+                withAnimation {
+                    didShowUnfollowPopup = true
+                }
+            } else {
+                Task {
+                    do {
+                        try await viewModel.followUser(id: userID)
+                    } catch {
+                        NetworkManager.shared.logger.error("Error following user: \(error)")
+                    }
+                }
+            }
+        } label: {
+            Group {
+                if viewModel.isFollowLoading {
+                    ProgressView()
+                        .controlSize(.mini)
+                        .tint(viewModel.isFollowing ? .white : Constants.Colors.resellPurple)
+                } else {
+                    Text(viewModel.isFollowing ? "Unfollow" : "Follow")
+                        .font(.custom("Rubik-Medium", size: 12))
+                }
+            }
+            .foregroundStyle(viewModel.isFollowing ? Constants.Colors.white : Constants.Colors.resellPurple)
+            .frame(width: 144, height: 30)
+            .background(
+                viewModel.isFollowing
+                    ? Constants.Colors.tertiaryGray
+                    : Constants.Colors.resellPurple.opacity(0.24)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(
+                        viewModel.isFollowing ? Constants.Colors.black : Constants.Colors.resellPurple,
+                        lineWidth: 1
+                    )
+            }
+        }
+        .buttonStyle(.plain)
+        .disabled(viewModel.isFollowLoading)
+    }
+
+    private func profileMetric(value: Int, label: String) -> some View {
+        VStack(spacing: 0) {
+            Text("\(value)")
+                .font(Constants.Fonts.body2)
+                .fontWeight(.medium)
+                .foregroundStyle(Constants.Colors.black)
+
+            Text(label)
+                .font(Constants.Fonts.body2)
+                .foregroundStyle(Constants.Colors.secondaryGray)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private var customToolbar: some View {
@@ -267,7 +338,7 @@ struct ExternalProfileView: View {
             .frame(width: 24, alignment: .trailing)
         }
         .padding(.horizontal, 24)
-        .padding(.bottom, 26)
+        .padding(.bottom, 14)
         .padding(.top, 10)
         .overlay(alignment: .bottom) {
             Divider()
@@ -284,16 +355,20 @@ struct ExternalProfileView: View {
                 }
             } label: {
                 HStack(spacing: 8) {
-                    Image("listing")
+                    Image(uiImage: Lucide.store)
                         .renderingMode(.template)
                         .resizable()
                         .scaledToFit()
                         .frame(width: 24, height: 24)
                     
+                    Text("Listings")
+                        .font(Constants.Fonts.body2)
+                        .fontWeight(.medium)
+                    
                     Text("(\(viewModel.externalUserPosts.count))")
                         .font(Constants.Fonts.body2)
                 }
-                .foregroundColor(listingViewIsPresented ? Constants.Colors.resellPurple : Constants.Colors.inactiveGray)
+                .foregroundColor(listingViewIsPresented ? Constants.Colors.black : Constants.Colors.inactiveGray)
             }
             
             Spacer()
@@ -310,21 +385,22 @@ struct ExternalProfileView: View {
                         .scaledToFit()
                         .frame(width: 20, height: 20)
                     
-                    Text(String(format: "%.1f", viewModel.averageStarRating))
+                    Text("Reviews")
                         .font(Constants.Fonts.body2)
                         .fontWeight(.medium)
                     + Text(" (\(viewModel.reviewCount))")
                         .font(Constants.Fonts.body2)
                 }
-                .foregroundColor(listingViewIsPresented ? Constants.Colors.inactiveGray : Constants.Colors.resellPurple)
+                .foregroundColor(listingViewIsPresented ? Constants.Colors.inactiveGray : Constants.Colors.black)
             }
         }
         .padding(.horizontal, 48)
-        .padding(.vertical, 16)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
         .overlay(alignment: .bottom) {
             GeometryReader { geo in
                 Rectangle()
-                    .fill(Constants.Colors.resellPurple)
+                    .fill(Constants.Colors.black)
                     .frame(width: geo.size.width / 2, height: 2)
                     .offset(x: listingViewIsPresented ? 0 : geo.size.width / 2)
                     .animation(.easeInOut(duration: 0.2), value: listingViewIsPresented)
