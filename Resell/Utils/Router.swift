@@ -60,7 +60,6 @@ class Router: ObservableObject {
         case availability
         case followList(userID: String, username: String, initialTab: FollowListType)
         case completedTransaction(Transaction)
-        case reviewTesting
     }
 
     func push(_ route: Route) {

@@ -34,6 +34,22 @@ struct MessagesView: View {
     /// Cancel (slot becomes "cancelled"). Decline has no slot-level effect
     /// (only the specific message is hidden, via `locallyRespondedMessageIds`).
     @State private var localSlotOverrides: [ProposalSlot: (isAccepted: Bool, endDate: Date)] = [:]
+    /// `transactionId` returned from `respondToProposal` before Firestore echoes it on the proposal message.
+    @State private var pendingTransactionIdBySlot: [ProposalSlot: String] = [:]
+    /// Latest `Transaction` from the API per id (drives “Mark sale complete” vs “Leave review”).
+    @State private var transactionById: [String: Transaction] = [:]
+    /// Buyer-only: whether this user already submitted a transaction review (from API).
+    @State private var buyerHasSubmittedReviewById: [String: Bool] = [:]
+    @State private var transactionCacheRefreshTask: Task<Void, Never>?
+    /// True while `getTransactionById` is in flight for this chat refresh pass.
+    @State private var isHydratingChatTransactions = false
+    /// Transaction ids we’ve already tried to load this session (avoids showing “Mark complete” before the first fetch).
+    @State private var transactionIdsFetchAttempted: Set<String> = []
+    @State private var completingSaleTransactionId: String?
+    @State private var markSaleCompleteError: String?
+    @State private var showSellerMarkedCompleteNotice = false
+    /// Shown when the user tries to propose a new time while a future confirmed meeting exists.
+    @State private var showActiveMeetingBlocksNewProposal = false
     @StateObject private var viewModel: ViewModel
     
 
@@ -83,9 +99,40 @@ struct MessagesView: View {
         .sheet(isPresented: $didShowWebView) {
             webView
         }
-        .onAppear(perform: setupOnAppear)
+        .onAppear {
+            setupOnAppear()
+            scheduleTransactionCacheRefresh()
+        }
         .onDisappear {
+            transactionCacheRefreshTask?.cancel()
+            transactionCacheRefreshTask = nil
+            isHydratingChatTransactions = false
+            transactionIdsFetchAttempted.removeAll()
             FirestoreManager.shared.stopListeningToChat()
+        }
+        .alert("Couldn't complete sale", isPresented: Binding(
+            get: { markSaleCompleteError != nil },
+            set: { if !$0 { markSaleCompleteError = nil } }
+        )) {
+            Button("OK", role: .cancel) {
+                markSaleCompleteError = nil
+            }
+        } message: {
+            Text(markSaleCompleteError ?? "")
+        }
+        .alert("Sale marked complete", isPresented: $showSellerMarkedCompleteNotice) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("The buyer can leave a review from this chat when they’re ready.")
+        }
+        .alert("Meeting already scheduled", isPresented: $showActiveMeetingBlocksNewProposal) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("You already have a scheduled meeting for this listing. Cancel it or wait until it passes before proposing a new time.")
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Constants.Notifications.TransactionReviewSubmitted)) { output in
+            guard let tid = output.userInfo?["transactionId"] as? String else { return }
+            buyerHasSubmittedReviewById[tid] = true
         }
         .endEditingOnTap()
     }
@@ -118,7 +165,11 @@ struct MessagesView: View {
     
     private var calendarButton: some View {
         Button {
-            didShowAvailabilityView.toggle()
+            if hasActiveConfirmedMeeting {
+                showActiveMeetingBlocksNewProposal = true
+            } else {
+                didShowAvailabilityView.toggle()
+            }
         } label: {
             Image(uiImage: Lucide.calendarFold)
                 .renderingMode(.template)
@@ -183,6 +234,7 @@ struct MessagesView: View {
                 }
                 .background(Constants.Colors.white)
                 .onChange(of: viewModel.messageClusters) { _ in
+                    scheduleTransactionCacheRefresh()
                     withAnimation {
                         proxy.scrollTo("BOTTOM", anchor: .bottom)
                     }
@@ -306,6 +358,89 @@ struct MessagesView: View {
         }
         return result
     }
+
+    /// `accepted == true` proposal docs the backend never clears; if any **later** proposal
+    /// message exists for the same time slot, this bubble is stale (e.g. cancel then re-accept same slot).
+    private var staleAcceptedProposalMessageIds: Set<String> {
+        let proposals = viewModel.messageClusters
+            .flatMap(\.messages)
+            .compactMap { $0 as? ProposalMessage }
+            .sorted { $0.timestamp < $1.timestamp }
+
+        var result: Set<String> = []
+        for (index, proposal) in proposals.enumerated() {
+            guard proposal.accepted == true else { continue }
+            let slot = ProposalSlot(startDate: proposal.startDate, endDate: proposal.endDate)
+            let hasLaterSameSlot = proposals[(index + 1)...].contains { later in
+                ProposalSlot(startDate: later.startDate, endDate: later.endDate) == slot
+            }
+            if hasLaterSameSlot {
+                result.insert(proposal.messageId)
+            }
+        }
+        return result
+    }
+
+    private var isViewerBuyer: Bool {
+        guard let uid = GoogleAuthManager.shared.user?.firebaseUid else { return false }
+        return uid == viewModel.chatInfo.buyer.firebaseUid
+    }
+
+    /// Transaction ids for accepted meetups in this chat (includes pending local ids before Firestore echoes).
+    private var resolvedTransactionIdsInChat: Set<String> {
+        var ids = Set<String>()
+        for message in viewModel.messageClusters.flatMap(\.messages) {
+            guard let proposal = message as? ProposalMessage, proposal.accepted == true else { continue }
+            let slot = ProposalSlot(startDate: proposal.startDate, endDate: proposal.endDate)
+            if let tid = proposal.transactionId ?? pendingTransactionIdBySlot[slot] {
+                ids.insert(tid)
+            }
+        }
+        return ids
+    }
+
+    private func scheduleTransactionCacheRefresh() {
+        transactionCacheRefreshTask?.cancel()
+        transactionCacheRefreshTask = Task {
+            try? await Task.sleep(nanoseconds: 400_000_000)
+            guard !Task.isCancelled else { return }
+            await refreshTransactionsAndReviewState()
+        }
+    }
+
+    @MainActor
+    private func refreshTransactionsAndReviewState() async {
+        let ids = resolvedTransactionIdsInChat
+        guard !ids.isEmpty else { return }
+        isHydratingChatTransactions = true
+        defer { isHydratingChatTransactions = false }
+        transactionIdsFetchAttempted.formUnion(ids)
+        let isBuyerViewing = isViewerBuyer
+
+        for tid in ids {
+            do {
+                let response = try await NetworkManager.shared.getTransactionById(transactionId: tid)
+                let tx = response.transaction
+                transactionById[tid] = tx
+                if tx.completed, isBuyerViewing {
+                    buyerHasSubmittedReviewById[tid] = await checkBuyerReviewExists(transactionId: tid)
+                }
+            } catch {
+                NetworkManager.shared.logger.error("Failed to refresh transaction \(tid): \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func checkBuyerReviewExists(transactionId: String) async -> Bool {
+        do {
+            _ = try await NetworkManager.shared.getTransactionReview(transactionId: transactionId)
+            return true
+        } catch let error as ErrorResponse where error.httpCode == 404 {
+            return false
+        } catch {
+            return false
+        }
+    }
     
     private func messageCluster(cluster: MessageCluster) -> some View {
         return VStack(spacing: 2) {
@@ -344,7 +479,9 @@ struct MessagesView: View {
                                     accepted: accepted
                                 )
                                 if accepted, let txId = transactionId {
-                                    print("Transaction created: \(txId)")
+                                    await MainActor.run {
+                                        pendingTransactionIdBySlot[slot] = txId
+                                    }
                                 }
                             } catch {
                                 // The network call failed – undo the optimistic UI
@@ -377,6 +514,8 @@ struct MessagesView: View {
                         // re-enable on any other pending proposals in the chat.
                         localSlotOverrides[slot] = (false, endDate)
 
+                        // One cancel call: the backend should append a chat-visible cancellation
+                        // so both buyer and seller see the update via Firestore `subscribeToChat`.
                         Task {
                             do {
                                 try await viewModel.cancelProposal(startDate: startDate, endDate: endDate)
@@ -394,7 +533,21 @@ struct MessagesView: View {
                     },
                     respondedMessageIds: locallyRespondedMessageIds.union(respondedProposalMessageIds),
                     currentlyCancelledSlots: currentlyCancelledSlots,
-                    hasActiveConfirmedMeeting: hasActiveConfirmedMeeting
+                    hasActiveConfirmedMeeting: hasActiveConfirmedMeeting,
+                    pendingTransactionIdBySlot: pendingTransactionIdBySlot,
+                    transactionById: transactionById,
+                    buyerHasSubmittedReviewById: buyerHasSubmittedReviewById,
+                    isViewerBuyer: isViewerBuyer,
+                    isHydratingChatTransactions: isHydratingChatTransactions,
+                    transactionIdsFetchAttempted: transactionIdsFetchAttempted,
+                    completingSaleTransactionId: $completingSaleTransactionId,
+                    onMarkSaleComplete: { transactionId in
+                        markSaleCompleteFromChat(transactionId: transactionId)
+                    },
+                    onLeaveReview: { tx in
+                        router.push(.completedTransaction(tx))
+                    },
+                    staleAcceptedProposalMessageIds: staleAcceptedProposalMessageIds
                 )
             }
         }
@@ -431,7 +584,12 @@ struct MessagesView: View {
             sellerId: viewModel.chatInfo.seller.firebaseUid
         ) { startDate, endDate in
             // On propose: send a proposal message with the selected time slot
-            Task {
+            Task { @MainActor in
+                guard !hasActiveConfirmedMeeting else {
+                    didShowAvailabilityView = false
+                    showActiveMeetingBlocksNewProposal = true
+                    return
+                }
                 do {
                     try await viewModel.sendMessage(startDate: startDate, endDate: endDate)
                 } catch {
@@ -465,6 +623,38 @@ struct MessagesView: View {
     }
     
     // MARK: - Helper Methods
+
+    private func markSaleCompleteFromChat(transactionId: String) {
+        if let cached = transactionById[transactionId], cached.completed {
+            return
+        }
+        Task {
+            await MainActor.run {
+                completingSaleTransactionId = transactionId
+                markSaleCompleteError = nil
+            }
+            do {
+                let response = try await NetworkManager.shared.completeTransaction(transactionId: transactionId)
+                await MainActor.run {
+                    completingSaleTransactionId = nil
+                    let tx = response.transaction
+                    transactionById[transactionId] = tx
+                    pendingTransactionIdBySlot = pendingTransactionIdBySlot.filter { $0.value != transactionId }
+                    if isViewerBuyer {
+                        router.push(.completedTransaction(tx))
+                    } else {
+                        showSellerMarkedCompleteNotice = true
+                    }
+                }
+            } catch {
+                NetworkManager.shared.logger.error("Mark sale complete failed: \(error.localizedDescription)")
+                await MainActor.run {
+                    completingSaleTransactionId = nil
+                    markSaleCompleteError = error.resellUserFacingDescription
+                }
+            }
+        }
+    }
     
     private func setupOnAppear() {
         guard GoogleAuthManager.shared.user != nil else {
@@ -971,6 +1161,20 @@ struct MessageBubbleView: View {
     /// Whether there's an active confirmed meeting in this chat (blocks accepting other proposals)
     var hasActiveConfirmedMeeting: Bool = false
 
+    /// Transaction ids from `respondToProposal` until Firestore updates the proposal bubble.
+    var pendingTransactionIdBySlot: [ProposalSlot: String] = [:]
+    var transactionById: [String: Transaction] = [:]
+    var buyerHasSubmittedReviewById: [String: Bool] = [:]
+    var isViewerBuyer: Bool = false
+    var isHydratingChatTransactions: Bool = false
+    var transactionIdsFetchAttempted: Set<String> = []
+    var completingSaleTransactionId: Binding<String?> = .constant(nil)
+    var onMarkSaleComplete: ((String) -> Void)? = nil
+    var onLeaveReview: ((Transaction) -> Void)? = nil
+
+    /// Accepted bubbles superseded by a later same-slot proposal (cancel, new proposal, new accept).
+    var staleAcceptedProposalMessageIds: Set<String> = []
+
     var body: some View {
         if message.messageType == .proposal {
             proposalMessageView
@@ -1147,21 +1351,23 @@ struct MessageBubbleView: View {
                 // meeting is in the future AND this slot's latest state is
                 // still "accepted" (not cancelled elsewhere in the timeline
                 // or optimistically in this session).
-                if message.accepted == true {
+                let isStaleAccepted = staleAcceptedProposalMessageIds.contains(message.messageId)
+                if message.accepted == true, !isStaleAccepted {
                     let isSlotCancelled = message.cancellation == true
                         || currentlyCancelledSlots.contains(slot)
                     let isUpcoming = message.endDate > Date()
+                    let resolvedTransactionId = message.transactionId ?? pendingTransactionIdBySlot[slot]
+                    let isAnySaleCompleting = completingSaleTransactionId.wrappedValue != nil
+                    let cachedTx = resolvedTransactionId.flatMap { transactionById[$0] }
+                    let hasAttemptedSaleFetch = resolvedTransactionId.map { transactionIdsFetchAttempted.contains($0) } ?? false
+                    let showSaleStatusPlaceholder = !isUpcoming
+                        && !isSlotCancelled
+                        && resolvedTransactionId != nil
+                        && cachedTx == nil
+                        && (!hasAttemptedSaleFetch || isHydratingChatTransactions)
 
-                    HStack(spacing: 32) {
-                        Button {
-                            // TODO: Show meeting details
-                        } label: {
-                            Text("View Details")
-                                .font(Constants.Fonts.title2)
-                                .foregroundColor(Constants.Colors.resellPurple)
-                        }
-
-                        if isUpcoming && !isSlotCancelled {
+                    if isUpcoming && !isSlotCancelled {
+                        HStack(spacing: 32) {
                             Button {
                                 onProposalCancel?(message.startDate, message.endDate)
                             } label: {
@@ -1170,6 +1376,82 @@ struct MessageBubbleView: View {
                                     .foregroundColor(Constants.Colors.errorRed)
                             }
                         }
+                    }
+
+                    // Only show “Mark sale complete” once we know from the API that the sale is still
+                    // incomplete—otherwise the row flashes that label before switching to “Leave review”.
+                    if showSaleStatusPlaceholder {
+                        ProgressView()
+                            .scaleEffect(0.9)
+                            .padding(.top, 4)
+                    }
+
+                    if !isUpcoming,
+                       !isSlotCancelled,
+                       let tid = resolvedTransactionId,
+                       let cachedForMark = transactionById[tid],
+                       !cachedForMark.completed,
+                       let markComplete = onMarkSaleComplete {
+                        let isCompletingThisSale = completingSaleTransactionId.wrappedValue == tid
+                        Button {
+                            markComplete(tid)
+                        } label: {
+                            HStack(spacing: 8) {
+                                if isCompletingThisSale {
+                                    ProgressView()
+                                        .scaleEffect(0.9)
+                                }
+                                Text("Mark sale complete")
+                                    .font(Constants.Fonts.title2)
+                            }
+                            .foregroundColor(Constants.Colors.resellPurple)
+                        }
+                        .disabled(isAnySaleCompleting)
+                        .padding(.top, 4)
+                    }
+
+                    // If we finished a fetch pass but this id never landed in the cache (e.g. network error), still allow completing.
+                    if !isUpcoming,
+                       !isSlotCancelled,
+                       let tid = resolvedTransactionId,
+                       transactionById[tid] == nil,
+                       hasAttemptedSaleFetch,
+                       !isHydratingChatTransactions,
+                       let markComplete = onMarkSaleComplete {
+                        let isCompletingThisSale = completingSaleTransactionId.wrappedValue == tid
+                        Button {
+                            markComplete(tid)
+                        } label: {
+                            HStack(spacing: 8) {
+                                if isCompletingThisSale {
+                                    ProgressView()
+                                        .scaleEffect(0.9)
+                                }
+                                Text("Mark sale complete")
+                                    .font(Constants.Fonts.title2)
+                            }
+                            .foregroundColor(Constants.Colors.resellPurple)
+                        }
+                        .disabled(isAnySaleCompleting)
+                        .padding(.top, 4)
+                    }
+
+                    if !isUpcoming,
+                       !isSlotCancelled,
+                       let tid = resolvedTransactionId,
+                       let tx = transactionById[tid],
+                       tx.completed,
+                       isViewerBuyer,
+                       buyerHasSubmittedReviewById[tid] != true,
+                       let openReview = onLeaveReview {
+                        Button {
+                            openReview(tx)
+                        } label: {
+                            Text("Leave review")
+                                .font(Constants.Fonts.title2)
+                                .foregroundColor(Constants.Colors.resellPurple)
+                        }
+                        .padding(.top, 4)
                     }
                 }
             }
@@ -1193,6 +1475,11 @@ struct MessageBubbleView: View {
                 return "\(proposerName) cancelled the meeting"
             }
         }
+
+        if message.accepted == true, staleAcceptedProposalMessageIds.contains(message.messageId) {
+            let range = formatConfirmedMeetingRange(start: message.startDate, end: message.endDate)
+            return "Earlier meetup (updated later):\n\(range)"
+        }
         
         switch message.accepted {
         case nil:
@@ -1202,7 +1489,8 @@ struct MessageBubbleView: View {
                 return "\(proposerName) wants to meet at:\n\(timeString)"
             }
         case true:
-            return "The meeting has been confirmed"
+            let range = formatConfirmedMeetingRange(start: message.startDate, end: message.endDate)
+            return "The meeting has been confirmed for\n\(range)"
         case false:
             return "The meeting was declined"
         default:
@@ -1214,6 +1502,18 @@ struct MessageBubbleView: View {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MMM d, h:mm a"
         return dateFormatter.string(from: start)
+    }
+
+    /// Full start–end range for confirmed meetings (same calendar day uses compact time–time).
+    private func formatConfirmedMeetingRange(start: Date, end: Date) -> String {
+        let dayFormatter = DateFormatter()
+        dayFormatter.dateFormat = "MMM d, yyyy"
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = "h:mm a"
+        if Calendar.current.isDate(start, inSameDayAs: end) {
+            return "\(dayFormatter.string(from: start)), \(timeFormatter.string(from: start)) – \(timeFormatter.string(from: end))"
+        }
+        return "\(dayFormatter.string(from: start)), \(timeFormatter.string(from: start))\n– \(dayFormatter.string(from: end)), \(timeFormatter.string(from: end))"
     }
 
 }

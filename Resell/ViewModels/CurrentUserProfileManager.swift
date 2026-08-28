@@ -16,7 +16,7 @@ class CurrentUserProfileManager: ObservableObject {
     
     // MARK: - Published Properties
     
-    @Published var profilePic: UIImage = UIImage(named: "emptyProfile")!
+    @Published var profilePic: UIImage = .profilePlaceholder
     @Published var username: String = ""
     @Published var givenName: String = ""
     @Published var bio: String = ""
@@ -145,7 +145,7 @@ class CurrentUserProfileManager: ObservableObject {
         userReviews = []
         
         // Clear profile data
-        profilePic = UIImage(named: "emptyProfile")!
+        profilePic = .profilePlaceholder
         username = ""
         givenName = ""
         bio = ""

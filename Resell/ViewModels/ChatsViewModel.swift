@@ -36,7 +36,7 @@ class ChatsViewModel: ObservableObject {
     @Published var draftMessageText: String = ""
     @Published var availabilityDates: [Availability] = []
 
-    @Published var otherUserProfileImage: UIImage = UIImage(named: "emptyProfile")!
+    @Published var otherUserProfileImage: UIImage = .profilePlaceholder
     
     private var isListening = false
     private var blockedUsers: [String] = []

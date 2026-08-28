@@ -18,10 +18,15 @@ struct ResellApp: App {
 
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject var mainViewModel = MainViewModel()
-    
+
     init() {
-        //TODO: Refactor...
-        HomeViewModel.shared.configure(mainViewModel: mainViewModel)
+        // NOTE: Do NOT touch `mainViewModel` here. Reading the wrappedValue of
+        // a `@StateObject` inside `App.init()` is undefined behavior — the
+        // SwiftUI storage isn't bound yet, so the instance you'd hand to a
+        // singleton becomes a different one than the view tree later uses.
+        // The previous `HomeViewModel.shared.configure(mainViewModel:)` call
+        // has been moved into `MainView.onAppear` so it operates on the same
+        // `MainViewModel` instance the view tree actually observes.
         setupKingfisher()
     }
     

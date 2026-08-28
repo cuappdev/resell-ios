@@ -202,8 +202,21 @@ class FirebaseNotificationService: NSObject, MessagingDelegate, UNUserNotificati
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        if let navigationId = response.notification.request.content.userInfo["navigationId"] as? String {
+        let userInfo = response.notification.request.content.userInfo
+
+        if let navigationId = userInfo["navigationId"] as? String {
             navigateToScreen(with: navigationId)
+        }
+
+        // Optional deep link: FCM payload includes `transactionId` (flat or under `data`).
+        let transactionId = userInfo["transactionId"] as? String
+            ?? (userInfo["data"] as? [String: Any])?["transactionId"] as? String
+        if let tid = transactionId?.trimmingCharacters(in: .whitespacesAndNewlines), !tid.isEmpty {
+            NotificationCenter.default.post(
+                name: Constants.Notifications.OpenTransactionDeepLink,
+                object: nil,
+                userInfo: ["transactionId": tid]
+            )
         }
 
         completionHandler()

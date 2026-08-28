@@ -76,6 +76,31 @@ struct MainTabView: View {
                 isHidden = false
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: Constants.Notifications.OpenTransactionDeepLink)) { output in
+            guard mainViewModel.userDidLogin else { return }
+            guard let tid = output.userInfo?["transactionId"] as? String, !tid.isEmpty else { return }
+            Task {
+                do {
+                    let response = try await NetworkManager.shared.getTransactionById(transactionId: tid)
+                    await MainActor.run {
+                        if response.transaction.completed {
+                            let uid = GoogleAuthManager.shared.user?.firebaseUid
+                            if response.transaction.buyer?.firebaseUid == uid {
+                                router.push(.completedTransaction(response.transaction))
+                            } else {
+                                router.push(.notifications)
+                            }
+                        } else {
+                            router.push(.notifications)
+                        }
+                    }
+                } catch {
+                    await MainActor.run {
+                        router.push(.notifications)
+                    }
+                }
+            }
+        }
     }
 
     private var showsTabBar: Bool {
