@@ -38,12 +38,10 @@ struct MainTabView: View {
                         .transition(.opacity)
                 }
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                Color.clear.frame(height: showsTabBar ? 90 : 0)
-            }
 
             if showsTabBar {
                 tabBarView
+                    .zIndex(1)
             }
         }
         .ignoresSafeArea(edges: .bottom)
@@ -67,27 +65,55 @@ struct MainTabView: View {
         .onChange(of: selection) { newSelection in
             router.activeTab = newSelection
         }
+        .onChange(of: router.path) { path in
+            // Restore tab bar as soon as we leave a conversation — don't wait
+            // for MessagesView.onDisappear, which fires after the pop animation.
+            let isMessages = path.last.map { route in
+                if case .messages = route { return true }
+                return false
+            } ?? false
+            if !isMessages && isHidden {
+                isHidden = false
+            }
+        }
     }
 
     private var showsTabBar: Bool {
-        mainViewModel.userDidLogin && !isHidden
+        mainViewModel.userDidLogin && !isHidden && !isMessagesRouteActive
+    }
+
+    private var isMessagesRouteActive: Bool {
+        if case .messages = router.lastPushedView() {
+            return true
+        }
+        return false
     }
 
     private var tabNavigation: some View {
-        TabView(selection: $selection) {
+        // Manual tab container — avoids the system TabView tab bar that was
+        // still rendering under our custom glass bar (double border / ghost pill).
+        ZStack {
             ForEach(tabBarConfigs.indices, id: \.self) { tab in
                 NavigationStack(path: router.pathBinding(for: tab)) {
                     tabRoot(for: tab)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .background(Constants.Colors.white)
+                        // Keep bottom clearance even while a conversation is open
+                        // (tab bar hidden). Tying this to showsTabBar removed the
+                        // inset on push and often failed to restore it on pop.
+                        .modifier(TabBarContentInsetModifier(
+                            isEnabled: mainViewModel.userDidLogin && !isHidden
+                        ))
                         .navigationDestination(for: Router.Route.self) { route in
                             destination(for: route)
                         }
                 }
-                .tag(tab)
+                .opacity(selection == tab ? 1 : 0)
+                .allowsHitTesting(selection == tab)
+                // Keep inactive stacks mounted so each tab retains its navigation path.
+                .accessibilityHidden(selection != tab)
             }
         }
-        .toolbar(.hidden, for: .tabBar)
     }
 
     private var loginNavigation: some View {
@@ -271,14 +297,20 @@ struct MainTabView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
+        // Keep the bar intrinsic-height; an unconstrained clear fill previously
+        // expanded to the full ZStack height and blew up the capsule.
+        .fixedSize(horizontal: false, vertical: true)
+        .background {
+            Capsule()
+                .fill(Color.white.opacity(0.001))
+        }
+        .contentShape(Capsule())
         .modifier(TabBarGlassModifier())
-        .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
         .padding(.bottom, 20)
         .frame(width: UIScreen.width)
-        .background(Color.clear)
-        .transition(.move(edge: .bottom).combined(with: .opacity))
-        .animation(.easeInOut, value: isHidden)
+        .fixedSize(horizontal: false, vertical: true)
+        .allowsHitTesting(true)
     }
 
     private var profileTabImage: some View {
@@ -290,9 +322,26 @@ struct MainTabView: View {
     }
 }
 
+private struct TabBarContentInsetModifier: ViewModifier {
+    let isEnabled: Bool
+
+    /// Floating glass tab bar + bottom padding + breathing room above home indicator.
+    private let tabBarScrollClearance: CGFloat = 100
+
+    func body(content: Content) -> some View {
+        // Always keep safeAreaInset in the tree — swapping it in/out with
+        // `if isEnabled` breaks ScrollView content insets after navigation.
+        content.safeAreaInset(edge: .bottom, spacing: 0) {
+            Color.clear.frame(height: isEnabled ? tabBarScrollClearance : 0)
+        }
+    }
+}
+
 private struct TabBarGlassModifier: ViewModifier {
     func body(content: Content) -> some View {
         let shape = Capsule()
+        // Use a single material/glass layer only — stacking fill + glass + shadow
+        // produced a second, slightly larger outline behind the bar.
         if #available(iOS 26, *) {
             content
                 .glassEffect(.regular, in: shape)
@@ -300,6 +349,7 @@ private struct TabBarGlassModifier: ViewModifier {
             content
                 .background(.ultraThinMaterial, in: shape)
                 .overlay(shape.strokeBorder(Color.black.opacity(0.06), lineWidth: 1))
+                .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
         }
     }
 }

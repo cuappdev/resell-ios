@@ -294,7 +294,7 @@ struct ExploreTrendingSection: View {
 
                     Spacer()
 
-                    Text("\(post.savedCount ?? post.saveCount ?? 0) saves")
+                    Text("\(post.displaySaveCount) \(post.displaySaveCount == 1 ? "save" : "saves")")
                         .font(Constants.Fonts.subtitle1)
                         .foregroundStyle(Constants.Colors.secondaryGray)
                 }

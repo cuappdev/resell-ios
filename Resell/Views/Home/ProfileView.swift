@@ -75,8 +75,14 @@ struct ProfileView: View {
                 Button {
                     router.push(.availability)
                 } label: {
-                    Icon(image: "calendar-internal")
+                    Image(uiImage: Lucide.calendarCog)
+                        .renderingMode(.template)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 22, height: 22)
+                        .foregroundStyle(Constants.Colors.black)
                 }
+                .accessibilityLabel("Availability settings")
             }
         }
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -116,7 +122,7 @@ struct ProfileView: View {
                     tabIcon(for: tab)
 
                     Text("\(tabTitle(for: tab)) (\(tabCount(for: tab)))")
-                        .font(Constants.Fonts.body2)
+                        .font(Constants.Fonts.subtitle1)
                         .fontWeight(.medium)
                 }
                 .foregroundStyle(

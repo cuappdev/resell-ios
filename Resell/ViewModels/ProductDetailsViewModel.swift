@@ -48,7 +48,7 @@ class ProductDetailsViewModel: ObservableObject {
         item = post
         images = post.images.compactMap { URL(string: $0) }
 
-        RecentlyViewedViewModel.shared.recordView(postId: post.id)
+        RecentlyViewedViewModel.shared.recordView(post: post)
         Task {
             try? await NetworkManager.shared.recordPostView(id: post.id)
         }

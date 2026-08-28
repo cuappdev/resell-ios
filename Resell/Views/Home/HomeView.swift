@@ -8,13 +8,7 @@
 import Kingfisher
 import OAuth2
 import SwiftUI
-
-private struct FilterRowMinYKey: PreferenceKey {
-    static var defaultValue: CGFloat = .greatestFiniteMagnitude
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = min(value, nextValue())
-    }
-}
+import UIKit
 
 struct HomeView: View {
 
@@ -33,6 +27,9 @@ struct HomeView: View {
     @State private var presentPopup = false
     @State private var showFilterInToolbar: Bool = false
 
+    /// How far content must scroll before the inline filter is considered off-screen.
+    private let inlineFilterHideOffset: CGFloat = 48
+
     var body: some View {
         ScrollView(.vertical, showsIndicators: !expand) {
             if expand && !searchViewModel.isSearching {
@@ -41,25 +38,36 @@ struct HomeView: View {
             } else {
                 homeFeedContent
                     .padding(.top, 12)
+                    .background {
+                        // PreferenceKeys / GeometryReader often stall mid-scroll;
+                        // observe the underlying UIScrollView contentOffset instead.
+                        HomeScrollOffsetReader { offsetY in
+                            updateFilterToolbarVisibility(offsetY > inlineFilterHideOffset)
+                        }
+                    }
             }
         }
-        .onPreferenceChange(FilterRowMinYKey.self) { minY in
-            withAnimation(.easeInOut(duration: 0.2)) {
-                showFilterInToolbar = minY < 130
-            }
-        }
+        .scrollDisabled(expand)
+        .modifier(HomeScrollOffsetModifier { offsetY in
+            updateFilterToolbarVisibility(offsetY > inlineFilterHideOffset)
+        })
         .safeAreaInset(edge: .top, spacing: 0) {
             Color.clear.frame(height: 44)
         }
-        
         .overlay(alignment: .top) {
             customToolbar
         }
         .toolbar(.hidden, for: .navigationBar)
         .onChange(of: expand) { isExpanded in
             if isExpanded {
+                updateFilterToolbarVisibility(false)
                 searchViewModel.isSearching = true
-                searchFocused = true
+                // Focus after the panel paints — keyboard + first glass/material
+                // creation in the same frame is what felt like a cold-start hang.
+                Task { @MainActor in
+                    await Task.yield()
+                    searchFocused = true
+                }
             } else {
                 searchText = ""
                 searchViewModel.isSearching = true
@@ -108,26 +116,25 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.leading, 24)
 
-//                Button(action: { presentPopup = true }) {
-//                    Image("filters")
-//                        .resizable()
-//                        .frame(width: 24, height: 21)
-//                        .padding(12)
-//                        .contentShape(Rectangle())
-//                }
-//                .padding(.trailing, 12)
+                Button(action: { presentPopup = true }) {
+                    Image("filters")
+                        .resizable()
+                        .frame(width: 24, height: 21)
+                        .padding(12)
+                        .contentShape(Rectangle())
+                }
+                .padding(.trailing, 12)
             }
             .padding(.bottom, 4)
-            .background(
-                GeometryReader { geo in
-                    Color.clear.preference(
-                        key: FilterRowMinYKey.self,
-                        value: geo.frame(in: .global).minY
-                    )
-                }
-            )
 
             ProductsGalleryView(items: viewModel.filteredItems, onScrollToBottom: viewModel.fetchMoreItems)
+        }
+    }
+
+    private func updateFilterToolbarVisibility(_ shouldShow: Bool) {
+        guard shouldShow != showFilterInToolbar else { return }
+        withAnimation(.easeInOut(duration: 0.2)) {
+            showFilterInToolbar = shouldShow
         }
     }
 
@@ -219,48 +226,71 @@ struct HomeView: View {
                         .padding(.bottom, 4)
                     }
                 }
-                .modifier(GlassToolbarModifier(cornerRadius: 22, isOpaque: true))
+                // Opaque panel — avoid glassEffect here; first materialization of a
+                // large glass surface was the cold-start hang when opening search.
+                .background {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(Constants.Colors.white)
+                        .shadow(color: .black.opacity(0.12), radius: 18, x: 0, y: 6)
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .strokeBorder(Color.black.opacity(0.06), lineWidth: 1)
+                }
                 .padding(.horizontal, Constants.Spacing.horizontalPadding)
                 .frame(maxWidth: .infinity)
-                .transition(.opacity)
             } else {
-                ZStack(alignment: .top) {
+                HStack(spacing: 10) {
                     if showFilterInToolbar {
-                        HStack {
-                            floatingFilterButton
-                            Spacer()
-                        }
-                        .padding(.leading, Constants.Spacing.horizontalPadding)
-                        .frame(height: 44)
-                        .transition(.opacity.combined(with: .scale(scale: 0.85)))
+                        floatingFilterButton
+                            .transition(.opacity.combined(with: .scale(scale: 0.85)))
                     }
 
-                    HStack(spacing: 16) {
-                        Button {
-                            withAnimation(.snappy(duration: 0.2)) { expand = true }
-                        } label: {
-                            Icon(image: "search")
-                        }
+                    // Principal search pill — tap expands into the full search panel.
+                    Button {
+                        expand = true
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image("search")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 18, height: 18)
 
-                        Button {
-                            router.push(.notifications)
-                        } label: {
-                            Image(systemName: "bell")
-                                .font(.system(size: 20, weight: .medium))
-                                .foregroundStyle(.black)
+                            Text("What are you looking for?")
+                                .font(Constants.Fonts.body2)
+                                .foregroundStyle(Constants.Colors.secondaryGray)
+                                .lineLimit(1)
+
+                            Spacer(minLength: 0)
                         }
+                        .padding(.horizontal, 14)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
+                    .buttonStyle(.plain)
+                    .frame(height: toolbarControlHeight)
                     .modifier(GlassToolbarModifier())
-                    .padding(.trailing, Constants.Spacing.horizontalPadding)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    .frame(height: 44)
+
+                    Button {
+                        router.push(.notifications)
+                    } label: {
+                        Image(systemName: "bell")
+                            .font(.system(size: 17, weight: .medium))
+                            .foregroundStyle(.black)
+                            .frame(width: 18, height: 18)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+                    .buttonStyle(.plain)
+                    .frame(width: toolbarControlHeight, height: toolbarControlHeight)
+                    .modifier(GlassToolbarModifier())
                 }
-                .transition(.opacity)
+                .padding(.horizontal, Constants.Spacing.horizontalPadding)
+                .frame(height: toolbarControlHeight)
+                .animation(.easeInOut(duration: 0.2), value: showFilterInToolbar)
             }
         }
     }
+
+    private var toolbarControlHeight: CGFloat { 40 }
 
     private var floatingFilterButton: some View {
         Button {
@@ -268,11 +298,12 @@ struct HomeView: View {
         } label: {
             Image("filters")
                 .resizable()
-                .frame(width: 22, height: 19)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
+                .scaledToFit()
+                .frame(width: 18, height: 16)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .buttonStyle(.plain)
+        .frame(width: toolbarControlHeight, height: toolbarControlHeight)
         .modifier(GlassToolbarModifier())
     }
 
@@ -303,18 +334,115 @@ struct HomeView: View {
 
 }
 
-private struct GlassToolbarModifier: ViewModifier {
+struct GlassToolbarModifier: ViewModifier {
     var cornerRadius: CGFloat = 999
     var isOpaque: Bool = false
 
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        // Material / glassEffect alone don't always claim the full pill for hits —
+        // match the tab bar: near-clear fill + contentShape over the laid-out frame.
         if #available(iOS 26, *) {
             content
-                .background(shape.fill(Color.white.opacity(isOpaque ? 0.55 : 0)))
+                .background {
+                    shape.fill(Color.white.opacity(isOpaque ? 0.55 : 0.001))
+                }
+                .contentShape(shape)
                 .glassEffect(.regular, in: shape)
         } else {
-            content.background(isOpaque ? AnyShapeStyle(.regularMaterial) : AnyShapeStyle(.ultraThinMaterial), in: shape)
+            content
+                .background {
+                    shape.fill(Color.white.opacity(0.001))
+                }
+                .contentShape(shape)
+                .background(isOpaque ? AnyShapeStyle(.regularMaterial) : AnyShapeStyle(.ultraThinMaterial), in: shape)
         }
+    }
+}
+
+/// iOS 18+: native scroll geometry. Earlier: UIKit contentOffset KVO.
+private struct HomeScrollOffsetModifier: ViewModifier {
+    let onOffsetChange: (CGFloat) -> Void
+
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *) {
+            content.onScrollGeometryChange(for: CGFloat.self) { geometry in
+                geometry.contentOffset.y
+            } action: { _, newOffset in
+                onOffsetChange(newOffset)
+            }
+        } else {
+            content
+        }
+    }
+}
+
+/// Observes the enclosing UIScrollView's contentOffset — more reliable than
+/// SwiftUI PreferenceKeys for driving toolbar chrome while scrolling.
+private struct HomeScrollOffsetReader: UIViewRepresentable {
+    var onChange: (CGFloat) -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onChange: onChange)
+    }
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: .zero)
+        view.isUserInteractionEnabled = false
+        view.backgroundColor = .clear
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        context.coordinator.onChange = onChange
+        context.coordinator.attach(from: uiView)
+    }
+
+    final class Coordinator {
+        var onChange: (CGFloat) -> Void
+        private weak var scrollView: UIScrollView?
+        private var observation: NSKeyValueObservation?
+
+        init(onChange: @escaping (CGFloat) -> Void) {
+            self.onChange = onChange
+        }
+
+        func attach(from view: UIView) {
+            if scrollView != nil { return }
+            // Walk up after layout so the SwiftUI ScrollView host exists.
+            attemptAttach(from: view, remainingAttempts: 8)
+        }
+
+        private func attemptAttach(from view: UIView, remainingAttempts: Int) {
+            if let enclosing = view.enclosingScrollView() {
+                scrollView = enclosing
+                observation = enclosing.observe(\.contentOffset, options: [.initial, .new]) { [weak self] scrollView, _ in
+                    let offsetY = scrollView.contentOffset.y
+                    DispatchQueue.main.async {
+                        self?.onChange(offsetY)
+                    }
+                }
+                return
+            }
+
+            guard remainingAttempts > 0 else { return }
+            DispatchQueue.main.async { [weak self, weak view] in
+                guard let self, let view, self.scrollView == nil else { return }
+                self.attemptAttach(from: view, remainingAttempts: remainingAttempts - 1)
+            }
+        }
+    }
+}
+
+private extension UIView {
+    func enclosingScrollView() -> UIScrollView? {
+        var current: UIView? = self
+        while let view = current {
+            if let scrollView = view as? UIScrollView {
+                return scrollView
+            }
+            current = view.superview
+        }
+        return nil
     }
 }

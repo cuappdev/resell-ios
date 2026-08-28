@@ -44,6 +44,20 @@ final class ExploreViewModel: ObservableObject {
         async let trending: () = loadTrending(forceRefresh: forceRefresh)
         await picks
         await trending
+        applyKnownSaveCounts()
+    }
+
+    /// `/post/trending` does not reliably include `savers`, so overlay IDs
+    /// from the current user's saved list (a lower bound, not a global total).
+    func applyKnownSaveCounts() {
+        let savedIDs = Set(HomeViewModel.shared.savedItems.map(\.id))
+        guard !savedIDs.isEmpty else { return }
+        trendingPosts = overlayKnownSaveCounts(savedIDs, on: trendingPosts)
+        trendingDetailPosts = overlayKnownSaveCounts(savedIDs, on: trendingDetailPosts)
+    }
+
+    private func overlayKnownSaveCounts(_ savedIDs: Set<String>, on posts: [Post]) -> [Post] {
+        posts.map { $0.ensuringMinimumSaves(savedIDs.contains($0.id) ? 1 : 0) }
     }
 
     func loadDailyPicks(forceRefresh: Bool = false, forSeeMore: Bool = false) async {
@@ -77,6 +91,7 @@ final class ExploreViewModel: ObservableObject {
            let lastFetch = lastTrendingFetch,
            Date().timeIntervalSince(lastFetch) < cacheValidityDuration,
            !trendingPosts.isEmpty {
+            applyKnownSaveCounts()
             return
         }
 
@@ -92,6 +107,7 @@ final class ExploreViewModel: ObservableObject {
             trendingPosts = response.posts
             lastTrendingFetch = Date()
             lastTrendingCategoryKey = categoryKey
+            applyKnownSaveCounts()
         } catch {
             NetworkManager.shared.logger.error("Failed to load trending posts: \(error)")
             trendingPosts = []
@@ -115,6 +131,7 @@ final class ExploreViewModel: ObservableObject {
         if !forceRefresh,
            lastTrendingDetailCategoryKey == categoryKey,
            !trendingDetailPosts.isEmpty {
+            applyKnownSaveCounts()
             return
         }
 
@@ -129,6 +146,7 @@ final class ExploreViewModel: ObservableObject {
             )
             trendingDetailPosts = response.posts
             lastTrendingDetailCategoryKey = categoryKey
+            applyKnownSaveCounts()
         } catch {
             NetworkManager.shared.logger.error("Failed to load trending details: \(error)")
             trendingDetailPosts = []

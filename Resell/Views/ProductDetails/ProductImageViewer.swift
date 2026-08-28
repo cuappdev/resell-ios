@@ -58,8 +58,8 @@ struct ProductImageViewer: View {
                     Spacer()
 
                     if images.count > 1 {
-                        Text("\(selectedIndex + 1) of \(images.count)")
-                            .font(Constants.Fonts.title4)
+                        Text("\(selectedIndex + 1) / \(images.count)")
+                            .font(Constants.Fonts.title3)
                             .foregroundStyle(Constants.Colors.white)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 7)

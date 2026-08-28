@@ -6,6 +6,7 @@
 //
 
 import Kingfisher
+import LucideIcons
 import PhotosUI
 import SwiftUI
 
@@ -66,10 +67,11 @@ struct MessagesView: View {
             }
             
             ToolbarItem(placement: .topBarTrailing) {
-                HStack(spacing: 8) {
-                    calendarButton
-                    optionsButton
-                }
+                calendarButton
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                optionsButton
             }
         }
         .sheet(isPresented: $didShowNegotiationView, onDismiss: setNegotiationText) {
@@ -118,10 +120,20 @@ struct MessagesView: View {
         Button {
             didShowAvailabilityView.toggle()
         } label: {
-            Image("calendar")
+            Image(uiImage: Lucide.calendarFold)
+                .renderingMode(.template)
                 .resizable()
+                .scaledToFit()
                 .frame(width: 24, height: 24)
+                .foregroundStyle(Constants.Colors.black)
+                .overlay(alignment: .topTrailing) {
+                    Circle()
+                        .fill(Constants.Colors.resellPurple)
+                        .frame(width: 7, height: 7)
+                        .offset(x: 2, y: -1)
+                }
         }
+        .accessibilityLabel("Availability")
     }
     
     private var headerButton: some View {

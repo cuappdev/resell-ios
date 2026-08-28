@@ -48,18 +48,18 @@ struct ExploreCollageCard: View {
                 if #available(iOS 17.0, *) {
                     (
                         Text(title)
-                            .font(Constants.Fonts.title1)
+                            .font(Constants.Fonts.title2)
                             .foregroundStyle(Constants.Colors.black)
                         + Text(" • \(subtitle)")
-                            .font(Constants.Fonts.title4)
-                            .foregroundStyle(Constants.Colors.secondaryGray)
+                            .font(Constants.Fonts.title2)
+                            .foregroundStyle(Constants.Colors.black)
                     )
                 } else {
                     // Fallback on earlier versions
                 }
             } else {
                 Text(title)
-                    .font(Constants.Fonts.title1)
+                    .font(Constants.Fonts.title2)
                     .foregroundStyle(Constants.Colors.black)
             }
         }
@@ -78,19 +78,24 @@ struct ExploreCollageCard: View {
         } else if count == 1 {
             imageCell(url: urls[0], index: 0)
                 .frame(width: size.width, height: size.height)
+                .clipped()
         } else {
             VStack(spacing: spacing) {
                 HStack(spacing: spacing) {
                     imageCell(url: urls[0], index: 0)
                         .frame(width: cellWidth, height: cellHeight)
+                        .clipped()
                     imageCell(url: urls[1], index: 1)
                         .frame(width: cellWidth, height: cellHeight)
+                        .clipped()
                 }
                 HStack(spacing: spacing) {
                     imageCell(url: urls[2], index: 2)
                         .frame(width: cellWidth, height: cellHeight)
+                        .clipped()
                     imageCell(url: urls[3], index: 3)
                         .frame(width: cellWidth, height: cellHeight)
+                        .clipped()
                 }
             }
         }

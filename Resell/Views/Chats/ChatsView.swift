@@ -29,12 +29,15 @@ struct ChatsView: View {
             Spacer()
         }
         .background(Constants.Colors.white)
+        .toolbar(.hidden, for: .navigationBar)
+        .navigationBarBackButtonHidden(true)
         .emptyState(isEmpty: viewModel.checkEmptyState(), title: viewModel.emptyStateTitle(), text: viewModel.emptyStateMessage())
         .refreshable {
             viewModel.refreshChats()
         }
         .onAppear {
             viewModel.getAllChats()
+            mainViewModel.hidesTabBar = false
         }
         .loadingView(isLoading: viewModel.isLoading)
     }
@@ -86,8 +89,7 @@ struct ChatsView: View {
                 }
             }
             .padding(.top, 12)
-
-            Spacer()
+            .padding(.bottom, 24)
         }
         .frame(width: UIScreen.width)
     }

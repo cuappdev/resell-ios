@@ -15,7 +15,7 @@ struct RecentlyViewedView: View {
             ProductsGalleryView(items: viewModel.posts)
         }
         .background(Constants.Colors.white)
-        .loadingView(isLoading: viewModel.isLoading)
+        .loadingView(isLoading: viewModel.isLoading && viewModel.posts.isEmpty)
         .emptyState(
             isEmpty: viewModel.posts.isEmpty,
             title: "No recently viewed posts",
@@ -38,7 +38,7 @@ struct RecentlyViewedView: View {
 
             ToolbarItem(placement: .principal) {
                 Text("Recently Viewed")
-                    .font(Constants.Fonts.h1)
+                    .font(Constants.Fonts.h2)
                     .foregroundStyle(Constants.Colors.black)
             }
         }
