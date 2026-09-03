@@ -6,6 +6,7 @@
 //
 
 import Kingfisher
+import LucideIcons
 import PhotosUI
 import SwiftUI
 
@@ -82,10 +83,11 @@ struct MessagesView: View {
             }
             
             ToolbarItem(placement: .topBarTrailing) {
-                HStack(spacing: 8) {
-                    calendarButton
-                    optionsButton
-                }
+                calendarButton
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                optionsButton
             }
         }
         .sheet(isPresented: $didShowNegotiationView, onDismiss: setNegotiationText) {
@@ -169,11 +171,22 @@ struct MessagesView: View {
                 didShowAvailabilityView.toggle()
             }
         } label: {
-            Image("calendar")
+            Image(uiImage: Lucide.calendarFold)
+                .renderingMode(.template)
                 .resizable()
+                .scaledToFit()
                 .frame(width: 24, height: 24)
-                .opacity(hasActiveConfirmedMeeting ? 0.45 : 1)
+                .foregroundStyle(Constants.Colors.black)
+                .overlay(alignment: .topTrailing) {
+                    if hasActiveConfirmedMeeting {
+                        Circle()
+                            .fill(Constants.Colors.resellPurple)
+                            .frame(width: 7, height: 7)
+                            .offset(x: 2, y: -1)
+                    }
+                }
         }
+        .accessibilityLabel("Availability")
         .accessibilityHint(
             hasActiveConfirmedMeeting
                 ? "A meeting is already scheduled. Cancel it or wait until it passes to propose a new time."

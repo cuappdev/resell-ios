@@ -167,7 +167,7 @@ struct SettingsView: View {
             Button {
                 guard viewModel.confirmUsernameText == CurrentUserProfileManager.shared.username else { return }
                 viewModel.deleteAccount()
-                mainViewModel.selection = 0
+                mainViewModel.selection = Router.Tab.home.rawValue
                 mainViewModel.userDidLogin = false
             } label: {
                 Text("Delete Account")

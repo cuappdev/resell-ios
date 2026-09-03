@@ -23,111 +23,57 @@ struct MainTabView: View {
     @EnvironmentObject private var newListingViewModel: NewListingViewModel
     @EnvironmentObject private var onboardingViewModel: SetupProfileViewModel
     @EnvironmentObject private var reportViewModel: ReportViewModel
+    @ObservedObject private var currentUser = CurrentUserProfileManager.shared
 
     // MARK: - UI
 
     var body: some View {
-        NavigationStack(path: $router.path) {
-                Group {
-                    if mainViewModel.userDidLogin {
-                        VStack(spacing: 0) {
-                            mainView
-                            
-                            if !isHidden {
-                                tabBarView
-                            }
-                        }
-                        .ignoresSafeArea(edges: .bottom)
+        ZStack(alignment: .bottom) {
+            Group {
+                if mainViewModel.userDidLogin {
+                    tabNavigation
                         .transition(.opacity)
-                        .background(.white)
-                        .environmentObject(router)
-                        .onAppear {
-                            // Start listening to chat updates as soon as the
-                            // user lands on the main shell so the tab-bar
-                            // unread badge is populated even if they never
-                            // open the messages tab.
-                            chatsViewModel.getAllChats()
-                        }
-                        .onChange(of: mainViewModel.userDidLogin) { didLogin in
-                            if didLogin {
-                                chatsViewModel.getAllChats()
-                            }
-                        }
-                    } else {
-                        LoginView()
-                            .transition(.opacity)
-                            .environmentObject(onboardingViewModel)
-                            .environmentObject(router)
-                    }
-            }
-            .navigationDestination(for: Router.Route.self) { route in
-                switch route {
-                case .newListingDetails:
-                    NewListingDetailsView()
-                        .environmentObject(newListingViewModel)
-                case .newListingImages:
-                    NewListingImagesView()
-                        .environmentObject(newListingViewModel)
-                case .newRequest:
-                    NewRequestView()
-                case .messages(let chatInfo):
-                    MessagesView(chatInfo: chatInfo)
-                case .discover:
-                    SuggestionsView()
-                case .productDetails(let item):
-                    ProductDetailsView(post: item)
-                        .ignoresSafeArea(edges: .top)
-                case .reportConfirmation:
-                    ReportConfirmationView()
-                        .environmentObject(reportViewModel)
-                case .reportDetails:
-                    ReportDetailsView()
-                        .environmentObject(reportViewModel)
-                case .reportOptions(let type, let id):
-                    ReportOptionsView(type: type, id: id)
-                        .environmentObject(reportViewModel)
-                case .search(let id):
-                    SearchView(userID: id)
-                case .settings(let isAccountSettings):
-                    SettingsView(isAccountSettings: isAccountSettings)
-                case .blockedUsers:
-                    BlockedUsersView()
-                case .editProfile:
-                    EditProfileView()
-                case .feedback:
-                    SendFeedbackView()
-                case .detailedFilter(let filter):
-                    DetailedFilterView(filter: filter)
-                case .saved:
-                    SavedView()
-                case .recentlyViewed:
-                    RecentlyViewedView()
-                case .dailyPicks:
-                    DailyPicksView()
-                case .trending(let category):
-                    TrendingView(category: category)
-                case .availability:
-                    AvailabilitySettingsView()
-               case .notifications:
-                   NotificationsView()
-                case .login:
-                    LoginView()
-                        .environmentObject(onboardingViewModel)
-                case .profile(let id):
-                    ExternalProfileView(userID: id)
-                case .followList(let userID, let username, let initialTab):
-                    FollowListView(userID: userID, username: username, initialTab: initialTab)
-                case .setupProfile:
-                    SetupProfileView(userDidLogin: $mainViewModel.userDidLogin, user: GoogleAuthManager.shared.user)
-                        .environmentObject(onboardingViewModel)
-                case .venmo:
-                    VenmoView(userDidLogin: $mainViewModel.userDidLogin)
-                        .environmentObject(onboardingViewModel)
-                case .completedTransaction(let transaction):
-                    CompletedTransactionView(transaction: transaction)
-                default:
-                    EmptyView()
+                } else {
+                    loginNavigation
+                        .transition(.opacity)
                 }
+            }
+
+            if showsTabBar {
+                tabBarView
+                    .zIndex(1)
+            }
+        }
+        .ignoresSafeArea(edges: .bottom)
+        .onAppear {
+            router.activeTab = selection
+            if mainViewModel.userDidLogin {
+                // Start listening to chat updates as soon as the user lands
+                // on the main shell so the unread badge stays populated.
+                chatsViewModel.getAllChats()
+                currentUser.loadProfile()
+            }
+        }
+        .onChange(of: mainViewModel.userDidLogin) { didLogin in
+            if didLogin {
+                chatsViewModel.getAllChats()
+                currentUser.loadProfile(forceRefresh: true)
+            } else {
+                router.reset()
+            }
+        }
+        .onChange(of: selection) { newSelection in
+            router.activeTab = newSelection
+        }
+        .onChange(of: router.path) { path in
+            // Restore tab bar as soon as we leave a conversation — don't wait
+            // for MessagesView.onDisappear, which fires after the pop animation.
+            let isMessages = path.last.map { route in
+                if case .messages = route { return true }
+                return false
+            } ?? false
+            if !isMessages && isHidden {
+                isHidden = false
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: Constants.Notifications.OpenTransactionDeepLink)) { output in
@@ -157,43 +103,283 @@ struct MainTabView: View {
         }
     }
 
-    private var mainView: some View {
-        ZStack() {
-            if selection == 0 {
-                HomeView()
-            } else if selection == 1 {
-                ChatsView()
-                    .environmentObject(chatsViewModel)
-            } else if selection == 2 {
-                ProfileView()
+    private var showsTabBar: Bool {
+        mainViewModel.userDidLogin && !isHidden && !isMessagesRouteActive
+    }
+
+    private var isMessagesRouteActive: Bool {
+        if case .messages = router.lastPushedView() {
+            return true
+        }
+        return false
+    }
+
+    private var tabNavigation: some View {
+        // Manual tab container — the system TabView still renders its own bar
+        // under ours, which showed through the glass as a second outline.
+        ZStack {
+            ForEach(Router.Tab.allCases, id: \.rawValue) { tab in
+                NavigationStack(path: router.pathBinding(for: tab.rawValue)) {
+                    tabRoot(for: tab)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Constants.Colors.white)
+                        // Keep bottom clearance even while a conversation is open
+                        // (tab bar hidden). Tying this to showsTabBar removed the
+                        // inset on push and often failed to restore it on pop.
+                        .modifier(TabBarContentInsetModifier(
+                            isEnabled: mainViewModel.userDidLogin && !isHidden
+                        ))
+                        .navigationDestination(for: Router.Route.self) { route in
+                            destination(for: route)
+                        }
+                }
+                .opacity(selection == tab.rawValue ? 1 : 0)
+                .allowsHitTesting(selection == tab.rawValue)
+                // Inactive stacks stay mounted so each tab keeps its own history.
+                .accessibilityHidden(selection != tab.rawValue)
             }
+        }
+    }
+
+    private var loginNavigation: some View {
+        NavigationStack(path: router.pathBinding(for: Router.Tab.home.rawValue)) {
+            LoginView()
+                .environmentObject(onboardingViewModel)
+                .navigationDestination(for: Router.Route.self) { route in
+                    destination(for: route)
+                }
+        }
+    }
+
+    @ViewBuilder
+    private func tabRoot(for tab: Router.Tab) -> some View {
+        switch tab {
+        case .home:
+            HomeView()
+        case .explore:
+            ExploreView()
+        case .sell:
+            SellView()
+        case .chats:
+            ChatsView()
+                .environmentObject(chatsViewModel)
+        case .profile:
+            ProfileView()
+        }
+    }
+
+    @ViewBuilder
+    private func destination(for route: Router.Route) -> some View {
+        switch route {
+        case .newListingDetails:
+            NewListingDetailsView()
+                .environmentObject(newListingViewModel)
+        case .newListingImages:
+            NewListingImagesView()
+                .environmentObject(newListingViewModel)
+        case .newRequest:
+            NewRequestView()
+        case .messages(let chatInfo):
+            MessagesView(chatInfo: chatInfo)
+        case .discover:
+            SuggestionsView()
+        case .productDetails(let item):
+            ProductDetailsView(post: item)
+                .ignoresSafeArea(edges: .top)
+        case .reportConfirmation:
+            ReportConfirmationView()
+                .environmentObject(reportViewModel)
+        case .reportDetails:
+            ReportDetailsView()
+                .environmentObject(reportViewModel)
+        case .reportOptions(let type, let id):
+            ReportOptionsView(type: type, id: id)
+                .environmentObject(reportViewModel)
+        case .search(let id):
+            SearchView(userID: id)
+        case .settings(let isAccountSettings):
+            SettingsView(isAccountSettings: isAccountSettings)
+        case .blockedUsers:
+            BlockedUsersView()
+        case .editProfile:
+            EditProfileView()
+        case .feedback:
+            SendFeedbackView()
+        case .detailedFilter(let filter):
+            DetailedFilterView(filter: filter)
+        case .saved:
+            SavedView()
+        case .recentlyViewed:
+            RecentlyViewedView()
+        case .dailyPicks:
+            DailyPicksView()
+        case .trending(let category):
+            TrendingView(category: category)
+        case .availability:
+            AvailabilitySettingsView()
+        case .notifications:
+            NotificationsView()
+        case .login:
+            LoginView()
+                .environmentObject(onboardingViewModel)
+        case .profile(let id):
+            ExternalProfileView(userID: id)
+        case .followList(let userID, let username, let initialTab):
+            FollowListView(userID: userID, username: username, initialTab: initialTab)
+        case .setupProfile:
+            SetupProfileView(userDidLogin: $mainViewModel.userDidLogin, user: GoogleAuthManager.shared.user)
+                .environmentObject(onboardingViewModel)
+        case .venmo:
+            VenmoView(userDidLogin: $mainViewModel.userDidLogin)
+                .environmentObject(onboardingViewModel)
+        case .completedTransaction(let transaction):
+            CompletedTransactionView(transaction: transaction)
+        default:
+            EmptyView()
+        }
+    }
+
+    // MARK: - Tab Bar
+
+    private struct TabBarConfig {
+        let label: String
+        let icon: String
+        let activeIcon: String
+    }
+
+    private func config(for tab: Router.Tab) -> TabBarConfig {
+        switch tab {
+        case .home:
+            TabBarConfig(label: "Home", icon: "house", activeIcon: "house.fill")
+        case .explore:
+            TabBarConfig(label: "Explore", icon: "safari", activeIcon: "safari.fill")
+        case .sell:
+            TabBarConfig(label: "Sell", icon: "tag", activeIcon: "tag.fill")
+        case .chats:
+            TabBarConfig(label: "Messages", icon: "paperplane", activeIcon: "paperplane.fill")
+        case .profile:
+            TabBarConfig(label: "Profile", icon: "person.crop.circle", activeIcon: "person.crop.circle.fill")
         }
     }
 
     private var tabBarView: some View {
-        HStack {
-            ForEach(0..<3, id: \.self) { index in
-                TabViewIcon(
-                    selectionIndex: $selection,
-                    itemIndex: index,
-                    badgeCount: index == 1 ? chatsViewModel.totalUnread : 0
-                )
-                    .frame(width: 28, height: 28)
+        HStack(spacing: 0) {
+            ForEach(Router.Tab.allCases, id: \.rawValue) { tab in
+                let index = tab.rawValue
+                let config = config(for: tab)
+                let isSelected = selection == index
+                let badgeCount = tab == .chats ? chatsViewModel.totalUnread : 0
 
-                if index != 2 {
-                    Spacer()
+                Button {
+                    if selection == index {
+                        router.popToRoot()
+                    } else {
+                        router.activeTab = index
+                        selection = index
+                    }
+                } label: {
+                    HStack(spacing: isSelected ? 6 : 0) {
+                        if tab == .profile && currentUser.hasProfilePicture {
+                            profileTabImage
+                        } else {
+                            Image(systemName: isSelected ? config.activeIcon : config.icon)
+                                .font(.system(size: 17, weight: isSelected ? .semibold : .regular))
+                        }
+
+                        if isSelected {
+                            Text(config.label)
+                                .font(.custom("Rubik-Medium", size: 13))
+                                .fixedSize()
+                                .transition(.opacity.combined(with: .scale(scale: 0.8)))
+                        }
+                    }
+                    .foregroundStyle(Color.black)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, isSelected ? 18 : 14)
+                    .background {
+                        if isSelected {
+                            Capsule()
+                                .fill(Color.black.opacity(0.08))
+                        }
+                    }
+                    .clipShape(Capsule())
+                    .overlay(alignment: .topTrailing) {
+                        if badgeCount > 0 {
+                            Text(badgeCount > 99 ? "99+" : "\(badgeCount)")
+                                .font(.custom("Roboto-Medium", size: 10))
+                                .foregroundStyle(Constants.Colors.white)
+                                .padding(.horizontal, 5)
+                                .frame(minWidth: 16, minHeight: 16)
+                                .background(Constants.Colors.errorRed)
+                                .clipShape(.capsule)
+                                .offset(x: isSelected ? 0 : 8, y: -6)
+                        }
+                    }
+                }
+                .buttonStyle(PlainButtonStyle())
+                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
+
+                if tab != Router.Tab.allCases.last {
+                    Spacer(minLength: 0)
                 }
             }
         }
-        .ignoresSafeArea(edges: .bottom)
-        .padding(.horizontal, 40)
-        .padding(.top, 16)
-        .padding(.bottom, 46)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        // Keep the bar intrinsic-height; an unconstrained clear fill previously
+        // expanded to the full ZStack height and blew up the capsule.
+        .fixedSize(horizontal: false, vertical: true)
+        .background {
+            Capsule()
+                .fill(Color.white.opacity(0.001))
+        }
+        .contentShape(Capsule())
+        .modifier(TabBarGlassModifier())
+        .padding(.horizontal, Constants.Spacing.horizontalPadding)
+        .padding(.bottom, 20)
         .frame(width: UIScreen.width)
-        .background(Constants.Colors.white)
-        .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
-        .shadow(radius: 4)
-        .transition(.move(edge: .bottom))
-        .animation(.easeInOut, value: isHidden)
+        .fixedSize(horizontal: false, vertical: true)
+        .allowsHitTesting(true)
+    }
+
+    private var profileTabImage: some View {
+        Image(uiImage: currentUser.profilePic)
+            .resizable()
+            .scaledToFill()
+            .frame(width: 20, height: 20)
+            .clipShape(Circle())
     }
 }
+
+private struct TabBarContentInsetModifier: ViewModifier {
+    let isEnabled: Bool
+
+    /// Floating glass tab bar + bottom padding + breathing room above home indicator.
+    private let tabBarScrollClearance: CGFloat = 100
+
+    func body(content: Content) -> some View {
+        // Always keep safeAreaInset in the tree — swapping it in/out with
+        // `if isEnabled` breaks ScrollView content insets after navigation.
+        content.safeAreaInset(edge: .bottom, spacing: 0) {
+            Color.clear.frame(height: isEnabled ? tabBarScrollClearance : 0)
+        }
+    }
+}
+
+private struct TabBarGlassModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        let shape = Capsule()
+        // Use a single material/glass layer only — stacking fill + glass + shadow
+        // produced a second, slightly larger outline behind the bar.
+        if #available(iOS 26, *) {
+            content
+                .glassEffect(.regular, in: shape)
+        } else {
+            content
+                .background(.ultraThinMaterial, in: shape)
+                .overlay(shape.strokeBorder(Color.black.opacity(0.06), lineWidth: 1))
+                .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
+        }
+    }
+}
+ 

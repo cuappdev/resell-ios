@@ -56,7 +56,6 @@
 		2C9337522C935C8100818C8E /* SavedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9337512C935C8100818C8E /* SavedView.swift */; };
 		2C9337542C935C9500818C8E /* ChatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9337532C935C9500818C8E /* ChatsView.swift */; };
 		2C9337562C935CB600818C8E /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9337552C935CB600818C8E /* ProfileView.swift */; };
-		2C93375A2C93667600818C8E /* TabViewIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9337592C93667600818C8E /* TabViewIcon.swift */; };
 		2C9B4CCB2C8FB7B70029DF61 /* ResellApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9B4CCA2C8FB7B70029DF61 /* ResellApp.swift */; };
 		2C9B4CCF2C8FB7B80029DF61 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2C9B4CCE2C8FB7B80029DF61 /* Assets.xcassets */; };
 		2C9B4CD22C8FB7B80029DF61 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2C9B4CD12C8FB7B80029DF61 /* Preview Assets.xcassets */; };
@@ -177,6 +176,7 @@
 		AD0F669E03C5CC5D5095E8FD /* SearchPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD7B878D8FDC4D4A0336C061 /* SearchPanel.swift */; };
 		ADF70ED11386D407EB2BD15F /* ExploreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD6DA1177C5F0B07D6B2E273 /* ExploreView.swift */; };
 		ADBF2503F1D2567996BEA15D /* SellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD301494F694E79F7F82961D /* SellView.swift */; };
+		2E9968BE3021BBC8006E910D /* LucideIcons in Frameworks */ = {isa = PBXBuildFile; productRef = 2E9968BD3021BBC8006E910D /* LucideIcons */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -248,7 +248,6 @@
 		2C9337512C935C8100818C8E /* SavedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedView.swift; sourceTree = "<group>"; };
 		2C9337532C935C9500818C8E /* ChatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatsView.swift; sourceTree = "<group>"; };
 		2C9337552C935CB600818C8E /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
-		2C9337592C93667600818C8E /* TabViewIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabViewIcon.swift; sourceTree = "<group>"; };
 		2C9B4CC72C8FB7B70029DF61 /* Resell.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Resell.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2C9B4CCA2C8FB7B70029DF61 /* ResellApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResellApp.swift; sourceTree = "<group>"; };
 		2C9B4CCC2C8FB7B70029DF61 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
@@ -373,6 +372,7 @@
 				2E8A5A252DBCC82E00B1F281 /* OAuth2 in Frameworks */,
 				2CF3CC802D017897001B90B5 /* TinyHTTPServer in Frameworks */,
 				2CF3CC7E2D017897001B90B5 /* SwiftyBase64 in Frameworks */,
+				2E9968BE3021BBC8006E910D /* LucideIcons in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -656,7 +656,6 @@
 				2C9337492C92AD2D00818C8E /* ProductsGalleryView.swift */,
 				2C41BB8B2CD9276E00EFF69E /* ShimmerView.swift */,
 				2CF3561A2CDDD65F0045A173 /* SwipeableRow.swift */,
-				2C9337592C93667600818C8E /* TabViewIcon.swift */,
 				2C4DD9842C98EF5E0055D0AB /* WebView.swift */,
 			);
 			path = Components;
@@ -825,6 +824,7 @@
 				2E87F6F12F27055A007C228E /* FirebaseCore */,
 				2E87F6F32F27055A007C228E /* FirebaseFirestore */,
 				2E87F6F52F27055A007C228E /* FirebaseMessaging */,
+				2E9968BD3021BBC8006E910D /* LucideIcons */,
 			);
 			productName = Resell;
 			productReference = 2C9B4CC72C8FB7B70029DF61 /* Resell.app */;
@@ -904,6 +904,7 @@
 				2E8A5A632DBCC8A100B1F281 /* XCRemoteSwiftPackageReference "Kingfisher" */,
 				2EEAAB1C2F142C460006FF5C /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
 				2E87F6EA2F27055A007C228E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				2E9968BC3021BBC8006E910D /* XCRemoteSwiftPackageReference "lucide-icons-swift" */,
 			);
 			productRefGroup = 2C9B4CC82C8FB7B70029DF61 /* Products */;
 			projectDirPath = "";
@@ -1082,7 +1083,6 @@
 				2E8A5A6A2DBCCB7C00B1F281 /* (null) in Sources */,
 				C6F1BDBB2FA14CC1004886F8 /* ForceUpdateView.swift in Sources */,
 				2C9B4CF82C8FB84F0029DF61 /* Constants.swift in Sources */,
-				2C93375A2C93667600818C8E /* TabViewIcon.swift in Sources */,
 				2C02B3A32CC074150020DF90 /* ProductDetailsView.swift in Sources */,
 				2C93374A2C92AD2D00818C8E /* ProductsGalleryView.swift in Sources */,
 				2C02B39F2CC06D760020DF90 /* NewRequestViewModel.swift in Sources */,
@@ -1475,6 +1475,14 @@
 				minimumVersion = 3.1.1;
 			};
 		};
+		2E9968BC3021BBC8006E910D /* XCRemoteSwiftPackageReference "lucide-icons-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/JakubMazur/lucide-icons-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.28.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1563,6 +1571,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 2EEAAB1C2F142C460006FF5C /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */;
 			productName = Flow;
+		};
+		2E9968BD3021BBC8006E910D /* LucideIcons */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2E9968BC3021BBC8006E910D /* XCRemoteSwiftPackageReference "lucide-icons-swift" */;
+			productName = LucideIcons;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
