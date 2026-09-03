@@ -14,7 +14,9 @@ struct FilterView: View {
     @State var presentPopup = false
     @EnvironmentObject var filtersVM: FiltersViewModel
 
-    private var categories : [String] = ["Clothing", "Books", "School", "Electronics", "Handmade", "Sports & Outdoors", "Other"]
+    /// Browsable categories, in `Constants.filters` order. A `nil` color marks a
+    /// pseudo-category (e.g. "Recent") that is not a real listing category.
+    private let categories: [String] = Constants.filters.compactMap { $0.color == nil ? nil : $0.title }
     private var conditions : [String] = ["Gently Used", "Worn", "Never Used"]
 
     let home : Bool
@@ -132,21 +134,11 @@ struct FilterView: View {
                                                 filtersVM.categoryFilters.insert(category)
                                             }
                                         } label: {
-                                            if filtersVM.categoryFilters.contains(category) {
-                                                HStack {
-                                                    Text(category)
-                                                        .font(.custom("Rubik-Medium", size: 14))
-                                                        .foregroundStyle(Constants.Colors.resellPurple)
-                                                    
-                                                    Image(systemName: "xmark")
-                                                        .font(.custom("Rubik-Medium", size: 14))
-                                                        .foregroundStyle(Constants.Colors.resellPurple)
-                                                }
-                                            } else {
-                                                Text(category)
-                                                    .font(.custom("Rubik-Medium", size: 14))
-                                                    .foregroundStyle(Color.black)
-                                            }
+                                            let isSelected = filtersVM.categoryFilters.contains(category)
+                                            Text(category)
+                                                .font(.custom("Rubik-Medium", size: 14))
+                                                .foregroundStyle(isSelected ? Constants.Colors.resellPurple : Color.black)
+                                                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
                                         }
                                         .padding(.horizontal, 14)
                                         .padding(.vertical, 8)
@@ -184,21 +176,11 @@ struct FilterView: View {
                                         filtersVM.conditionFilters.insert(condition)
                                     }
                                 } label: {
-                                    if filtersVM.conditionFilters.contains(condition) {
-                                        HStack {
-                                            Text(condition)
-                                                .font(.custom("Rubik-Medium", size: 14))
-                                                .foregroundStyle(Constants.Colors.resellPurple)
-                                            
-                                            Image(systemName: "xmark")
-                                                .font(.custom("Rubik-Medium", size: 14))
-                                                .foregroundStyle(Constants.Colors.resellPurple)
-                                        }
-                                    } else {
-                                        Text(condition)
-                                            .font(.custom("Rubik-Medium", size: 14))
-                                            .foregroundStyle(Color.black)
-                                    }
+                                    let isSelected = filtersVM.conditionFilters.contains(condition)
+                                    Text(condition)
+                                        .font(.custom("Rubik-Medium", size: 14))
+                                        .foregroundStyle(isSelected ? Constants.Colors.resellPurple : Color.black)
+                                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
                                 }
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 8)
