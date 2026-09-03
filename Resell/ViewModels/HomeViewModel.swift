@@ -55,6 +55,9 @@ class HomeViewModel: ObservableObject {
     }
     
     @Published var savedItems: [Post] = []
+    /// True once `getSavedPosts()` has returned at least once. Until then a post's
+    /// absence from `savedItems` means "unknown", not "not saved".
+    @Published private(set) var hasLoadedSavedItems: Bool = false
 
     private var allItems: [Post] = []
     private var page = 1
@@ -175,6 +178,7 @@ class HomeViewModel: ObservableObject {
             let postsResponse = try await NetworkManager.shared.getSavedPosts()
             savedItems = Post.sortPostsByDate(postsResponse.posts)
             lastSavedFetchTime = Date()
+            hasLoadedSavedItems = true
         } catch {
             NetworkManager.shared.logger.error("Error in HomeViewModel.getSavedPosts: \(error)")
         }
