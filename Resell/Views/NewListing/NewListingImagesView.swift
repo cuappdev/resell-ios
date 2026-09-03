@@ -43,7 +43,7 @@ struct NewListingImagesView: View {
 
                     PaginatedImageView(
                         images: $viewModel.selectedImages,
-                        maxImages: 9,
+                        maxImages: NewListingViewModel.maxImages,
                         onPickPhotoLibrary: { viewModel.didShowPhotosPicker = true },
                         onPickCamera: { viewModel.didShowCamera = true }
                     )
@@ -102,13 +102,19 @@ struct NewListingImagesView: View {
                 }
             }
         }
-        .photosPicker(isPresented: $viewModel.didShowPhotosPicker, selection: $viewModel.selectedItem, matching: .images, photoLibrary: .shared())
+        .photosPicker(
+            isPresented: $viewModel.didShowPhotosPicker,
+            selection: $viewModel.selectedItems,
+            maxSelectionCount: viewModel.remainingImageSlots,
+            matching: .images,
+            photoLibrary: .shared()
+        )
         .sheet(isPresented: $viewModel.didShowCamera) {
             ImagePicker(sourceType: .camera, selectedImages: $viewModel.selectedImages)
         }
-        .onChange(of: viewModel.selectedItem) { newItem in
+        .onChange(of: viewModel.selectedItems) { newItems in
             Task {
-                await viewModel.updateListingImage(newItem: newItem)
+                await viewModel.updateListingImages(newItems: newItems)
             }
         }
     }
