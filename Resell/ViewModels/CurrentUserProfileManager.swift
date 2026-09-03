@@ -28,6 +28,7 @@ class CurrentUserProfileManager: ObservableObject {
     @Published var userPosts: [Post] = []
     @Published var archivedPosts: [Post] = []
     @Published var requests: [Request] = []
+    @Published var userReviews: [UserReview] = []
     
     @Published var isLoading: Bool = false
     
@@ -70,12 +71,22 @@ class CurrentUserProfileManager: ObservableObject {
                 async let postsResponse = NetworkManager.shared.getPostsByUserID(id: userId)
                 async let archivedResponse = NetworkManager.shared.getArchivedPostsByUserID(id: userId)
                 async let requestsResponse = NetworkManager.shared.getRequestsByUserID(id: userId)
+                async let reviewsResponse = NetworkManager.shared.getUserReviewsBySeller(sellerId: userId)
 
                 let (posts, archived, reqs) = try await (postsResponse, archivedResponse, requestsResponse)
                 
                 userPosts = Post.sortPostsByDate(posts.posts)
                 archivedPosts = Post.sortPostsByDate(archived.posts)
                 requests = reqs.requests
+
+                // Reviews are additive: a failure here shouldn't cost the user
+                // their listings, so it's caught separately from the rest.
+                do {
+                    userReviews = try await reviewsResponse
+                } catch {
+                    NetworkManager.shared.logger.error("Error loading current user reviews: \(error)")
+                    userReviews = []
+                }
                 
                 username = user.username
                 givenName = user.givenName
@@ -135,6 +146,7 @@ class CurrentUserProfileManager: ObservableObject {
         userPosts = []
         archivedPosts = []
         requests = []
+        userReviews = []
         
         // Clear profile data
         profilePic = .profilePlaceholder
