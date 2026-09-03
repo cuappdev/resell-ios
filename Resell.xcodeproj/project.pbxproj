@@ -174,6 +174,8 @@
 		ADA18E8891F5365FCF5D4A36 /* RecentlyViewedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD36843F11D34E925CA18F7B /* RecentlyViewedView.swift */; };
 		AD352495F4C92AC5AF1AADF6 /* ExploreCollageCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD0062162947A49A54BA0E74 /* ExploreCollageCard.swift */; };
 		ADC4811657FC86FA058DBC78 /* ExploreSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD61E53786777FDFEDFFBC3F /* ExploreSections.swift */; };
+		AD0F669E03C5CC5D5095E8FD /* SearchPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD7B878D8FDC4D4A0336C061 /* SearchPanel.swift */; };
+		ADF70ED11386D407EB2BD15F /* ExploreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD6DA1177C5F0B07D6B2E273 /* ExploreView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -342,6 +344,8 @@
 		AD36843F11D34E925CA18F7B /* RecentlyViewedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentlyViewedView.swift; sourceTree = "<group>"; };
 		AD0062162947A49A54BA0E74 /* ExploreCollageCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreCollageCard.swift; sourceTree = "<group>"; };
 		AD61E53786777FDFEDFFBC3F /* ExploreSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreSections.swift; sourceTree = "<group>"; };
+		AD7B878D8FDC4D4A0336C061 /* SearchPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchPanel.swift; sourceTree = "<group>"; };
+		AD6DA1177C5F0B07D6B2E273 /* ExploreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -617,6 +621,7 @@
 		2C9B4D052C8FCAF20029DF61 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				AD7B878D8FDC4D4A0336C061 /* SearchPanel.swift */,
 				ADF650358E3D49F1BFF982BD /* CategoriesView.swift */,
 				AD1309285CE00E73FFD36889 /* GlassToolbarModifier.swift */,
 				C6F1BDBA2FA14CC1004886F8 /* ForceUpdateView.swift */,
@@ -764,6 +769,7 @@
 		ADE4A10188B9356473A077AA /* Explore */ = {
 			isa = PBXGroup;
 			children = (
+				AD6DA1177C5F0B07D6B2E273 /* ExploreView.swift */,
 				AD61E53786777FDFEDFFBC3F /* ExploreSections.swift */,
 				AD0062162947A49A54BA0E74 /* ExploreCollageCard.swift */,
 				AD36843F11D34E925CA18F7B /* RecentlyViewedView.swift */,
@@ -935,6 +941,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ADF70ED11386D407EB2BD15F /* ExploreView.swift in Sources */,
+				AD0F669E03C5CC5D5095E8FD /* SearchPanel.swift in Sources */,
 				ADC4811657FC86FA058DBC78 /* ExploreSections.swift in Sources */,
 				AD352495F4C92AC5AF1AADF6 /* ExploreCollageCard.swift in Sources */,
 				ADA18E8891F5365FCF5D4A36 /* RecentlyViewedView.swift in Sources */,
