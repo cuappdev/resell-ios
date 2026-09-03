@@ -9,37 +9,67 @@ import SwiftUI
 
 // TODO: Consolidate SavedView and DetailedFilterView into one view...
 struct DetailedFilterView: View {
-    @State var presentPopup = false
-    @State var searchText = ""
+    @State private var presentPopup = false
+    @State private var searchText = ""
+    @State private var isSearchExpanded = false
+    @State private var isShowingSearchHistory = true
+    @FocusState private var searchFocused: Bool
+
     @EnvironmentObject var router: Router
+    @EnvironmentObject private var mainViewModel: MainViewModel
+
     let filter: FilterCategory
-    
+
     @StateObject private var filtersViewModel = FiltersViewModel(isHome: false)
     @ObservedObject private var viewModel = HomeViewModel.shared
-    
-    // Computed property to show either searched or all filtered items
+
     private var displayedItems: [Post] {
-        searchText.isEmpty ? filtersViewModel.detailedFilterItems : filtersViewModel.searchedDetailedFilterItems
+        if isSearchExpanded && !isShowingSearchHistory {
+            return filtersViewModel.searchedDetailedFilterItems
+        }
+        return filtersViewModel.detailedFilterItems
     }
 
     var body: some View {
-            VStack(spacing: 0) {
-                headerView
-                ScrollView(.vertical) {
-                    ProductsGalleryView(items: displayedItems)
-                }
+        ScrollView(.vertical, showsIndicators: !isSearchExpanded) {
+            ProductsGalleryView(items: displayedItems)
+                .padding(.top, 12)
         }
+        .scrollDisabled(isSearchExpanded && isShowingSearchHistory)
         .background(Constants.Colors.white)
         .loadingView(isLoading: viewModel.isLoading)
         .emptyState(
-            isEmpty: (displayedItems.isEmpty),
-            title: searchText.isEmpty ? "No \(filter.title) posts" : "No results",
-            text: searchText.isEmpty ? "Posts in the \(filter.title) category will be displayed here." : "No posts match '\(searchText)'"
+            isEmpty: displayedItems.isEmpty && !(isSearchExpanded && isShowingSearchHistory),
+            title: isSearchExpanded && !isShowingSearchHistory
+                ? "No results"
+                : "No \(filter.title) posts",
+            text: isSearchExpanded && !isShowingSearchHistory
+                ? "No posts match '\(searchText)'"
+                : "Posts in the \(filter.title) category will be displayed here."
         )
+        .overlay(alignment: .top) {
+            if isSearchExpanded {
+                searchOverlay
+            }
+        }
         .onAppear {
             viewModel.getBlockedUsers()
             Task {
                 try await filtersViewModel.initializeDetailedFilter(category: filter.title)
+                filtersViewModel.clearFilterSearch()
+            }
+        }
+        .onChange(of: isSearchExpanded) { isExpanded in
+            if isExpanded {
+                isShowingSearchHistory = true
+                Task { @MainActor in
+                    await Task.yield()
+                    searchFocused = true
+                }
+            } else {
+                searchText = ""
+                isShowingSearchHistory = true
+                searchFocused = false
                 filtersViewModel.clearFilterSearch()
             }
         }
@@ -48,11 +78,31 @@ struct DetailedFilterView: View {
             ToolbarItem(placement: .topBarLeading) {
                 BackButton(style: .systemChevronResizable(width: 12, height: 20))
             }
-            
+
             ToolbarItem(placement: .principal) {
                 Text(filter.title)
-                    .font(Constants.Fonts.h1)
+                    .font(Constants.Fonts.h2)
                     .foregroundStyle(Constants.Colors.black)
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    isSearchExpanded = true
+                } label: {
+                    Icon(image: "search")
+                }
+                .disabled(isSearchExpanded)
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    presentPopup = true
+                } label: {
+                    Image("filters")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 22, height: 19)
+                }
             }
         }
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -62,23 +112,25 @@ struct DetailedFilterView: View {
         }
     }
 
-    private var headerView: some View {
-            HStack {
-                SearchBar(text: $searchText, placeholder: "Search in \(filter.title)", isEditable: true)
-                    .onChange(of: searchText) { newValue in
-                        filtersViewModel.searchWithinFilter(query: newValue)
-                    }
-                
-                Button(action: {
-                    presentPopup = true
-                }, label: {
-                    Image("filters") 
-                        .resizable()
-                        .frame(width: 24, height: 21)
-                })
+    private var searchOverlay: some View {
+        SearchPanel(
+            placeholder: "Search in \(filter.title)",
+            text: $searchText,
+            history: Array(mainViewModel.searchHistory.prefix(5)),
+            showsHistory: isShowingSearchHistory,
+            isFocused: $searchFocused,
+            onSubmit: runSearch,
+            onDismiss: {
+                withAnimation(.snappy(duration: 0.2)) { isSearchExpanded = false }
             }
-            .padding(.bottom, 12)
-            .padding(.horizontal, Constants.Spacing.horizontalPadding)
-        
+        )
+    }
+
+    private func runSearch(_ query: String) {
+        guard !query.isEmpty else { return }
+        searchFocused = false
+        isShowingSearchHistory = false
+        mainViewModel.saveSearchQuery(query)
+        filtersViewModel.searchWithinFilter(query: query)
     }
 }
