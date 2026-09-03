@@ -266,7 +266,8 @@ struct ProductDetailsView: View {
     private var sellerProfileView: some View {
         Button {
             if viewModel.isMyPost() {
-                mainViewModel.selection = 2
+                router.activeTab = Router.Tab.profile.rawValue
+                mainViewModel.selection = Router.Tab.profile.rawValue
                 router.popToRoot()
             } else {
                 router.push(.profile(viewModel.item?.user?.firebaseUid ?? ""))
