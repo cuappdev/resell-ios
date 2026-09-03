@@ -177,6 +177,7 @@
 		ADF70ED11386D407EB2BD15F /* ExploreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD6DA1177C5F0B07D6B2E273 /* ExploreView.swift */; };
 		ADBF2503F1D2567996BEA15D /* SellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD301494F694E79F7F82961D /* SellView.swift */; };
 		2E9968BE3021BBC8006E910D /* LucideIcons in Frameworks */ = {isa = PBXBuildFile; productRef = 2E9968BD3021BBC8006E910D /* LucideIcons */; };
+		AD5B1594F39E99DBFBDE2C89 /* ProductImageViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADED4A4B411EB77324FB613B /* ProductImageViewer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -347,6 +348,7 @@
 		AD7B878D8FDC4D4A0336C061 /* SearchPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchPanel.swift; sourceTree = "<group>"; };
 		AD6DA1177C5F0B07D6B2E273 /* ExploreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreView.swift; sourceTree = "<group>"; };
 		AD301494F694E79F7F82961D /* SellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SellView.swift; sourceTree = "<group>"; };
+		ADED4A4B411EB77324FB613B /* ProductImageViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductImageViewer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -710,6 +712,7 @@
 		2CD7CABA2CE94EAE0056209E /* ProductDetails */ = {
 			isa = PBXGroup;
 			children = (
+				ADED4A4B411EB77324FB613B /* ProductImageViewer.swift */,
 				2E87F6FF2F29AA71007C228E /* CompletedTransactionView.swift */,
 				2C02B3A22CC074150020DF90 /* ProductDetailsView.swift */,
 				2E0A38862F0CBDE000362083 /* FollowListView.swift */,
@@ -953,6 +956,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AD5B1594F39E99DBFBDE2C89 /* ProductImageViewer.swift in Sources */,
 				ADBF2503F1D2567996BEA15D /* SellView.swift in Sources */,
 				ADF70ED11386D407EB2BD15F /* ExploreView.swift in Sources */,
 				AD0F669E03C5CC5D5095E8FD /* SearchPanel.swift in Sources */,
