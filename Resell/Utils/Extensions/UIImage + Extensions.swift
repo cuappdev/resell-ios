@@ -78,6 +78,99 @@ extension UIImage {
         }
         return UIImage()
     }()
+
+    /// Whether the toolbar band is *clearly* dark enough for white icons.
+    /// Mixed / mid-tone heroes (drinks, cafe walls, snow) stay on black.
+    func prefersLightToolbarIcons(
+        displayedIn containerSize: CGSize,
+        darkThreshold: CGFloat = 0.38,
+        requiredDarkFraction: CGFloat = 0.78
+    ) -> Bool {
+        guard let samples = toolbarBandLuminanceSamples(in: containerSize),
+              !samples.isEmpty else {
+            return false
+        }
+        let darkCount = samples.filter { $0 < darkThreshold }.count
+        return CGFloat(darkCount) / CGFloat(samples.count) >= requiredDarkFraction
+    }
+
+    /// Grid of relative luminances (0 = black, 1 = white) from the visible
+    /// top toolbar band after aspect-fill cropping and orientation fix.
+    func toolbarBandLuminanceSamples(in containerSize: CGSize) -> [CGFloat]? {
+        guard containerSize.width > 0, containerSize.height > 0,
+              let upright = flattenedOrientation().cgImage else { return nil }
+
+        let imageSize = CGSize(width: upright.width, height: upright.height)
+        let visible = aspectFillVisibleRect(imageSize: imageSize, containerSize: containerSize)
+        // Cover both leading + trailing toolbar items with a short top strip.
+        let sample = CGRect(
+            x: visible.minX,
+            y: visible.minY,
+            width: max(1, visible.width),
+            height: max(1, visible.height * 0.14)
+        ).integral
+
+        guard let cropped = upright.cropping(to: sample) else { return nil }
+
+        let gridWidth = 16
+        let gridHeight = 4
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        var pixels = [UInt8](repeating: 0, count: gridWidth * gridHeight * 4)
+        guard let context = CGContext(
+            data: &pixels,
+            width: gridWidth,
+            height: gridHeight,
+            bitsPerComponent: 8,
+            bytesPerRow: gridWidth * 4,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+
+        context.interpolationQuality = .low
+        context.draw(cropped, in: CGRect(x: 0, y: 0, width: gridWidth, height: gridHeight))
+
+        return stride(from: 0, to: pixels.count, by: 4).map { offset in
+            let r = CGFloat(pixels[offset]) / 255
+            let g = CGFloat(pixels[offset + 1]) / 255
+            let b = CGFloat(pixels[offset + 2]) / 255
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b
+        }
+    }
+
+    /// Draw the image upright so EXIF orientation doesn't shift the sampled corner.
+    func flattenedOrientation() -> UIImage {
+        if imageOrientation == .up { return self }
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = scale
+        format.opaque = false
+        return UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            draw(in: CGRect(origin: .zero, size: size))
+        }
+    }
+
+    /// Pixel rect of `imageSize` that remains visible when aspect-filled into `containerSize`.
+    private func aspectFillVisibleRect(imageSize: CGSize, containerSize: CGSize) -> CGRect {
+        let imageAspect = imageSize.width / imageSize.height
+        let containerAspect = containerSize.width / containerSize.height
+
+        if imageAspect > containerAspect {
+            let visibleWidth = imageSize.height * containerAspect
+            return CGRect(
+                x: (imageSize.width - visibleWidth) / 2,
+                y: 0,
+                width: visibleWidth,
+                height: imageSize.height
+            )
+        } else {
+            let visibleHeight = imageSize.width / containerAspect
+            return CGRect(
+                x: 0,
+                y: (imageSize.height - visibleHeight) / 2,
+                width: imageSize.width,
+                height: visibleHeight
+            )
+        }
+    }
 }
 
 
