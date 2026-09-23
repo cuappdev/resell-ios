@@ -13,8 +13,17 @@ struct RangeSlider: View {
     let range: ClosedRange<Double>
     let step: Double = 5 // Define the step value
     
+    
     private let trackWidth: CGFloat = 344
     private let handleDiameter: CGFloat = 14
+    
+    private var lowX: CGFloat {
+        position(for: lowValue) + handleDiameter / 2
+    }
+
+    private var highX: CGFloat {
+        position(for: highValue) + handleDiameter / 2
+    }
     
     var body: some View {
         GeometryReader { geometry in
@@ -25,8 +34,7 @@ struct RangeSlider: View {
                     .cornerRadius(4)
 
                 // Active range between the two handles.
-                let lowX = position(for: lowValue) + handleDiameter / 2
-                let highX = position(for: highValue) + handleDiameter / 2
+                
                 Rectangle()
                     .fill(
                         LinearGradient(
