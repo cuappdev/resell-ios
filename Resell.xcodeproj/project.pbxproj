@@ -165,6 +165,7 @@
 		C6235EDD2FA1587E00395FD7 /* SemanticVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6235EDB2FA1587E00395FD7 /* SemanticVersion.swift */; };
 		C6235EDE2FA1587E00395FD7 /* AppVersionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6235EDA2FA1587E00395FD7 /* AppVersionService.swift */; };
 		C6F1BDBB2FA14CC1004886F8 /* ForceUpdateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F1BDBA2FA14CC1004886F8 /* ForceUpdateView.swift */; };
+		ADDB8A9D2CC0738E02F4CFA5 /* GlassToolbarModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1309285CE00E73FFD36889 /* GlassToolbarModifier.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -324,6 +325,7 @@
 		C6235EDA2FA1587E00395FD7 /* AppVersionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppVersionService.swift; sourceTree = "<group>"; };
 		C6235EDB2FA1587E00395FD7 /* SemanticVersion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SemanticVersion.swift; sourceTree = "<group>"; };
 		C6F1BDBA2FA14CC1004886F8 /* ForceUpdateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForceUpdateView.swift; sourceTree = "<group>"; };
+		AD1309285CE00E73FFD36889 /* GlassToolbarModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassToolbarModifier.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -598,6 +600,7 @@
 		2C9B4D052C8FCAF20029DF61 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				AD1309285CE00E73FFD36889 /* GlassToolbarModifier.swift */,
 				C6F1BDBA2FA14CC1004886F8 /* ForceUpdateView.swift */,
 				C607480A2F90643200825192 /* ShareSheet.swift */,
 				2EEAAB272F1ADA1B0006FF5C /* AvailabilitySettingsMenu.swift */,
@@ -900,6 +903,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ADDB8A9D2CC0738E02F4CFA5 /* GlassToolbarModifier.swift in Sources */,
 				2E87F6FE2F29A651007C228E /* TransactionConfirmationPopup.swift in Sources */,
 				2E87F6FC2F270A13007C228E /* NotificationsSettingsView.swift in Sources */,
 				2E87F6FB2F270A0D007C228E /* NotificationsViewModel.swift in Sources */,

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 extension View {
 
@@ -18,6 +19,12 @@ extension View {
     func endEditingOnTap() -> some View {
         self.modifier(EndEditingOnTap())
     }
+
+    /// Restores the system edge-swipe-to-pop while a custom back button hides
+    /// the navigation bar item that normally owns that gesture.
+    func enableSwipeBack() -> some View {
+        background(InteractivePopGestureEnabler())
+    }
 }
 
 struct EndEditingOnTap: ViewModifier {
@@ -26,6 +33,41 @@ struct EndEditingOnTap: ViewModifier {
             .onTapGesture {
                 UIApplication.shared.endEditing()
             }
+    }
+}
+
+private struct InteractivePopGestureEnabler: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> InteractivePopGestureController {
+        InteractivePopGestureController()
+    }
+
+    func updateUIViewController(_ uiViewController: InteractivePopGestureController, context: Context) {}
+}
+
+private final class InteractivePopGestureController: UIViewController, UIGestureRecognizerDelegate {
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        guard let popGesture = navigationController?.interactivePopGestureRecognizer else { return }
+        popGesture.isEnabled = true
+        popGesture.delegate = self
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if navigationController?.interactivePopGestureRecognizer?.delegate === self {
+            navigationController?.interactivePopGestureRecognizer?.delegate = nil
+        }
+    }
+
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        (navigationController?.viewControllers.count ?? 0) > 1
+    }
+
+    func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+    ) -> Bool {
+        false
     }
 }
 
