@@ -1,19 +1,8 @@
 {
   "images" : [
     {
-      "filename" : "rivet-icons_filter 1.png",
-      "idiom" : "universal",
-      "scale" : "1x"
-    },
-    {
-      "filename" : "Group 66.png",
-      "idiom" : "universal",
-      "scale" : "2x"
-    },
-    {
-      "filename" : "rivet.png",
-      "idiom" : "universal",
-      "scale" : "3x"
+      "filename" : "Icons List Filter.svg",
+      "idiom" : "universal"
     }
   ],
   "info" : {
