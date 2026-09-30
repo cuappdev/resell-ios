@@ -14,7 +14,7 @@ struct FilterView: View {
     @State var presentPopup = false
     @EnvironmentObject var filtersVM: FiltersViewModel
 
-    private var categories : [String] = ["Clothing", "Books", "School", "Electronics", "Handmade", "Sports & Outdoors", "Other"]
+    private let categories: [String] = Constants.productCategories.map(\.title)
     private var conditions : [String] = ["Gently Used", "Worn", "Never Used"]
 
     let home : Bool
@@ -105,7 +105,6 @@ struct FilterView: View {
                         }
                         .padding(.bottom, 8)
                         
-                        // Slider — extend trailing to avoid clipping the 344pt track
                         RangeSlider(lowValue: $filtersVM.lowValue, highValue: $filtersVM.highValue, range: 0...1000)
                             .padding(.trailing, -28)
                         
@@ -132,21 +131,11 @@ struct FilterView: View {
                                                 filtersVM.categoryFilters.insert(category)
                                             }
                                         } label: {
-                                            if filtersVM.categoryFilters.contains(category) {
-                                                HStack {
-                                                    Text(category)
-                                                        .font(.custom("Rubik-Medium", size: 14))
-                                                        .foregroundStyle(Constants.Colors.resellPurple)
-                                                    
-                                                    Image(systemName: "xmark")
-                                                        .font(.custom("Rubik-Medium", size: 14))
-                                                        .foregroundStyle(Constants.Colors.resellPurple)
-                                                }
-                                            } else {
-                                                Text(category)
-                                                    .font(.custom("Rubik-Medium", size: 14))
-                                                    .foregroundStyle(Color.black)
-                                            }
+                                            let isSelected = filtersVM.categoryFilters.contains(category)
+                                            Text(category)
+                                                .font(Constants.Fonts.title3)
+                                                .foregroundStyle(isSelected ? Constants.Colors.resellPurple : Constants.Colors.black)
+                                                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
                                         }
                                         .padding(.horizontal, 14)
                                         .padding(.vertical, 8)
@@ -184,21 +173,11 @@ struct FilterView: View {
                                         filtersVM.conditionFilters.insert(condition)
                                     }
                                 } label: {
-                                    if filtersVM.conditionFilters.contains(condition) {
-                                        HStack {
-                                            Text(condition)
-                                                .font(.custom("Rubik-Medium", size: 14))
-                                                .foregroundStyle(Constants.Colors.resellPurple)
-                                            
-                                            Image(systemName: "xmark")
-                                                .font(.custom("Rubik-Medium", size: 14))
-                                                .foregroundStyle(Constants.Colors.resellPurple)
-                                        }
-                                    } else {
-                                        Text(condition)
-                                            .font(.custom("Rubik-Medium", size: 14))
-                                            .foregroundStyle(Color.black)
-                                    }
+                                    let isSelected = filtersVM.conditionFilters.contains(condition)
+                                    Text(condition)
+                                        .font(Constants.Fonts.title3)
+                                        .foregroundStyle(isSelected ? Constants.Colors.resellPurple : Constants.Colors.black)
+                                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
                                 }
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 8)
@@ -214,7 +193,7 @@ struct FilterView: View {
                         }
                     }
                     .padding(.horizontal, 28)
-                    } // End of ScrollView
+                    }
                     
                     Spacer()
                     
