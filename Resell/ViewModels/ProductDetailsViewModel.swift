@@ -50,7 +50,11 @@ class ProductDetailsViewModel: ObservableObject {
 
         RecentlyViewedViewModel.shared.recordView(post: post)
         Task {
-            try? await NetworkManager.shared.recordPostView(id: post.id)
+            do {
+                try await NetworkManager.shared.recordPostView(id: post.id)
+            } catch {
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.setPost recording view: \(error)")
+            }
         }
 
         maxImgRatioTask?.cancel()

@@ -7,10 +7,16 @@
 
 import SwiftUI
 
+/// See More screen for the Trending rail: the full trending list for one category.
 struct TrendingView: View {
+
+    // MARK: - Properties
+
     let category: FilterCategory
 
     @ObservedObject private var viewModel = ExploreViewModel.shared
+
+    // MARK: - UI
 
     var body: some View {
         ScrollView(.vertical) {
