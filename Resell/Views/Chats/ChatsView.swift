@@ -29,12 +29,15 @@ struct ChatsView: View {
             Spacer()
         }
         .background(Constants.Colors.white)
+        .toolbar(.hidden, for: .navigationBar)
+        .navigationBarBackButtonHidden(true)
         .emptyState(isEmpty: viewModel.checkEmptyState(), title: viewModel.emptyStateTitle(), text: viewModel.emptyStateMessage())
         .refreshable {
             viewModel.refreshChats()
         }
         .onAppear {
             viewModel.getAllChats()
+            mainViewModel.hidesTabBar = false
         }
         .loadingView(isLoading: viewModel.isLoading)
     }
@@ -86,8 +89,7 @@ struct ChatsView: View {
                 }
             }
             .padding(.top, 12)
-
-            Spacer()
+            .padding(.bottom, 24)
         }
         .frame(width: UIScreen.width)
     }
@@ -105,26 +107,20 @@ struct ChatsView: View {
 
     private func chatPreviewRow(chat: Chat, isArchived: Bool = false) -> some View {
         HStack(spacing: 12) {
-            KFImage(chat.other.photoUrl)
+            KFImage(URL(string: chat.post.images.first ?? ""))
                 .placeholder {
                     ShimmerView()
                         .frame(width: 52, height: 52)
-                        .clipShape(Circle())
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
                 .resizable()
                 .scaledToFill()
                 .frame(width: 52, height: 52)
-                .clipShape(Circle())
+                .clipShape(RoundedRectangle(cornerRadius: 8))
                 .opacity(isArchived ? 0.7 : 1.0)
 
             VStack(alignment: .leading) {
                 HStack {
-                    Text("\(chat.other.givenName)")
-                        .font(Constants.Fonts.title1)
-                        .foregroundStyle(isArchived ? Constants.Colors.secondaryGray : Constants.Colors.black)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-
                     Text(chat.post.title)
                         .font(Constants.Fonts.title4)
                         .foregroundStyle(Constants.Colors.secondaryGray)
@@ -136,29 +132,26 @@ struct ChatsView: View {
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(Constants.Colors.stroke, lineWidth: 0.75)
                         }
+                    
+                    Text(Date.timeAgo(from: chat.updatedAt))
+                        .font(Constants.Fonts.title4)
+                        .foregroundStyle(Constants.Colors.secondaryGray)
                 }
 
                 HStack(spacing: 0) {
-                    if isArchived {
-                        Text("Completed")
-                            .font(Constants.Fonts.title4)
-                            .foregroundStyle(Constants.Colors.resellPurple.opacity(0.7))
-                        
-                        Text(" • ")
-                            .foregroundStyle(Constants.Colors.secondaryGray)
-                    }
+                    Text("\(chat.other.givenName)")
+                        .font(Constants.Fonts.title4)
+                        .foregroundStyle(isArchived ? Constants.Colors.secondaryGray : Constants.Colors.black)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                     
+                    Text(" • ")
+
                     Text(chat.lastMessage)
                         .font(Constants.Fonts.title4)
                         .foregroundStyle(Constants.Colors.secondaryGray)
                         .lineLimit(1)
                         .truncationMode(.tail)
-
-                    Text(" • ")
-
-                    Text(Date.timeAgo(from: chat.updatedAt))
-                        .font(Constants.Fonts.title4)
-                        .foregroundStyle(Constants.Colors.secondaryGray)
                 }
 
             }

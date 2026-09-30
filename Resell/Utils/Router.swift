@@ -13,7 +13,32 @@ enum FollowListType {
 }
 
 class Router: ObservableObject {
-    @Published var path: [Route] = []
+
+    /// Bottom tab bar slots. Each one owns an independent navigation stack, so
+    /// switching tabs leaves the stack you were in exactly where you left it.
+    enum Tab: Int, CaseIterable {
+        case home, explore, sell, chats, profile
+    }
+
+    @Published private var tabPaths: [Tab: [Route]] = [:]
+    @Published var activeTab: Tab = .home
+
+    /// Navigation path of whichever tab is on screen. Every existing call site
+    /// (`push`, `pop`, `popToRoot`, …) reads and writes through this, so the
+    /// per-tab split is invisible to them.
+    var path: [Route] {
+        get { tabPaths[activeTab, default: []] }
+        set { tabPaths[activeTab] = newValue }
+    }
+
+    /// Binding for one tab's `NavigationStack`, including the tabs that are
+    /// currently off screen but still mounted.
+    func pathBinding(for tab: Tab) -> Binding<[Route]> {
+        Binding(
+            get: { self.tabPaths[tab, default: []] },
+            set: { self.tabPaths[tab] = $0 }
+        )
+    }
 
     enum Route: Hashable {
         case login
@@ -67,6 +92,13 @@ class Router: ObservableObject {
 
     func popToRoot() {
         path.removeAll()
+    }
+
+    /// Clears every tab's stack and returns to Home. Used on logout so the next
+    /// account doesn't inherit the previous one's navigation.
+    func reset() {
+        tabPaths = [:]
+        activeTab = .home
     }
 
     func lastPushedView() -> Route {

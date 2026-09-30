@@ -21,6 +21,9 @@ class CurrentUserProfileManager: ObservableObject {
     @Published var givenName: String = ""
     @Published var bio: String = ""
     @Published var venmoHandle: String = ""
+    /// Whether the account has a real uploaded photo, as opposed to the
+    /// placeholder `profilePic` falls back to.
+    @Published var hasProfilePicture: Bool = false
     
     @Published var userPosts: [Post] = []
     @Published var archivedPosts: [Post] = []
@@ -110,6 +113,7 @@ class CurrentUserProfileManager: ObservableObject {
         self.bio = bio
         self.venmoHandle = venmoHandle
         self.profilePic = profileImage
+        self.hasProfilePicture = true
         
         let updatedUserResponse = try await NetworkManager.shared.updateUserProfile(edit: edit)
         
@@ -137,6 +141,7 @@ class CurrentUserProfileManager: ObservableObject {
         givenName = ""
         bio = ""
         venmoHandle = ""
+        hasProfilePicture = false
     }
     
     // MARK: - Private Methods
@@ -160,6 +165,7 @@ class CurrentUserProfileManager: ObservableObject {
               let image = UIImage(data: data) else { return }
         
         profilePic = image
+        hasProfilePicture = true
     }
     
     private func setupNotificationObservers() {

@@ -1,5 +1,5 @@
 {
-  "originHash" : "3040011e224f4c14fbfa4512ed2b36ea1e7850c5437565215d601b5013c92c28",
+  "originHash" : "e6de68e181bdea9fd204c105e8fa72043dfb80dadda121c76792e8d6488dad9b",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -161,6 +161,15 @@
       "state" : {
         "revision" : "a0bc79961d7be727d258d33d5a6b2f1023270ba1",
         "version" : "1.22.5"
+      }
+    },
+    {
+      "identity" : "lucide-icons-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/JakubMazur/lucide-icons-swift",
+      "state" : {
+        "revision" : "e4f7c76d6a16f2fb4a414dd6c5c83fc04216bdf8",
+        "version" : "1.28.0"
       }
     },
     {
