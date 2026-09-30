@@ -7,8 +7,15 @@
 
 import SwiftUI
 
+/// The listings the user opened most recently, newest first.
+///
+/// Shared because `ProductDetailsViewModel` records views into it while Explore
+/// and `RecentlyViewedView` read from it. The IDs and the listings themselves are
+/// persisted so the list renders on launch before anything is refetched.
 @MainActor
 final class RecentlyViewedViewModel: ObservableObject {
+
+    // MARK: - Properties
 
     static let shared = RecentlyViewedViewModel()
 
@@ -24,18 +31,12 @@ final class RecentlyViewedViewModel: ObservableObject {
 
     private var recentlyViewedIds: [String] {
         get {
-            guard let data = storedIdsData.data(using: .utf8),
-                  let decoded = try? JSONDecoder().decode([String].self, from: data) else {
-                return []
-            }
-            return decoded
+            decodeStored([String].self, from: storedIdsData) ?? []
         }
         set {
-            if let data = try? JSONEncoder().encode(newValue),
-               let string = String(data: data, encoding: .utf8) {
-                storedIdsData = string
-                objectWillChange.send()
-            }
+            guard let encoded = encodeForStorage(newValue) else { return }
+            storedIdsData = encoded
+            objectWillChange.send()
         }
     }
 
@@ -43,6 +44,8 @@ final class RecentlyViewedViewModel: ObservableObject {
         hydrateCache()
         publishOrderedPosts()
     }
+
+    // MARK: - Functions
 
     /// Record a post view, most-recent first, and cache the listing so Recently
     /// Viewed can render it without a refetch. Duplicates move to the front.
@@ -64,6 +67,8 @@ final class RecentlyViewedViewModel: ObservableObject {
         // The first page is in the cache now; only the tail is still missing.
         await loadPosts(limit: maxStoredIds, forceRefresh: false)
     }
+
+    // MARK: - Private Methods
 
     private func moveIdToFront(_ postId: String) {
         var ids = recentlyViewedIds
@@ -106,20 +111,26 @@ final class RecentlyViewedViewModel: ObservableObject {
     }
 
     private func hydrateCache() {
-        guard let data = storedPostsData.data(using: .utf8),
-              let decoded = try? JSONDecoder().decode([Post].self, from: data) else {
-            return
-        }
+        guard let decoded = decodeStored([Post].self, from: storedPostsData) else { return }
         postCache = Dictionary(uniqueKeysWithValues: decoded.map { ($0.id, $0) })
     }
 
     private func persistCache() {
         let ordered = recentlyViewedIds.compactMap { postCache[$0] }
-        guard let data = try? JSONEncoder().encode(ordered),
-              let string = String(data: data, encoding: .utf8) else {
-            return
-        }
-        storedPostsData = string
+        guard let encoded = encodeForStorage(ordered) else { return }
+        storedPostsData = encoded
+    }
+
+    /// Stored lists go through `NetworkManager`'s shared coders so cached posts
+    /// round-trip their dates exactly as the backend's JSON does.
+    private func encodeForStorage<T: Encodable>(_ value: T) -> String? {
+        guard let data = try? NetworkManager.shared.jsonEncoder.encode(value) else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    private func decodeStored<T: Decodable>(_ type: T.Type, from string: String) -> T? {
+        guard let data = string.data(using: .utf8) else { return nil }
+        return try? NetworkManager.shared.jsonDecoder.decode(type, from: data)
     }
 
     private func fetchPostsInParallel(_ ids: [String]) async -> [Post] {
