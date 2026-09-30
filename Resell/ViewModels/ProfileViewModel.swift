@@ -27,6 +27,7 @@ class ProfileViewModel: ObservableObject {
     @Published var followerCount: Int = 0
     @Published var followingCount: Int = 0
 
+    /// Lets `loadExternalUser(id:)` skip a profile that is already loaded or in flight.
     private var loadedExternalUserID: String?
     private var loadingExternalUserID: String?
     
