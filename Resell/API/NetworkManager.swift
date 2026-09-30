@@ -29,7 +29,7 @@ class NetworkManager {
     private let maxAttempts = 2
     
     /// Shared JSON encoder configured for backend compatibility (sends dates as ISO8601 strings)
-    private let jsonEncoder: JSONEncoder = {
+    let jsonEncoder: JSONEncoder = {
         let encoder = JSONEncoder()
         // Backend expects ISO8601 strings like "2026-01-28T03:12:55.810Z"
         encoder.dateEncodingStrategy = .custom { date, encoder in
@@ -45,7 +45,7 @@ class NetworkManager {
     /// backend's behavior (ISO8601 strings, with or without fractional seconds) and
     /// also gracefully falls back to numeric timestamps. This must match
     /// `jsonEncoder` so request/response round-trips work correctly.
-    private let jsonDecoder: JSONDecoder = {
+    let jsonDecoder: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .custom { decoder in
             let container = try decoder.singleValueContainer()
@@ -189,6 +189,11 @@ class NetworkManager {
         func post<T: Decodable>(url: URL) async throws -> T {
             let (data, _) = try await perform { try await createRequest(url: url, method: "POST") }
             return try jsonDecoder.decode(T.self, from: data)
+        }
+
+        /// Overloaded post for requests with no body and no decoded response (e.g. 204).
+        func post(url: URL) async throws {
+            _ = try await perform { try await createRequest(url: url, method: "POST") }
         }
             
         /// Template function to DELETE data to a specified URL
@@ -441,6 +446,25 @@ class NetworkManager {
         func getSimilarPostsByID(id: String) async throws -> PostsResponse {
             let url = try constructURL(endpoint: "/post/similar/postId/\(id)/")
             
+            return try await get(url: url)
+        }
+
+        /// Idempotent view upsert for the viewer + post + UTC day. Skips own posts server-side.
+        func recordPostView(id: String) async throws {
+            let url = try constructURL(endpoint: "/post/view/postId/\(id)/")
+            try await post(url: url)
+        }
+
+        /// Popular listings from the last day, for Explore's Daily Picks rail.
+        func getDailyPicks(limit: Int = 10) async throws -> PostsResponse {
+            let url = try constructURL(endpoint: "/post/dailyPicks/?limit=\(limit)")
+            return try await get(url: url)
+        }
+
+        /// Category must match seed names (e.g. `ELECTRONICS`, `CLOTHING`).
+        func getTrendingPosts(category: String, page: Int = 1, limit: Int = 10) async throws -> PostsResponse {
+            let encoded = category.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? category
+            let url = try constructURL(endpoint: "/post/trending/?category=\(encoded)&page=\(page)&limit=\(limit)")
             return try await get(url: url)
         }
         

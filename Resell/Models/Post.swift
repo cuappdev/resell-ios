@@ -22,12 +22,31 @@ struct Post: Codable, Equatable, Identifiable, Hashable {
     let archive: Bool
     let user: User?
     let sold: Bool?
+    var savedCount: Int? = nil
+    var saveCount: Int? = nil
+    var saves: Int? = nil
+    /// Backend `getPostInfo()` exposes savers as a user array, not a numeric count.
+    var savers: [PostSaver]? = nil
+
+    var displaySaveCount: Int {
+        [savedCount, saveCount, saves, savers?.count].compactMap { $0 }.max() ?? 0
+    }
+
+    /// Trending payloads often omit `savers`. If we already know this post is
+    /// saved locally, treat that as at least one save.
+    func ensuringMinimumSaves(_ minimum: Int) -> Post {
+        guard minimum > displaySaveCount else { return self }
+        var copy = self
+        copy.savedCount = minimum
+        return copy
+    }
 
     enum CodingKeys: String, CodingKey {
         case id, title, description, categories, category, condition
         case originalPrice = "originalPrice"
         case alteredPrice = "alteredPrice"
         case images, created, location, archive, user, sold
+        case savedCount, saveCount, saves, savers
     }
 
     static func == (lhs: Post, rhs: Post) -> Bool {
@@ -51,6 +70,11 @@ struct Post: Codable, Equatable, Identifiable, Hashable {
             return ascending ? date1 < date2 : date1 > date2
         }
     }
+}
+
+/// Minimal saver payload so we can count `savers` without decoding full users.
+struct PostSaver: Codable, Equatable, Hashable {
+    let firebaseUid: String?
 }
 
 struct PostCategory: Codable {

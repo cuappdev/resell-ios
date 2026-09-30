@@ -167,6 +167,8 @@
 		C6F1BDBB2FA14CC1004886F8 /* ForceUpdateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F1BDBA2FA14CC1004886F8 /* ForceUpdateView.swift */; };
 		ADDB8A9D2CC0738E02F4CFA5 /* GlassToolbarModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1309285CE00E73FFD36889 /* GlassToolbarModifier.swift */; };
 		ADBE83F08B58C5A3D25A8497 /* CategoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADF650358E3D49F1BFF982BD /* CategoriesView.swift */; };
+		AD0318063D3FF1F919C9665F /* ExploreViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADEFB3FC5FC8A6B527B63B3C /* ExploreViewModel.swift */; };
+		AD4BA28A18F3DD806C02C17E /* RecentlyViewedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD2586BBA47B621B27FFBAE8 /* RecentlyViewedViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -328,6 +330,8 @@
 		C6F1BDBA2FA14CC1004886F8 /* ForceUpdateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForceUpdateView.swift; sourceTree = "<group>"; };
 		AD1309285CE00E73FFD36889 /* GlassToolbarModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassToolbarModifier.swift; sourceTree = "<group>"; };
 		ADF650358E3D49F1BFF982BD /* CategoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoriesView.swift; sourceTree = "<group>"; };
+		ADEFB3FC5FC8A6B527B63B3C /* ExploreViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreViewModel.swift; sourceTree = "<group>"; };
+		AD2586BBA47B621B27FFBAE8 /* RecentlyViewedViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentlyViewedViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -651,6 +655,8 @@
 		2C9B4D122C90FE170029DF61 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				AD2586BBA47B621B27FFBAE8 /* RecentlyViewedViewModel.swift */,
+				ADEFB3FC5FC8A6B527B63B3C /* ExploreViewModel.swift */,
 				2E9F75852EB6D680003FE0E0 /* CurrentUserProfileManager.swift */,
 				2E9F75862EB6D680003FE0E0 /* EditProfileViewModel.swift */,
 				2E9F75872EB6D680003FE0E0 /* MessagesViewModel.swift */,
@@ -906,6 +912,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AD4BA28A18F3DD806C02C17E /* RecentlyViewedViewModel.swift in Sources */,
+				AD0318063D3FF1F919C9665F /* ExploreViewModel.swift in Sources */,
 				ADBE83F08B58C5A3D25A8497 /* CategoriesView.swift in Sources */,
 				ADDB8A9D2CC0738E02F4CFA5 /* GlassToolbarModifier.swift in Sources */,
 				2E87F6FE2F29A651007C228E /* TransactionConfirmationPopup.swift in Sources */,
