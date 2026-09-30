@@ -205,7 +205,34 @@ class HomeViewModel: ObservableObject {
             NetworkManager.shared.logger.error("Sync failed: \(error)")
         }
     }
-    
+
+    /// Whether `post` is saved. Once `savedItems` has loaded it holds every saved
+    /// post, so absence is an answer; only before that does this ask the backend,
+    /// otherwise scrolling a feed would fire one request per cell.
+    func isPostSaved(_ post: Post) async -> Bool {
+        if savedItems.contains(where: { $0.id == post.id }) {
+            return true
+        }
+        guard !hasLoadedSavedItems else { return false }
+
+        do {
+            return try await NetworkManager.shared.postIsSaved(id: post.id).isSaved
+        } catch {
+            NetworkManager.shared.logger.error("Error in HomeViewModel.isPostSaved: \(error)")
+            return false
+        }
+    }
+
+    /// Saves or unsaves `post` on the backend, then brings `savedItems` in line.
+    func setSaved(_ isSaved: Bool, for post: Post) async throws {
+        if isSaved {
+            _ = try await NetworkManager.shared.savePostByID(id: post.id)
+        } else {
+            _ = try await NetworkManager.shared.unsavePostByID(id: post.id)
+        }
+        await toggleLocalSaveStatus(for: post, isSaving: isSaved)
+    }
+
     /// Clear any applied filter-sheet results and return the home feed to the
     /// default "Recent" state. Explicitly resets `filteredItems` to the full
     /// cached `allItems` rather than depending on `selectedFilter`'s `didSet`.

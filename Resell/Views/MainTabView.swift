@@ -46,7 +46,7 @@ struct MainTabView: View {
         }
         .ignoresSafeArea(edges: .bottom)
         .onAppear {
-            router.activeTab = selection
+            router.activeTab = selectedTab
             if mainViewModel.userDidLogin {
                 // Start listening to chat updates as soon as the user lands
                 // on the main shell so the unread badge stays populated.
@@ -62,17 +62,13 @@ struct MainTabView: View {
                 router.reset()
             }
         }
-        .onChange(of: selection) { newSelection in
-            router.activeTab = newSelection
+        .onChange(of: selection) { _ in
+            router.activeTab = selectedTab
         }
-        .onChange(of: router.path) { path in
+        .onChange(of: router.path) { _ in
             // Restore tab bar as soon as we leave a conversation — don't wait
             // for MessagesView.onDisappear, which fires after the pop animation.
-            let isMessages = path.last.map { route in
-                if case .messages = route { return true }
-                return false
-            } ?? false
-            if !isMessages && isHidden {
+            if isHidden && !isMessagesRouteActive {
                 isHidden = false
             }
         }
@@ -103,6 +99,10 @@ struct MainTabView: View {
         }
     }
 
+    private var selectedTab: Router.Tab {
+        Router.Tab(rawValue: selection) ?? .home
+    }
+
     private var showsTabBar: Bool {
         mainViewModel.userDidLogin && !isHidden && !isMessagesRouteActive
     }
@@ -119,7 +119,7 @@ struct MainTabView: View {
         // under ours, which showed through the glass as a second outline.
         ZStack {
             ForEach(Router.Tab.allCases, id: \.rawValue) { tab in
-                NavigationStack(path: router.pathBinding(for: tab.rawValue)) {
+                NavigationStack(path: router.pathBinding(for: tab)) {
                     tabRoot(for: tab)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .background(Constants.Colors.white)
@@ -133,16 +133,16 @@ struct MainTabView: View {
                             destination(for: route)
                         }
                 }
-                .opacity(selection == tab.rawValue ? 1 : 0)
-                .allowsHitTesting(selection == tab.rawValue)
+                .opacity(selectedTab == tab ? 1 : 0)
+                .allowsHitTesting(selectedTab == tab)
                 // Inactive stacks stay mounted so each tab keeps its own history.
-                .accessibilityHidden(selection != tab.rawValue)
+                .accessibilityHidden(selectedTab != tab)
             }
         }
     }
 
     private var loginNavigation: some View {
-        NavigationStack(path: router.pathBinding(for: Router.Tab.home.rawValue)) {
+        NavigationStack(path: router.pathBinding(for: .home)) {
             LoginView()
                 .environmentObject(onboardingViewModel)
                 .navigationDestination(for: Router.Route.self) { route in
@@ -265,59 +265,7 @@ struct MainTabView: View {
     private var tabBarView: some View {
         HStack(spacing: 0) {
             ForEach(Router.Tab.allCases, id: \.rawValue) { tab in
-                let index = tab.rawValue
-                let config = config(for: tab)
-                let isSelected = selection == index
-                let badgeCount = tab == .chats ? chatsViewModel.totalUnread : 0
-
-                Button {
-                    if selection == index {
-                        router.popToRoot()
-                    } else {
-                        router.activeTab = index
-                        selection = index
-                    }
-                } label: {
-                    HStack(spacing: isSelected ? 6 : 0) {
-                        if tab == .profile && currentUser.hasProfilePicture {
-                            profileTabImage
-                        } else {
-                            Image(systemName: isSelected ? config.activeIcon : config.icon)
-                                .font(.system(size: 17, weight: isSelected ? .semibold : .regular))
-                        }
-
-                        if isSelected {
-                            Text(config.label)
-                                .font(.custom("Rubik-Medium", size: 13))
-                                .fixedSize()
-                                .transition(.opacity.combined(with: .scale(scale: 0.8)))
-                        }
-                    }
-                    .foregroundStyle(Color.black)
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, isSelected ? 18 : 14)
-                    .background {
-                        if isSelected {
-                            Capsule()
-                                .fill(Color.black.opacity(0.08))
-                        }
-                    }
-                    .clipShape(Capsule())
-                    .overlay(alignment: .topTrailing) {
-                        if badgeCount > 0 {
-                            Text(badgeCount > 99 ? "99+" : "\(badgeCount)")
-                                .font(.custom("Roboto-Medium", size: 10))
-                                .foregroundStyle(Constants.Colors.white)
-                                .padding(.horizontal, 5)
-                                .frame(minWidth: 16, minHeight: 16)
-                                .background(Constants.Colors.errorRed)
-                                .clipShape(.capsule)
-                                .offset(x: isSelected ? 0 : 8, y: -6)
-                        }
-                    }
-                }
-                .buttonStyle(PlainButtonStyle())
-                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
+                tabBarButton(for: tab)
 
                 if tab != Router.Tab.allCases.last {
                     Spacer(minLength: 0)
@@ -331,7 +279,7 @@ struct MainTabView: View {
         .fixedSize(horizontal: false, vertical: true)
         .background {
             Capsule()
-                .fill(Color.white.opacity(0.001))
+                .fill(Constants.Colors.white.opacity(0.001))
         }
         .contentShape(Capsule())
         .modifier(TabBarGlassModifier())
@@ -340,6 +288,66 @@ struct MainTabView: View {
         .frame(width: UIScreen.width)
         .fixedSize(horizontal: false, vertical: true)
         .allowsHitTesting(true)
+    }
+
+    /// Tapping the selected tab pops its stack to the root; any other tab switches to it.
+    private func tabBarButton(for tab: Router.Tab) -> some View {
+        let config = config(for: tab)
+        let isSelected = selectedTab == tab
+        let badgeCount = tab == .chats ? chatsViewModel.totalUnread : 0
+
+        return Button {
+            if isSelected {
+                router.popToRoot()
+            } else {
+                router.activeTab = tab
+                selection = tab.rawValue
+            }
+        } label: {
+            HStack(spacing: isSelected ? 6 : 0) {
+                if tab == .profile && currentUser.hasProfilePicture {
+                    profileTabImage
+                } else {
+                    Image(systemName: isSelected ? config.activeIcon : config.icon)
+                        .font(.system(size: 17, weight: isSelected ? .semibold : .regular))
+                }
+
+                if isSelected {
+                    Text(config.label)
+                        .font(Constants.Fonts.tabBarLabel)
+                        .fixedSize()
+                        .transition(.opacity.combined(with: .scale(scale: 0.8)))
+                }
+            }
+            .foregroundStyle(Constants.Colors.black)
+            .padding(.vertical, 10)
+            .padding(.horizontal, isSelected ? 18 : 14)
+            .background {
+                if isSelected {
+                    Capsule()
+                        .fill(Constants.Colors.black.opacity(0.08))
+                }
+            }
+            .clipShape(Capsule())
+            .overlay(alignment: .topTrailing) {
+                if badgeCount > 0 {
+                    unreadBadge(count: badgeCount, isTabSelected: isSelected)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
+    }
+
+    private func unreadBadge(count: Int, isTabSelected: Bool) -> some View {
+        Text(count > 99 ? "99+" : "\(count)")
+            .font(Constants.Fonts.badge)
+            .foregroundStyle(Constants.Colors.white)
+            .padding(.horizontal, 5)
+            .frame(minWidth: 16, minHeight: 16)
+            .background(Constants.Colors.errorRed)
+            .clipShape(.capsule)
+            .offset(x: isTabSelected ? 0 : 8, y: -6)
     }
 
     private var profileTabImage: some View {
@@ -351,6 +359,8 @@ struct MainTabView: View {
     }
 }
 
+/// Reserves room at the bottom of a tab's scroll content so it can scroll clear
+/// of the floating tab bar.
 private struct TabBarContentInsetModifier: ViewModifier {
     let isEnabled: Bool
 
@@ -366,6 +376,8 @@ private struct TabBarContentInsetModifier: ViewModifier {
     }
 }
 
+/// Liquid Glass capsule behind the floating tab bar, with a material fallback
+/// before iOS 26.
 private struct TabBarGlassModifier: ViewModifier {
     func body(content: Content) -> some View {
         let shape = Capsule()
@@ -377,8 +389,8 @@ private struct TabBarGlassModifier: ViewModifier {
         } else {
             content
                 .background(.ultraThinMaterial, in: shape)
-                .overlay(shape.strokeBorder(Color.black.opacity(0.06), lineWidth: 1))
-                .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
+                .overlay(shape.strokeBorder(Constants.Colors.black.opacity(0.06), lineWidth: 1))
+                .shadow(color: Constants.Colors.black.opacity(0.08), radius: 8, x: 0, y: 2)
         }
     }
 }

@@ -9,6 +9,7 @@ import Flow
 import PhotosUI
 import SwiftUI
 
+/// Sell tab: every field needed to post a listing, on one scrolling screen.
 struct SellView: View {
 
     // MARK: - Properties
@@ -20,15 +21,10 @@ struct SellView: View {
 
     private enum Field {
         case title
-        case price
         case description
     }
 
-    /// Listing categories, in `Constants.filters` order. A nil color marks a
-    /// pseudo-category ("Recent") that is not something you can list under.
-    private let categoryOptions: [String] = Constants.filters.compactMap {
-        $0.color == nil ? nil : $0.title
-    }
+    private let categoryOptions: [String] = Constants.productCategories.map(\.title)
 
     /// The backend category name differs from what reads well on the form.
     private let categoryDisplayNames = ["Handmade": "Homemade"]
@@ -50,7 +46,7 @@ struct SellView: View {
                 categorySection
                 conditionSection
                 descriptionField
-                actionButtons
+                publishButton
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
             .padding(.top, 12)
@@ -189,45 +185,52 @@ struct SellView: View {
 
             VStack {
                 HStack {
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            viewModel.removeImage(at: currentImageIndex)
-                        }
-                    } label: {
-                        Image(systemName: "trash")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(Constants.Colors.errorRed)
-                            .frame(width: 36, height: 36)
-                            .background(.ultraThinMaterial, in: Circle())
-                    }
-                    .buttonStyle(.plain)
+                    removeImageButton
 
                     Spacer()
 
-                    Button {
-                        viewModel.didShowImageSourceDialog = true
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(Constants.Colors.black)
-                            .frame(width: 36, height: 36)
-                            .background(.ultraThinMaterial, in: Circle())
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(viewModel.remainingImageSlots == 0)
+                    addImageButton
                 }
 
                 Spacer()
 
-                Text("\(currentImageIndex + 1) / \(viewModel.selectedImages.count)")
-                    .font(Constants.Fonts.subtitle1)
-                    .foregroundStyle(Constants.Colors.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(.black.opacity(0.55), in: Capsule())
+                ImageCountBadge(
+                    currentIndex: currentImageIndex,
+                    count: viewModel.selectedImages.count,
+                    font: Constants.Fonts.subtitle1
+                )
             }
             .padding(12)
         }
+    }
+
+    private var removeImageButton: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                viewModel.removeImage(at: currentImageIndex)
+            }
+        } label: {
+            Image(systemName: "trash")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Constants.Colors.errorRed)
+                .frame(width: 36, height: 36)
+                .background(.ultraThinMaterial, in: Circle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var addImageButton: some View {
+        Button {
+            viewModel.didShowImageSourceDialog = true
+        } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Constants.Colors.black)
+                .frame(width: 36, height: 36)
+                .background(.ultraThinMaterial, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .disabled(viewModel.remainingImageSlots == 0)
     }
 
     private func carouselButton(systemName: String, direction: Int) -> some View {
@@ -243,7 +246,7 @@ struct SellView: View {
                 .foregroundStyle(Constants.Colors.white)
                 .frame(width: 44, height: 60)
                 .contentShape(Rectangle())
-                .shadow(color: .black.opacity(0.35), radius: 2)
+                .shadow(color: Constants.Colors.black.opacity(0.35), radius: 2)
         }
         .buttonStyle(.plain)
         .disabled(!viewModel.selectedImages.indices.contains(currentImageIndex + direction))
@@ -305,39 +308,27 @@ struct SellView: View {
         label: String,
         placeholder: String,
         text: Binding<String>,
-        field: Field,
-        prefix: String? = nil,
-        width: CGFloat? = nil
+        field: Field
     ) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label)
                 .font(Constants.Fonts.body2)
                 .foregroundStyle(Constants.Colors.black)
 
-            HStack(spacing: 6) {
-                if let prefix {
-                    Text(prefix)
-                        .font(Constants.Fonts.body2)
-                        .foregroundStyle(Constants.Colors.black)
+            TextField(placeholder, text: text)
+                .font(Constants.Fonts.subtitle1)
+                .foregroundStyle(Constants.Colors.black)
+                .focused($focusedField, equals: field)
+                .padding(.horizontal, 10)
+                .frame(height: 36)
+                .background(Constants.Colors.wash)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Constants.Colors.inactiveGray, lineWidth: 1)
                 }
-
-                TextField(placeholder, text: text)
-                    .font(Constants.Fonts.subtitle1)
-                    .foregroundStyle(Constants.Colors.black)
-                    .focused($focusedField, equals: field)
-                    .keyboardType(field == .price ? .decimalPad : .default)
-            }
-            .padding(.horizontal, 10)
-            .frame(height: 36)
-            .background(Constants.Colors.wash)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay {
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Constants.Colors.inactiveGray, lineWidth: 1)
-            }
         }
-        .frame(width: width)
-        .frame(maxWidth: width == nil ? .infinity : nil, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var categorySection: some View {
@@ -454,7 +445,7 @@ struct SellView: View {
         }
     }
 
-    private var actionButtons: some View {
+    private var publishButton: some View {
         Button {
             focusedField = nil
             viewModel.createNewListing()

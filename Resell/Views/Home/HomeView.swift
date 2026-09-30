@@ -12,6 +12,8 @@ import UIKit
 
 struct HomeView: View {
 
+    // MARK: - Properties
+
     @EnvironmentObject private var mainViewModel: MainViewModel
     @EnvironmentObject private var searchViewModel: SearchViewModel
     @EnvironmentObject var router: Router
@@ -37,11 +39,16 @@ struct HomeView: View {
         isSearchExpanded && searchViewModel.isSearching
     }
 
+    // MARK: - UI
+
     var body: some View {
         ScrollView(.vertical, showsIndicators: !isSearchPanelBlocking) {
             if isSearchExpanded && !searchViewModel.isSearching {
-                searchResultsContent
-                    .padding(.top, 12)
+                SearchResultsView(
+                    isLoading: searchViewModel.isLoading,
+                    items: searchViewModel.searchedItems
+                )
+                .padding(.top, 12)
             } else {
                 homeFeedContent
                     .padding(.top, 12)
@@ -63,23 +70,7 @@ struct HomeView: View {
             customToolbar
         }
         .toolbar(.hidden, for: .navigationBar)
-        .onChange(of: isSearchExpanded) { isExpanded in
-            if isExpanded {
-                updateFilterToolbarVisibility(false)
-                searchViewModel.isSearching = true
-                // Focus after the panel paints — creating the field and raising
-                // the keyboard in one frame drops the first animation.
-                Task { @MainActor in
-                    await Task.yield()
-                    searchFocused = true
-                }
-            } else {
-                searchText = ""
-                searchViewModel.isSearching = true
-                searchViewModel.searchedItems = []
-                searchFocused = false
-            }
-        }
+        .onChange(of: isSearchExpanded, perform: handleSearchExpansionChange)
         .onChange(of: searchFocused) { focused in
             if focused { searchViewModel.isSearching = true }
         }
@@ -88,19 +79,17 @@ struct HomeView: View {
                 viewModel.getAllPosts()
             }
             viewModel.getBlockedUsers()
-            Task { await viewModel.getSavedPosts() }
             withAnimation { mainViewModel.hidesTabBar = false }
+        }
+        .task {
+            await viewModel.getSavedPosts()
         }
         .onDisappear {
             viewModel.cleanupMemory()
         }
         .background(Constants.Colors.white)
         .refreshable {
-            if viewModel.isFilteredFeed {
-                Task { try? await filtersViewModel.applyFilters(homeViewModel: viewModel) }
-            } else {
-                viewModel.getAllPosts(forceRefresh: true)
-            }
+            await refreshFeed()
         }
         .loadingView(isLoading: viewModel.isLoading)
         .navigationBarBackButtonHidden()
@@ -119,18 +108,9 @@ struct HomeView: View {
                     .font(Constants.Fonts.h2)
                     .foregroundStyle(Constants.Colors.black)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.leading, 24)
+                    .padding(.leading, Constants.Spacing.horizontalPadding)
 
-                Button {
-                    presentPopup = true
-                } label: {
-                    Image("filters")
-                        .resizable()
-                        .frame(width: 24, height: 21)
-                        .padding(12)
-                        .contentShape(Rectangle())
-                }
-                .padding(.trailing, 12)
+                inlineFilterButton
             }
             .padding(.bottom, 4)
 
@@ -138,27 +118,17 @@ struct HomeView: View {
         }
     }
 
-    @ViewBuilder
-    private var searchResultsContent: some View {
-        if searchViewModel.isLoading {
-            ProgressView()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(.top, 80)
-        } else if searchViewModel.searchedItems.isEmpty {
-            VStack(spacing: 12) {
-                Text("No results")
-                    .font(Constants.Fonts.h2)
-                    .foregroundStyle(Constants.Colors.black)
-
-                Text("Try a different search term")
-                    .font(Constants.Fonts.body1)
-                    .foregroundStyle(Constants.Colors.secondaryGray)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.top, 80)
-        } else {
-            ProductsGalleryView(items: searchViewModel.searchedItems)
+    private var inlineFilterButton: some View {
+        Button {
+            presentPopup = true
+        } label: {
+            Image("filters")
+                .resizable()
+                .frame(width: 24, height: 21)
+                .padding(12)
+                .contentShape(Rectangle())
         }
+        .padding(.trailing, 12)
     }
 
     // MARK: - Custom Toolbar
@@ -186,7 +156,9 @@ struct HomeView: View {
                         .transition(.opacity.combined(with: .scale(scale: 0.85)))
                 }
 
-                searchPill
+                SearchPill(placeholder: "What are you looking for?", height: toolbarControlHeight) {
+                    isSearchExpanded = true
+                }
 
                 notificationsButton
             }
@@ -194,31 +166,6 @@ struct HomeView: View {
             .frame(height: toolbarControlHeight)
             .animation(.easeInOut(duration: 0.2), value: showFilterInToolbar)
         }
-    }
-
-    private var searchPill: some View {
-        Button {
-            isSearchExpanded = true
-        } label: {
-            HStack(spacing: 8) {
-                Image("search")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 18, height: 18)
-
-                Text("What are you looking for?")
-                    .font(Constants.Fonts.body2)
-                    .foregroundStyle(Constants.Colors.secondaryGray)
-                    .lineLimit(1)
-
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 14)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-        }
-        .buttonStyle(.plain)
-        .frame(height: toolbarControlHeight)
-        .modifier(GlassToolbarModifier())
     }
 
     private var notificationsButton: some View {
@@ -233,7 +180,7 @@ struct HomeView: View {
         }
         .buttonStyle(.plain)
         .frame(width: toolbarControlHeight, height: toolbarControlHeight)
-        .modifier(GlassToolbarModifier())
+        .glassToolbarBackground()
         .accessibilityLabel("Notifications")
     }
 
@@ -249,16 +196,47 @@ struct HomeView: View {
         }
         .buttonStyle(.plain)
         .frame(width: toolbarControlHeight, height: toolbarControlHeight)
-        .modifier(GlassToolbarModifier())
+        .glassToolbarBackground()
         .accessibilityLabel("Filters")
     }
 
-    // MARK: - Helpers
+    // MARK: - Private Methods
 
     private func updateFilterToolbarVisibility(_ shouldShow: Bool) {
         guard shouldShow != showFilterInToolbar else { return }
         withAnimation(.easeInOut(duration: 0.2)) {
             showFilterInToolbar = shouldShow
+        }
+    }
+
+    private func handleSearchExpansionChange(_ isExpanded: Bool) {
+        if isExpanded {
+            updateFilterToolbarVisibility(false)
+            searchViewModel.isSearching = true
+            // Focus after the panel paints — creating the field and raising
+            // the keyboard in one frame drops the first animation.
+            Task { @MainActor in
+                await Task.yield()
+                searchFocused = true
+            }
+        } else {
+            searchText = ""
+            searchViewModel.isSearching = true
+            searchViewModel.searchedItems = []
+            searchFocused = false
+        }
+    }
+
+    private func refreshFeed() async {
+        guard viewModel.isFilteredFeed else {
+            viewModel.getAllPosts(forceRefresh: true)
+            return
+        }
+
+        do {
+            try await filtersViewModel.applyFilters(homeViewModel: viewModel)
+        } catch {
+            NetworkManager.shared.logger.error("Error in HomeView.refreshFeed: \(error)")
         }
     }
 
@@ -298,6 +276,7 @@ private struct HomeScrollOffsetReader: UIViewRepresentable {
         context.coordinator.attach(from: uiView)
     }
 
+    @MainActor
     final class Coordinator {
 
         var onChange: (CGFloat) -> Void
@@ -320,7 +299,7 @@ private struct HomeScrollOffsetReader: UIViewRepresentable {
                 scrollView = enclosing
                 observation = enclosing.observe(\.contentOffset, options: [.initial, .new]) { [weak self] scrollView, _ in
                     let offsetY = scrollView.contentOffset.y
-                    DispatchQueue.main.async {
+                    Task { @MainActor in
                         self?.onChange(offsetY)
                     }
                 }
@@ -328,7 +307,7 @@ private struct HomeScrollOffsetReader: UIViewRepresentable {
             }
 
             guard remainingAttempts > 0 else { return }
-            DispatchQueue.main.async { [weak self, weak view] in
+            Task { @MainActor [weak self, weak view] in
                 guard let self, let view, self.scrollView == nil else { return }
                 self.attemptAttach(from: view, remainingAttempts: remainingAttempts - 1)
             }

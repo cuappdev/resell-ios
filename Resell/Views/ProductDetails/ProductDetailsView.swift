@@ -330,7 +330,7 @@ struct ProductDetailsView: View {
         HStack(spacing: 8) {
             Button {
                 if viewModel.isMyPost() {
-                    router.activeTab = Router.Tab.profile.rawValue
+                    router.activeTab = .profile
                     mainViewModel.selection = Router.Tab.profile.rawValue
                     router.popToRoot()
                 } else {

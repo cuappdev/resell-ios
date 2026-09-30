@@ -7,9 +7,14 @@
 
 import SwiftUI
 
+/// See More screen for the Daily Picks rail: the full grid of the day's picks.
 struct DailyPicksView: View {
 
+    // MARK: - Properties
+
     @ObservedObject private var viewModel = ExploreViewModel.shared
+
+    // MARK: - UI
 
     var body: some View {
         ScrollView(.vertical) {
@@ -25,10 +30,8 @@ struct DailyPicksView: View {
         .refreshable {
             await viewModel.loadDailyPicks(forceRefresh: true, forSeeMore: true)
         }
-        .onAppear {
-            Task {
-                await viewModel.loadDailyPicks(forSeeMore: true)
-            }
+        .task {
+            await viewModel.loadDailyPicks(forSeeMore: true)
         }
         .navigationBarBackButtonHidden(true)
         .toolbarBackground(.hidden, for: .navigationBar)
