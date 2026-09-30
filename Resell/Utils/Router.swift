@@ -20,33 +20,23 @@ class Router: ObservableObject {
         case home, explore, sell, chats, profile
     }
 
-    @Published private var tabPaths: [[Route]] = Array(
-        repeating: [],
-        count: Tab.allCases.count
-    )
-    @Published var activeTab: Int = Tab.home.rawValue
+    @Published private var tabPaths: [Tab: [Route]] = [:]
+    @Published var activeTab: Tab = .home
 
     /// Navigation path of whichever tab is on screen. Every existing call site
     /// (`push`, `pop`, `popToRoot`, …) reads and writes through this, so the
     /// per-tab split is invisible to them.
     var path: [Route] {
-        get { tabPaths[activeIndex] }
-        set { tabPaths[activeIndex] = newValue }
-    }
-
-    private var activeIndex: Int {
-        tabPaths.indices.contains(activeTab) ? activeTab : Tab.home.rawValue
+        get { tabPaths[activeTab, default: []] }
+        set { tabPaths[activeTab] = newValue }
     }
 
     /// Binding for one tab's `NavigationStack`, including the tabs that are
     /// currently off screen but still mounted.
-    func pathBinding(for tab: Int) -> Binding<[Route]> {
+    func pathBinding(for tab: Tab) -> Binding<[Route]> {
         Binding(
-            get: { self.tabPaths.indices.contains(tab) ? self.tabPaths[tab] : [] },
-            set: { newValue in
-                guard self.tabPaths.indices.contains(tab) else { return }
-                self.tabPaths[tab] = newValue
-            }
+            get: { self.tabPaths[tab, default: []] },
+            set: { self.tabPaths[tab] = $0 }
         )
     }
 
@@ -107,8 +97,8 @@ class Router: ObservableObject {
     /// Clears every tab's stack and returns to Home. Used on logout so the next
     /// account doesn't inherit the previous one's navigation.
     func reset() {
-        tabPaths = Array(repeating: [], count: Tab.allCases.count)
-        activeTab = Tab.home.rawValue
+        tabPaths = [:]
+        activeTab = .home
     }
 
     func lastPushedView() -> Route {
