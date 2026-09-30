@@ -224,7 +224,6 @@ class NetworkManager {
                 throw URLError(.badURL)
             }
             
-            
             return url
         }
             

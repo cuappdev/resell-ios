@@ -23,17 +23,28 @@ struct GlassToolbarModifier: ViewModifier {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         if #available(iOS 26, *) {
             content
-                .background { shape.fill(Color.white.opacity(isOpaque ? 0.55 : 0.001)) }
+                .background { shape.fill(Constants.Colors.white.opacity(isOpaque ? 0.55 : 0.001)) }
                 .contentShape(shape)
                 .glassEffect(.regular, in: shape)
         } else {
             content
-                .background { shape.fill(Color.white.opacity(0.001)) }
+                .background { shape.fill(Constants.Colors.white.opacity(0.001)) }
                 .contentShape(shape)
                 .background(
                     isOpaque ? AnyShapeStyle(.regularMaterial) : AnyShapeStyle(.ultraThinMaterial),
                     in: shape
                 )
         }
+    }
+}
+
+// MARK: - View Extension
+
+extension View {
+
+    /// Gives a floating toolbar control a Liquid Glass background that also claims
+    /// its whole shape for hit testing. See `GlassToolbarModifier`.
+    func glassToolbarBackground(cornerRadius: CGFloat = 999, isOpaque: Bool = false) -> some View {
+        modifier(GlassToolbarModifier(cornerRadius: cornerRadius, isOpaque: isOpaque))
     }
 }
