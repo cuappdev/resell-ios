@@ -10,6 +10,8 @@ import SwiftUI
 /// Collage preview showing either one image or a four-image grid.
 struct ExploreCollageCard: View {
 
+    // MARK: - Properties
+
     let title: String
     let subtitle: String?
     let posts: [Post]
@@ -22,6 +24,8 @@ struct ExploreCollageCard: View {
     private var previewPosts: [Post] {
         Array(posts.prefix(posts.count >= 4 ? 4 : 1))
     }
+
+    // MARK: - UI
 
     var body: some View {
         Button(action: action) {
@@ -66,21 +70,15 @@ struct ExploreCollageCard: View {
                 .clipped()
         } else {
             VStack(spacing: spacing) {
-                HStack(spacing: spacing) {
-                    imageCell(url: urls[0], index: 0)
-                        .frame(width: cellWidth, height: cellHeight)
-                        .clipped()
-                    imageCell(url: urls[1], index: 1)
-                        .frame(width: cellWidth, height: cellHeight)
-                        .clipped()
-                }
-                HStack(spacing: spacing) {
-                    imageCell(url: urls[2], index: 2)
-                        .frame(width: cellWidth, height: cellHeight)
-                        .clipped()
-                    imageCell(url: urls[3], index: 3)
-                        .frame(width: cellWidth, height: cellHeight)
-                        .clipped()
+                ForEach(0..<2, id: \.self) { row in
+                    HStack(spacing: spacing) {
+                        ForEach(0..<2, id: \.self) { column in
+                            let index = row * 2 + column
+                            imageCell(url: urls[index], index: index)
+                                .frame(width: cellWidth, height: cellHeight)
+                                .clipped()
+                        }
+                    }
                 }
             }
         }
