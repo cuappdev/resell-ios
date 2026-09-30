@@ -22,6 +22,8 @@ struct EditProfileView: View {
     
     @State private var selectedItem: PhotosPickerItem? = nil
     @State private var didShowPhotosPicker: Bool = false
+    @State private var pendingProfilePic: UIImage?
+    @State private var didShowImageCropper = false
 
     @FocusState private var focusedField: Field?
 
@@ -76,8 +78,25 @@ struct EditProfileView: View {
             }
         }
         .loadingView(isLoading: profileManager.isLoading)
+        .fullScreenCover(isPresented: $didShowImageCropper) {
+            imageCropper
+        }
         .onAppear {
             loadCurrentValues()
+        }
+    }
+
+    @ViewBuilder
+    private var imageCropper: some View {
+        if let pendingProfilePic {
+            ProfileImageCropView(
+                image: pendingProfilePic,
+                onCancel: dismissImageCropper,
+                onSave: { croppedImage in
+                    editedProfilePic = croppedImage
+                    dismissImageCropper()
+                }
+            )
         }
     }
 
@@ -85,6 +104,7 @@ struct EditProfileView: View {
         ZStack(alignment: .bottomTrailing) {
             Image(uiImage: editedProfilePic)
                 .resizable()
+                .scaledToFill()
                 .frame(width: 132, height: 132)
                 .background(Constants.Colors.stroke)
                 .clipShape(.circle)
@@ -219,13 +239,20 @@ struct EditProfileView: View {
             }
         }
     }
-    
+
+    private func dismissImageCropper() {
+        didShowImageCropper = false
+        pendingProfilePic = nil
+    }
+
     private func updateProfileImage(newItem: PhotosPickerItem?) async {
         guard let newItem = newItem else { return }
         
         if let data = try? await newItem.loadTransferable(type: Data.self),
            let image = UIImage(data: data) {
-            editedProfilePic = image
+            pendingProfilePic = image
+            didShowImageCropper = true
+            selectedItem = nil
         }
     }
 }
