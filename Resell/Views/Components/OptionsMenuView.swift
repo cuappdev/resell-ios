@@ -102,8 +102,8 @@ struct OptionsMenuView: View {
                 }
             }
             .frame(width: 250)
-            .background(Constants.Colors.wash.opacity(0.9))
             .clipShape(.rect(cornerRadius: 12))
+            .glassEffect(.regular, in: .rect(cornerRadius: 12))
             .padding(.trailing, Constants.Spacing.horizontalPadding)
             .scaleEffect(showMenu ? 1 : 0, anchor: .topTrailing)
             .animation(.spring, value: showMenu)

@@ -34,8 +34,6 @@ struct FollowListView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            customToolbar
-            
             tabBar
             
             ScrollView {
@@ -54,35 +52,19 @@ struct FollowListView: View {
         }
 //        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Constants.Colors.white)
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("@\(username)")
+                    .font(Constants.Fonts.h3)
+                    .foregroundStyle(Constants.Colors.black)
+            }
+        }
         .onAppear {
             loadData()
         }
     }
-    
-    private var customToolbar: some View {
-        HStack {
-            BackButton(
-                style: .systemChevronResizable(width: 12, height: 20),
-                hitTargetSize: CGSize(width: 24, height: 44)
-            )
-            
-            Spacer()
-            
-            Text("@\(username)")
-                .font(Constants.Fonts.h3)
-                .foregroundStyle(Constants.Colors.black)
-            
-            Spacer()
-            
-            Color.clear
-                .frame(width: 24)
-        }
-        .frame(height: 44)
-        .padding(.horizontal, 24)
-        .background(Constants.Colors.white)
-    }
-    
+
     private var tabBar: some View {
         HStack {
             Button {

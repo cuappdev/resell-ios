@@ -20,12 +20,13 @@ struct HomeView: View {
     
     @State var forYouPosts: [[Post]] = []
     @State private var presentPopup = false
+    /// Bottom safe-area inset (tab bar + home indicator), captured so the
+    /// dropped button can align its center with the minimized tab bar pill.
+    @State private var bottomSafeAreaInset: CGFloat = 0
 
     var body: some View {
             ScrollView(.vertical, showsIndicators: true) {
                 VStack {
-                    headerView
-                    
                     filtersView
                         .padding(.top, 12)
                         .padding(.bottom, 32)
@@ -63,15 +64,30 @@ struct HomeView: View {
                 viewModel.getAllPosts() //only get all posts if no filters are applied
             }
             viewModel.getBlockedUsers()
-            withAnimation { mainViewModel.hidesTabBar = false }
         }
         .onDisappear {
             // Clean up image cache when leaving home view
             viewModel.cleanupMemory()
         }
         .background(Constants.Colors.white)
+        .onScrollGeometryChange(for: CGFloat.self) { geometry in
+            geometry.contentOffset.y
+        } action: { oldValue, newValue in
+            mainViewModel.updateTabBarForScroll(offset: newValue, previousOffset: oldValue)
+        }
+        .background(
+            GeometryReader { proxy in
+                Color.clear
+                    .onAppear { bottomSafeAreaInset = proxy.safeAreaInsets.bottom }
+            }
+        )
         .overlay(alignment: .bottomTrailing) {
-            ExpandableAddButton().padding(.bottom, 40)
+            // Dropped position: button bottom edge 16pt above the screen edge,
+            // which centers the 64pt button on the minimized tab bar pill.
+            ExpandableAddButton()
+                .padding(.bottom, 8)
+                .offset(y: mainViewModel.isTabBarMinimized ? max(bottomSafeAreaInset - 4, 56) : 0)
+                .animation(.spring(duration: 0.35), value: mainViewModel.isTabBarMinimized)
         }
         .refreshable {
             // Force refresh when user pulls to refresh
@@ -84,40 +100,13 @@ struct HomeView: View {
             }
         }
         .loadingView(isLoading: viewModel.isLoading)
-        .navigationBarBackButtonHidden()
         .sheet(isPresented: $presentPopup) {
             FilterView(home: true, isPresented: $presentPopup)
                 .environmentObject(filtersViewModel)
+                .presentationDragIndicator(.visible)
         }
     }
 
-    private var headerView: some View {
-            HStack {
-                    Text("resell")
-                        .font(Constants.Fonts.resellHeader)
-                        .foregroundStyle(Constants.Colors.resellGradient)
-
-                    Spacer()
-
-                    Button(action: {
-                        router.push(.search(nil))
-                    }, label: {
-                        Icon(image: "search")
-                    })
-            
-                    Button(action: {
-                        router.push(.notifications)
-                    }, label: {
-                        Image(systemName: "bell") // using the native sfsymbols bell is faster + prettier
-                            .font(.system(size: 20, weight: .medium)) // Increases thickness to bold
-                            .foregroundStyle(.black)
-                    })
-                    .padding(.leading, 12)
-                }
-                .padding(.horizontal, Constants.Spacing.horizontalPadding)
-
-        }
-    
 
     private var filtersView: some View {
             VStack(alignment: .leading) {

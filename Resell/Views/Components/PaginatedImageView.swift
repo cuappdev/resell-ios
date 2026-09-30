@@ -35,7 +35,7 @@ struct PaginatedImageView: View {
             }
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
 
-            CustomPageControlIndicatorView(currentPage: $currentPage, numberOfPages: $images.count + (images.count < maxImages ? 1 : 0))
+            CustomPageControlIndicatorView(currentPage: $currentPage, numberOfPages: $images.count + (images.count < maxImages ? 1 : 0), showsGlassBackground: false)
                 .frame(height: 20)
                 .padding()
         }
@@ -59,9 +59,12 @@ struct PaginatedImageView: View {
                         .resizable()
                         .foregroundColor(.white)
                         .frame(width: 24, height: 24)
-                        .padding(.leading, 20)
-                        .padding(.bottom, 20)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Circle())
                 }
+                .glassEffect(.regular.interactive(), in: .circle)
+                .padding(.leading, 20)
+                .padding(.bottom, 20)
             }
             .scaleEffect(currentPage == index ? 1.0 : 0.9)
             .animation(.easeInOut, value: currentPage)
@@ -73,10 +76,13 @@ struct PaginatedImageView: View {
             Button {
                 isImageSourceDialogPresented = true
             } label: {
-                Image("addNewListing")
-                    .resizable()
+                Image(systemName: "plus")
+                    .font(.system(size: 26, weight: .semibold))
+                    .foregroundStyle(Constants.Colors.white)
                     .frame(width: 64, height: 64)
+                    .contentShape(Circle())
             }
+            .glassEffect(.regular.tint(Constants.Colors.resellPurple).interactive(), in: .circle)
             .confirmationDialog(
                 "Select Image Source",
                 isPresented: $isImageSourceDialogPresented,
@@ -91,7 +97,6 @@ struct PaginatedImageView: View {
                 Button("Cancel", role: .cancel) {}
             }
         }
-        .shadow(radius: 5)
         .tag(images.count)
     }
 

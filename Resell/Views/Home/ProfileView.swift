@@ -69,27 +69,11 @@ struct ProfileView: View {
             }
         }
         .background(Constants.Colors.white)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    router.push(.settings(false))
-                } label: {
-                    Icon(image: "settings")
-                }
-            }
-            
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    router.push(.availability)
-                } label: {
-                    Icon(image: "calendar-internal")
-                }
-            }
-        }
-        .toolbarBackground(.hidden, for: .navigationBar)
+        // The nested gallery ScrollView keeps the system tab bar from ever
+        // minimizing on this screen, so the button stays in its raised position.
         .overlay(alignment: .bottomTrailing) {
             ExpandableAddButton()
-                .padding(.bottom, 40)
+                .padding(.bottom, 8)
         }
         .onAppear {
             viewModel.loadCurrentUser()

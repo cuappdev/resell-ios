@@ -13,7 +13,6 @@ struct MainTabView: View {
 
     @EnvironmentObject var router: Router
 
-    @Binding var isHidden: Bool
     @Binding var selection: Int
 
     // MARK: - ViewModels
@@ -30,16 +29,8 @@ struct MainTabView: View {
         NavigationStack(path: $router.path) {
                 Group {
                     if mainViewModel.userDidLogin {
-                        VStack(spacing: 0) {
-                            mainView
-                            
-                            if !isHidden {
-                                tabBarView
-                            }
-                        }
-                        .ignoresSafeArea(edges: .bottom)
+                        mainView
                         .transition(.opacity)
-                        .background(.white)
                         .environmentObject(router)
                         .onAppear {
                             // Start listening to chat updates as soon as the
@@ -124,6 +115,7 @@ struct MainTabView: View {
                 }
             }
         }
+        .tint(Constants.Colors.resellPurple)
         .onReceive(NotificationCenter.default.publisher(for: Constants.Notifications.OpenTransactionDeepLink)) { output in
             guard mainViewModel.userDidLogin else { return }
             guard let tid = output.userInfo?["transactionId"] as? String, !tid.isEmpty else { return }
@@ -152,42 +144,156 @@ struct MainTabView: View {
     }
 
     private var mainView: some View {
-        ZStack() {
-            if selection == 0 {
+        TabView(selection: $selection) {
+            Tab("Home", systemImage: "house", value: 0) {
                 HomeView()
-            } else if selection == 1 {
+            }
+
+            Tab("Messages", systemImage: "message", value: 1) {
                 ChatsView()
                     .environmentObject(chatsViewModel)
-            } else if selection == 2 {
+            }
+            .badge(chatsViewModel.totalUnread)
+
+            Tab("Profile", systemImage: "person", value: 2) {
                 ProfileView()
             }
         }
+        .tint(Constants.Colors.resellPurple)
+        // .never forces the bar back to full size — pulsed when a tab root's scroll
+        // crosses back above the top breakpoint, since the system only re-expands
+        // on fast flings. At rest the bar stays armed with .onScrollDown so any
+        // downward gesture minimizes it natively regardless of speed.
+        .tabBarMinimizeBehavior(mainViewModel.expandsTabBar ? .never : .onScrollDown)
+        .onChange(of: selection) { _, _ in
+            mainViewModel.pulseExpandTabBar()
+        }
+        // Detects taps on the minimized tab bar pill (bottom-leading corner) so the
+        // floating add button rises together with the manually re-expanded bar.
+        .background(
+            MinimizedTabBarTapObserver {
+                mainViewModel.handleManualTabBarExpansion()
+            }
+            .frame(width: 0, height: 0)
+        )
+        // Tab-root toolbars are defined here, on the outer NavigationStack's root,
+        // because toolbar items inside non-initial TabView tabs don't reliably
+        // propagate to the enclosing stack's navigation bar.
+        .toolbar {
+            tabRootToolbar
+        }
     }
 
-    private var tabBarView: some View {
-        HStack {
-            ForEach(0..<3, id: \.self) { index in
-                TabViewIcon(
-                    selectionIndex: $selection,
-                    itemIndex: index,
-                    badgeCount: index == 1 ? chatsViewModel.totalUnread : 0
-                )
-                    .frame(width: 28, height: 28)
+    @ToolbarContentBuilder
+    private var tabRootToolbar: some ToolbarContent {
+        if selection == 0 {
+            ToolbarItem(placement: .topBarLeading) {
+                Text("resell")
+                    .font(Constants.Fonts.resellHeader)
+                    .foregroundStyle(Constants.Colors.resellGradient)
+                    .fixedSize()
+            }
+            .sharedBackgroundVisibility(.hidden)
 
-                if index != 2 {
-                    Spacer()
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    router.push(.search(nil))
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(Constants.Colors.black)
+                }
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    router.push(.notifications)
+                } label: {
+                    Image(systemName: "bell")
+                        .foregroundStyle(Constants.Colors.black)
+                }
+            }
+        } else if selection == 1 {
+            ToolbarItem(placement: .topBarLeading) {
+                Text("Messages")
+                    .font(Constants.Fonts.h1)
+                    .foregroundStyle(Constants.Colors.black)
+                    .fixedSize()
+            }
+            .sharedBackgroundVisibility(.hidden)
+        } else {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    router.push(.settings(false))
+                } label: {
+                    Image(systemName: "gearshape")
+                        .foregroundStyle(Constants.Colors.black)
+                }
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    router.push(.availability)
+                } label: {
+                    Image(systemName: "calendar")
+                        .foregroundStyle(Constants.Colors.black)
                 }
             }
         }
-        .ignoresSafeArea(edges: .bottom)
-        .padding(.horizontal, 40)
-        .padding(.top, 16)
-        .padding(.bottom, 46)
-        .frame(width: UIScreen.width)
-        .background(Constants.Colors.white)
-        .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
-        .shadow(radius: 4)
-        .transition(.move(edge: .bottom))
-        .animation(.easeInOut, value: isHidden)
+    }
+}
+
+// MARK: - Minimized Tab Bar Tap Detection
+
+/// Installs a passive, non-consuming tap recognizer on the window to notice taps
+/// in the minimized tab bar pill's region (bottom-leading corner). SwiftUI exposes
+/// no state for the bar's minimized/expanded presentation, so this is how floating
+/// controls learn the user manually re-expanded the bar by tapping the pill.
+private struct MinimizedTabBarTapObserver: UIViewRepresentable {
+    let onTap: () -> Void
+
+    func makeUIView(context: Context) -> TapObserverUIView {
+        let view = TapObserverUIView()
+        view.onBottomLeadingTap = onTap
+        return view
+    }
+
+    func updateUIView(_ uiView: TapObserverUIView, context: Context) {
+        uiView.onBottomLeadingTap = onTap
+    }
+}
+
+final class TapObserverUIView: UIView, UIGestureRecognizerDelegate {
+    var onBottomLeadingTap: (() -> Void)?
+
+    private weak var recognizer: UITapGestureRecognizer?
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        isUserInteractionEnabled = false
+        guard let window, recognizer == nil else { return }
+
+        let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+        tap.cancelsTouchesInView = false
+        tap.delegate = self
+        window.addGestureRecognizer(tap)
+        recognizer = tap
+    }
+
+    @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
+        guard let window = gesture.view as? UIWindow ?? window else { return }
+        let location = gesture.location(in: window)
+        let bounds = window.bounds
+        // Bottom-leading corner only: the minimized pill's zone. Excludes the
+        // trailing side so taps on the floating add button never trigger this.
+        if location.y > bounds.height - 80, location.x < bounds.width * 0.4 {
+            onBottomLeadingTap?()
+        }
+    }
+
+    func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+    ) -> Bool {
+        true
     }
 }

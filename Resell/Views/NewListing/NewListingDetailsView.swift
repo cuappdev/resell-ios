@@ -13,7 +13,6 @@ struct NewListingDetailsView: View {
 
     @EnvironmentObject var router: Router
     @EnvironmentObject var viewModel: NewListingViewModel
-    @EnvironmentObject var mainViewModel: MainViewModel
 
     @State private var priceFieldPosition: CGFloat = 0.0
 
@@ -46,28 +45,16 @@ struct NewListingDetailsView: View {
         .scrollDismissesKeyboard(.interactively)
         .background(Constants.Colors.white)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            VStack(spacing: 0) {
-                PurpleButton(isLoading: viewModel.isLoading, isActive: viewModel.checkInputIsValid(), text: "Continue") {
-                    viewModel.createNewListing()
-
-                    withAnimation {
-                        mainViewModel.hidesTabBar = false
-                    }
-                }
+            PurpleButton(isLoading: viewModel.isLoading, isActive: viewModel.checkInputIsValid(), text: "Continue") {
+                viewModel.createNewListing()
             }
             .padding(.horizontal, 24)
             .padding(.top, 12)
             .padding(.bottom, 8)
             .frame(maxWidth: .infinity)
-            .background(Constants.Colors.white)
         }
         .endEditingOnTap()
-        .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                BackButton()
-            }
-
             ToolbarItem(placement: .principal) {
                 Text("New Listing")
                     .font(Constants.Fonts.h3)

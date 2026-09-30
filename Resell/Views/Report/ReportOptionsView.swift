@@ -39,11 +39,7 @@ struct ReportOptionsView: View {
             Spacer()
         }
         .background(Constants.Colors.white)
-        .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                BackButton()
-            }
             ToolbarItem(placement: .principal) {
                 Text("Report \(viewModel.reportType)")
                     .font(Constants.Fonts.h3)

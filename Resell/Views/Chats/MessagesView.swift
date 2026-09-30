@@ -14,7 +14,6 @@ struct MessagesView: View {
     // MARK: - Properties
 
     @EnvironmentObject var router: Router
-    @State private var didShowOptionsMenu: Bool = false
     @State private var didShowNegotiationView: Bool = false
     @State private var didShowAvailabilityView: Bool = false
     @State private var didShowWebView: Bool = false
@@ -61,31 +60,20 @@ struct MessagesView: View {
     // MARK: - UI
 
     var body: some View {
-        ZStack {
-            mainContentView
-
-            if didShowOptionsMenu {
-                optionsMenuOverlay
-            }
-        }
+        mainContentView
         .background(Constants.Colors.white)
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbarBackground(Constants.Colors.white, for: .automatic)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                BackButton(style: .systemChevronResizable(width: 12, height: 20))
-            }
-                
             ToolbarItem(placement: .principal) {
                 headerButton
             }
-            
+
             ToolbarItem(placement: .topBarTrailing) {
-                HStack(spacing: 8) {
-                    calendarButton
-                    optionsButton
-                }
+                calendarButton
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                optionsButton
             }
         }
         .sheet(isPresented: $didShowNegotiationView, onDismiss: setNegotiationText) {
@@ -138,22 +126,12 @@ struct MessagesView: View {
     // MARK: - Extracted Subviews
 
     private var mainContentView: some View {
-        VStack {
-            messageListView
-
-            Spacer()
-
-            Divider()
-
-            messageInputView
-        }
+        messageListView
+            .safeAreaInset(edge: .bottom) {
+                messageInputView
+            }
     }
 
-    private var optionsMenuOverlay: some View {
-        OptionsMenuView(showMenu: $didShowOptionsMenu, options: [.report(type: "User", id: otherUser.firebaseUid)])
-            .zIndex(100)
-    }
-    
     private var otherUser: User {
         guard let user = GoogleAuthManager.shared.user else {
             return viewModel.chatInfo.buyer
@@ -169,9 +147,8 @@ struct MessagesView: View {
                 didShowAvailabilityView.toggle()
             }
         } label: {
-            Image("calendar")
-                .resizable()
-                .frame(width: 24, height: 24)
+            Image(systemName: "calendar")
+                .foregroundStyle(Constants.Colors.black)
                 .opacity(hasActiveConfirmedMeeting ? 0.45 : 1)
         }
         .accessibilityHint(
@@ -202,14 +179,14 @@ struct MessagesView: View {
     }
     
     private var optionsButton: some View {
-        Button {
-            withAnimation {
-                didShowOptionsMenu.toggle()
+        Menu {
+            Button {
+                router.push(.reportOptions(type: "User", id: otherUser.firebaseUid))
+            } label: {
+                Label("Report", systemImage: "flag")
             }
         } label: {
             Image(systemName: "ellipsis")
-                .resizable()
-                .frame(width: 24, height: 6)
                 .foregroundStyle(Constants.Colors.black)
         }
     }
@@ -243,10 +220,13 @@ struct MessagesView: View {
     }
 
     private var messageInputView: some View {
-        VStack(spacing: 12) {
-            filtersView
-            textInputView
+        GlassEffectContainer(spacing: 8) {
+            VStack(spacing: 12) {
+                filtersView
+                textInputView
+            }
         }
+        .padding(.bottom, 8)
     }
 
     private var filtersView: some View {
@@ -592,7 +572,7 @@ struct MessagesView: View {
             }
         }
         .presentationCornerRadius(25)
-        .presentationDragIndicator(.hidden)
+        .presentationDragIndicator(.visible)
         .onAppear {
             // Initialize cells from viewModel.availability when viewing someone's availability
             if !isEditing {
@@ -695,7 +675,7 @@ struct FilterOptionsView: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack {
+            HStack(spacing: 12) {
                 ForEach(Constants.chatMessageOptions, id: \.self) { option in
                     switch option {
                     case .negotiate:
@@ -736,10 +716,7 @@ struct FilterOptionsView: View {
                 .lineLimit(1)
         }
         .padding(12)
-        .overlay {
-            RoundedRectangle(cornerRadius: 25)
-                .stroke(Constants.Colors.resellGradient, lineWidth: 2)
-        }
+        .glassEffect(.regular.interactive(), in: .capsule)
     }
 }
 
@@ -779,6 +756,10 @@ struct NegotiationSheetView: View {
             .frame(width: UIScreen.width - 40, height: 125)
             .background(Constants.Colors.white)
             .clipShape(.rect(cornerRadius: 18))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(Constants.Colors.stroke, lineWidth: 1)
+            }
 
             PriceInputView(
                 price: $priceText,
@@ -786,19 +767,9 @@ struct NegotiationSheetView: View {
                 titleText: "What price do you want to propose?"
             )
             .padding(.bottom, 24)
-            .background(Constants.Colors.white)
-            .clipShape(.rect(cornerRadii: .init(topLeading: 25, topTrailing: 25)))
-            .overlay(alignment: .top) {
-                Rectangle()
-                    .foregroundStyle(Constants.Colors.stroke)
-                    .frame(width: 66, height: 6)
-                    .clipShape(.capsule)
-                    .padding(.top, 12)
-            }
         }
         .presentationDetents([.height(UIScreen.height * 3/4)])
-        .presentationBackground(.clear)
-        .ignoresSafeArea()
+        .presentationDragIndicator(.visible)
     }
 }
 
@@ -863,18 +834,13 @@ struct MessagesAvailabilitySheet: View {
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 0) {
-                RoundedRectangle(cornerRadius: 10)
-                    .frame(width: 66, height: 6)
-                    .foregroundStyle(Constants.Colors.filterGray)
-                    .padding(.top, 12)
-                    .padding(.bottom, 16)
-
                 MonthPickerHeader(
                     currentMonthOffset: $currentMonthOffset,
                     showCalendar: $showCalendar,
                     showSettings: .constant(false),
                     maxMonthOffset: maxMonthOffset
                 )
+                .padding(.top, 16)
 
                 proposeSubheader
                     .padding(.horizontal)
@@ -1558,16 +1524,16 @@ struct TextInputView: View {
                 }
             }
 
-            HStack {
+            HStack(spacing: 12) {
                 Button {
                     showingPhotoPicker = true
                 } label: {
                     Image(systemName: "photo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 24, height: 24)
+                        .font(.system(size: 18, weight: .medium))
                         .foregroundStyle(Constants.Colors.secondaryGray)
+                        .frame(width: 44, height: 44)
                 }
+                .glassEffect(.regular.interactive(), in: .circle)
                 .sheet(isPresented: $showingPhotoPicker) {
                     ImagePicker(selectedImages: $selectedImages)
                 }
@@ -1577,9 +1543,8 @@ struct TextInputView: View {
                     .foregroundColor(Constants.Colors.black)
                     .padding(12)
                     .scrollContentBackground(.hidden)
-                    .background(Constants.Colors.wash)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
                     .frame(height: 48)
+                    .glassEffect(.regular, in: .capsule)
                     .onChange(of: draftMessageText) { newText in
                         if newText.count > maxCharacters {
                             draftMessageText = String(newText.prefix(maxCharacters))
@@ -1592,11 +1557,12 @@ struct TextInputView: View {
                         draftMessageText = ""
                         selectedImages = []
                     }) {
-                        Image("sendButton")
-                            .resizable()
-                            .frame(width: 24, height: 24)
+                        Image(systemName: "arrow.up")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(Constants.Colors.white)
+                            .frame(width: 44, height: 44)
                     }
-                    .padding(.trailing, 8)
+                    .glassEffect(.regular.tint(Constants.Colors.resellPurple).interactive(), in: .circle)
                 }
             }
         }

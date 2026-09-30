@@ -53,12 +53,7 @@ struct EditProfileView: View {
             
         }
         .padding(.top, 40)
-        .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                BackButton()
-            }
-
             ToolbarItem(placement: .principal) {
                 Text("Edit Profile")
                     .font(Constants.Fonts.h3)

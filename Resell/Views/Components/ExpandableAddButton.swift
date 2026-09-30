@@ -7,13 +7,14 @@
 
 import SwiftUI
 
-/// Expandable button that animates to show options to add listing or add new request
+/// Expandable Liquid Glass button that morphs to show options to add listing or add new request
 struct ExpandableAddButton: View {
 
     // MARK: - Properties
 
     @EnvironmentObject var router: Router
     @State private var isExpanded: Bool = false
+    @Namespace private var glassNamespace
 
     // MARK: - UI
 
@@ -29,30 +30,32 @@ struct ExpandableAddButton: View {
                     }
                 }
             }
-            
-            VStack(alignment: .trailing, spacing: 24) {
-                buttonOptions
 
-                HStack {
-                    Spacer()
-
-                    Button {
-                        withAnimation {
-                            isExpanded.toggle()
-                        }
-                    } label: {
-                        Image("addNewListing")
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 64, height: 64)
-                            .clipShape(.circle)
-                            .background(.red)
+            GlassEffectContainer(spacing: 12) {
+                VStack(alignment: .trailing, spacing: 24) {
+                    if isExpanded {
+                        buttonOptions
                     }
-                    .rotationEffect(.degrees(isExpanded ? -45 : 0))
-                    .buttonStyle(PlainButtonStyle())
-                    .clipShape(.circle)
+
+                    HStack {
+                        Spacer()
+
+                        Button {
+                            withAnimation {
+                                isExpanded.toggle()
+                            }
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.system(size: 26, weight: .semibold))
+                                .foregroundStyle(Constants.Colors.white)
+                                .frame(width: 64, height: 64)
+                        }
+                        .rotationEffect(.degrees(isExpanded ? -45 : 0))
+                        .glassEffect(.regular.tint(Constants.Colors.resellPurple).interactive(), in: .circle)
+                        .glassEffectID("addButton", in: glassNamespace)
+                    }
+                    .fixedSize(horizontal: true, vertical: false)
                 }
-                .fixedSize(horizontal: true, vertical: false)
             }
             .padding(.trailing, Constants.Spacing.horizontalPadding)
             .padding(.bottom, Constants.Spacing.horizontalPadding)
@@ -61,7 +64,7 @@ struct ExpandableAddButton: View {
     }
 
     private var buttonOptions: some View {
-        ZStack(alignment: .trailing) {
+        VStack(alignment: .trailing, spacing: 16) {
             Button {
                 router.push(.newListingImages)
                 withAnimation {
@@ -70,9 +73,8 @@ struct ExpandableAddButton: View {
             } label: {
                 buttonContent(name: "New Listing", image: "newListing")
             }
-            .offset(y: isExpanded ? -64 : 64)
-            .opacity(isExpanded ? 1 : 0)
-            .allowsHitTesting(isExpanded)
+            .glassEffect(.regular.interactive(), in: .capsule)
+            .glassEffectID("newListing", in: glassNamespace)
 
             Button {
                 router.push(.newRequest)
@@ -82,9 +84,8 @@ struct ExpandableAddButton: View {
             } label: {
                 buttonContent(name: "New Request", image: "newRequest")
             }
-            .offset(y: isExpanded ? 0 : 64)
-            .opacity(isExpanded ? 1 : 0)
-            .allowsHitTesting(isExpanded)
+            .glassEffect(.regular.interactive(), in: .capsule)
+            .glassEffectID("newRequest", in: glassNamespace)
         }
     }
 
@@ -100,11 +101,5 @@ struct ExpandableAddButton: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Constants.Colors.white)
-        .clipShape(.capsule)
-        .overlay {
-            RoundedRectangle(cornerRadius: 25)
-                .stroke(Constants.Colors.resellGradient, lineWidth: 3)
-        }
     }
 }

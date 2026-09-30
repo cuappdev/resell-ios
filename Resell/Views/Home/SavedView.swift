@@ -30,13 +30,7 @@ struct SavedView: View {
                 await viewModel.getSavedPosts()
             }
         }
-        .navigationBarBackButtonHidden(true)
-        .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                BackButton()
-            }
-            
             ToolbarItem(placement: .principal) {
                 Text("Saved By You")
                     .font(Constants.Fonts.h1)
