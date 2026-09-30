@@ -19,6 +19,9 @@ class Router: ObservableObject {
         case login
         case home
         case saved
+        case recentlyViewed
+        case dailyPicks
+        case trending(FilterCategory)
         case chats
         case editProfile
         case messages(chatInfo: ChatInfo)
