@@ -7,8 +7,14 @@
 
 import SwiftUI
 
+/// State behind the Explore tab's Daily Picks and Trending rails.
+///
+/// Shared so the Explore tab and its See More screens (`DailyPicksView`,
+/// `TrendingView`) read the same cached lists instead of refetching them.
 @MainActor
 final class ExploreViewModel: ObservableObject {
+
+    // MARK: - Properties
 
     static let shared = ExploreViewModel()
 
@@ -19,11 +25,16 @@ final class ExploreViewModel: ObservableObject {
     @Published private(set) var isLoadingTrending: Bool = false
     @Published private(set) var isLoadingTrendingDetails: Bool = false
 
-    /// Product categories only (excludes "Recent").
-    let trendingCategories: [FilterCategory] = Constants.filters.filter { $0.color != nil }
+    @Published var selectedTrendingCategory: FilterCategory = Constants.productCategories.first { $0.title == "Electronics" }
+        ?? Constants.productCategories[0]
 
-    @Published var selectedTrendingCategory: FilterCategory = Constants.filters.first { $0.title == "Electronics" }
-        ?? FilterCategory(id: 4, title: "Electronics", color: Constants.Colors.filterPink)
+    /// Categories the Trending rail can switch between.
+    let trendingCategories: [FilterCategory] = Constants.productCategories
+
+    /// API category query value matching backend seed names (`ELECTRONICS`, …).
+    var trendingCategoryAPIName: String {
+        selectedTrendingCategory.title.uppercased()
+    }
 
     private var lastDailyPicksFetch: Date?
     private var lastTrendingFetch: Date?
@@ -36,11 +47,9 @@ final class ExploreViewModel: ObservableObject {
 
     private init() {}
 
-    /// API category query value matching backend seed names (`ELECTRONICS`, …).
-    var trendingCategoryAPIName: String {
-        selectedTrendingCategory.title.uppercased()
-    }
+    // MARK: - Functions
 
+    /// Loads both rails in parallel, reusing anything fetched in the last few minutes.
     func loadAll(forceRefresh: Bool = false) async {
         async let picks: () = loadDailyPicks(forceRefresh: forceRefresh)
         async let trending: () = loadTrending(forceRefresh: forceRefresh)
@@ -58,10 +67,8 @@ final class ExploreViewModel: ObservableObject {
         trendingDetailPosts = overlayKnownSaveCounts(savedIDs, on: trendingDetailPosts)
     }
 
-    private func overlayKnownSaveCounts(_ savedIDs: Set<String>, on posts: [Post]) -> [Post] {
-        posts.map { $0.ensuringMinimumSaves(savedIDs.contains($0.id) ? 1 : 0) }
-    }
-
+    /// Loads Daily Picks: a short preview for the rail, or the longer list its
+    /// See More screen shows when `forSeeMore` is true.
     func loadDailyPicks(forceRefresh: Bool = false, forSeeMore: Bool = false) async {
         let limit = forSeeMore ? seeMoreLimit : previewLimit
 
@@ -85,6 +92,7 @@ final class ExploreViewModel: ObservableObject {
         }
     }
 
+    /// Loads the Trending rail for `selectedTrendingCategory`.
     func loadTrending(forceRefresh: Bool = false) async {
         let categoryKey = trendingCategoryAPIName
 
@@ -116,6 +124,7 @@ final class ExploreViewModel: ObservableObject {
         }
     }
 
+    /// Switches the Trending rail to `category` and refetches it.
     func selectTrendingCategory(_ category: FilterCategory) {
         guard category.id != selectedTrendingCategory.id else { return }
         selectedTrendingCategory = category
@@ -124,6 +133,7 @@ final class ExploreViewModel: ObservableObject {
         }
     }
 
+    /// Loads the full Trending list for `category`, shown by its See More screen.
     func loadTrendingDetails(
         category: FilterCategory,
         forceRefresh: Bool = false
@@ -153,5 +163,11 @@ final class ExploreViewModel: ObservableObject {
             NetworkManager.shared.logger.error("Failed to load trending details: \(error)")
             trendingDetailPosts = []
         }
+    }
+
+    // MARK: - Private Methods
+
+    private func overlayKnownSaveCounts(_ savedIDs: Set<String>, on posts: [Post]) -> [Post] {
+        posts.map { $0.ensuringMinimumSaves(savedIDs.contains($0.id) ? 1 : 0) }
     }
 }
