@@ -29,7 +29,7 @@ class NetworkManager {
     private let maxAttempts = 2
     
     /// Shared JSON encoder configured for backend compatibility (sends dates as ISO8601 strings)
-    private let jsonEncoder: JSONEncoder = {
+    let jsonEncoder: JSONEncoder = {
         let encoder = JSONEncoder()
         // Backend expects ISO8601 strings like "2026-01-28T03:12:55.810Z"
         encoder.dateEncodingStrategy = .custom { date, encoder in
@@ -45,7 +45,7 @@ class NetworkManager {
     /// backend's behavior (ISO8601 strings, with or without fractional seconds) and
     /// also gracefully falls back to numeric timestamps. This must match
     /// `jsonEncoder` so request/response round-trips work correctly.
-    private let jsonDecoder: JSONDecoder = {
+    let jsonDecoder: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .custom { decoder in
             let container = try decoder.singleValueContainer()
@@ -228,7 +228,6 @@ class NetworkManager {
                 logger.error("Failed to construct URL for endpoint: \(endpoint)")
                 throw URLError(.badURL)
             }
-            
             
             return url
         }
@@ -456,6 +455,7 @@ class NetworkManager {
             try await post(url: url)
         }
 
+        /// Popular listings from the last day, for Explore's Daily Picks rail.
         func getDailyPicks(limit: Int = 10) async throws -> PostsResponse {
             let url = try constructURL(endpoint: "/post/dailyPicks/?limit=\(limit)")
             return try await get(url: url)

@@ -14,9 +14,7 @@ struct FilterView: View {
     @State var presentPopup = false
     @EnvironmentObject var filtersVM: FiltersViewModel
 
-    /// Browsable categories, in `Constants.filters` order. A `nil` color marks a
-    /// pseudo-category (e.g. "Recent") that is not a real listing category.
-    private let categories: [String] = Constants.filters.compactMap { $0.color == nil ? nil : $0.title }
+    private let categories: [String] = Constants.productCategories.map(\.title)
     private var conditions : [String] = ["Gently Used", "Worn", "Never Used"]
 
     let home : Bool
@@ -107,7 +105,6 @@ struct FilterView: View {
                         }
                         .padding(.bottom, 8)
                         
-                        // Slider — extend trailing to avoid clipping the 344pt track
                         RangeSlider(lowValue: $filtersVM.lowValue, highValue: $filtersVM.highValue, range: 0...1000)
                             .padding(.trailing, -28)
                         
@@ -136,8 +133,8 @@ struct FilterView: View {
                                         } label: {
                                             let isSelected = filtersVM.categoryFilters.contains(category)
                                             Text(category)
-                                                .font(.custom("Rubik-Medium", size: 14))
-                                                .foregroundStyle(isSelected ? Constants.Colors.resellPurple : Color.black)
+                                                .font(Constants.Fonts.title3)
+                                                .foregroundStyle(isSelected ? Constants.Colors.resellPurple : Constants.Colors.black)
                                                 .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
                                         }
                                         .padding(.horizontal, 14)
@@ -178,8 +175,8 @@ struct FilterView: View {
                                 } label: {
                                     let isSelected = filtersVM.conditionFilters.contains(condition)
                                     Text(condition)
-                                        .font(.custom("Rubik-Medium", size: 14))
-                                        .foregroundStyle(isSelected ? Constants.Colors.resellPurple : Color.black)
+                                        .font(Constants.Fonts.title3)
+                                        .foregroundStyle(isSelected ? Constants.Colors.resellPurple : Constants.Colors.black)
                                         .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
                                 }
                                 .padding(.horizontal, 14)
@@ -196,7 +193,7 @@ struct FilterView: View {
                         }
                     }
                     .padding(.horizontal, 28)
-                    } // End of ScrollView
+                    }
                     
                     Spacer()
                     
