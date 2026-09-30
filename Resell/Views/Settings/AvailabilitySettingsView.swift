@@ -171,29 +171,7 @@ struct AvailabilitySettingsView: View {
                 BackButton()
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    Task {
-                        await saveAvailability()
-                    }
-                } label: {
-                    if isSaving {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Image(uiImage: Lucide.save)
-                            .renderingMode(.template)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 20, height: 20)
-                    }
-                }
-                .foregroundStyle(
-                    hasUnsavedChanges
-                        ? Constants.Colors.resellPurple
-                        : Constants.Colors.inactiveGray
-                )
-                .disabled(!hasUnsavedChanges || isSaving || isLoading)
-                .accessibilityLabel("Save availability")
+                saveButton
             }
         }
         .alert("Error", isPresented: .constant(errorMessage != nil)) {
@@ -250,6 +228,33 @@ struct AvailabilitySettingsView: View {
         }
     }
     
+    /// Lit up only while the grid differs from what's saved on the backend.
+    private var saveButton: some View {
+        Button {
+            Task {
+                await saveAvailability()
+            }
+        } label: {
+            if isSaving {
+                ProgressView()
+                    .controlSize(.small)
+            } else {
+                Image(uiImage: Lucide.save)
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 20, height: 20)
+            }
+        }
+        .foregroundStyle(
+            hasUnsavedChanges
+                ? Constants.Colors.resellPurple
+                : Constants.Colors.inactiveGray
+        )
+        .disabled(!hasUnsavedChanges || isSaving || isLoading)
+        .accessibilityLabel("Save availability")
+    }
+
     // MARK: - Functions
     
     private func updateVisibleDates(from startDate: Date, page: Int) {
