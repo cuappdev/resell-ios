@@ -8,13 +8,21 @@
 import Kingfisher
 import SwiftUI
 
+/// Full-screen, swipeable photo viewer for a listing, with pinch and
+/// double-tap zoom on each photo.
 struct ProductImageViewer: View {
+
+    // MARK: - Properties
+
     @Environment(\.dismiss) private var dismiss
 
     let images: [URL]
     @Binding var selectedIndex: Int
 
+    /// The photo currently zoomed in, if any; paging is disabled while one is.
     @State private var zoomedIndex: Int?
+
+    // MARK: - UI
 
     var body: some View {
         GeometryReader { geometry in
@@ -40,17 +48,7 @@ struct ProductImageViewer: View {
 
                 VStack {
                     HStack {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 17, weight: .semibold))
-                                .foregroundStyle(Constants.Colors.white)
-                                .frame(width: 44, height: 44)
-                                .background(.ultraThinMaterial, in: Circle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Close image viewer")
+                        closeButton
 
                         Spacer()
                     }
@@ -60,12 +58,7 @@ struct ProductImageViewer: View {
                     Spacer()
 
                     if images.count > 1 {
-                        Text("\(selectedIndex + 1) / \(images.count)")
-                            .font(Constants.Fonts.title3)
-                            .foregroundStyle(Constants.Colors.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 7)
-                            .background(.black.opacity(0.55), in: Capsule())
+                        ImageCountBadge(currentIndex: selectedIndex, count: images.count)
                             .padding(.bottom, geometry.safeAreaInsets.bottom + 16)
                     }
                 }
@@ -74,9 +67,28 @@ struct ProductImageViewer: View {
         .preferredColorScheme(.dark)
         .statusBarHidden()
     }
+
+    private var closeButton: some View {
+        Button {
+            dismiss()
+        } label: {
+            Image(systemName: "xmark")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(Constants.Colors.white)
+                .frame(width: 44, height: 44)
+                .background(.ultraThinMaterial, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Close image viewer")
+    }
 }
 
+/// One photo in the viewer. Reports through `onZoomChange` whenever it zooms in
+/// or back out, so the pager can stop swiping while the photo is being panned.
 private struct ZoomableProductImage: View {
+
+    // MARK: - Properties
+
     let url: URL
     let onZoomChange: (Bool) -> Void
 
@@ -84,6 +96,8 @@ private struct ZoomableProductImage: View {
     @State private var lastScale: CGFloat = 1
     @State private var offset: CGSize = .zero
     @State private var lastOffset: CGSize = .zero
+
+    // MARK: - UI
 
     var body: some View {
         GeometryReader { geometry in
@@ -105,20 +119,24 @@ private struct ZoomableProductImage: View {
                 .contentShape(Rectangle())
                 .gesture(magnificationGesture(in: geometry.size))
                 .simultaneousGesture(dragGesture(in: geometry.size))
-                .onTapGesture(count: 2) {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        if scale > 1 {
-                            resetZoom()
-                        } else {
-                            scale = 2.5
-                            lastScale = scale
-                            onZoomChange(true)
-                        }
-                    }
-                }
+                .onTapGesture(count: 2, perform: toggleDoubleTapZoom)
         }
         .onDisappear {
             resetZoom()
+        }
+    }
+
+    // MARK: - Private Methods
+
+    private func toggleDoubleTapZoom() {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+            if scale > 1 {
+                resetZoom()
+            } else {
+                scale = 2.5
+                lastScale = scale
+                onZoomChange(true)
+            }
         }
     }
 

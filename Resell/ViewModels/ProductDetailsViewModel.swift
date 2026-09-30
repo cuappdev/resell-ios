@@ -50,7 +50,11 @@ class ProductDetailsViewModel: ObservableObject {
 
         RecentlyViewedViewModel.shared.recordView(post: post)
         Task {
-            try? await NetworkManager.shared.recordPostView(id: post.id)
+            do {
+                try await NetworkManager.shared.recordPostView(id: post.id)
+            } catch {
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.setPost recording view: \(error)")
+            }
         }
 
         maxImgRatioTask?.cancel()
@@ -130,6 +134,24 @@ class ProductDetailsViewModel: ObservableObject {
             } catch {
                 NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.getIsSaved: \(error)")
             }
+        }
+    }
+
+    /// Whether toolbar icons drawn over the hero photo on screen need to be white
+    /// to stay legible. A sold listing's dimming always reads as dark.
+    func heroPrefersLightIcons(displayedIn heroSize: CGSize) async -> Bool {
+        if item?.sold == true { return true }
+        guard images.indices.contains(currentPage) else { return false }
+
+        do {
+            let result = try await KingfisherManager.shared.retrieveImage(with: images[currentPage])
+            return result.image.prefersLightToolbarIcons(displayedIn: heroSize)
+        } catch {
+            // Swiping away before the photo loads cancels this; that isn't worth logging.
+            if !Task.isCancelled {
+                NetworkManager.shared.logger.error("Error in ProductDetailsViewModel.heroPrefersLightIcons: \(error)")
+            }
+            return false
         }
     }
 

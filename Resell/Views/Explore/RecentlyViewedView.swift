@@ -7,9 +7,14 @@
 
 import SwiftUI
 
+/// Every listing the user has recently opened, newest first.
 struct RecentlyViewedView: View {
 
+    // MARK: - Properties
+
     @ObservedObject private var viewModel = RecentlyViewedViewModel.shared
+
+    // MARK: - UI
 
     var body: some View {
         ScrollView(.vertical) {
@@ -25,10 +30,8 @@ struct RecentlyViewedView: View {
         .refreshable {
             await viewModel.loadAllPosts(forceRefresh: true)
         }
-        .onAppear {
-            Task {
-                await viewModel.loadAllPosts()
-            }
+        .task {
+            await viewModel.loadAllPosts()
         }
         .navigationBarBackButtonHidden(true)
         .toolbarBackground(.hidden, for: .navigationBar)

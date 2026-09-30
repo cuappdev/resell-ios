@@ -72,6 +72,11 @@ struct Constants {
         static let title3 = Font.custom("Rubik-Medium", size: 14)
         static let title4 = Font.custom("Rubik-Regular", size: 14)
         static let subtitle1 = Font.custom("Rubik-Regular", size: 12)
+        static let subtitle2 = Font.custom("Rubik-Medium", size: 12)
+
+        // Tab bar
+        static let tabBarLabel = Font.custom("Rubik-Medium", size: 13)
+        static let badge = Font.custom("Roboto-Medium", size: 10)
     }
 
     /// Spacing amounts used in Resell's design system
@@ -128,7 +133,11 @@ struct Constants {
         FilterCategory(id: 7, title: "Active", color: Constants.Colors.filterBlue),
         FilterCategory(id: 8, title: "Other", color: Constants.Colors.filterGray)
     ]
-    
+
+    /// The categories a listing can belong to: `filters` without the "Recent"
+    /// pseudo-category, which is the only entry with no `color`.
+    static let productCategories = filters.filter { $0.color != nil }
+
     static let notificationFilters = [
         FilterCategory(id: 0, title: "All"),
         FilterCategory(id: 1, title: "Messages"),

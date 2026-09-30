@@ -18,6 +18,8 @@ import SwiftUI
 /// opening search feel like a cold-start hang.
 struct SearchPanel: View {
 
+    // MARK: - Properties
+
     let placeholder: String
     @Binding var text: String
     /// Recent queries to offer. Ignored while results are on screen.
@@ -29,6 +31,8 @@ struct SearchPanel: View {
     let onDismiss: () -> Void
 
     private let cornerRadius: CGFloat = 22
+
+    // MARK: - UI
 
     var body: some View {
         VStack(spacing: 0) {
@@ -44,11 +48,11 @@ struct SearchPanel: View {
         .background {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .fill(Constants.Colors.white)
-                .shadow(color: .black.opacity(0.12), radius: 18, x: 0, y: 6)
+                .shadow(color: Constants.Colors.black.opacity(0.12), radius: 18, x: 0, y: 6)
         }
         .overlay {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .strokeBorder(Color.black.opacity(0.06), lineWidth: 1)
+                .strokeBorder(Constants.Colors.black.opacity(0.06), lineWidth: 1)
         }
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
         .frame(maxWidth: .infinity)
@@ -111,5 +115,43 @@ struct SearchPanel: View {
             }
         }
         .padding(.bottom, 4)
+    }
+}
+
+// MARK: - Search Pill
+
+/// The collapsed control that opens a `SearchPanel`: a glass pill showing the
+/// search prompt, sized to sit in a floating toolbar.
+struct SearchPill: View {
+
+    // MARK: - Properties
+
+    let placeholder: String
+    var height: CGFloat = 40
+    let action: () -> Void
+
+    // MARK: - UI
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image("search")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 18, height: 18)
+
+                Text(placeholder)
+                    .font(Constants.Fonts.body2)
+                    .foregroundStyle(Constants.Colors.secondaryGray)
+                    .lineLimit(1)
+
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        }
+        .buttonStyle(.plain)
+        .frame(height: height)
+        .glassToolbarBackground()
     }
 }

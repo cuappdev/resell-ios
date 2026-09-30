@@ -38,8 +38,13 @@ struct ProductDetailsView: View {
     private var toolbarIconShadow: Color {
         guard isToolbarOverHero else { return .clear }
         return heroPrefersLightIcons
-            ? Color.black.opacity(0.45)
-            : Color.white.opacity(0.7)
+            ? Constants.Colors.black.opacity(0.45)
+            : Constants.Colors.white.opacity(0.7)
+    }
+
+    /// Everything the hero icon-contrast sample depends on; a change re-samples.
+    private var heroContrastInputs: HeroContrastInputs {
+        HeroContrastInputs(images: viewModel.images, currentPage: viewModel.currentPage, isSold: isSold)
     }
 
     /// Read the true top safe area inset from the window.
@@ -49,7 +54,7 @@ struct ProductDetailsView: View {
             .first?.windows.first?.safeAreaInsets.top ?? 0
     }
 
-    // Keep every listing's hero height consistent.
+    /// Fixed so every listing's hero is the same height.
     private var imageHeight: CGFloat {
         UIScreen.main.bounds.height * 0.65
     }
@@ -93,26 +98,11 @@ struct ProductDetailsView: View {
             }
 
             if viewModel.didShowOptionsMenu {
-                OptionsMenuView(showMenu: $viewModel.didShowOptionsMenu, didShowDeleteView: $viewModel.didShowDeleteView, options: {
-                    var options: [Option] = []
-                            
-                    let urlString = "resell://product/\(post.id)"
-                    if let shareUrl = URL(string: urlString) {
-                        options.append(
-                            .share(
-                                url: shareUrl,
-                                itemName: viewModel.item?.title ?? "Check out this AWESOME item on Resell!"
-                            ))
-                    }
-                    
-                    options.append(.report(type: "Post", id: post.id))
-                    
-                    if viewModel.isUserPost() {
-                        options.append(.delete)
-                    }
-                    
-                    return options
-                }())
+                OptionsMenuView(
+                    showMenu: $viewModel.didShowOptionsMenu,
+                    didShowDeleteView: $viewModel.didShowDeleteView,
+                    options: menuOptions
+                )
                 .padding(.top, topSafeArea + 52)
                 .zIndex(2)
             }
@@ -134,19 +124,7 @@ struct ProductDetailsView: View {
             }
 
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    withAnimation {
-                        viewModel.didShowOptionsMenu.toggle()
-                    }
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(toolbarIconTint)
-                        .shadow(color: toolbarIconShadow, radius: 2, y: 1)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Circle())
-                }
-                .buttonStyle(.plain)
+                optionsButton
             }
         }
         .sheet(isPresented: $viewModel.didShowDeleteView) {
@@ -166,16 +144,9 @@ struct ProductDetailsView: View {
         .onAppear {
             viewModel.setPost(post: post)
             viewModel.maxDrag = imageHeight
-            updateHeroIconContrast()
         }
-        .onChange(of: viewModel.currentPage) { _ in
-            updateHeroIconContrast()
-        }
-        .onChange(of: viewModel.images) { _ in
-            updateHeroIconContrast()
-        }
-        .onChange(of: viewModel.item?.sold) { _ in
-            updateHeroIconContrast()
+        .task(id: heroContrastInputs) {
+            await updateHeroIconContrast()
         }
         .onDisappear {
             viewModel.didShowOptionsMenu = false
@@ -204,7 +175,7 @@ struct ProductDetailsView: View {
             }
 
             if viewModel.images.count > 0 {
-                imageCountBadge
+                ImageCountBadge(currentIndex: viewModel.currentPage, count: viewModel.images.count)
                     .padding(.trailing, 16)
                     .padding(.bottom, detailsOverlap + 14)
             }
@@ -237,47 +208,40 @@ struct ProductDetailsView: View {
         .background(Constants.Colors.white)
     }
 
-    private var imageCountBadge: some View {
-        Text("\(viewModel.currentPage + 1) / \(viewModel.images.count)")
-            .font(Constants.Fonts.title3)
-            .foregroundStyle(Color.white)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(.black.opacity(0.55), in: Capsule())
-            .accessibilityLabel("Image \(viewModel.currentPage + 1) of \(viewModel.images.count)")
+    private var optionsButton: some View {
+        Button {
+            withAnimation {
+                viewModel.didShowOptionsMenu.toggle()
+            }
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(toolbarIconTint)
+                .shadow(color: toolbarIconShadow, radius: 2, y: 1)
+                .frame(width: 44, height: 44)
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
     }
 
-    /// Sample the top-leading corner of the current hero image for icon contrast.
-    private func updateHeroIconContrast() {
-        // Sold dimming always reads as a dark surface.
-        if isSold {
-            heroPrefersLightIcons = true
-            return
+    private var menuOptions: [Option] {
+        var options: [Option] = []
+
+        if let shareUrl = URL(string: "resell://product/\(post.id)") {
+            options.append(
+                .share(
+                    url: shareUrl,
+                    itemName: viewModel.item?.title ?? "Check out this AWESOME item on Resell!"
+                ))
         }
 
-        guard viewModel.images.indices.contains(viewModel.currentPage) else {
-            heroPrefersLightIcons = false
-            return
+        options.append(.report(type: "Post", id: post.id))
+
+        if viewModel.isUserPost() {
+            options.append(.delete)
         }
 
-        let url = viewModel.images[viewModel.currentPage]
-        let sampleSize = CGSize(width: UIScreen.main.bounds.width, height: imageHeight)
-        KingfisherManager.shared.retrieveImage(with: url) { result in
-            let prefersLight: Bool
-            if case .success(let value) = result {
-                prefersLight = value.image.prefersLightToolbarIcons(displayedIn: sampleSize)
-            } else {
-                prefersLight = false
-            }
-
-            Task { @MainActor in
-                guard viewModel.images.indices.contains(viewModel.currentPage),
-                      url == viewModel.images[viewModel.currentPage] else { return }
-                withAnimation(.easeInOut(duration: 0.15)) {
-                    heroPrefersLightIcons = prefersLight
-                }
-            }
-        }
+        return options
     }
 
     private func imageView(_ index: Int) -> some View {
@@ -330,7 +294,7 @@ struct ProductDetailsView: View {
         HStack(spacing: 8) {
             Button {
                 if viewModel.isMyPost() {
-                    router.activeTab = Router.Tab.profile.rawValue
+                    router.activeTab = .profile
                     mainViewModel.selection = Router.Tab.profile.rawValue
                     router.popToRoot()
                 } else {
@@ -355,7 +319,7 @@ struct ProductDetailsView: View {
                     
                     if !viewModel.isMyPost() {
                         Text("•")
-                            .foregroundStyle(.black)
+                            .foregroundStyle(Constants.Colors.black)
                             .font(Constants.Fonts.body2)
                         
                         Button {
@@ -490,6 +454,15 @@ struct ProductDetailsView: View {
 
     // MARK: - Functions
 
+    private func updateHeroIconContrast() async {
+        let heroSize = CGSize(width: UIScreen.main.bounds.width, height: imageHeight)
+        let prefersLight = await viewModel.heroPrefersLightIcons(displayedIn: heroSize)
+        guard !Task.isCancelled else { return }
+        withAnimation(.easeInOut(duration: 0.15)) {
+            heroPrefersLightIcons = prefersLight
+        }
+    }
+
     private func contactSeller() {
         guard let item = viewModel.item,
               let user = item.user,
@@ -520,3 +493,10 @@ struct ProductDetailsView: View {
     }
 }
 
+/// Inputs to `ProductDetailsView`'s hero icon-contrast sample, bundled so one
+/// `.task(id:)` re-samples whenever any of them changes.
+private struct HeroContrastInputs: Equatable {
+    let images: [URL]
+    let currentPage: Int
+    let isSold: Bool
+}

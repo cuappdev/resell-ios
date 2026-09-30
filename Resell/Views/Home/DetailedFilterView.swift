@@ -9,6 +9,9 @@ import SwiftUI
 
 // TODO: Consolidate SavedView and DetailedFilterView into one view...
 struct DetailedFilterView: View {
+
+    // MARK: - Properties
+
     @State private var presentPopup = false
     @State private var searchText = ""
     @State private var isSearchExpanded = false
@@ -23,27 +26,38 @@ struct DetailedFilterView: View {
     @StateObject private var filtersViewModel = FiltersViewModel(isHome: false)
     @ObservedObject private var viewModel = HomeViewModel.shared
 
-    private var displayedItems: [Post] {
-        if isSearchExpanded && !isShowingSearchHistory {
-            return filtersViewModel.searchedDetailedFilterItems
-        }
-        return filtersViewModel.detailedFilterItems
+    /// A search has run, so the grid shows its matches instead of the whole category.
+    private var isShowingSearchResults: Bool {
+        isSearchExpanded && !isShowingSearchHistory
     }
+
+    /// The search card and its history cover the grid, which shouldn't scroll behind it.
+    private var isSearchPanelBlocking: Bool {
+        isSearchExpanded && isShowingSearchHistory
+    }
+
+    private var displayedItems: [Post] {
+        isShowingSearchResults
+            ? filtersViewModel.searchedDetailedFilterItems
+            : filtersViewModel.detailedFilterItems
+    }
+
+    // MARK: - UI
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: !isSearchExpanded) {
             ProductsGalleryView(items: displayedItems)
                 .padding(.top, 12)
         }
-        .scrollDisabled(isSearchExpanded && isShowingSearchHistory)
+        .scrollDisabled(isSearchPanelBlocking)
         .background(Constants.Colors.white)
         .loadingView(isLoading: viewModel.isLoading)
         .emptyState(
-            isEmpty: displayedItems.isEmpty && !(isSearchExpanded && isShowingSearchHistory),
-            title: isSearchExpanded && !isShowingSearchHistory
+            isEmpty: displayedItems.isEmpty && !isSearchPanelBlocking,
+            title: isShowingSearchResults
                 ? "No results"
                 : "No \(filter.title) posts",
-            text: isSearchExpanded && !isShowingSearchHistory
+            text: isShowingSearchResults
                 ? "No posts match '\(searchText)'"
                 : "Posts in the \(filter.title) category will be displayed here."
         )
@@ -54,25 +68,11 @@ struct DetailedFilterView: View {
         }
         .onAppear {
             viewModel.getBlockedUsers()
-            Task {
-                try await filtersViewModel.initializeDetailedFilter(category: filter.title)
-                filtersViewModel.clearFilterSearch()
-            }
         }
-        .onChange(of: isSearchExpanded) { isExpanded in
-            if isExpanded {
-                isShowingSearchHistory = true
-                Task { @MainActor in
-                    await Task.yield()
-                    searchFocused = true
-                }
-            } else {
-                searchText = ""
-                isShowingSearchHistory = true
-                searchFocused = false
-                filtersViewModel.clearFilterSearch()
-            }
+        .task {
+            await loadCategoryPosts()
         }
+        .onChange(of: isSearchExpanded, perform: handleSearchExpansionChange)
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
@@ -86,29 +86,37 @@ struct DetailedFilterView: View {
             }
 
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    isSearchExpanded = true
-                } label: {
-                    Icon(image: "search")
-                }
-                .disabled(isSearchExpanded)
+                searchButton
             }
 
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    presentPopup = true
-                } label: {
-                    Image("filters")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 22, height: 19)
-                }
+                filterButton
             }
         }
         .toolbarBackground(.hidden, for: .navigationBar)
         .sheet(isPresented: $presentPopup) {
             FilterView(home: false, isPresented: $presentPopup)
                 .environmentObject(filtersViewModel)
+        }
+    }
+
+    private var searchButton: some View {
+        Button {
+            isSearchExpanded = true
+        } label: {
+            Icon(image: "search")
+        }
+        .disabled(isSearchExpanded)
+    }
+
+    private var filterButton: some View {
+        Button {
+            presentPopup = true
+        } label: {
+            Image("filters")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 22, height: 19)
         }
     }
 
@@ -124,6 +132,32 @@ struct DetailedFilterView: View {
                 withAnimation(.snappy(duration: 0.2)) { isSearchExpanded = false }
             }
         )
+    }
+
+    // MARK: - Private Methods
+
+    private func loadCategoryPosts() async {
+        do {
+            try await filtersViewModel.initializeDetailedFilter(category: filter.title)
+            filtersViewModel.clearFilterSearch()
+        } catch {
+            NetworkManager.shared.logger.error("Error in DetailedFilterView.loadCategoryPosts: \(error)")
+        }
+    }
+
+    private func handleSearchExpansionChange(_ isExpanded: Bool) {
+        if isExpanded {
+            isShowingSearchHistory = true
+            Task { @MainActor in
+                await Task.yield()
+                searchFocused = true
+            }
+        } else {
+            searchText = ""
+            isShowingSearchHistory = true
+            searchFocused = false
+            filtersViewModel.clearFilterSearch()
+        }
     }
 
     private func runSearch(_ query: String) {

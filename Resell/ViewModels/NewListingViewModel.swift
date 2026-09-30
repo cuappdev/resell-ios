@@ -13,14 +13,15 @@ class NewListingViewModel: ObservableObject {
     
     // MARK: - Properties
 
+    /// Most photos a single listing can hold.
+    static let maxImages = 9
+
     @Published var didShowImageSourceDialog: Bool = false
     @Published var didShowCamera: Bool = false
     @Published var didShowPhotosPicker: Bool = false
     @Published var isLoading: Bool = false
     @Published var selectedImages: [UIImage] = []
     @Published var selectedItems: [PhotosPickerItem] = []
-
-    static let maxImages = 9
     @Published var didShowPriceInput: Bool = false
     @Published var descriptionText: String = ""
     @Published var priceText: String = ""
@@ -28,16 +29,19 @@ class NewListingViewModel: ObservableObject {
     @Published var selectedCondition: String = "Gently Used"
     @Published var titleText: String = ""
 
+    /// How many more photos can be added before reaching `maxImages`.
+    var remainingImageSlots: Int {
+        max(0, Self.maxImages - selectedImages.count)
+    }
+
     // MARK: - Functions
 
     func checkInputIsValid() -> Bool {
         return !(descriptionText.cleaned().isEmpty || priceText.cleaned().isEmpty || titleText.cleaned().isEmpty)
     }
 
-    var remainingImageSlots: Int {
-        max(0, Self.maxImages - selectedImages.count)
-    }
-
+    /// Appends the picked photos (up to the remaining slots) to `selectedImages`,
+    /// then clears the picker selection so the same photos can be picked again.
     func updateListingImages(newItems: [PhotosPickerItem]) async {
         guard !newItems.isEmpty, remainingImageSlots > 0 else {
             selectedItems = []
@@ -48,9 +52,13 @@ class NewListingViewModel: ObservableObject {
         var newImages: [UIImage] = []
 
         for item in itemsToLoad {
-            if let data = try? await item.loadTransferable(type: Data.self),
-               let image = UIImage(data: data) {
-                newImages.append(image)
+            do {
+                if let data = try await item.loadTransferable(type: Data.self),
+                   let image = UIImage(data: data) {
+                    newImages.append(image)
+                }
+            } catch {
+                NetworkManager.shared.logger.error("Error in NewListingViewModel.updateListingImages: \(error)")
             }
         }
 

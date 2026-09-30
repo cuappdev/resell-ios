@@ -54,14 +54,6 @@ struct ExternalProfileView: View {
                 }
             }
             .coordinateSpace(name: "externalProfileScroll")
-            .onPreferenceChange(ProfileIdentityMaxYPreferenceKey.self) { maxY in
-                let isVisible = maxY > 0
-                if isProfileIdentityVisible != isVisible {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        isProfileIdentityVisible = isVisible
-                    }
-                }
-            }
             .navigationBarBackButtonHidden(true)
             .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
@@ -158,12 +150,12 @@ struct ExternalProfileView: View {
                     }
                 }
             }
-            .background {
-                GeometryReader { proxy in
-                    Color.clear.preference(
-                        key: ProfileIdentityMaxYPreferenceKey.self,
-                        value: proxy.frame(in: .named("externalProfileScroll")).maxY
-                    )
+            // Once the name-and-rating block scrolls away, the toolbar names the profile.
+            .onGeometryChange(for: Bool.self) { proxy in
+                proxy.frame(in: .named("externalProfileScroll")).maxY > 0
+            } action: { isVisible in
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isProfileIdentityVisible = isVisible
                 }
             }
             
@@ -242,10 +234,10 @@ struct ExternalProfileView: View {
                 if viewModel.isFollowLoading {
                     ProgressView()
                         .controlSize(.mini)
-                        .tint(viewModel.isFollowing ? .white : Constants.Colors.resellPurple)
+                        .tint(viewModel.isFollowing ? Constants.Colors.white : Constants.Colors.resellPurple)
                 } else {
                     Text(viewModel.isFollowing ? "Unfollow" : "Follow")
-                        .font(.custom("Rubik-Medium", size: 12))
+                        .font(Constants.Fonts.subtitle2)
                 }
             }
             .foregroundStyle(viewModel.isFollowing ? Constants.Colors.white : Constants.Colors.resellPurple)
@@ -284,50 +276,29 @@ struct ExternalProfileView: View {
 
     private var profileTabBar: some View {
         HStack {
-            // Listings tab
-            Button {
-                withAnimation {
-                    listingViewIsPresented = true
-                }
-            } label: {
-                HStack(spacing: 8) {
-                    Image(uiImage: Lucide.store)
-                        .renderingMode(.template)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 24, height: 24)
-                    
-                    Text("Listings")
-                        .font(Constants.Fonts.body2)
-                        .fontWeight(.medium)
-                    
-                    Text("(\(viewModel.externalUserPosts.count))")
-                        .font(Constants.Fonts.body2)
-                }
-                .foregroundColor(listingViewIsPresented ? Constants.Colors.black : Constants.Colors.inactiveGray)
+            profileTab(
+                title: "Listings",
+                count: viewModel.externalUserPosts.count,
+                showsListings: true
+            ) {
+                Image(uiImage: Lucide.store)
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 24, height: 24)
             }
-            
+
             Spacer()
-            
-            // Reviews tab
-            Button {
-                withAnimation {
-                    listingViewIsPresented = false
-                }
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "star.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 20, height: 20)
-                    
-                    Text("Reviews")
-                        .font(Constants.Fonts.body2)
-                        .fontWeight(.medium)
-                    + Text(" (\(viewModel.reviewCount))")
-                        .font(Constants.Fonts.body2)
-                }
-                .foregroundColor(listingViewIsPresented ? Constants.Colors.inactiveGray : Constants.Colors.black)
+
+            profileTab(
+                title: "Reviews",
+                count: viewModel.reviewCount,
+                showsListings: false
+            ) {
+                Image(systemName: "star.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 20, height: 20)
             }
         }
         .padding(.horizontal, 48)
@@ -345,6 +316,36 @@ struct ExternalProfileView: View {
         }
         .overlay(alignment: .bottom) {
             Divider()
+        }
+    }
+
+    /// One half of the Listings / Reviews switcher; `showsListings` is the
+    /// `listingViewIsPresented` value it selects.
+    private func profileTab<TabIcon: View>(
+        title: String,
+        count: Int,
+        showsListings: Bool,
+        @ViewBuilder icon: () -> TabIcon
+    ) -> some View {
+        Button {
+            withAnimation {
+                listingViewIsPresented = showsListings
+            }
+        } label: {
+            HStack(spacing: 8) {
+                icon()
+
+                Text(title)
+                    .font(Constants.Fonts.body2)
+                    .fontWeight(.medium)
+                + Text(" (\(count))")
+                    .font(Constants.Fonts.body2)
+            }
+            .foregroundStyle(
+                listingViewIsPresented == showsListings
+                    ? Constants.Colors.black
+                    : Constants.Colors.inactiveGray
+            )
         }
     }
 
@@ -478,14 +479,4 @@ struct ExternalProfileView: View {
         .background(Constants.Colors.white)
     }
 
-}
-
-/// Vertical position of the name-and-rating block, in the profile scroll view's
-/// coordinate space. Drives whether the toolbar needs to name the profile.
-private struct ProfileIdentityMaxYPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = .greatestFiniteMagnitude
-
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
-    }
 }
