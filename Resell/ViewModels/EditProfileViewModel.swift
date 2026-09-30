@@ -16,7 +16,7 @@ class EditProfileViewModel: ObservableObject {
     @Published var didShowPhotosPicker: Bool = false
     @Published var isLoading: Bool = false
 
-    @Published var selectedImage: UIImage = UIImage(named: "emptyProfile")!
+    @Published var selectedImage: UIImage = .profilePlaceholder
     @Published var selectedItem: PhotosPickerItem? = nil
     @Published var user: User? = nil
 

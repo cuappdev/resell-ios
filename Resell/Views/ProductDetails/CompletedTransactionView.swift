@@ -67,8 +67,16 @@ struct CompletedTransactionView: View {
     @State private var showSuccessAlert: Bool = false
     @State private var showErrorAlert: Bool = false
     @State private var errorMessage: String = ""
+    @State private var isLoadingReviewState = true
+    @State private var hasExistingReview = false
     
     private let sellerTags = ["Friendly", "Punctual", "Responsive", "Slow response", "Fair pricing", "As described"]
+    
+    private var isCurrentUserBuyer: Bool {
+        guard let uid = GoogleAuthManager.shared.user?.firebaseUid,
+              let buyerId = transaction.buyer?.firebaseUid else { return false }
+        return uid == buyerId
+    }
     
     private var canSubmit: Bool {
         stars > 0
@@ -79,24 +87,86 @@ struct CompletedTransactionView: View {
     @FocusState private var isTextEditorFocused: Bool
     
     var body: some View {
+        Group {
+            if !isCurrentUserBuyer {
+                sellerOrUnknownViewerContent
+            } else if isLoadingReviewState {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if hasExistingReview {
+                buyerAlreadyReviewedContent
+            } else {
+                buyerReviewForm
+            }
+        }
+        .background(Constants.Colors.white)
+        .navigationTitle("Completed Transaction")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbarBackground(Constants.Colors.white, for: .automatic)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                BackButton(style: .systemChevronResizable(width: 12, height: 20))
+            }
+        }
+        .task {
+            await loadBuyerReviewStateIfNeeded()
+        }
+        .alert("Review Submitted!", isPresented: $showSuccessAlert) {
+            Button("OK") {
+                router.pop()
+            }
+        } message: {
+            Text("Thank you for your feedback!")
+        }
+        .alert("Couldn’t submit review", isPresented: $showErrorAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(errorMessage)
+        }
+    }
+    
+    private var sellerOrUnknownViewerContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                transactionSummaryCard
+                Text("Only the buyer can leave a review for this sale.")
+                    .font(Constants.Fonts.body2)
+                    .foregroundStyle(Constants.Colors.secondaryGray)
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 24)
+        }
+    }
+    
+    private var buyerAlreadyReviewedContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                transactionSummaryCard
+                Text("You’ve already submitted a review for this transaction.")
+                    .font(Constants.Fonts.body2)
+                    .foregroundStyle(Constants.Colors.secondaryGray)
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 24)
+        }
+    }
+    
+    private var buyerReviewForm: some View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    // Transaction summary card
                     transactionSummaryCard
                     
                     Divider()
                     
-                    // Review section
                     VStack(alignment: .leading, spacing: 20) {
                         Text("Transaction Review")
                             .font(Constants.Fonts.h3)
                             .foregroundColor(.black)
                         
-                        // Star rating
                         starRatingView
                         
-                        // Review text field with inline placeholder
                         ZStack(alignment: .topLeading) {
                             if reviewFeedback.isEmpty {
                                 Text("How was your transaction experience with \(transaction.seller?.fullName ?? transaction.seller?.username ?? "the seller")? (optional)")
@@ -118,7 +188,6 @@ struct CompletedTransactionView: View {
                         .background(Constants.Colors.wash)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         
-                        // Seller tags
                         sellerTagsView
                     }
                 }
@@ -129,7 +198,6 @@ struct CompletedTransactionView: View {
                 isTextEditorFocused = false
             }
             
-            // Submit button pinned to bottom
             PurpleButton(isActive: canSubmit, text: isSubmitting ? "Submitting..." : "Submit Review") {
                 submitReview()
             }
@@ -137,21 +205,6 @@ struct CompletedTransactionView: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 32)
             .padding(.top, 12)
-        }
-        .background(Constants.Colors.white)
-        .navigationTitle("Completed Transaction")
-        .navigationBarTitleDisplayMode(.inline)
-        .alert("Review Submitted!", isPresented: $showSuccessAlert) {
-            Button("OK") {
-                router.pop()
-            }
-        } message: {
-            Text("Thank you for your feedback!")
-        }
-        .alert("Couldn’t submit review", isPresented: $showErrorAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(errorMessage)
         }
     }
     
@@ -284,8 +337,27 @@ struct CompletedTransactionView: View {
     
     // MARK: - Functions
     
+    @MainActor
+    private func loadBuyerReviewStateIfNeeded() async {
+        guard isCurrentUserBuyer else {
+            isLoadingReviewState = false
+            return
+        }
+        isLoadingReviewState = true
+        do {
+            _ = try await NetworkManager.shared.getTransactionReview(transactionId: transaction.id)
+            hasExistingReview = true
+        } catch let error as ErrorResponse where error.httpCode == 404 {
+            hasExistingReview = false
+        } catch {
+            hasExistingReview = false
+            NetworkManager.shared.logger.error("loadBuyerReviewState: \(error.localizedDescription)")
+        }
+        isLoadingReviewState = false
+    }
+    
     private func submitReview() {
-        guard canSubmit else { return }
+        guard canSubmit, isCurrentUserBuyer, !hasExistingReview else { return }
         
         isSubmitting = true
         
@@ -328,6 +400,11 @@ struct CompletedTransactionView: View {
                 
                 await MainActor.run {
                     isSubmitting = false
+                    NotificationCenter.default.post(
+                        name: Constants.Notifications.TransactionReviewSubmitted,
+                        object: nil,
+                        userInfo: ["transactionId": transaction.id]
+                    )
                     showSuccessAlert = true
                 }
             } catch {

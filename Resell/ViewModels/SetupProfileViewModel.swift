@@ -36,7 +36,7 @@ class SetupProfileViewModel: ObservableObject {
     // MARK: - Functions
 
     func checkInputIsValid() -> Bool {
-        let hasImage = selectedImage != nil && selectedImage != UIImage(named: "emptyProfile")
+        let hasImage = selectedImage != nil && selectedImage != .profilePlaceholder
         
         return !(username.cleaned().isEmpty || bio.cleaned().isEmpty) && didAgreeWithEULA && hasImage
     }
@@ -114,7 +114,7 @@ class SetupProfileViewModel: ObservableObject {
         username = ""
         bio = ""
         venmoHandle = ""
-        selectedImage = UIImage(named: "emptyProfile")!
+        selectedImage = .profilePlaceholder
         selectedItem = nil
 
         netid = ""

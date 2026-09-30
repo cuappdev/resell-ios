@@ -119,8 +119,6 @@ struct MainTabView: View {
                         .environmentObject(onboardingViewModel)
                 case .completedTransaction(let transaction):
                     CompletedTransactionView(transaction: transaction)
-                case .reviewTesting:
-                    ReviewTestingView()
                 default:
                     EmptyView()
                 }
@@ -134,7 +132,12 @@ struct MainTabView: View {
                     let response = try await NetworkManager.shared.getTransactionById(transactionId: tid)
                     await MainActor.run {
                         if response.transaction.completed {
-                            router.push(.completedTransaction(response.transaction))
+                            let uid = GoogleAuthManager.shared.user?.firebaseUid
+                            if response.transaction.buyer?.firebaseUid == uid {
+                                router.push(.completedTransaction(response.transaction))
+                            } else {
+                                router.push(.notifications)
+                            }
                         } else {
                             router.push(.notifications)
                         }
