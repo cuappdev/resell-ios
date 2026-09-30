@@ -92,7 +92,6 @@ class CurrentUserProfileManager: ObservableObject {
                 givenName = user.givenName
                 bio = user.bio.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Hi I'm \(username), looking for great deals and selling even greater items" : user.bio
                 venmoHandle = user.venmoHandle ?? ""
-                hasProfilePicture = user.photoUrl != nil
                 
                 await decodeProfileImage(url: user.photoUrl)
                 
@@ -178,6 +177,7 @@ class CurrentUserProfileManager: ObservableObject {
               let image = UIImage(data: data) else { return }
         
         profilePic = image
+        hasProfilePicture = true
     }
     
     private func setupNotificationObservers() {
