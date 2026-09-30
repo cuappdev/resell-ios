@@ -12,8 +12,7 @@ struct RangeSlider: View {
     @Binding var highValue: Double
     let range: ClosedRange<Double>
     let step: Double = 5 // Define the step value
-    
-    
+
     private let trackWidth: CGFloat = 344
     private let handleDiameter: CGFloat = 14
     

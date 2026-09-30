@@ -14,7 +14,7 @@ struct FilterView: View {
     @State var presentPopup = false
     @EnvironmentObject var filtersVM: FiltersViewModel
 
-    private let categories: [String] = Constants.filters.compactMap { $0.color == nil ? nil : $0.title }
+    private let categories: [String] = Constants.productCategories.map(\.title)
     private var conditions : [String] = ["Gently Used", "Worn", "Never Used"]
 
     let home : Bool
@@ -133,8 +133,8 @@ struct FilterView: View {
                                         } label: {
                                             let isSelected = filtersVM.categoryFilters.contains(category)
                                             Text(category)
-                                                .font(.custom("Rubik-Medium", size: 14))
-                                                .foregroundStyle(isSelected ? Constants.Colors.resellPurple : Color.black)
+                                                .font(Constants.Fonts.title3)
+                                                .foregroundStyle(isSelected ? Constants.Colors.resellPurple : Constants.Colors.black)
                                                 .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
                                         }
                                         .padding(.horizontal, 14)
@@ -175,8 +175,8 @@ struct FilterView: View {
                                 } label: {
                                     let isSelected = filtersVM.conditionFilters.contains(condition)
                                     Text(condition)
-                                        .font(.custom("Rubik-Medium", size: 14))
-                                        .foregroundStyle(isSelected ? Constants.Colors.resellPurple : Color.black)
+                                        .font(Constants.Fonts.title3)
+                                        .foregroundStyle(isSelected ? Constants.Colors.resellPurple : Constants.Colors.black)
                                         .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
                                 }
                                 .padding(.horizontal, 14)

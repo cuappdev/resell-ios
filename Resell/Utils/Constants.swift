@@ -128,7 +128,11 @@ struct Constants {
         FilterCategory(id: 7, title: "Active", color: Constants.Colors.filterBlue),
         FilterCategory(id: 8, title: "Other", color: Constants.Colors.filterGray)
     ]
-    
+
+    /// The categories a listing can belong to: `filters` without the "Recent"
+    /// pseudo-category, which is the only entry with no `color`.
+    static let productCategories = filters.filter { $0.color != nil }
+
     static let notificationFilters = [
         FilterCategory(id: 0, title: "All"),
         FilterCategory(id: 1, title: "Messages"),
