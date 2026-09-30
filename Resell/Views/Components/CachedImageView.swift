@@ -12,6 +12,8 @@ import SwiftUI
 struct CachedImageView: View {
     
     @Binding var isImageLoaded: Bool
+    /// Receives the loaded image's height/width ratio, for callers that size
+    /// themselves to the photo rather than cropping it.
     @Binding var aspectRatio: CGFloat?
     let imageURL: URL?
 

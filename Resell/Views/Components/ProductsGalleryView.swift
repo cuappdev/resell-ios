@@ -92,7 +92,7 @@ struct ProductsGalleryView: View {
 
 struct ProductGalleryCell: View {
 
-    // MARK: Properties
+    // MARK: - Properties
 
     @Binding var selectedItem: Post?
     @ObservedObject private var homeViewModel = HomeViewModel.shared
@@ -104,14 +104,12 @@ struct ProductGalleryCell: View {
     let savedCell: Bool
     private let cellWidth = (UIScreen.width - 46) / 2
 
-    // MARK: UI
+    /// Height/width ratio used while loading and as a fallback.
+    private static let placeholderAspectRatio: CGFloat = 4.0 / 3.0
 
     private var isSold: Bool {
         post.sold == true
     }
-
-    /// Height/width ratio used while loading and as a fallback.
-    private static let placeholderAspectRatio: CGFloat = 4.0 / 3.0
 
     private var imageHeight: CGFloat {
         let ratio = imageAspectRatio ?? Self.placeholderAspectRatio
@@ -137,35 +135,12 @@ struct ProductGalleryCell: View {
         guard let conditionLabel else { return categoryLabel }
         return "\(categoryLabel) • \(conditionLabel)"
     }
-    
+
+    // MARK: - UI
+
     var body: some View {
         VStack(spacing: 0) {
-            Button {
-                selectedItem = post
-            } label: {
-                let url = URL(string: post.images.first ?? "")
-                ZStack {
-                    CachedImageView(
-                        isImageLoaded: $isImageLoaded,
-                        imageURL: url,
-                        aspectRatio: $imageAspectRatio
-                    )
-                    .frame(width: cellWidth, height: imageHeight)
-                    .clipped()
-
-                    if isSold {
-                        Rectangle()
-                            .fill(Color.black.opacity(0.5))
-                            .frame(width: cellWidth, height: imageHeight)
-
-                        Text("Item Sold")
-                            .font(.custom("Rubik-Medium", size: 16))
-                            .foregroundColor(.white)
-                    }
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-            }
-            .buttonStyle(.plain)
+            imageButton
 
             HStack(alignment: .top, spacing: 8) {
                 infoButton
@@ -185,20 +160,52 @@ struct ProductGalleryCell: View {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(Constants.Colors.stroke, lineWidth: 1)
         }
-        .onAppear {
-            loadSavedState()
+        .onAppear(perform: syncSavedStateWithSavedItems)
+        .onChange(of: homeViewModel.savedItems) { _ in
+            syncSavedStateWithSavedItems()
         }
-        .onReceive(homeViewModel.$savedItems) { savedItems in
-            isSaved = savedItems.contains(where: { $0.id == post.id })
+        .task(id: post.id) {
+            isSaved = await homeViewModel.isPostSaved(post)
         }
         .onChange(of: post.id) { _ in
             imageAspectRatio = nil
             isImageLoaded = false
-            loadSavedState()
         }
     }
 
-    // MARK: - Private Methods
+    private var imageButton: some View {
+        Button {
+            selectedItem = post
+        } label: {
+            ZStack {
+                CachedImageView(
+                    isImageLoaded: $isImageLoaded,
+                    imageURL: URL(string: post.images.first ?? ""),
+                    aspectRatio: $imageAspectRatio
+                )
+                .frame(width: cellWidth, height: imageHeight)
+                .clipped()
+
+                if isSold {
+                    soldOverlay
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var soldOverlay: some View {
+        ZStack {
+            Rectangle()
+                .fill(Constants.Colors.black.opacity(0.5))
+                .frame(width: cellWidth, height: imageHeight)
+
+            Text("Item Sold")
+                .font(Constants.Fonts.title2)
+                .foregroundStyle(Constants.Colors.white)
+        }
+    }
 
     private var infoButton: some View {
         Button {
@@ -237,25 +244,15 @@ struct ProductGalleryCell: View {
         .buttonStyle(.plain)
     }
 
-    private func loadSavedState() {
+    // MARK: - Private Methods
+
+    /// Shows the bookmark as filled as soon as `savedItems` includes this post, so
+    /// a saved listing never flashes unsaved while `isPostSaved(_:)` runs.
+    private func syncSavedStateWithSavedItems() {
         if homeViewModel.savedItems.contains(where: { $0.id == post.id }) {
             isSaved = true
-            return
-        }
-
-        // `savedItems` holds every saved post, so once it has loaded, absence is
-        // an answer. Only fall back to a per-post request before that — otherwise
-        // scrolling a feed fires one request per cell.
-        guard !homeViewModel.hasLoadedSavedItems else {
+        } else if homeViewModel.hasLoadedSavedItems {
             isSaved = false
-            return
-        }
-
-        Task {
-            let saved = (try? await NetworkManager.shared.postIsSaved(id: post.id))?.isSaved ?? false
-            await MainActor.run {
-                isSaved = saved
-            }
         }
     }
 
@@ -265,16 +262,9 @@ struct ProductGalleryCell: View {
 
         Task {
             do {
-                if newState {
-                    _ = try await NetworkManager.shared.savePostByID(id: post.id)
-                } else {
-                    _ = try await NetworkManager.shared.unsavePostByID(id: post.id)
-                }
-                await homeViewModel.toggleLocalSaveStatus(for: post, isSaving: newState)
+                try await homeViewModel.setSaved(newState, for: post)
             } catch {
-                await MainActor.run {
-                    isSaved = !newState
-                }
+                isSaved = !newState
                 NetworkManager.shared.logger.error("Error in ProductGalleryCell.toggleSave: \(error)")
             }
         }
