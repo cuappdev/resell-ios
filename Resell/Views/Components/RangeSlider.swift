@@ -32,8 +32,6 @@ struct RangeSlider: View {
                     .fill(Constants.Colors.resellPurple.opacity(0.2))
                     .frame(width: trackWidth, height: 4)
                     .cornerRadius(4)
-
-                // Active range between the two handles.
                 
                 Rectangle()
                     .fill(

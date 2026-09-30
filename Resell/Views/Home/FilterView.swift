@@ -14,8 +14,6 @@ struct FilterView: View {
     @State var presentPopup = false
     @EnvironmentObject var filtersVM: FiltersViewModel
 
-    /// Browsable categories, in `Constants.filters` order. A `nil` color marks a
-    /// pseudo-category (e.g. "Recent") that is not a real listing category.
     private let categories: [String] = Constants.filters.compactMap { $0.color == nil ? nil : $0.title }
     private var conditions : [String] = ["Gently Used", "Worn", "Never Used"]
 
@@ -107,7 +105,6 @@ struct FilterView: View {
                         }
                         .padding(.bottom, 8)
                         
-                        // Slider — extend trailing to avoid clipping the 344pt track
                         RangeSlider(lowValue: $filtersVM.lowValue, highValue: $filtersVM.highValue, range: 0...1000)
                             .padding(.trailing, -28)
                         
@@ -196,7 +193,7 @@ struct FilterView: View {
                         }
                     }
                     .padding(.horizontal, 28)
-                    } // End of ScrollView
+                    }
                     
                     Spacer()
                     
