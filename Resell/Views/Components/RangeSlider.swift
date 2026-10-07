@@ -33,8 +33,7 @@ struct RangeSlider: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
-                backgroundTrack
-                selectedRangeTrack
+                track
                 lowHandle(centerY: geometry.size.height / 2)
                 highHandle(centerY: geometry.size.height / 2)
             }
@@ -42,31 +41,34 @@ struct RangeSlider: View {
         .frame(height: 44)
     }
 
-    private var backgroundTrack: some View {
-        Rectangle()
-            .fill(Constants.Colors.resellPurple.opacity(0.2))
-            .frame(width: trackWidth, height: trackHeight)
-            .cornerRadius(trackHeight)
-    }
+    private var track: some View {
+        ZStack(alignment: .leading) {
+            Rectangle()
+                .fill(Constants.Colors.resellPurple.opacity(0.2))
+                .frame(width: trackWidth, height: trackHeight)
+                .cornerRadius(trackHeight)
 
-    private var selectedRangeTrack: some View {
-        Rectangle()
-            .fill(
-                LinearGradient(
-                    colors: [
-                        Constants.Colors.resellPurple.opacity(0.5),
-                        Constants.Colors.resellPurple
-                    ],
-                    startPoint: .leading,
-                    endPoint: .trailing
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Constants.Colors.resellPurple.opacity(0.5),
+                            Constants.Colors.resellPurple
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
                 )
-            )
-            .frame(width: max(0, highHandleX - lowHandleX), height: trackHeight)
-            .offset(x: lowHandleX)
+                .frame(width: max(0, highHandleX - lowHandleX), height: trackHeight)
+                .offset(x: lowHandleX)
+        }
     }
 
     private func lowHandle(centerY: CGFloat) -> some View {
-        handle
+        Circle()
+            .fill(Color.white)
+            .frame(width: handleDiameter, height: handleDiameter)
+            .shadow(radius: 4)
             .position(x: lowHandleX, y: centerY)
             .gesture(
                 DragGesture()
@@ -81,7 +83,10 @@ struct RangeSlider: View {
     }
 
     private func highHandle(centerY: CGFloat) -> some View {
-        handle
+        Circle()
+            .fill(Color.white)
+            .frame(width: handleDiameter, height: handleDiameter)
+            .shadow(radius: 4)
             .position(x: highHandleX, y: centerY)
             .gesture(
                 DragGesture()
@@ -93,13 +98,6 @@ struct RangeSlider: View {
                         }
                     }
             )
-    }
-
-    private var handle: some View {
-        Circle()
-            .fill(Color.white)
-            .frame(width: handleDiameter, height: handleDiameter)
-            .shadow(radius: 4)
     }
 
     // MARK: - Helpers
