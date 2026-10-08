@@ -26,6 +26,10 @@ class ProfileViewModel: ObservableObject {
     @Published var isFollowLoading: Bool = false
     @Published var followerCount: Int = 0
     @Published var followingCount: Int = 0
+
+    /// Lets `loadExternalUser(id:)` skip a profile that is already loaded or in flight.
+    private var loadedExternalUserID: String?
+    private var loadingExternalUserID: String?
     
     /// Computed average star rating for the external user
     var averageStarRating: Double {
@@ -49,7 +53,7 @@ class ProfileViewModel: ObservableObject {
     }
 
     enum Tab: String {
-        case listing, archive, wishlist
+        case listing, archive, reviews
     }
     
     // MARK: - Computed Properties
@@ -60,9 +64,14 @@ class ProfileViewModel: ObservableObject {
     
     var selectedPosts: [Post] {
         if isViewingCurrentUser {
-            return selectedTab == .listing
-                ? CurrentUserProfileManager.shared.userPosts
-                : CurrentUserProfileManager.shared.archivedPosts
+            switch selectedTab {
+            case .listing:
+                return CurrentUserProfileManager.shared.userPosts
+            case .archive:
+                return CurrentUserProfileManager.shared.archivedPosts
+            case .reviews:
+                return []
+            }
         } else {
             return externalUserPosts
         }
@@ -97,7 +106,13 @@ class ProfileViewModel: ObservableObject {
         CurrentUserProfileManager.shared.loadProfile(forceRefresh: forceRefresh)
     }
     
-    func loadExternalUser(id: String) {
+    func loadExternalUser(id: String, forceRefresh: Bool = false) {
+        guard forceRefresh
+                || (loadedExternalUserID != id && loadingExternalUserID != id) else {
+            return
+        }
+
+        loadingExternalUserID = id
         externalUser = nil
         externalUserPosts = []
         externalUserReviews = []
@@ -107,7 +122,10 @@ class ProfileViewModel: ObservableObject {
         
         Task {
             isLoadingExternalUser = true
-            defer { isLoadingExternalUser = false }
+            defer {
+                isLoadingExternalUser = false
+                loadingExternalUserID = nil
+            }
 
             do {
                 externalUser = try await NetworkManager.shared.getUserByID(id: id).user
@@ -140,6 +158,7 @@ class ProfileViewModel: ObservableObject {
                     NetworkManager.shared.logger.error("Cannot fetch reviews: externalUser has no firebaseUid")
                     externalUserReviews = []
                 }
+                loadedExternalUserID = id
             } catch {
                 NetworkManager.shared.logger.error("Error in ProfileViewModel.loadExternalUser: \(error)")
             }
