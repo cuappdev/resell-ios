@@ -607,7 +607,6 @@
 			isa = PBXGroup;
 			children = (
 				ADF650358E3D49F1BFF982BD /* CategoriesView.swift */,
-				AD1309285CE00E73FFD36889 /* GlassToolbarModifier.swift */,
 				C6F1BDBA2FA14CC1004886F8 /* ForceUpdateView.swift */,
 				C607480A2F90643200825192 /* ShareSheet.swift */,
 				2EEAAB272F1ADA1B0006FF5C /* AvailabilitySettingsMenu.swift */,
@@ -728,6 +727,7 @@
 			isa = PBXGroup;
 			children = (
 				2E9F75992EB6DC93003FE0E0 /* EmptyStateModifier.swift */,
+				AD1309285CE00E73FFD36889 /* GlassToolbarModifier.swift */,
 				2C1692902CE4361C009D2291 /* LoadingView.swift */,
 				2CD6CA8B2CB48286005A4F78 /* PopupModal.swift */,
 			);
