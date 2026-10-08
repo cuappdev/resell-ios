@@ -72,6 +72,10 @@ struct Constants {
         static let title3 = Font.custom("Rubik-Medium", size: 14)
         static let title4 = Font.custom("Rubik-Regular", size: 14)
         static let subtitle1 = Font.custom("Rubik-Regular", size: 12)
+
+        // Tab bar
+        static let tabBarLabel = Font.custom("Rubik-Medium", size: 13)
+        static let badge = Font.custom("Roboto-Medium", size: 10)
     }
 
     /// Spacing amounts used in Resell's design system
