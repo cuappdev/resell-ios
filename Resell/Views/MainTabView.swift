@@ -100,6 +100,12 @@ struct MainTabView: View {
                     DetailedFilterView(filter: filter)
                 case .saved:
                     SavedView()
+                case .recentlyViewed:
+                    RecentlyViewedView()
+                case .dailyPicks:
+                    DailyPicksView()
+                case .trending(let category):
+                    TrendingView(category: category)
                 case .availability:
                     AvailabilitySettingsView()
                case .notifications:
