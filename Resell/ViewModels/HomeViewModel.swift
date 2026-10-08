@@ -57,7 +57,7 @@ class HomeViewModel: ObservableObject {
     @Published var savedItems: [Post] = []
     /// True once `getSavedPosts()` has returned at least once. Until then a post's
     /// absence from `savedItems` means "unknown", not "not saved".
-    @Published private(set) var hasLoadedSavedItems: Bool = false
+    @Published private var hasLoadedSavedItems: Bool = false
 
     private var allItems: [Post] = []
     private var page = 1
@@ -206,14 +206,23 @@ class HomeViewModel: ObservableObject {
         }
     }
 
+    /// What `savedItems` already says about `post`: `true` if it's there, `false`
+    /// once saved posts have loaded without it, and `nil` before then, when its
+    /// absence proves nothing.
+    func knownSavedState(for post: Post) -> Bool? {
+        if savedItems.contains(where: { $0.id == post.id }) {
+            return true
+        }
+        return hasLoadedSavedItems ? false : nil
+    }
+
     /// Whether `post` is saved. Once `savedItems` has loaded it holds every saved
     /// post, so absence is an answer; only before that does this ask the backend,
     /// otherwise scrolling a feed would fire one request per cell.
     func isPostSaved(_ post: Post) async -> Bool {
-        if savedItems.contains(where: { $0.id == post.id }) {
-            return true
+        if let knownState = knownSavedState(for: post) {
+            return knownState
         }
-        guard !hasLoadedSavedItems else { return false }
 
         do {
             return try await NetworkManager.shared.postIsSaved(id: post.id).isSaved
@@ -224,13 +233,21 @@ class HomeViewModel: ObservableObject {
     }
 
     /// Saves or unsaves `post` on the backend, then brings `savedItems` in line.
-    func setSaved(_ isSaved: Bool, for post: Post) async throws {
-        if isSaved {
-            _ = try await NetworkManager.shared.savePostByID(id: post.id)
-        } else {
-            _ = try await NetworkManager.shared.unsavePostByID(id: post.id)
+    /// Returns whether the change went through, so a bookmark that was flipped
+    /// optimistically knows to roll back.
+    func setSaved(_ isSaved: Bool, for post: Post) async -> Bool {
+        do {
+            if isSaved {
+                _ = try await NetworkManager.shared.savePostByID(id: post.id)
+            } else {
+                _ = try await NetworkManager.shared.unsavePostByID(id: post.id)
+            }
+        } catch {
+            NetworkManager.shared.logger.error("Error in HomeViewModel.setSaved: \(error)")
+            return false
         }
         await toggleLocalSaveStatus(for: post, isSaving: isSaved)
+        return true
     }
 
     /// Clear any applied filter-sheet results and return the home feed to the
