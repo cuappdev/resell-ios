@@ -17,3 +17,6 @@ Resell/Supporting/**
 **/Keys.xcconfig
 *.xcconfig.local
 .DS_Store
+
+## Personal Claude Code notes
+CLAUDE.local.md
