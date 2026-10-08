@@ -5,6 +5,7 @@
 //  Created by Charles Liggins on 1/12/26.
 //
 
+import LucideIcons
 import SwiftUI
 
 struct AvailabilitySettingsView: View {
@@ -23,6 +24,8 @@ struct AvailabilitySettingsView: View {
     @State private var isLoading: Bool = false
     @State private var isSaving: Bool = false
     @State private var errorMessage: String? = nil
+    @State private var savedCells: Set<CellIdentifier> = []
+    @State private var showSaveConfirmation = false
 
     /// Dates (yyyy-MM-dd) that exist in the saved schedule on the backend.
     /// Tracked so we can send empty arrays for them on save when the user clears cells,
@@ -37,6 +40,10 @@ struct AvailabilitySettingsView: View {
     
     private var monthName: String {
         CalendarHelper.monthName(for: currentMonthOffset)
+    }
+
+    private var hasUnsavedChanges: Bool {
+        selectedCells != savedCells
     }
     
     // MARK: - Body
@@ -138,18 +145,6 @@ struct AvailabilitySettingsView: View {
                     }
                 )
                 .id(gridStartDate) // Force rebuild when start date changes
-
-                if !showCalendar {
-                    PurpleButton(isLoading: isSaving, text: isSaving ? "Saving..." : "Save") {
-                        Task {
-                            await saveAvailability()
-                        }
-                    }
-                    .disabled(isSaving)
-                    .padding(.top, 16)
-                    .padding(.horizontal)
-                    .padding(.bottom, 24)
-                }
             }
         }
         .scrollDisabled(true)
@@ -175,6 +170,9 @@ struct AvailabilitySettingsView: View {
             ToolbarItem(placement: .navigationBarLeading) {
                 BackButton()
             }
+            ToolbarItem(placement: .topBarTrailing) {
+                saveButton
+            }
         }
         .alert("Error", isPresented: .constant(errorMessage != nil)) {
             Button("OK") {
@@ -182,6 +180,11 @@ struct AvailabilitySettingsView: View {
             }
         } message: {
             Text(errorMessage ?? "")
+        }
+        .alert("Availability Updated", isPresented: $showSaveConfirmation) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Your new availability settings have been saved.")
         }
         .onAppear {
             // Initialize visible dates
@@ -225,6 +228,33 @@ struct AvailabilitySettingsView: View {
         }
     }
     
+    /// Lit up only while the grid differs from what's saved on the backend.
+    private var saveButton: some View {
+        Button {
+            Task {
+                await saveAvailability()
+            }
+        } label: {
+            if isSaving {
+                ProgressView()
+                    .controlSize(.small)
+            } else {
+                Image(uiImage: Lucide.save)
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 20, height: 20)
+            }
+        }
+        .foregroundStyle(
+            hasUnsavedChanges
+                ? Constants.Colors.resellPurple
+                : Constants.Colors.inactiveGray
+        )
+        .disabled(!hasUnsavedChanges || isSaving || isLoading)
+        .accessibilityLabel("Save availability")
+    }
+
     // MARK: - Functions
     
     private func updateVisibleDates(from startDate: Date, page: Int) {
@@ -245,6 +275,7 @@ struct AvailabilitySettingsView: View {
             let scheduleDates = Set(response.availability.schedule.keys)
             await MainActor.run {
                 selectedCells = cells
+                savedCells = cells
                 knownScheduleDates = scheduleDates
             }
         } catch {
@@ -253,6 +284,8 @@ struct AvailabilitySettingsView: View {
     }
     
     private func saveAvailability() async {
+        guard hasUnsavedChanges, !isSaving else { return }
+
         isSaving = true
         defer { isSaving = false }
         
@@ -265,6 +298,8 @@ struct AvailabilitySettingsView: View {
             // we just sent (excluding the explicit empty-array clears).
             await MainActor.run {
                 knownScheduleDates = Set(schedule.compactMap { $0.value.isEmpty ? nil : $0.key })
+                savedCells = selectedCells
+                showSaveConfirmation = true
             }
         } catch {
             await MainActor.run {

@@ -176,6 +176,7 @@
 		AD0F669E03C5CC5D5095E8FD /* SearchPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD7B878D8FDC4D4A0336C061 /* SearchPanel.swift */; };
 		CFEAD122D31482DC01ACDAA7 /* SearchResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40C73AC881FC28673D34FE76 /* SearchResultsView.swift */; };
 		A9C6FDECE41DF4AA1920B87C /* ImageCountBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44DC361F2DFB4C7E05717C4E /* ImageCountBadge.swift */; };
+		858B78BAC8C82016919D5CBE /* ProfileImageCropView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3F14FF258987E8DC734416A /* ProfileImageCropView.swift */; };
 		ADF70ED11386D407EB2BD15F /* ExploreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD6DA1177C5F0B07D6B2E273 /* ExploreView.swift */; };
 		ADBF2503F1D2567996BEA15D /* SellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD301494F694E79F7F82961D /* SellView.swift */; };
 		2E9968BE3021BBC8006E910D /* LucideIcons in Frameworks */ = {isa = PBXBuildFile; productRef = 2E9968BD3021BBC8006E910D /* LucideIcons */; };
@@ -350,6 +351,7 @@
 		AD7B878D8FDC4D4A0336C061 /* SearchPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchPanel.swift; sourceTree = "<group>"; };
 		40C73AC881FC28673D34FE76 /* SearchResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsView.swift; sourceTree = "<group>"; };
 		44DC361F2DFB4C7E05717C4E /* ImageCountBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCountBadge.swift; sourceTree = "<group>"; };
+		B3F14FF258987E8DC734416A /* ProfileImageCropView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileImageCropView.swift; sourceTree = "<group>"; };
 		AD6DA1177C5F0B07D6B2E273 /* ExploreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreView.swift; sourceTree = "<group>"; };
 		AD301494F694E79F7F82961D /* SellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SellView.swift; sourceTree = "<group>"; };
 		ADED4A4B411EB77324FB613B /* ProductImageViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductImageViewer.swift; sourceTree = "<group>"; };
@@ -633,6 +635,7 @@
 				AD7B878D8FDC4D4A0336C061 /* SearchPanel.swift */,
 				40C73AC881FC28673D34FE76 /* SearchResultsView.swift */,
 				44DC361F2DFB4C7E05717C4E /* ImageCountBadge.swift */,
+				B3F14FF258987E8DC734416A /* ProfileImageCropView.swift */,
 				ADF650358E3D49F1BFF982BD /* CategoriesView.swift */,
 				C6F1BDBA2FA14CC1004886F8 /* ForceUpdateView.swift */,
 				C607480A2F90643200825192 /* ShareSheet.swift */,
@@ -968,6 +971,7 @@
 				AD0F669E03C5CC5D5095E8FD /* SearchPanel.swift in Sources */,
 				CFEAD122D31482DC01ACDAA7 /* SearchResultsView.swift in Sources */,
 				A9C6FDECE41DF4AA1920B87C /* ImageCountBadge.swift in Sources */,
+				858B78BAC8C82016919D5CBE /* ProfileImageCropView.swift in Sources */,
 				ADC4811657FC86FA058DBC78 /* ExploreSections.swift in Sources */,
 				AD352495F4C92AC5AF1AADF6 /* ExploreCollageCard.swift in Sources */,
 				ADA18E8891F5365FCF5D4A36 /* RecentlyViewedView.swift in Sources */,
