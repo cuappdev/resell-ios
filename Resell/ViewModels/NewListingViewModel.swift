@@ -26,7 +26,7 @@ class NewListingViewModel: ObservableObject {
     @Published var descriptionText: String = ""
     @Published var priceText: String = ""
     @Published var selectedFilter: String = "Clothing"
-    @Published var selectedCondition: String = "Never Used"
+    @Published var selectedCondition: String = "Gently Used"
     @Published var titleText: String = ""
 
     /// How many more photos can be added before reaching `maxImages`.
@@ -118,7 +118,7 @@ class NewListingViewModel: ObservableObject {
         descriptionText = ""
         priceText = ""
         selectedFilter = "Clothing"
-        selectedCondition = "Never Used"
+        selectedCondition = "Gently Used"
         isLoading = false
     }
 }
