@@ -160,9 +160,9 @@ struct ProductGalleryCell: View {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(Constants.Colors.stroke, lineWidth: 1)
         }
-        .onAppear(perform: syncSavedStateWithSavedItems)
-        .onChange(of: homeViewModel.savedItems) { _ in
-            syncSavedStateWithSavedItems()
+        .onAppear { isSaved = homeViewModel.knownSavedState(for: post) ?? isSaved }
+        .onChange(of: homeViewModel.knownSavedState(for: post)) { knownState in
+            isSaved = knownState ?? isSaved
         }
         .task(id: post.id) {
             isSaved = await homeViewModel.isPostSaved(post)
@@ -235,38 +235,20 @@ struct ProductGalleryCell: View {
     }
 
     private var saveButton: some View {
-        Button(action: toggleSave) {
+        Button {
+            let newState = !isSaved
+            isSaved = newState
+            Task {
+                if await !homeViewModel.setSaved(newState, for: post) {
+                    isSaved = !newState
+                }
+            }
+        } label: {
             Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(Constants.Colors.black)
                 .frame(width: 14, height: 14)
         }
         .buttonStyle(.plain)
-    }
-
-    // MARK: - Private Methods
-
-    /// Shows the bookmark as filled as soon as `savedItems` includes this post, so
-    /// a saved listing never flashes unsaved while `isPostSaved(_:)` runs.
-    private func syncSavedStateWithSavedItems() {
-        if homeViewModel.savedItems.contains(where: { $0.id == post.id }) {
-            isSaved = true
-        } else if homeViewModel.hasLoadedSavedItems {
-            isSaved = false
-        }
-    }
-
-    private func toggleSave() {
-        let newState = !isSaved
-        isSaved = newState
-
-        Task {
-            do {
-                try await homeViewModel.setSaved(newState, for: post)
-            } catch {
-                isSaved = !newState
-                NetworkManager.shared.logger.error("Error in ProductGalleryCell.toggleSave: \(error)")
-            }
-        }
     }
 }
