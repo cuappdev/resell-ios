@@ -21,17 +21,18 @@ adding or changing code. The goal is code that reads like the code already here.
 1. **Self-documenting code.** Names carry the meaning. Prefer a clear name over a comment
    explaining an unclear one. `getSavedPosts()`, `shouldRetryOn401(_:)`,
    `sortPostsByDate(_:)` say what they do without prose.
-2. **Minimal comments — but document the API surface.** Don't narrate obvious code. Do use
+2. Make sure to seperate all complex logic into ViewModels for the specific Views, complex logic should never be in the views. 
+3. **Minimal comments — but document the API surface.** Don't narrate obvious code. Do use
    Swift doc comments (`///` or `/** */`) on non-trivial types and functions so the symbol
    reads well in Xcode Quick Help — the `NetworkManager` request templates are the model to
    follow. Reserve inline `//` comments for genuinely non-obvious logic (e.g. why a 401 is
    retried, why a timestamp heuristic exists). Don't leave commented-out code or
    scratch/placeholder files (`Untitled.swift`, `sfsfs.swift`) in new work.
-3. **Clean separation of concerns.** Views render; ViewModels hold state and orchestrate;
+4. **Clean separation of concerns.** Views render; ViewModels hold state and orchestrate;
    the `API/` layer owns side effects (network, auth, storage, caching); Models are inert
    `Codable` value types. Never call `URLSession` or build requests from a `View` — go
    through `NetworkManager`.
-4. **Prefer the newest iOS APIs.** Reach for modern Swift concurrency (`async`/`await`,
+5. **Prefer the newest iOS APIs.** Reach for modern Swift concurrency (`async`/`await`,
    `Task`), `NavigationStack`, and current SwiftUI first. Only fall back to older patterns
    (Combine pipelines, completion handlers) when interoperating with code that still uses
    them.
@@ -270,6 +271,7 @@ Gate debug-only logging behind `#if DEBUG`. The codebase still has stray `print(
 - [ ] Non-trivial symbols have `///` doc comments; no narration comments, no commented-out
       code, no placeholder files.
 - [ ] View split into named `private` sub-views; reusable UI lives in `Components/`.
+- [ ] All complex logic is in ViewModels not in the Views themselves.
 - [ ] Navigation goes through `Router`; new screens added as `Route` cases.
 - [ ] ViewModel is `@MainActor`; `@Observable` for new screens; shared instances justified.
 - [ ] Network access goes through a `NetworkManager` endpoint method using the request
