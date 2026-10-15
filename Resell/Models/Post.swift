@@ -57,6 +57,13 @@ struct Post: Codable, Equatable, Identifiable, Hashable {
         hasher.combine(id)
     }
 
+    /// When the listing was posted, parsed from the backend's ISO 8601 `created` timestamp.
+    var createdDate: Date? {
+        let isoDateFormatter = ISO8601DateFormatter()
+        isoDateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return isoDateFormatter.date(from: created)
+    }
+
     static func sortPostsByDate(_ posts: [Post], ascending: Bool = false) -> [Post] {
         let isoDateFormatter = ISO8601DateFormatter()
         isoDateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]

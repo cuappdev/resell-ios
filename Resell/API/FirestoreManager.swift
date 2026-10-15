@@ -366,6 +366,16 @@ extension Date {
         return relativeFormatter.localizedString(for: datetime, relativeTo: now)
     }
 
+    /// Compact relative time such as "5m ago", "2d ago" or "1w ago". A date
+    /// slightly in the future (device clock skew) reads as "0s ago", not "in 5s".
+    static func shortTimeAgo(from datetime: Date) -> String {
+        let relativeFormatter = RelativeDateTimeFormatter()
+        relativeFormatter.unitsStyle = .abbreviated
+
+        let now = Date()
+        return relativeFormatter.localizedString(for: min(datetime, now), relativeTo: now)
+    }
+
     var iso8601String: String {
         let formatter = ISO8601DateFormatter()
         return formatter.string(from: self)
