@@ -138,6 +138,16 @@ struct Constants {
     /// pseudo-category, which is the only entry with no `color`.
     static let productCategories = filters.filter { $0.color != nil }
 
+    /// Events a listing can be tagged with, in the order Explore and the Sell
+    /// picker show them. The backend matches tag names exactly and creates any
+    /// it hasn't seen, so a tag must not change once listings use it.
+    static let eventSpaces = [
+        EventSpace(tag: "homecoming", title: "Homecoming"),
+        EventSpace(tag: "halloween", title: "Halloween"),
+        EventSpace(tag: "formal", title: "Formal"),
+        EventSpace(tag: "stpatricks", title: "St. Patrick's Day")
+    ]
+
     static let notificationFilters = [
         FilterCategory(id: 0, title: "All"),
         FilterCategory(id: 1, title: "Messages"),

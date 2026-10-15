@@ -467,6 +467,13 @@ class NetworkManager {
             let url = try constructURL(endpoint: "/post/trending/?category=\(encoded)&page=\(page)&limit=\(limit)")
             return try await get(url: url)
         }
+
+        /// Listings tagged with any of `eventTags`, which must match backend tag names exactly (e.g. `halloween`),
+        /// along with how many there are across every page.
+        func getPostsByEventTags(_ eventTags: [String], page: Int = 1, limit: Int = 10) async throws -> EventPostsResponse {
+            let url = try constructURL(endpoint: "/post/filterByEventTags/?page=\(page)&limit=\(limit)")
+            return try await post(url: url, body: FilterEventTagsRequest(eventTags: eventTags))
+        }
         
         
         func savePostByID(id: String) async throws -> PostResponse {

@@ -119,6 +119,8 @@ struct PostBody: Codable {
     let original_price: Double
     let imagesBase64: [String]
     let userId: String
+    /// Backend event-tag names to file the listing under; omitted from the request when `nil`.
+    let eventTags: [String]?
 
     enum CodingKeys: String, CodingKey {
         case title
@@ -128,5 +130,6 @@ struct PostBody: Codable {
         case original_price = "originalPrice"
         case imagesBase64
         case userId
+        case eventTags
     }
 }
