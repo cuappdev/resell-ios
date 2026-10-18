@@ -41,6 +41,9 @@ struct EventSpaceView: View {
                 feedSheet
                     .padding(.top, -sheetOverlap)
             }
+            .overlay(alignment: .top) {
+                emptyFeedMessage
+            }
         }
         .background(Constants.Colors.white)
         .ignoresSafeArea(edges: .top)
@@ -121,11 +124,19 @@ struct EventSpaceView: View {
             onScrollToBottom: viewModel.fetchMorePosts
         )
         .loadingView(isLoading: viewModel.isLoading)
-        .emptyState(
-            isEmpty: viewModel.posts.isEmpty && !viewModel.isLoading,
-            title: "No \(event.title) listings yet",
-            text: "Listings tagged for this event will be displayed here."
-        )
         .frame(maxWidth: .infinity)
+    }
+
+    /// Spans the first screen's worth of content rather than the feed, whose
+    /// height collapses in the scroll view, so the message opens centered on
+    /// screen and still scrolls with the sheet.
+    private var emptyFeedMessage: some View {
+        Color.clear
+            .emptyState(
+                isEmpty: viewModel.posts.isEmpty && !viewModel.isLoading,
+                title: "No \(event.title) listings yet",
+                text: "Listings tagged for this event will be displayed here."
+            )
+            .frame(height: UIScreen.height)
     }
 }
