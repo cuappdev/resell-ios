@@ -16,6 +16,9 @@ struct MainTabView: View {
     @Binding var isHidden: Bool
     @Binding var selection: Int
 
+    @State private var isSelectionLensMoving = false
+    @State private var selectionLensSettleTask: Task<Void, Never>?
+
     // MARK: - ViewModels
 
     @EnvironmentObject private var chatsViewModel: ChatsViewModel
@@ -64,6 +67,7 @@ struct MainTabView: View {
         }
         .onChange(of: selection) { _ in
             router.activeTab = selectedTab
+            swellSelectionLens()
         }
         .onChange(of: router.path) { _ in
             // Restore tab bar as soon as we leave a conversation — don't wait
@@ -134,6 +138,7 @@ struct MainTabView: View {
                         }
                 }
                 .opacity(selectedTab == tab ? 1 : 0)
+                .animation(.easeInOut(duration: 0.2), value: selectedTab)
                 .allowsHitTesting(selectedTab == tab)
                 // Inactive stacks stay mounted so each tab keeps its own history.
                 .accessibilityHidden(selectedTab != tab)
@@ -268,14 +273,18 @@ struct MainTabView: View {
         HStack(spacing: 0) {
             ForEach(Router.Tab.allCases, id: \.rawValue) { tab in
                 tabBarButton(for: tab)
-
-                if tab != Router.Tab.allCases.last {
-                    Spacer(minLength: 0)
+            }
+        }
+        .background {
+            selectedTabSlot {
+                ZStack {
+                    Capsule()
+                        .fill(Constants.Colors.black.opacity(0.08))
+                    TabBarGlassLens(isMoving: isSelectionLensMoving)
                 }
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
+        .padding(6)
         // Keep the bar intrinsic-height; an unconstrained clear fill previously
         // expanded to the full ZStack height and blew up the capsule.
         .fixedSize(horizontal: false, vertical: true)
@@ -285,6 +294,7 @@ struct MainTabView: View {
         }
         .contentShape(Capsule())
         .modifier(TabBarGlassModifier())
+        .animation(.spring(response: 0.5, dampingFraction: 0.85), value: selectedTab)
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
         .padding(.bottom, 20)
         .frame(width: UIScreen.width)
@@ -306,42 +316,67 @@ struct MainTabView: View {
                 selection = tab.rawValue
             }
         } label: {
-            HStack(spacing: isSelected ? 6 : 0) {
-                if tab == .profile && currentUser.hasProfilePicture {
-                    profileTabImage
-                } else {
-                    Image(systemName: isSelected ? config.activeIcon : config.icon)
-                        .font(.system(size: 17, weight: isSelected ? .semibold : .regular))
-                }
+            VStack(spacing: 3) {
+                tabBarIcon(for: tab, config: config, isSelected: isSelected)
+                    .frame(height: 24)
+                    .overlay(alignment: .topTrailing) {
+                        if badgeCount > 0 {
+                            unreadBadge(count: badgeCount)
+                        }
+                    }
 
-                if isSelected {
-                    Text(config.label)
-                        .font(Constants.Fonts.tabBarLabel)
-                        .fixedSize()
-                        .transition(.opacity.combined(with: .scale(scale: 0.8)))
-                }
+                Text(config.label)
+                    .font(Constants.Fonts.tabBarLabel)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
             .foregroundStyle(Constants.Colors.black)
-            .padding(.vertical, 10)
-            .padding(.horizontal, isSelected ? 18 : 14)
-            .background {
-                if isSelected {
-                    Capsule()
-                        .fill(Constants.Colors.black.opacity(0.08))
-                }
-            }
-            .clipShape(Capsule())
-            .overlay(alignment: .topTrailing) {
-                if badgeCount > 0 {
-                    unreadBadge(count: badgeCount, isTabSelected: isSelected)
-                }
-            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 7)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
     }
 
-    private func unreadBadge(count: Int, isTabSelected: Bool) -> some View {
+    @ViewBuilder
+    private func tabBarIcon(for tab: Router.Tab, config: TabBarConfig, isSelected: Bool) -> some View {
+        if tab == .profile && currentUser.hasProfilePicture {
+            profileTabImage
+        } else {
+            Image(systemName: isSelected ? config.activeIcon : config.icon)
+                .font(.system(size: 20, weight: isSelected ? .semibold : .regular))
+        }
+    }
+
+    /// Places `content` over the selected tab's slot. The view persists across
+    /// selection changes, so it slides to the new tab instead of reappearing there.
+    private func selectedTabSlot<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        let content = content()
+        return GeometryReader { proxy in
+            let tabWidth = proxy.size.width / CGFloat(Router.Tab.allCases.count)
+            content
+                .frame(width: tabWidth)
+                .offset(x: tabWidth * CGFloat(selectedTab.rawValue))
+        }
+    }
+
+    /// Raises the glass lens for the slide, then dissolves it back into the
+    /// resting pill once the spring has mostly landed.
+    private func swellSelectionLens() {
+        selectionLensSettleTask?.cancel()
+        withAnimation(.easeOut(duration: 0.15)) {
+            isSelectionLensMoving = true
+        }
+        selectionLensSettleTask = Task {
+            try? await Task.sleep(for: .milliseconds(300))
+            guard !Task.isCancelled else { return }
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.65)) {
+                isSelectionLensMoving = false
+            }
+        }
+    }
+
+    private func unreadBadge(count: Int) -> some View {
         Text(count > 99 ? "99+" : "\(count)")
             .font(Constants.Fonts.badge)
             .foregroundStyle(Constants.Colors.white)
@@ -349,14 +384,15 @@ struct MainTabView: View {
             .frame(minWidth: 16, minHeight: 16)
             .background(Constants.Colors.errorRed)
             .clipShape(.capsule)
-            .offset(x: isTabSelected ? 0 : 8, y: -6)
+            .fixedSize()
+            .offset(x: 8, y: -6)
     }
 
     private var profileTabImage: some View {
         Image(uiImage: currentUser.profilePic)
             .resizable()
             .scaledToFill()
-            .frame(width: 20, height: 20)
+            .frame(width: 24, height: 24)
             .clipShape(Circle())
     }
 }
@@ -378,8 +414,39 @@ private struct TabBarContentInsetModifier: ViewModifier {
     }
 }
 
-/// Liquid Glass capsule behind the floating tab bar, with a material fallback
-/// before iOS 26.
+/// Glass lens that swells behind the selected tab while the selection slides, like
+/// the iOS 26 system tab bar. Invisible at rest and before iOS 26.
+private struct TabBarGlassLens: View {
+    let isMoving: Bool
+
+    var body: some View {
+        if #available(iOS 26, *) {
+            // Its own container keeps the lens a separate glass layer; glass placed
+            // directly inside the bar's glass content merged into the bar and never showed.
+            GlassEffectContainer {
+                Color.clear
+                    .glassEffect(isMoving ? .clear : .identity, in: Capsule())
+            }
+            .overlay {
+                Capsule()
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [Constants.Colors.white, Constants.Colors.white.opacity(0.2)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 1.5
+                    )
+                    .opacity(isMoving ? 1 : 0)
+            }
+            .shadow(color: Constants.Colors.black.opacity(isMoving ? 0.15 : 0), radius: 10, y: 4)
+            .scaleEffect(x: isMoving ? 1.15 : 1, y: isMoving ? 1.35 : 1)
+        }
+    }
+}
+
+/// Frosted, touch-responsive Liquid Glass capsule behind the floating tab bar,
+/// with a material fallback before iOS 26.
 private struct TabBarGlassModifier: ViewModifier {
     func body(content: Content) -> some View {
         let shape = Capsule()
@@ -387,7 +454,7 @@ private struct TabBarGlassModifier: ViewModifier {
         // produced a second, slightly larger outline behind the bar.
         if #available(iOS 26, *) {
             content
-                .glassEffect(.regular, in: shape)
+                .glassEffect(.regular.interactive(), in: shape)
         } else {
             content
                 .background(.ultraThinMaterial, in: shape)

@@ -75,7 +75,7 @@ struct Constants {
         static let subtitle2 = Font.custom("Rubik-Medium", size: 12)
 
         // Tab bar
-        static let tabBarLabel = Font.custom("Rubik-Medium", size: 13)
+        static let tabBarLabel = Font.custom("Rubik-Medium", size: 11)
         static let badge = Font.custom("Roboto-Medium", size: 10)
     }
 
