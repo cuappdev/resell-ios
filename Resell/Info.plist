@@ -38,14 +38,14 @@
 	</dict>
 	<key>PROD_DATABASE_ID</key>
 	<string></string>
+	<key>RESELL_APP_STORE_ID</key>
+	<string>$(RESELL_APP_STORE_ID)</string>
 	<key>RESELL_DEV_URL</key>
 	<string>$(RESELL_DEV_URL)</string>
 	<key>RESELL_LOCAL_URL</key>
 	<string>$(RESELL_LOCAL_URL)</string>
 	<key>RESELL_PROD_URL</key>
 	<string>$(RESELL_PROD_URL)</string>
-	<key>RESELL_APP_STORE_ID</key>
-	<string>$(RESELL_APP_STORE_ID)</string>
 	<key>RESELL_SSHDEV_URL</key>
 	<string>$(RESELL_SSHDEV_URL)</string>
 	<key>UIAppFonts</key>
@@ -59,7 +59,5 @@
 		<string>remote-notification</string>
 		<string>fetch</string>
 	</array>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
 </dict>
 </plist>
