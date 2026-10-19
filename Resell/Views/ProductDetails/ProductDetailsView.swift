@@ -316,7 +316,8 @@ struct ProductDetailsView: View {
                     Text(viewModel.item?.user?.username ?? "")
                         .font(Constants.Fonts.body2)
                         .foregroundStyle(Constants.Colors.black)
-                    
+                        .lineLimit(1)
+
                     if !viewModel.isMyPost() {
                         Text("•")
                             .foregroundStyle(Constants.Colors.black)
@@ -335,6 +336,14 @@ struct ProductDetailsView: View {
             .buttonStyle(.plain)
 
             Spacer()
+
+            if let postedTimeAgo = viewModel.postedTimeAgo {
+                Text(postedTimeAgo)
+                    .font(Constants.Fonts.body2)
+                    .foregroundStyle(Constants.Colors.secondaryGray)
+                    .lineLimit(1)
+                    .fixedSize()
+            }
 
             saveButton
         }

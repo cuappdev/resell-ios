@@ -9,6 +9,8 @@ build/
 *.xcworkspace/xcuserdata/
 *.xcscmblueprint
 *.xccheckout
+# Index data that command-line builds can write into a folder named "-I"
+-I/
 
 ## Secrets
 Resell/Supporting/*

@@ -27,6 +27,8 @@ class NewListingViewModel: ObservableObject {
     @Published var priceText: String = ""
     @Published var selectedFilter: String = "Clothing"
     @Published var selectedCondition: String = "Gently Used"
+    /// Event the listing will be tagged with, if any.
+    @Published var selectedEvent: EventSpace?
     @Published var titleText: String = ""
 
     /// How many more photos can be added before reaching `maxImages`.
@@ -71,6 +73,11 @@ class NewListingViewModel: ObservableObject {
         selectedImages.remove(at: index)
     }
 
+    /// Selects `event`, or clears the selection if it is already selected.
+    func toggleEvent(_ event: EventSpace) {
+        selectedEvent = selectedEvent == event ? nil : event
+    }
+
     func createNewListing() {
             isLoading = true
             
@@ -89,7 +96,7 @@ class NewListingViewModel: ObservableObject {
                         }.value
                         
                         
-                        let postBody = PostBody(title: titleText, description: descriptionText, categories: [selectedFilter], condition: selectedCondition, original_price: Double(priceText) ?? 0, imagesBase64: imagesBase64, userId: user.firebaseUid)
+                        let postBody = PostBody(title: titleText, description: descriptionText, categories: [selectedFilter], condition: selectedCondition, original_price: Double(priceText) ?? 0, imagesBase64: imagesBase64, userId: user.firebaseUid, eventTags: selectedEvent.map { [$0.tag] })
                         
                         let _ = try await NetworkManager.shared.createPost(postBody: postBody)
                         
@@ -119,6 +126,7 @@ class NewListingViewModel: ObservableObject {
         priceText = ""
         selectedFilter = "Clothing"
         selectedCondition = "Gently Used"
+        selectedEvent = nil
         isLoading = false
     }
 }

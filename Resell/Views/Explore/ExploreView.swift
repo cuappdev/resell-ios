@@ -92,6 +92,8 @@ struct ExploreView: View {
 
             justForYouSection
 
+            eventSpacesSection
+
             ExploreDailyPicksSection()
 
             ExploreTrendingSection()
@@ -121,6 +123,31 @@ struct ExploreView: View {
                     }
                     .padding(.horizontal, Constants.Spacing.horizontalPadding)
                 }
+            }
+        }
+    }
+
+    /// One photo card per event space, showing how many listings it has.
+    private var eventSpacesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Event Spaces")
+                .font(Constants.Fonts.h2)
+                .foregroundStyle(Constants.Colors.black)
+                .padding(.horizontal, Constants.Spacing.horizontalPadding)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: collageCardSpacing) {
+                    ForEach(Constants.eventSpaces) { event in
+                        EventSpaceCard(
+                            event: event,
+                            listingCount: exploreViewModel.eventListingCounts[event.tag]
+                        ) {
+                            router.push(.eventSpace(event))
+                        }
+                        .frame(width: collageCardWidth)
+                    }
+                }
+                .padding(.horizontal, Constants.Spacing.horizontalPadding)
             }
         }
     }

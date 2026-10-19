@@ -47,6 +47,7 @@ class Router: ObservableObject {
         case recentlyViewed
         case dailyPicks
         case trending(FilterCategory)
+        case eventSpace(EventSpace)
         case chats
         case editProfile
         case messages(chatInfo: ChatInfo)

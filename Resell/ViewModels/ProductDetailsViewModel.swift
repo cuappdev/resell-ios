@@ -28,6 +28,11 @@ class ProductDetailsViewModel: ObservableObject {
     @Published var item: Post?
     @Published var similarPosts: [Post] = []
 
+    /// How long ago the listing was posted, e.g. "2d ago"; `nil` until a post is set.
+    var postedTimeAgo: String? {
+        item?.createdDate.map(Date.shortTimeAgo(from:))
+    }
+
     private var refetchTask: Task<Void, Never>?
     private var maxImgRatioTask: Task<Void, Never>?
 

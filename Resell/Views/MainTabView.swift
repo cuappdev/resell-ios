@@ -215,6 +215,8 @@ struct MainTabView: View {
             DailyPicksView()
         case .trending(let category):
             TrendingView(category: category)
+        case .eventSpace(let event):
+            EventSpaceView(event: event)
         case .availability:
             AvailabilitySettingsView()
         case .notifications:

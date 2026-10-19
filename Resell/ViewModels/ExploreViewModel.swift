@@ -24,6 +24,9 @@ final class ExploreViewModel: ObservableObject {
     @Published private(set) var isLoadingDailyPicks: Bool = false
     @Published private(set) var isLoadingTrending: Bool = false
     @Published private(set) var isLoadingTrendingDetails: Bool = false
+    /// How many listings each event space has, keyed by `EventSpace.tag`. An
+    /// event is missing until its count loads.
+    @Published private(set) var eventListingCounts: [String: Int] = [:]
 
     @Published var selectedTrendingCategory: FilterCategory = Constants.productCategories.first { $0.title == "Electronics" }
         ?? Constants.productCategories[0]
@@ -40,21 +43,37 @@ final class ExploreViewModel: ObservableObject {
     private var lastTrendingFetch: Date?
     private var lastTrendingCategoryKey: String?
     private var lastTrendingDetailCategoryKey: String?
+    private var lastEventCountsFetch: Date?
     private let cacheValidityDuration: TimeInterval = 180
 
     private let previewLimit = 10
     private let seeMoreLimit = 40
+    /// The count rides along with a page of listings; one is the smallest page to ask for.
+    private let eventCountPageSize = 1
 
-    private init() {}
+    private init() {
+        NotificationCenter.default.addObserver(
+            forName: Constants.Notifications.NewListingCreated,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                await self?.loadEventListingCounts(forceRefresh: true)
+            }
+        }
+    }
 
     // MARK: - Functions
 
-    /// Loads both rails in parallel, reusing anything fetched in the last few minutes.
+    /// Loads the rails and event listing counts in parallel, reusing anything
+    /// fetched in the last few minutes.
     func loadAll(forceRefresh: Bool = false) async {
         async let picks: () = loadDailyPicks(forceRefresh: forceRefresh)
         async let trending: () = loadTrending(forceRefresh: forceRefresh)
+        async let events: () = loadEventListingCounts(forceRefresh: forceRefresh)
         await picks
         await trending
+        await events
         applyKnownSaveCounts()
     }
 
@@ -163,6 +182,46 @@ final class ExploreViewModel: ObservableObject {
             NetworkManager.shared.logger.error("Failed to load trending details: \(error)")
             trendingDetailPosts = []
         }
+    }
+
+    /// Loads every event space's listing count. An event whose request fails,
+    /// or whose response has no count, keeps its previous count, and the next
+    /// load retries it.
+    func loadEventListingCounts(forceRefresh: Bool = false) async {
+        if !forceRefresh,
+           let lastFetch = lastEventCountsFetch,
+           Date().timeIntervalSince(lastFetch) < cacheValidityDuration {
+            return
+        }
+
+        let pageSize = eventCountPageSize
+        var counts = eventListingCounts
+        var didFail = false
+
+        await withTaskGroup(of: (tag: String, count: Int?).self) { group in
+            for tag in Constants.eventSpaces.map(\.tag) {
+                group.addTask {
+                    do {
+                        let response = try await NetworkManager.shared.getPostsByEventTags([tag], limit: pageSize)
+                        return (tag, response.total)
+                    } catch {
+                        NetworkManager.shared.logger.error("Failed to load the event listing count for \(tag): \(error)")
+                        return (tag, nil)
+                    }
+                }
+            }
+
+            for await result in group {
+                if let count = result.count {
+                    counts[result.tag] = count
+                } else {
+                    didFail = true
+                }
+            }
+        }
+
+        eventListingCounts = counts
+        lastEventCountsFetch = didFail ? nil : Date()
     }
 
     // MARK: - Private Methods

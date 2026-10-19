@@ -57,6 +57,13 @@ struct Post: Codable, Equatable, Identifiable, Hashable {
         hasher.combine(id)
     }
 
+    /// When the listing was posted, parsed from the backend's ISO 8601 `created` timestamp.
+    var createdDate: Date? {
+        let isoDateFormatter = ISO8601DateFormatter()
+        isoDateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return isoDateFormatter.date(from: created)
+    }
+
     static func sortPostsByDate(_ posts: [Post], ascending: Bool = false) -> [Post] {
         let isoDateFormatter = ISO8601DateFormatter()
         isoDateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -119,6 +126,8 @@ struct PostBody: Codable {
     let original_price: Double
     let imagesBase64: [String]
     let userId: String
+    /// Backend event-tag names to file the listing under; omitted from the request when `nil`.
+    let eventTags: [String]?
 
     enum CodingKeys: String, CodingKey {
         case title
@@ -128,5 +137,6 @@ struct PostBody: Codable {
         case original_price = "originalPrice"
         case imagesBase64
         case userId
+        case eventTags
     }
 }

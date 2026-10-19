@@ -45,6 +45,7 @@ struct SellView: View {
                 primaryFields
                 categorySection
                 conditionSection
+                eventSection
                 descriptionField
                 publishButton
             }
@@ -356,6 +357,21 @@ struct SellView: View {
                         isSelected: viewModel.selectedCondition == condition.value
                     ) {
                         viewModel.selectedCondition = condition.value
+                    }
+                }
+            }
+        }
+    }
+
+    private var eventSection: some View {
+        formSection(title: "Event (optional)") {
+            HFlow {
+                ForEach(Constants.eventSpaces) { event in
+                    selectionChip(
+                        title: event.title,
+                        isSelected: viewModel.selectedEvent == event
+                    ) {
+                        viewModel.toggleEvent(event)
                     }
                 }
             }
