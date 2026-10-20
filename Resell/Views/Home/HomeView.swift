@@ -30,6 +30,8 @@ struct HomeView: View {
 
     /// How far content must scroll before the inline filter is considered off-screen.
     private let inlineFilterHideOffset: CGFloat = 48
+    /// Scroll target for the top of the feed.
+    private let feedTopID = "homeFeedTop"
     private let toolbarControlHeight: CGFloat = 40
 
     /// True while the search card covers the feed with nothing searched yet —
@@ -43,23 +45,31 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: !isSearchPanelBlocking) {
-            if isSearchExpanded && !searchViewModel.isSearching {
-                SearchResultsView(
-                    isLoading: searchViewModel.isLoading,
-                    items: searchViewModel.searchedItems
-                )
-                .padding(.top, 12)
-            } else {
-                homeFeedContent
+            ScrollViewReader { scrollProxy in
+                if isSearchExpanded && !searchViewModel.isSearching {
+                    SearchResultsView(
+                        isLoading: searchViewModel.isLoading,
+                        items: searchViewModel.searchedItems
+                    )
                     .padding(.top, 12)
-                    .background {
-                        // Sits inside the scroll content so it can walk up to the
-                        // enclosing UIScrollView. PreferenceKeys and GeometryReader
-                        // stall mid-scroll, which left the toolbar filter stuck.
-                        HomeScrollOffsetReader { offsetY in
-                            updateFilterToolbarVisibility(offsetY > inlineFilterHideOffset)
+                } else {
+                    homeFeedContent
+                        .padding(.top, 12)
+                        .id(feedTopID)
+                        .background {
+                            // Sits inside the scroll content so it can walk up to the
+                            // enclosing UIScrollView. PreferenceKeys and GeometryReader
+                            // stall mid-scroll, which left the toolbar filter stuck.
+                            HomeScrollOffsetReader { offsetY in
+                                updateFilterToolbarVisibility(offsetY > inlineFilterHideOffset)
+                            }
                         }
-                    }
+                        .onReceive(NotificationCenter.default.publisher(for: Constants.Notifications.HomeTabReselected)) { _ in
+                            withAnimation {
+                                scrollProxy.scrollTo(feedTopID, anchor: .top)
+                            }
+                        }
+                }
             }
         }
         .scrollDisabled(isSearchPanelBlocking)

@@ -302,14 +302,17 @@ struct MainTabView: View {
         .allowsHitTesting(true)
     }
 
-    /// Tapping the selected tab pops its stack to the root; any other tab switches to it.
+    /// Tapping the selected tab pops its stack to the root, or scrolls Home's feed back to the
+    /// top once it's already there; any other tab switches to it.
     private func tabBarButton(for tab: Router.Tab) -> some View {
         let config = config(for: tab)
         let isSelected = selectedTab == tab
         let badgeCount = tab == .chats ? chatsViewModel.totalUnread : 0
 
         return Button {
-            if isSelected {
+            if isSelected && tab == .home && router.path.isEmpty {
+                NotificationCenter.default.post(name: Constants.Notifications.HomeTabReselected, object: nil)
+            } else if isSelected {
                 router.popToRoot()
             } else {
                 router.activeTab = tab

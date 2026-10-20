@@ -105,6 +105,9 @@ struct Constants {
         static let OpenTransactionDeepLink = Notification.Name("ResellOpenTransactionDeepLink")
         /// Posted when the buyer submits a review; `userInfo["transactionId"]` is the backend id.
         static let TransactionReviewSubmitted = Notification.Name("ResellTransactionReviewSubmitted")
+        /// Posted when the Home tab is tapped while Home's feed is already on screen.
+        /// `HomeView` scrolls the feed back to the top.
+        static let HomeTabReselected = Notification.Name("ResellHomeTabReselected")
     }
 
     /// Chat  categories used in Resell's design system
