@@ -17,7 +17,7 @@ struct CalendarDay: Identifiable, Equatable {
     let isPast: Bool
     let isToday: Bool
     let weekdayIndex: Int // 0 = Sunday, 6 = Saturday
-    let rowIndex: Int // Which row in the grid (0-4)
+    let rowIndex: Int // Which row in the grid (0-5)
     
     var isSelectable: Bool {
         isCurrentMonth && !isPast
@@ -29,6 +29,11 @@ struct CalendarMonthData {
     let year: Int
     let days: [CalendarDay]
     let referenceDate: Date // First day of the month
+
+    /// Week rows in the grid: 5, or 6 for a month that spans six weeks.
+    var rowCount: Int {
+        days.count / 7
+    }
     
     static let weekdaySymbols = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
 }
@@ -109,8 +114,10 @@ struct CalendarHelper {
             }
         }
         
-        // Add trailing days from next month to fill 35 slots
-        let remainingSlots = 35 - days.count
+        // Add trailing days from next month to finish the last week. Every month gets
+        // at least 5 rows; one that starts late in the week needs a 6th for its last days.
+        let rowCount = max((days.count + 6) / 7, 5)
+        let remainingSlots = rowCount * 7 - days.count
         if remainingSlots > 0 {
             guard let nextMonth = calendar.date(byAdding: .month, value: 1, to: firstOfMonth) else {
                 return CalendarMonthData(monthName: monthName, year: year, days: days, referenceDate: firstOfMonth)
@@ -135,7 +142,7 @@ struct CalendarHelper {
         return CalendarMonthData(
             monthName: monthName,
             year: year,
-            days: Array(days.prefix(35)),
+            days: days,
             referenceDate: firstOfMonth
         )
     }
@@ -232,6 +239,11 @@ struct MonthCalendarView: View {
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)
     private let cellHeight: CGFloat = 40
     private let rowSpacing: CGFloat = 8
+
+    private var gridHeight: CGFloat {
+        let rowCount = CGFloat(monthData.rowCount)
+        return rowCount * cellHeight + max(rowCount - 1, 0) * rowSpacing
+    }
     
     var body: some View {
         VStack(spacing: 12) {
@@ -253,7 +265,7 @@ struct MonthCalendarView: View {
                     }
                 }
             }
-            .frame(height: CGFloat(5) * cellHeight + CGFloat(4) * rowSpacing)
+            .frame(height: gridHeight)
         }
         .contentShape(Rectangle())
         .simultaneousGesture(
