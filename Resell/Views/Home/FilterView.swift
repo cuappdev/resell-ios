@@ -35,29 +35,25 @@ struct FilterView: View {
             Color.white
                 .ignoresSafeArea()
 
-            ZStack {
-                VStack(spacing: 0) {
-                    header
+            VStack(spacing: 0) {
+                header
 
-                    Divider()
+                Divider()
 
-                    ScrollView {
-                        filterSections
-                    }
-
-                    Spacer()
-
-                    footerButtons
+                ScrollView {
+                    filterSections
                 }
 
-                if presentPopup {
-                    SortByView(selectedSort: $filtersVM.selectedSort)
-                        .offset(x: 88, y: -142)
-                        .onTapGesture {
-                            presentPopup.toggle()
-                        }
-                }
+                Spacer()
+
+                footerButtons
             }
+        }
+        .overlayPreferenceValue(SortButtonBoundsKey.self) { sortButtonBounds in
+            sortPopup(below: sortButtonBounds)
+        }
+        .onDisappear {
+            filtersVM.discardUnappliedChanges()
         }
     }
 
@@ -109,11 +105,36 @@ struct FilterView: View {
                         .foregroundStyle(.gray)
                 }
             }
+            .anchorPreference(key: SortButtonBoundsKey.self, value: .bounds) { $0 }
         }
         .padding(.vertical, 24)
 
         Divider()
             .padding(.bottom, 16)
+    }
+
+    /// The sort options, dropped down below the Sort by button. Tapping anywhere else closes them.
+    @ViewBuilder
+    private func sortPopup(below sortButtonBounds: Anchor<CGRect>?) -> some View {
+        if presentPopup, let sortButtonBounds {
+            GeometryReader { proxy in
+                let sortButtonFrame = proxy[sortButtonBounds]
+
+                ZStack(alignment: .topLeading) {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            presentPopup = false
+                        }
+
+                    SortByView(selectedSort: $filtersVM.selectedSort, isPresented: $presentPopup)
+                        .offset(
+                            x: sortButtonFrame.maxX - SortByView.width,
+                            y: sortButtonFrame.maxY + Constants.Spacing.spacing8
+                        )
+                }
+            }
+        }
     }
 
     @ViewBuilder
@@ -216,10 +237,10 @@ struct FilterView: View {
                 .foregroundStyle(Color.white)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
-                .background(!filtersVM.hasActiveFilters ? Constants.Colors.resellPurple.opacity(0.4) : Constants.Colors.resellPurple)
+                .background(!filtersVM.hasUnappliedChanges ? Constants.Colors.resellPurple.opacity(0.4) : Constants.Colors.resellPurple)
                 .cornerRadius(20)
         }
-        .disabled(!filtersVM.hasActiveFilters)
+        .disabled(!filtersVM.hasUnappliedChanges)
     }
 
     private func sectionTitle(_ title: String) -> some View {
@@ -258,7 +279,10 @@ struct FilterView: View {
     }
 
     struct SortByView: View {
+        static let width: CGFloat = 171
+
         @Binding var selectedSort: SortOption?
+        @Binding var isPresented: Bool
 
         let sortOptions = SortOption.allCases
 
@@ -267,6 +291,7 @@ struct FilterView: View {
                 ForEach(sortOptions) { option in
                     Button(action: {
                         selectedSort = option
+                        isPresented = false
                     }) {
                         VStack(alignment: .leading, spacing: 0) {
                             Text(option.title)
@@ -284,7 +309,7 @@ struct FilterView: View {
             }
             .padding(.horizontal, 16)
             .background(Color.white)
-            .frame(width: 171)
+            .frame(width: Self.width)
             .overlay(
                 RoundedRectangle(cornerRadius: 13)
                     .stroke(Color.gray.opacity(0.3), lineWidth: 1)
@@ -303,4 +328,27 @@ enum SortOption: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     var title: String { rawValue }
+
+    /// The backend's name for this order in `FilterPostsUnifiedRequest.sortField`.
+    var sortField: String {
+        switch self {
+        case .any:
+            "any"
+        case .newlyListed:
+            "newlyListed"
+        case .priceHighToLow:
+            "priceHighToLow"
+        case .priceLowToHigh:
+            "priceLowToHigh"
+        }
+    }
+}
+
+/// Where the Sort by button sits, so its options can drop down right below it.
+private struct SortButtonBoundsKey: PreferenceKey {
+    static let defaultValue: Anchor<CGRect>? = nil
+
+    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
+        value = value ?? nextValue()
+    }
 }

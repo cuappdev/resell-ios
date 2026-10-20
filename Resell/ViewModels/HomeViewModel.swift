@@ -40,8 +40,7 @@ class HomeViewModel: ObservableObject {
     @Published var filteredItems: [Post] = []
     /// True when the home feed is currently showing results from an applied
     /// filter sheet (as opposed to the default "Recent" feed or a category
-    /// chip). Distinct from `FiltersViewModel.hasActiveFilters`, which reflects
-    /// the in-progress selection inside the filter sheet.
+    /// chip). While it is, `FiltersViewModel` loads the feed's later pages.
     @Published var isFilteredFeed: Bool = false
     @Published var cardsLoaded: Bool = false
     @Published var selectedFilter: [String] = ["Recent"] {

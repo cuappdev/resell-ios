@@ -46,7 +46,7 @@ struct DetailedFilterView: View {
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: !isSearchExpanded) {
-            ProductsGalleryView(items: displayedItems)
+            ProductsGalleryView(items: displayedItems, onScrollToBottom: isShowingSearchResults ? nil : loadMorePosts)
                 .padding(.top, 12)
         }
         .scrollDisabled(isSearchPanelBlocking)
@@ -143,6 +143,10 @@ struct DetailedFilterView: View {
         } catch {
             NetworkManager.shared.logger.error("Error in DetailedFilterView.loadCategoryPosts: \(error)")
         }
+    }
+
+    private func loadMorePosts() {
+        filtersViewModel.fetchMoreFilteredPosts(homeViewModel: viewModel)
     }
 
     private func handleSearchExpansionChange(_ isExpanded: Bool) {

@@ -386,8 +386,9 @@ class NetworkManager {
             return try await get(url: url)
         }
         
-        func getUnifiedFilteredPosts(filters: FilterPostsUnifiedRequest) async throws -> PostsResponse {
-            let url = try constructURL(endpoint: "/post/filter/")
+        /// One page of posts matching every filter in `filters`, in the order of its `sortField`.
+        func getUnifiedFilteredPosts(filters: FilterPostsUnifiedRequest, page: Int = 1, limit: Int = 10) async throws -> PostsResponse {
+            let url = try constructURL(endpoint: "/post/filter/?page=\(page)&limit=\(limit)")
             
             return try await post(url: url, body: filters)
         }
