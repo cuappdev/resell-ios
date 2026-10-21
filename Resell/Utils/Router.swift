@@ -22,6 +22,9 @@ class Router: ObservableObject {
 
     @Published private var tabPaths: [Tab: [Route]] = [:]
     @Published var activeTab: Tab = .home
+    /// How many times each tab was tapped again while already showing its root.
+    /// A root view watches its tab's count and scrolls to the top when it changes.
+    @Published private(set) var rootReselectCounts: [Tab: Int] = [:]
 
     /// Navigation path of whichever tab is on screen. Every existing call site
     /// (`push`, `pop`, `popToRoot`, …) reads and writes through this, so the
@@ -93,6 +96,16 @@ class Router: ObservableObject {
 
     func popToRoot() {
         path.removeAll()
+    }
+
+    /// Handles a tap on the tab that's already selected: pops its stack to the
+    /// root, or, if it's already there, asks the root to scroll to the top.
+    func reselect(_ tab: Tab) {
+        if tabPaths[tab, default: []].isEmpty {
+            rootReselectCounts[tab, default: 0] += 1
+        } else {
+            tabPaths[tab] = []
+        }
     }
 
     /// Clears every tab's stack and returns to Home. Used on logout so the next

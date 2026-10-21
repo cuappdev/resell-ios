@@ -302,7 +302,8 @@ struct MainTabView: View {
         .allowsHitTesting(true)
     }
 
-    /// Tapping the selected tab pops its stack to the root; any other tab switches to it.
+    /// Tapping the selected tab goes through `Router.reselect(_:)`, which pops it to its root
+    /// or scrolls the root back to the top; any other tab switches to it.
     private func tabBarButton(for tab: Router.Tab) -> some View {
         let config = config(for: tab)
         let isSelected = selectedTab == tab
@@ -310,7 +311,7 @@ struct MainTabView: View {
 
         return Button {
             if isSelected {
-                router.popToRoot()
+                router.reselect(tab)
             } else {
                 router.activeTab = tab
                 selection = tab.rawValue
