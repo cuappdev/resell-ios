@@ -64,7 +64,7 @@ struct HomeView: View {
                                 updateFilterToolbarVisibility(offsetY > inlineFilterHideOffset)
                             }
                         }
-                        .onReceive(NotificationCenter.default.publisher(for: Constants.Notifications.HomeTabReselected)) { _ in
+                        .onChange(of: router.rootReselectCounts[.home]) { _ in
                             withAnimation {
                                 scrollProxy.scrollTo(feedTopID, anchor: .top)
                             }
