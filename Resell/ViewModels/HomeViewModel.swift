@@ -91,7 +91,7 @@ class HomeViewModel: ObservableObject {
 
     func getAllPosts(forceRefresh: Bool = false) {
         if !forceRefresh && shouldUseCachedData() {
-            print("Using cached posts data")
+            NetworkManager.shared.logger.debug("Using cached posts data")
             return
         }
         
@@ -110,8 +110,10 @@ class HomeViewModel: ObservableObject {
                 let postsResponse = try await NetworkManager.shared.getAllPosts()
                 
                 allItems = Post.sortPostsByDate(postsResponse.posts)
-                filteredItems = allItems
-                
+                if !isFilteredFeed {
+                    filteredItems = allItems
+                }
+
                 // Update cache state
                 hasLoadedInitialData = true
                 lastFetchTime = Date()

@@ -13,11 +13,8 @@ class FiltersViewModel: ObservableObject {
 
     // MARK: - Properties
 
-    @Published var categoryFilters: Set<String> = []
-    @Published var conditionFilters: Set<String> = []
-    @Published var lowValue: Double = 0
-    @Published var highValue: Double = 1000
-    @Published var selectedSort: SortOption? = nil
+    /// What the sheet's controls are set to.
+    @Published var selection = FilterSelection()
     @Published var detailedFilterItems: [Post] = []
     @Published var searchedDetailedFilterItems: [Post] = []
     @Published var isSearching: Bool = false
@@ -26,26 +23,17 @@ class FiltersViewModel: ObservableObject {
 
     private var baseCategory: String? = nil // Store the base category for detailed view
 
-    /// What the posts on screen are filtered by. The sheet's controls differ from it
-    /// while the user has changes they haven't applied.
+    /// What the posts on screen are filtered by. `selection` differs from it while the
+    /// sheet has changes the user hasn't applied.
     private var appliedSelection = FilterSelection()
     private var page = 1
     private var hasMorePages = true
     private var isFetchingNextPage = false
+    private let pageSize = 10
 
     /// Whether "Apply filters" would change the posts on screen.
     var hasUnappliedChanges: Bool {
-        currentSelection != appliedSelection
-    }
-
-    private var currentSelection: FilterSelection {
-        FilterSelection(
-            categories: categoryFilters,
-            conditions: conditionFilters,
-            lowPrice: lowValue,
-            highPrice: highValue,
-            sort: selectedSort ?? .any
-        )
+        selection != appliedSelection
     }
 
     /// What Reset returns to: no filters on Home, just the page's own category on a category page.
@@ -61,7 +49,7 @@ class FiltersViewModel: ObservableObject {
 
     func initializeDetailedFilter(category: String) async throws {
         baseCategory = category
-        categoryFilters = [category] // Pre-populate with the category
+        selection.categories = [category] // Pre-populate with the category
         try await applyFilters(homeViewModel: HomeViewModel.shared)
     }
     
@@ -88,32 +76,14 @@ class FiltersViewModel: ObservableObject {
     }
 
     /// Shows the first page of posts matching the sheet's selection, in the home feed or on
-    /// the category page. On Home, selecting nothing returns the feed to its regular listings.
+    /// the category page.
     func applyFilters(homeViewModel: HomeViewModel) async throws {
-        let selection = currentSelection
+        await showFirstPage(matching: selection, homeViewModel: homeViewModel)
+    }
 
-        if isHome && selection == FilterSelection() {
-            appliedSelection = selection
-            homeViewModel.clearFilters()
-            return
-        }
-
-        do {
-            let postsResponse = try await NetworkManager.shared.getUnifiedFilteredPosts(filters: FilterPostsUnifiedRequest(selection))
-            appliedSelection = selection
-            page = 1
-            hasMorePages = !postsResponse.posts.isEmpty
-
-            if isHome {
-                homeViewModel.filteredItems = postsResponse.posts
-                homeViewModel.isFilteredFeed = true
-            } else {
-                detailedFilterItems = postsResponse.posts
-                clearFilterSearch()
-            }
-        } catch {
-            NetworkManager.shared.logger.error("Error in FiltersViewModel.applyFilters: \(error)")
-        }
+    /// Reloads the first page of the applied filters, for pull-to-refresh.
+    func refreshFilteredPosts(homeViewModel: HomeViewModel) async {
+        await showFirstPage(matching: appliedSelection, homeViewModel: homeViewModel)
     }
 
     /// Appends the next page of posts matching the applied filters, for when the user scrolls
@@ -121,7 +91,7 @@ class FiltersViewModel: ObservableObject {
     func fetchMoreFilteredPosts(homeViewModel: HomeViewModel) {
         guard hasMorePages, !isFetchingNextPage else { return }
 
-        let selection = appliedSelection
+        let requestedSelection = appliedSelection
         let nextPage = page + 1
         isFetchingNextPage = true
 
@@ -130,18 +100,15 @@ class FiltersViewModel: ObservableObject {
 
             do {
                 let postsResponse = try await NetworkManager.shared.getUnifiedFilteredPosts(
-                    filters: FilterPostsUnifiedRequest(selection),
-                    page: nextPage
+                    filters: FilterPostsUnifiedRequest(requestedSelection),
+                    page: nextPage,
+                    limit: pageSize
                 )
                 // Filters applied while this page loaded have replaced the list it belonged to.
-                guard selection == appliedSelection, nextPage == page + 1 else { return }
-
-                guard !postsResponse.posts.isEmpty else {
-                    hasMorePages = false
-                    return
-                }
+                guard requestedSelection == appliedSelection, nextPage == page + 1 else { return }
 
                 page = nextPage
+                hasMorePages = postsResponse.posts.count == pageSize
                 appendUnseenPosts(postsResponse.posts, homeViewModel: homeViewModel)
             } catch {
                 NetworkManager.shared.logger.error("Error in FiltersViewModel.fetchMoreFilteredPosts: \(error)")
@@ -152,14 +119,14 @@ class FiltersViewModel: ObservableObject {
     /// Puts the sheet's controls back to the applied filters, so the sheet always opens on
     /// what the posts are filtered by.
     func discardUnappliedChanges() {
-        select(appliedSelection)
+        selection = appliedSelection
     }
 
     func resetFilters(homeViewModel: HomeViewModel) {
-        select(defaultSelection)
+        selection = defaultSelection
 
         if isHome {
-            appliedSelection = defaultSelection
+            appliedSelection = selection
             homeViewModel.clearFilters()
         } else {
             Task {
@@ -170,12 +137,34 @@ class FiltersViewModel: ObservableObject {
 
     // MARK: - Private Methods
 
-    private func select(_ selection: FilterSelection) {
-        categoryFilters = selection.categories
-        conditionFilters = selection.conditions
-        lowValue = selection.lowPrice
-        highValue = selection.highPrice
-        selectedSort = selection.sort
+    /// Replaces the posts on screen with the first page matching `filters`. On Home, an
+    /// empty selection returns the feed to its regular listings instead.
+    private func showFirstPage(matching filters: FilterSelection, homeViewModel: HomeViewModel) async {
+        if isHome && filters == FilterSelection() {
+            appliedSelection = filters
+            homeViewModel.clearFilters()
+            return
+        }
+
+        do {
+            let postsResponse = try await NetworkManager.shared.getUnifiedFilteredPosts(
+                filters: FilterPostsUnifiedRequest(filters),
+                limit: pageSize
+            )
+            appliedSelection = filters
+            page = 1
+            hasMorePages = postsResponse.posts.count == pageSize
+
+            if isHome {
+                homeViewModel.filteredItems = postsResponse.posts
+                homeViewModel.isFilteredFeed = true
+            } else {
+                detailedFilterItems = postsResponse.posts
+                clearFilterSearch()
+            }
+        } catch {
+            NetworkManager.shared.logger.error("Error in FiltersViewModel.showFirstPage: \(error)")
+        }
     }
 
     /// Skips posts already on screen: a listing created between page loads shifts later pages

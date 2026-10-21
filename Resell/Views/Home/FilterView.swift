@@ -13,7 +13,6 @@ struct FilterView: View {
     // MARK: - Properties
 
     @Binding var isPresented: Bool
-    @State var presentPopup = false
     @EnvironmentObject var filtersVM: FiltersViewModel
 
     private let categories: [String] = Constants.productCategories.map(\.title)
@@ -49,10 +48,7 @@ struct FilterView: View {
                 footerButtons
             }
         }
-        .overlayPreferenceValue(SortButtonBoundsKey.self) { sortButtonBounds in
-            sortPopup(below: sortButtonBounds)
-        }
-        .onDisappear {
+        .onAppear {
             filtersVM.discardUnappliedChanges()
         }
     }
@@ -93,11 +89,16 @@ struct FilterView: View {
 
             Spacer()
 
-            Button {
-                presentPopup.toggle()
+            Menu {
+                Picker("Sort by", selection: $filtersVM.selection.sort) {
+                    ForEach(SortOption.allCases) { option in
+                        Text(option.title)
+                            .tag(option)
+                    }
+                }
             } label: {
                 HStack(spacing: 2) {
-                    Text("\(filtersVM.selectedSort?.title ?? "Any")")
+                    Text(filtersVM.selection.sort.title)
                         .font(.custom("Rubik-Regular", size: 20))
                         .foregroundStyle(.gray)
 
@@ -105,36 +106,11 @@ struct FilterView: View {
                         .foregroundStyle(.gray)
                 }
             }
-            .anchorPreference(key: SortButtonBoundsKey.self, value: .bounds) { $0 }
         }
         .padding(.vertical, 24)
 
         Divider()
             .padding(.bottom, 16)
-    }
-
-    /// The sort options, dropped down below the Sort by button. Tapping anywhere else closes them.
-    @ViewBuilder
-    private func sortPopup(below sortButtonBounds: Anchor<CGRect>?) -> some View {
-        if presentPopup, let sortButtonBounds {
-            GeometryReader { proxy in
-                let sortButtonFrame = proxy[sortButtonBounds]
-
-                ZStack(alignment: .topLeading) {
-                    Color.clear
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            presentPopup = false
-                        }
-
-                    SortByView(selectedSort: $filtersVM.selectedSort, isPresented: $presentPopup)
-                        .offset(
-                            x: sortButtonFrame.maxX - SortByView.width,
-                            y: sortButtonFrame.maxY + Constants.Spacing.spacing8
-                        )
-                }
-            }
-        }
     }
 
     @ViewBuilder
@@ -150,20 +126,23 @@ struct FilterView: View {
         }
         .padding(.bottom, 8)
 
-        RangeSlider(lowValue: $filtersVM.lowValue, highValue: $filtersVM.highValue, range: 0...1000)
+        RangeSlider(lowValue: $filtersVM.selection.lowPrice, highValue: $filtersVM.selection.highPrice, range: 0...1000)
             .padding(.trailing, -28)
     }
 
     @ViewBuilder
     private var priceRangeLabel: some View {
-        if filtersVM.lowValue == 0 && filtersVM.highValue == 1000 {
+        let lowPrice = filtersVM.selection.lowPrice
+        let highPrice = filtersVM.selection.highPrice
+
+        if lowPrice == 0 && highPrice == 1000 {
             Text("Any")
-        } else if filtersVM.lowValue == 0 {
-            Text("Up to $\(Int(filtersVM.highValue))")
-        } else if filtersVM.highValue == 1000 {
-            Text("$\(Int(filtersVM.lowValue)) +")
+        } else if lowPrice == 0 {
+            Text("Up to $\(Int(highPrice))")
+        } else if highPrice == 1000 {
+            Text("$\(Int(lowPrice)) +")
         } else {
-            Text("$\(Int(filtersVM.lowValue)) to $\(Int(filtersVM.highValue))")
+            Text("$\(Int(lowPrice)) to $\(Int(highPrice))")
         }
     }
 
@@ -178,8 +157,8 @@ struct FilterView: View {
 
         HFlow {
             ForEach(categories, id: \.self) { category in
-                filterChip(category, isSelected: filtersVM.categoryFilters.contains(category)) {
-                    toggle(category, in: &filtersVM.categoryFilters)
+                filterChip(category, isSelected: filtersVM.selection.categories.contains(category)) {
+                    toggle(category, in: &filtersVM.selection.categories)
                 }
             }
         }
@@ -196,8 +175,8 @@ struct FilterView: View {
 
         HStack {
             ForEach(conditions, id: \.self) { condition in
-                filterChip(condition, isSelected: filtersVM.conditionFilters.contains(condition)) {
-                    toggle(condition, in: &filtersVM.conditionFilters)
+                filterChip(condition, isSelected: filtersVM.selection.conditions.contains(condition)) {
+                    toggle(condition, in: &filtersVM.selection.conditions)
                 }
             }
         }
@@ -277,45 +256,6 @@ struct FilterView: View {
             filters.insert(value)
         }
     }
-
-    struct SortByView: View {
-        static let width: CGFloat = 171
-
-        @Binding var selectedSort: SortOption?
-        @Binding var isPresented: Bool
-
-        let sortOptions = SortOption.allCases
-
-        var body: some View {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(sortOptions) { option in
-                    Button(action: {
-                        selectedSort = option
-                        isPresented = false
-                    }) {
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text(option.title)
-                                .font(.system(size: 17, weight: selectedSort == option ? .bold : .regular))
-                                .foregroundColor(.black)
-                                .padding(.vertical, 12)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-
-                            if option != sortOptions.last {
-                                Divider()
-                            }
-                        }
-                    }
-                }
-            }
-            .padding(.horizontal, 16)
-            .background(Color.white)
-            .frame(width: Self.width)
-            .overlay(
-                RoundedRectangle(cornerRadius: 13)
-                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-            )
-        }
-    }
 }
 
 
@@ -341,14 +281,5 @@ enum SortOption: String, CaseIterable, Identifiable {
         case .priceLowToHigh:
             "priceLowToHigh"
         }
-    }
-}
-
-/// Where the Sort by button sits, so its options can drop down right below it.
-private struct SortButtonBoundsKey: PreferenceKey {
-    static let defaultValue: Anchor<CGRect>? = nil
-
-    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
-        value = value ?? nextValue()
     }
 }

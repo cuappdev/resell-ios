@@ -233,11 +233,7 @@ struct HomeView: View {
             return
         }
 
-        do {
-            try await filtersViewModel.applyFilters(homeViewModel: viewModel)
-        } catch {
-            NetworkManager.shared.logger.error("Error in HomeView.refreshFeed: \(error)")
-        }
+        await filtersViewModel.refreshFilteredPosts(homeViewModel: viewModel)
     }
 
     private func loadMorePosts() {
