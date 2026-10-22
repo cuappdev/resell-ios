@@ -97,20 +97,34 @@ struct FilterView: View {
                     }
                 }
             } label: {
-                HStack(spacing: 2) {
-                    Text(filtersVM.selection.sort.title)
-                        .font(.custom("Rubik-Regular", size: 20))
-                        .foregroundStyle(.gray)
-
-                    Image(systemName: "chevron.down")
-                        .foregroundStyle(.gray)
-                }
+                sortMenuLabel
             }
         }
         .padding(.vertical, 24)
 
         Divider()
             .padding(.bottom, 16)
+    }
+
+    /// The selected sort and a chevron, sized to fit the longest option.
+    private var sortMenuLabel: some View {
+        HStack(spacing: 2) {
+            // The menu keeps its label's size while it closes, which cut off a longer
+            // pick until it finished. Reserving the widest title keeps the size fixed.
+            ZStack(alignment: .trailing) {
+                ForEach(SortOption.allCases) { option in
+                    Text(option.title)
+                        .hidden()
+                }
+
+                Text(filtersVM.selection.sort.title)
+            }
+            .font(.custom("Rubik-Regular", size: 20))
+            .foregroundStyle(.gray)
+
+            Image(systemName: "chevron.down")
+                .foregroundStyle(.gray)
+        }
     }
 
     @ViewBuilder
