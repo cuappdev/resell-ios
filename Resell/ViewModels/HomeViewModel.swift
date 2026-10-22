@@ -40,8 +40,7 @@ class HomeViewModel: ObservableObject {
     @Published var filteredItems: [Post] = []
     /// True when the home feed is currently showing results from an applied
     /// filter sheet (as opposed to the default "Recent" feed or a category
-    /// chip). Distinct from `FiltersViewModel.hasActiveFilters`, which reflects
-    /// the in-progress selection inside the filter sheet.
+    /// chip). While it is, `FiltersViewModel` loads the feed's later pages.
     @Published var isFilteredFeed: Bool = false
     @Published var cardsLoaded: Bool = false
     @Published var selectedFilter: [String] = ["Recent"] {
@@ -92,7 +91,7 @@ class HomeViewModel: ObservableObject {
 
     func getAllPosts(forceRefresh: Bool = false) {
         if !forceRefresh && shouldUseCachedData() {
-            print("Using cached posts data")
+            NetworkManager.shared.logger.debug("Using cached posts data")
             return
         }
         
@@ -111,8 +110,10 @@ class HomeViewModel: ObservableObject {
                 let postsResponse = try await NetworkManager.shared.getAllPosts()
                 
                 allItems = Post.sortPostsByDate(postsResponse.posts)
-                filteredItems = allItems
-                
+                if !isFilteredFeed {
+                    filteredItems = allItems
+                }
+
                 // Update cache state
                 hasLoadedInitialData = true
                 lastFetchTime = Date()

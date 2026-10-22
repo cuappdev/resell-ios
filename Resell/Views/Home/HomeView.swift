@@ -124,7 +124,7 @@ struct HomeView: View {
             }
             .padding(.bottom, 4)
 
-            ProductsGalleryView(items: viewModel.filteredItems, onScrollToBottom: viewModel.fetchMoreItems)
+            ProductsGalleryView(items: viewModel.filteredItems, onScrollToBottom: loadMorePosts)
         }
     }
 
@@ -243,10 +243,14 @@ struct HomeView: View {
             return
         }
 
-        do {
-            try await filtersViewModel.applyFilters(homeViewModel: viewModel)
-        } catch {
-            NetworkManager.shared.logger.error("Error in HomeView.refreshFeed: \(error)")
+        await filtersViewModel.refreshFilteredPosts(homeViewModel: viewModel)
+    }
+
+    private func loadMorePosts() {
+        if viewModel.isFilteredFeed {
+            filtersViewModel.fetchMoreFilteredPosts(homeViewModel: viewModel)
+        } else {
+            viewModel.fetchMoreItems()
         }
     }
 

@@ -13,7 +13,6 @@ struct FilterView: View {
     // MARK: - Properties
 
     @Binding var isPresented: Bool
-    @State var presentPopup = false
     @EnvironmentObject var filtersVM: FiltersViewModel
 
     private let categories: [String] = Constants.productCategories.map(\.title)
@@ -35,29 +34,22 @@ struct FilterView: View {
             Color.white
                 .ignoresSafeArea()
 
-            ZStack {
-                VStack(spacing: 0) {
-                    header
+            VStack(spacing: 0) {
+                header
 
-                    Divider()
+                Divider()
 
-                    ScrollView {
-                        filterSections
-                    }
-
-                    Spacer()
-
-                    footerButtons
+                ScrollView {
+                    filterSections
                 }
 
-                if presentPopup {
-                    SortByView(selectedSort: $filtersVM.selectedSort)
-                        .offset(x: 88, y: -142)
-                        .onTapGesture {
-                            presentPopup.toggle()
-                        }
-                }
+                Spacer()
+
+                footerButtons
             }
+        }
+        .onAppear {
+            filtersVM.discardUnappliedChanges()
         }
     }
 
@@ -97,23 +89,42 @@ struct FilterView: View {
 
             Spacer()
 
-            Button {
-                presentPopup.toggle()
-            } label: {
-                HStack(spacing: 2) {
-                    Text("\(filtersVM.selectedSort?.title ?? "Any")")
-                        .font(.custom("Rubik-Regular", size: 20))
-                        .foregroundStyle(.gray)
-
-                    Image(systemName: "chevron.down")
-                        .foregroundStyle(.gray)
+            Menu {
+                Picker("Sort by", selection: $filtersVM.selection.sort) {
+                    ForEach(SortOption.allCases) { option in
+                        Text(option.title)
+                            .tag(option)
+                    }
                 }
+            } label: {
+                sortMenuLabel
             }
         }
         .padding(.vertical, 24)
 
         Divider()
             .padding(.bottom, 16)
+    }
+
+    /// The selected sort and a chevron, sized to fit the longest option.
+    private var sortMenuLabel: some View {
+        HStack(spacing: 2) {
+            // The menu keeps its label's size while it closes, which cut off a longer
+            // pick until it finished. Reserving the widest title keeps the size fixed.
+            ZStack(alignment: .trailing) {
+                ForEach(SortOption.allCases) { option in
+                    Text(option.title)
+                        .hidden()
+                }
+
+                Text(filtersVM.selection.sort.title)
+            }
+            .font(.custom("Rubik-Regular", size: 20))
+            .foregroundStyle(.gray)
+
+            Image(systemName: "chevron.down")
+                .foregroundStyle(.gray)
+        }
     }
 
     @ViewBuilder
@@ -129,20 +140,23 @@ struct FilterView: View {
         }
         .padding(.bottom, 8)
 
-        RangeSlider(lowValue: $filtersVM.lowValue, highValue: $filtersVM.highValue, range: 0...1000)
+        RangeSlider(lowValue: $filtersVM.selection.lowPrice, highValue: $filtersVM.selection.highPrice, range: 0...1000)
             .padding(.trailing, -28)
     }
 
     @ViewBuilder
     private var priceRangeLabel: some View {
-        if filtersVM.lowValue == 0 && filtersVM.highValue == 1000 {
+        let lowPrice = filtersVM.selection.lowPrice
+        let highPrice = filtersVM.selection.highPrice
+
+        if lowPrice == 0 && highPrice == 1000 {
             Text("Any")
-        } else if filtersVM.lowValue == 0 {
-            Text("Up to $\(Int(filtersVM.highValue))")
-        } else if filtersVM.highValue == 1000 {
-            Text("$\(Int(filtersVM.lowValue)) +")
+        } else if lowPrice == 0 {
+            Text("Up to $\(Int(highPrice))")
+        } else if highPrice == 1000 {
+            Text("$\(Int(lowPrice)) +")
         } else {
-            Text("$\(Int(filtersVM.lowValue)) to $\(Int(filtersVM.highValue))")
+            Text("$\(Int(lowPrice)) to $\(Int(highPrice))")
         }
     }
 
@@ -157,8 +171,8 @@ struct FilterView: View {
 
         HFlow {
             ForEach(categories, id: \.self) { category in
-                filterChip(category, isSelected: filtersVM.categoryFilters.contains(category)) {
-                    toggle(category, in: &filtersVM.categoryFilters)
+                filterChip(category, isSelected: filtersVM.selection.categories.contains(category)) {
+                    toggle(category, in: &filtersVM.selection.categories)
                 }
             }
         }
@@ -175,8 +189,8 @@ struct FilterView: View {
 
         HStack {
             ForEach(conditions, id: \.self) { condition in
-                filterChip(condition, isSelected: filtersVM.conditionFilters.contains(condition)) {
-                    toggle(condition, in: &filtersVM.conditionFilters)
+                filterChip(condition, isSelected: filtersVM.selection.conditions.contains(condition)) {
+                    toggle(condition, in: &filtersVM.selection.conditions)
                 }
             }
         }
@@ -216,10 +230,10 @@ struct FilterView: View {
                 .foregroundStyle(Color.white)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
-                .background(!filtersVM.hasActiveFilters ? Constants.Colors.resellPurple.opacity(0.4) : Constants.Colors.resellPurple)
+                .background(!filtersVM.hasUnappliedChanges ? Constants.Colors.resellPurple.opacity(0.4) : Constants.Colors.resellPurple)
                 .cornerRadius(20)
         }
-        .disabled(!filtersVM.hasActiveFilters)
+        .disabled(!filtersVM.hasUnappliedChanges)
     }
 
     private func sectionTitle(_ title: String) -> some View {
@@ -256,41 +270,6 @@ struct FilterView: View {
             filters.insert(value)
         }
     }
-
-    struct SortByView: View {
-        @Binding var selectedSort: SortOption?
-
-        let sortOptions = SortOption.allCases
-
-        var body: some View {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(sortOptions) { option in
-                    Button(action: {
-                        selectedSort = option
-                    }) {
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text(option.title)
-                                .font(.system(size: 17, weight: selectedSort == option ? .bold : .regular))
-                                .foregroundColor(.black)
-                                .padding(.vertical, 12)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-
-                            if option != sortOptions.last {
-                                Divider()
-                            }
-                        }
-                    }
-                }
-            }
-            .padding(.horizontal, 16)
-            .background(Color.white)
-            .frame(width: 171)
-            .overlay(
-                RoundedRectangle(cornerRadius: 13)
-                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-            )
-        }
-    }
 }
 
 
@@ -303,4 +282,18 @@ enum SortOption: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     var title: String { rawValue }
+
+    /// The backend's name for this order in `FilterPostsUnifiedRequest.sortField`.
+    var sortField: String {
+        switch self {
+        case .any:
+            "any"
+        case .newlyListed:
+            "newlyListed"
+        case .priceHighToLow:
+            "priceHighToLow"
+        case .priceLowToHigh:
+            "priceLowToHigh"
+        }
+    }
 }
