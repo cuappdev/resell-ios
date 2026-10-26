@@ -18,7 +18,7 @@ extension FilterPostsUnifiedRequest {
         self.init(
             sortField: selection.sort.sortField,
             price: PriceBody(lowerBound: Int(selection.lowPrice), upperBound: Int(selection.highPrice)),
-            categories: selection.categories.map { $0.lowercased() }.sorted(),
+            categories: selection.categories.sorted(),
             condition: selection.conditions.sorted()
         )
     }
