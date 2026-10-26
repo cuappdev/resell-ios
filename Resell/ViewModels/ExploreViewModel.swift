@@ -34,9 +34,9 @@ final class ExploreViewModel: ObservableObject {
     /// Categories the Trending rail can switch between.
     let trendingCategories: [FilterCategory] = Constants.productCategories
 
-    /// API category query value: the title listings are created with (`Electronics`, …).
+    /// API category query value, lowercased (`electronics`, …).
     var trendingCategoryAPIName: String {
-        selectedTrendingCategory.title
+        selectedTrendingCategory.title.lowercased()
     }
 
     private var lastDailyPicksFetch: Date?
@@ -157,7 +157,7 @@ final class ExploreViewModel: ObservableObject {
         category: FilterCategory,
         forceRefresh: Bool = false
     ) async {
-        let categoryKey = category.title
+        let categoryKey = category.title.lowercased()
 
         if !forceRefresh,
            lastTrendingDetailCategoryKey == categoryKey,

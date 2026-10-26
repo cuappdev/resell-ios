@@ -402,9 +402,9 @@ class NetworkManager {
         func getFilteredPostsByCategory(for filters: [String]) async throws -> PostsResponse {
             let url = try constructURL(endpoint: "/post/filterByCategories")
             
-            return try await post(url: url, body: FilterRequest(categories: filters))
+            return try await post(url: url, body: FilterRequest(categories: filters.map { $0.lowercased() }))
         }
-        
+
         // this can prob go bye bye
         func getFilteredPosts(by filter: String) async throws -> PostsResponse {
             let url = try constructURL(endpoint: "/post/filter/")
@@ -462,7 +462,7 @@ class NetworkManager {
             return try await get(url: url)
         }
 
-        /// Category is a listing category title (e.g. `Electronics`, `Clothing`).
+        /// Category name, lowercased (e.g. `electronics`, `clothing`).
         func getTrendingPosts(category: String, page: Int = 1, limit: Int = 10) async throws -> PostsResponse {
             let encoded = category.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? category
             let url = try constructURL(endpoint: "/post/trending/?category=\(encoded)&page=\(page)&limit=\(limit)")
