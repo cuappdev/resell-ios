@@ -462,7 +462,7 @@ class NetworkManager {
             return try await get(url: url)
         }
 
-        /// Category must match seed names (e.g. `ELECTRONICS`, `CLOTHING`).
+        /// Category is a listing category title (e.g. `Electronics`, `Clothing`).
         func getTrendingPosts(category: String, page: Int = 1, limit: Int = 10) async throws -> PostsResponse {
             let encoded = category.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? category
             let url = try constructURL(endpoint: "/post/trending/?category=\(encoded)&page=\(page)&limit=\(limit)")
