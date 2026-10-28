@@ -180,7 +180,7 @@ struct Constants {
 
 }
 
-struct FilterCategory: Hashable {
+struct FilterCategory: Identifiable, Hashable {
     let id: Int
     let title: String
     let color: Color?

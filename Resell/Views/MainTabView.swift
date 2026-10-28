@@ -18,6 +18,7 @@ struct MainTabView: View {
 
     @State private var isSelectionLensMoving = false
     @State private var selectionLensSettleTask: Task<Void, Never>?
+    @State private var tabLabelWidths: [Router.Tab: CGFloat] = [:]
 
     // MARK: - ViewModels
 
@@ -330,6 +331,11 @@ struct MainTabView: View {
                     .font(Constants.Fonts.tabBarLabel)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
+                    .onGeometryChange(for: CGFloat.self) { proxy in
+                        proxy.size.width
+                    } action: { width in
+                        tabLabelWidths[tab] = width
+                    }
             }
             .foregroundStyle(Constants.Colors.black)
             .frame(maxWidth: .infinity)
@@ -351,13 +357,17 @@ struct MainTabView: View {
 
     /// Places `content` over the selected tab's slot. The view persists across
     /// selection changes, so it slides to the new tab instead of reappearing there.
+    /// It widens past the slot, staying centered on it, when the tab's label plus
+    /// padding needs more room (e.g. "Messages").
     private func selectedTabSlot<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         let content = content()
         return GeometryReader { proxy in
             let tabWidth = proxy.size.width / CGFloat(Router.Tab.allCases.count)
+            let labelWidth = tabLabelWidths[selectedTab, default: 0]
+            let highlightWidth = max(tabWidth, labelWidth + Constants.Spacing.spacing12 * 2)
             content
-                .frame(width: tabWidth)
-                .offset(x: tabWidth * CGFloat(selectedTab.rawValue))
+                .frame(width: highlightWidth)
+                .offset(x: tabWidth * CGFloat(selectedTab.rawValue) - (highlightWidth - tabWidth) / 2)
         }
     }
 

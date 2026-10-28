@@ -79,15 +79,10 @@ struct ExploreTrendingSection: View {
     private var categoryHeader: some View {
         HStack(spacing: 12) {
             Menu {
-                ForEach(viewModel.trendingCategories, id: \.id) { category in
-                    Button {
-                        viewModel.selectTrendingCategory(category)
-                    } label: {
-                        if category.id == viewModel.selectedTrendingCategory.id {
-                            Label(category.title, systemImage: "checkmark")
-                        } else {
-                            Text(category.title)
-                        }
+                Picker("Category", selection: trendingCategorySelection) {
+                    ForEach(viewModel.trendingCategories) { category in
+                        Text(category.title)
+                            .tag(category)
                     }
                 }
             } label: {
@@ -105,6 +100,13 @@ struct ExploreTrendingSection: View {
             .fixedSize()
         }
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
+    }
+
+    private var trendingCategorySelection: Binding<FilterCategory> {
+        Binding(
+            get: { viewModel.selectedTrendingCategory },
+            set: { viewModel.selectTrendingCategory($0) }
+        )
     }
 
     private var categoryMenuLabel: some View {
