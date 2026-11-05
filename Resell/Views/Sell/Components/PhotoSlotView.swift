@@ -7,13 +7,12 @@
 
 import SwiftUI
 
-/// One card in the Sell tab's photo strip: a picked photo, the next open slot to add to, or an empty placeholder.
+/// One card in the Sell tab's photo strip: a picked photo, or the card for adding the next one.
 struct PhotoSlotView: View {
 
     enum Content {
         case photo(UIImage)
         case add
-        case empty
     }
 
     // MARK: - Properties
@@ -35,8 +34,6 @@ struct PhotoSlotView: View {
             photoSlot(image)
         case .add:
             addSlot
-        case .empty:
-            emptySlot
         }
     }
 
@@ -112,24 +109,6 @@ struct PhotoSlotView: View {
         .clipShape(Capsule())
     }
 
-    // MARK: - Empty
-
-    private var emptySlot: some View {
-        Button(action: onAdd) {
-            slotShape
-                .fill(Constants.Colors.white)
-                .frame(width: Constants.Sell.photoSlotWidth, height: Constants.Sell.photoSlotHeight)
-                .overlay {
-                    dashedBorder(Constants.Colors.stroke)
-                }
-                .overlay(alignment: .topLeading) {
-                    slotNumber
-                        .padding(Constants.Sell.photoSlotBadgeInset)
-                }
-        }
-        .buttonStyle(.plain)
-    }
-
     // MARK: - Shared
 
     @ViewBuilder
@@ -179,7 +158,6 @@ struct PhotoSlotView: View {
         HStack(spacing: Constants.Sell.photoSlotSpacing) {
             PhotoSlotView(index: 0, content: .photo(UIImage(named: "justin") ?? UIImage()))
             PhotoSlotView(index: 1, content: .add)
-            PhotoSlotView(index: 2, content: .empty)
         }
         .padding()
     }

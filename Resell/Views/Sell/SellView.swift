@@ -91,10 +91,10 @@ struct SellView: View {
     private var photoStrip: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: Constants.Sell.photoSlotSpacing) {
-                ForEach(0..<Constants.Sell.maxImages, id: \.self) { index in
+                ForEach(viewModel.photoSlots.indices, id: \.self) { index in
                     PhotoSlotView(
                         index: index,
-                        content: viewModel.slotContent(at: index),
+                        content: viewModel.photoSlots[index],
                         onAdd: viewModel.addPhotoTapped,
                         onRemove: { viewModel.removeImage(at: index) }
                     )

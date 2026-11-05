@@ -34,14 +34,12 @@ extension SellView {
             UIImagePickerController.isSourceTypeAvailable(.camera)
         }
 
-        // MARK: - Functions
-
-        func slotContent(at index: Int) -> PhotoSlotView.Content {
-            if selectedImages.indices.contains(index) {
-                return .photo(selectedImages[index])
-            }
-            return index == selectedImages.count ? .add : .empty
+        var photoSlots: [PhotoSlotView.Content] {
+            let photos = selectedImages.map(PhotoSlotView.Content.photo)
+            return remainingImageSlots > 0 ? photos + [.add] : photos
         }
+
+        // MARK: - Functions
 
         func addPhotoTapped() {
             isShowingImageSourceDialog = true
