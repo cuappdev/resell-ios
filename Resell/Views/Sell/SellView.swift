@@ -26,9 +26,6 @@ struct SellView: View {
 
     private let categoryOptions: [String] = Constants.productCategories.map(\.title)
 
-    /// The backend category name differs from what reads well on the form.
-    private let categoryDisplayNames = ["Handmade": "Homemade"]
-
     private let conditionOptions: [(label: String, value: String)] = [
         ("Brand New", "Never Used"),
         ("Gently Used", "Gently Used"),
@@ -337,7 +334,7 @@ struct SellView: View {
             HFlow {
                 ForEach(categoryOptions, id: \.self) { category in
                     selectionChip(
-                        title: categoryDisplayNames[category] ?? category,
+                        title: category,
                         isSelected: viewModel.selectedFilter == category
                     ) {
                         viewModel.selectedFilter = category

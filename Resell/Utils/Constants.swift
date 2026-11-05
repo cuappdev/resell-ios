@@ -30,7 +30,6 @@ struct Constants {
         static let filterPink = Color(red: 202/255, green: 149/255, blue: 163/255)
         static let filterGreen = Color(red: 49/255, green: 96/255, blue: 84/255)
         static let filterLightGreen = Color(red: 164/255, green: 183/255, blue: 171/255)
-        static let filterYellow = Color(red: 227/255, green: 181/255, blue: 112/255)
         static let filterBlue = Color(red: 115/255, green: 162/255, blue: 171/255)
         
 
@@ -129,9 +128,8 @@ struct Constants {
         FilterCategory(id: 3, title: "School", color: Constants.Colors.filterLightGreen),
         FilterCategory(id: 4, title: "Electronics", color: Constants.Colors.filterPink),
         FilterCategory(id: 5, title: "Household", color: Constants.Colors.purpleWash),
-        FilterCategory(id: 6, title: "Handmade", color: Constants.Colors.filterYellow),
-        FilterCategory(id: 7, title: "Active", color: Constants.Colors.filterBlue),
-        FilterCategory(id: 8, title: "Other", color: Constants.Colors.filterGray)
+        FilterCategory(id: 6, title: "Active", color: Constants.Colors.filterBlue),
+        FilterCategory(id: 7, title: "Other", color: Constants.Colors.filterGray)
     ]
 
     /// The categories a listing can belong to: `filters` without the "Recent"
