@@ -16,10 +16,13 @@ struct Constants {
         static let black = Color(red: 0/255, green: 0/255, blue: 0/255)
         static let errorRed = Color(red: 242/255, green: 0/255, blue: 0/255)
         static let inactiveGray = Color(red: 190/255, green: 190/255, blue: 190/255)
+        static let lightPurpleWash = Color(red: 247/255, green: 242/255, blue: 255/255)
+        static let mutedGray = Color(red: 112/255, green: 112/255, blue: 112/255)
         static let purpleWash = Color(red: 250/255, green: 247/255, blue: 255/255)
         static let resellPurple = Color(red: 158/255, green: 112/255, blue: 246/255)
         static let tertiaryGray = Color(red: 45/255, green: 45/255, blue: 45/255)
         static let secondaryGray = Color(red: 77/255, green: 77/255, blue: 77/255)
+        static let shadow = Color(red: 0/255, green: 0/255, blue: 0/255, opacity: 25/100)
         static let stroke = Color(red: 214/255, green: 214/255, blue: 214/255)
         static let tint = Color(red: 0/255, green: 0/255, blue: 0/255, opacity: 20/100)
         static let wash = Color(red: 244/255, green: 244/255, blue: 244/255)
@@ -99,6 +102,30 @@ struct Constants {
         static let spacing8: CGFloat = 8.0
 
         static let horizontalPadding: CGFloat = 24.0
+    }
+
+    /// Layout values for the Sell tab
+    enum Sell {
+        static let maxImages = 8
+
+        static let photoSlotWidth: CGFloat = 231
+        static let photoSlotHeight: CGFloat = 294
+        static let photoSlotCornerRadius: CGFloat = 15
+        static let photoSlotSpacing: CGFloat = 15
+        static let photoSlotBorderWidth: CGFloat = 2
+        static let photoSlotDash: [CGFloat] = [6, 4]
+        static let photoSlotBadgeInset: CGFloat = 16
+        /// Half of Figma's blur of 10, since SwiftUI's radius spreads twice as far.
+        static let photoShadowRadius: CGFloat = 5
+        static let photoShadowY: CGFloat = 2
+
+        static let coverPillHeight: CGFloat = 30
+        static let addButtonWidth: CGFloat = 123
+        static let addButtonHeight: CGFloat = 30
+        static let addPhotoIconSize = CGSize(width: 47.25, height: 41.25)
+        static let removeIconSize: CGFloat = 23
+        static let removeButtonSize: CGFloat = 32
+        static let removeButtonInset: CGFloat = 12
     }
 
     /// Notifications for pub/sub
