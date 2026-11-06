@@ -35,8 +35,13 @@ extension SellView {
         }
 
         var photoSlots: [PhotoSlotView.Content] {
+            guard !selectedImages.isEmpty else { return [.add, .empty] }
             let photos = selectedImages.map(PhotoSlotView.Content.photo)
             return remainingImageSlots > 0 ? photos + [.add] : photos
+        }
+
+        var isPhotoStripScrollable: Bool {
+            !selectedImages.isEmpty
         }
 
         // MARK: - Functions
