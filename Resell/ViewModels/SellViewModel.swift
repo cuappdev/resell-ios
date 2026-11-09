@@ -50,7 +50,6 @@ extension SellView {
             isShowingImageSourceDialog = true
         }
 
-        /// Clears the picker selection afterward so picking the same photos again still triggers a load.
         func loadImages() async {
             guard !selectedItems.isEmpty, remainingImageSlots > 0 else {
                 selectedItems = []
