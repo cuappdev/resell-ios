@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-/// One card in the Sell tab's photo strip: a picked photo, the card for adding the next one, or an empty placeholder.
 struct PhotoSlotView: View {
 
     enum Content {
@@ -30,6 +29,16 @@ struct PhotoSlotView: View {
     // MARK: - UI
 
     var body: some View {
+        card
+            .frame(width: Constants.Sell.photoSlotWidth, height: Constants.Sell.photoSlotHeight)
+            .overlay(alignment: .topLeading) {
+                badge
+                    .padding(Constants.Sell.photoSlotBadgeInset)
+            }
+    }
+
+    @ViewBuilder
+    private var card: some View {
         switch content {
         case .photo(let image):
             photoSlot(image)
@@ -43,20 +52,18 @@ struct PhotoSlotView: View {
     // MARK: - Photo
 
     private func photoSlot(_ image: UIImage) -> some View {
-        Image(uiImage: image)
-            .resizable()
-            .scaledToFill()
-            .frame(width: Constants.Sell.photoSlotWidth, height: Constants.Sell.photoSlotHeight)
+        Color.clear
+            .overlay {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            }
             .clipShape(slotShape)
             .shadow(
                 color: Constants.Colors.shadow,
                 radius: Constants.Sell.photoShadowRadius,
                 y: Constants.Sell.photoShadowY
             )
-            .overlay(alignment: .topLeading) {
-                badge
-                    .padding(Constants.Sell.photoSlotBadgeInset)
-            }
             .overlay(alignment: .topTrailing) {
                 removeButton
                     .padding(Constants.Sell.removeButtonInset)
@@ -79,23 +86,20 @@ struct PhotoSlotView: View {
 
     private var addSlot: some View {
         Button(action: onAdd) {
-            VStack(spacing: 16) {
-                Image("addPhoto")
-                    .resizable()
-                    .frame(width: Constants.Sell.addPhotoIconSize.width, height: Constants.Sell.addPhotoIconSize.height)
+            slotShape
+                .fill(Constants.Colors.lightPurpleWash)
+                .overlay {
+                    VStack(spacing: 16) {
+                        Image("addPhoto")
+                            .resizable()
+                            .frame(width: Constants.Sell.addPhotoIconSize.width, height: Constants.Sell.addPhotoIconSize.height)
 
-                addLabel
-            }
-            .frame(width: Constants.Sell.photoSlotWidth, height: Constants.Sell.photoSlotHeight)
-            .background(Constants.Colors.lightPurpleWash)
-            .clipShape(slotShape)
-            .overlay {
-                dashedBorder(Constants.Colors.resellPurple)
-            }
-            .overlay(alignment: .topLeading) {
-                badge
-                    .padding(Constants.Sell.photoSlotBadgeInset)
-            }
+                        addLabel
+                    }
+                }
+                .overlay {
+                    dashedBorder(Constants.Colors.resellPurple)
+                }
         }
         .buttonStyle(.plain)
     }
@@ -117,13 +121,8 @@ struct PhotoSlotView: View {
     private var emptySlot: some View {
         slotShape
             .fill(Constants.Colors.white)
-            .frame(width: Constants.Sell.photoSlotWidth, height: Constants.Sell.photoSlotHeight)
             .overlay {
                 dashedBorder(Constants.Colors.stroke)
-            }
-            .overlay(alignment: .topLeading) {
-                slotNumber
-                    .padding(Constants.Sell.photoSlotBadgeInset)
             }
     }
 

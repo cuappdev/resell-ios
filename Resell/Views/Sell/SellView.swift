@@ -104,8 +104,6 @@ struct SellView: View {
             .padding(.vertical, Constants.Sell.photoShadowRadius * 2)
         }
         .scrollDisabled(!viewModel.isPhotoStripScrollable)
-        // Lets the strip run to the screen edges and leaves room for the card shadows,
-        // without shifting the rest of the layout.
         .padding(.horizontal, -Constants.Spacing.horizontalPadding)
         .padding(.vertical, -Constants.Sell.photoShadowRadius * 2)
     }
