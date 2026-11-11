@@ -8,7 +8,6 @@
 import Flow
 import SwiftUI
 
-/// A bottom sheet for picking one option from a set of chips. Nothing changes until Apply.
 struct SelectionSheet: View {
 
     // MARK: - Properties

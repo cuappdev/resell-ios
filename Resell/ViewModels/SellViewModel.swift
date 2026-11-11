@@ -47,7 +47,6 @@ extension SellView {
         @Published var isShowingPublishError = false
         @Published private(set) var didPublish = false
 
-        /// The Figma's labels, mapped to the names the backend and Home's filters already use.
         private static let backendCategories = ["Sports & Outdoors": "Active"]
         private static let backendConditions = ["Used": "Worn"]
 
@@ -202,7 +201,7 @@ extension SellView {
             event = nil
         }
 
-        /// Keeps only digits and a single decimal point with at most two decimal places.
+
         private static func sanitizedPrice(_ text: String) -> String {
             let parts = text.filter { $0.isNumber || $0 == "." }.split(separator: ".", omittingEmptySubsequences: false)
             guard let whole = parts.first else { return "" }
