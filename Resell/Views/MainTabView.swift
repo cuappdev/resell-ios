@@ -16,9 +16,8 @@ struct MainTabView: View {
     @Binding var isHidden: Bool
     @Binding var selection: Int
 
-    @State private var isSelectionLensMoving = false
+    @State private var isSelectionLensLifted = false
     @State private var selectionLensSettleTask: Task<Void, Never>?
-    @State private var tabLabelWidths: [Router.Tab: CGFloat] = [:]
 
     // MARK: - ViewModels
 
@@ -249,26 +248,10 @@ struct MainTabView: View {
 
     // MARK: - Tab Bar
 
-    private struct TabBarConfig {
-        let label: String
-        let icon: String
-        let activeIcon: String
-    }
-
-    private func config(for tab: Router.Tab) -> TabBarConfig {
-        switch tab {
-        case .home:
-            TabBarConfig(label: "Home", icon: "house", activeIcon: "house.fill")
-        case .explore:
-            TabBarConfig(label: "Explore", icon: "safari", activeIcon: "safari.fill")
-        case .sell:
-            TabBarConfig(label: "Sell", icon: "tag", activeIcon: "tag.fill")
-        case .chats:
-            TabBarConfig(label: "Messages", icon: "paperplane", activeIcon: "paperplane.fill")
-        case .profile:
-            TabBarConfig(label: "Profile", icon: "person.crop.circle", activeIcon: "person.crop.circle.fill")
-        }
-    }
+    private static let tabBarIconFade = Animation.easeInOut(duration: 0.25)
+    private static let avatarDiameter: CGFloat = 28
+    private static let avatarRingWidth: CGFloat = 1.5
+    private static let selectedAvatarRingWidth: CGFloat = 2.5
 
     private var tabBarView: some View {
         HStack(spacing: 0) {
@@ -277,25 +260,13 @@ struct MainTabView: View {
             }
         }
         .background {
-            selectedTabSlot {
-                ZStack {
-                    Capsule()
-                        .fill(Constants.Colors.black.opacity(0.08))
-                    TabBarGlassLens(isMoving: isSelectionLensMoving)
-                }
-            }
+            TabBarSelectionLens(selectedIndex: selectedTab.rawValue, isLifted: isSelectionLensLifted)
         }
-        .padding(6)
+        .padding(Constants.Spacing.spacing8)
         // Keep the bar intrinsic-height; an unconstrained clear fill previously
         // expanded to the full ZStack height and blew up the capsule.
         .fixedSize(horizontal: false, vertical: true)
-        .background {
-            Capsule()
-                .fill(Constants.Colors.white.opacity(0.001))
-        }
-        .contentShape(Capsule())
         .modifier(TabBarGlassModifier())
-        .animation(.spring(response: 0.5, dampingFraction: 0.85), value: selectedTab)
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
         .padding(.bottom, 20)
         .frame(width: UIScreen.width)
@@ -306,7 +277,6 @@ struct MainTabView: View {
     /// Tapping the selected tab goes through `Router.reselect(_:)`, which pops it to its root
     /// or scrolls the root back to the top; any other tab switches to it.
     private func tabBarButton(for tab: Router.Tab) -> some View {
-        let config = config(for: tab)
         let isSelected = selectedTab == tab
         let badgeCount = tab == .chats ? chatsViewModel.totalUnread : 0
 
@@ -318,72 +288,69 @@ struct MainTabView: View {
                 selection = tab.rawValue
             }
         } label: {
-            VStack(spacing: 3) {
-                tabBarIcon(for: tab, config: config, isSelected: isSelected)
-                    .frame(height: 24)
-                    .overlay(alignment: .topTrailing) {
-                        if badgeCount > 0 {
-                            unreadBadge(count: badgeCount)
-                        }
+            tabBarIcon(for: tab, isSelected: isSelected)
+                .overlay(alignment: .topTrailing) {
+                    if badgeCount > 0 {
+                        unreadBadge(count: badgeCount)
                     }
-
-                Text(config.label)
-                    .font(Constants.Fonts.tabBarLabel)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                    .onGeometryChange(for: CGFloat.self) { proxy in
-                        proxy.size.width
-                    } action: { width in
-                        tabLabelWidths[tab] = width
-                    }
-            }
-            .foregroundStyle(Constants.Colors.black)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 7)
-            .contentShape(Rectangle())
+                }
+                .frame(maxWidth: .infinity, minHeight: Self.avatarDiameter)
+                .padding(.vertical, Constants.Spacing.spacing8)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(tabBarLabel(for: tab))
+        .accessibilityValue(badgeCount > 0 ? "\(badgeCount) unread" : "")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    /// The tabs are icon-only, so this is what VoiceOver reads for each one.
+    private func tabBarLabel(for tab: Router.Tab) -> String {
+        switch tab {
+        case .home: "Home"
+        case .explore: "Explore"
+        case .sell: "Sell"
+        case .chats: "Messages"
+        case .profile: "Profile"
+        }
     }
 
     @ViewBuilder
-    private func tabBarIcon(for tab: Router.Tab, config: TabBarConfig, isSelected: Bool) -> some View {
-        if tab == .profile && currentUser.hasProfilePicture {
-            profileTabImage
-        } else {
-            Image(systemName: isSelected ? config.activeIcon : config.icon)
-                .font(.system(size: 20, weight: isSelected ? .semibold : .regular))
+    private func tabBarIcon(for tab: Router.Tab, isSelected: Bool) -> some View {
+        switch tab {
+        case .home:
+            tabBarAsset("tab-home", isSelected: isSelected)
+        case .explore:
+            tabBarAsset("tab-search", isSelected: isSelected)
+        case .sell:
+            tabBarAsset("tab-sell", isSelected: isSelected)
+        case .chats:
+            tabBarAsset("tab-messages", isSelected: isSelected)
+        case .profile:
+            profileTabImage(isSelected: isSelected)
         }
     }
 
-    /// Places `content` over the selected tab's slot. The view persists across
-    /// selection changes, so it slides to the new tab instead of reappearing there.
-    /// It widens past the slot, staying centered on it, when the tab's label plus
-    /// padding needs more room (e.g. "Messages").
-    private func selectedTabSlot<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        let content = content()
-        return GeometryReader { proxy in
-            let tabWidth = proxy.size.width / CGFloat(Router.Tab.allCases.count)
-            let labelWidth = tabLabelWidths[selectedTab, default: 0]
-            let highlightWidth = max(tabWidth, labelWidth + Constants.Spacing.spacing12 * 2)
-            content
-                .frame(width: highlightWidth)
-                .offset(x: tabWidth * CGFloat(selectedTab.rawValue) - (highlightWidth - tabWidth) / 2)
+    /// Cross-fades between an icon's idle asset and its `-selected` one.
+    private func tabBarAsset(_ name: String, isSelected: Bool) -> some View {
+        ZStack {
+            Image(name)
+                .opacity(isSelected ? 0 : 1)
+            Image("\(name)-selected")
+                .opacity(isSelected ? 1 : 0)
         }
+        .animation(Self.tabBarIconFade, value: isSelected)
     }
 
-    /// Raises the glass lens for the slide, then dissolves it back into the
-    /// resting pill once the spring has mostly landed.
+    /// Lifts the selection lens as it sets off, then lets it sink back into the
+    /// resting pill while it is still arriving, so the two motions read as one.
     private func swellSelectionLens() {
         selectionLensSettleTask?.cancel()
-        withAnimation(.easeOut(duration: 0.15)) {
-            isSelectionLensMoving = true
-        }
+        isSelectionLensLifted = true
         selectionLensSettleTask = Task {
-            try? await Task.sleep(for: .milliseconds(300))
+            try? await Task.sleep(for: .milliseconds(220))
             guard !Task.isCancelled else { return }
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.65)) {
-                isSelectionLensMoving = false
-            }
+            isSelectionLensLifted = false
         }
     }
 
@@ -399,12 +366,30 @@ struct MainTabView: View {
             .offset(x: 8, y: -6)
     }
 
-    private var profileTabImage: some View {
+    /// The user's avatar (or the placeholder when they have none), ringed in gray
+    /// while idle and in the tab bar gradient while Profile is selected.
+    private func profileTabImage(isSelected: Bool) -> some View {
         Image(uiImage: currentUser.profilePic)
             .resizable()
             .scaledToFill()
-            .frame(width: 24, height: 24)
+            .frame(width: Self.avatarDiameter, height: Self.avatarDiameter)
             .clipShape(Circle())
+            .overlay {
+                avatarRing(Constants.Colors.tabBarInactive, width: Self.avatarRingWidth)
+                    .opacity(isSelected ? 0 : 1)
+            }
+            .overlay {
+                avatarRing(Constants.Colors.tabBarActiveGradient, width: Self.selectedAvatarRingWidth)
+                    .opacity(isSelected ? 1 : 0)
+            }
+            .animation(Self.tabBarIconFade, value: isSelected)
+    }
+
+    /// A ring drawn just outside the avatar's edge.
+    private func avatarRing<Style: ShapeStyle>(_ style: Style, width: CGFloat) -> some View {
+        Circle()
+            .strokeBorder(style, lineWidth: width)
+            .padding(-width)
     }
 }
 
@@ -425,53 +410,138 @@ private struct TabBarContentInsetModifier: ViewModifier {
     }
 }
 
-/// Glass lens that swells behind the selected tab while the selection slides, like
-/// the iOS 26 system tab bar. Invisible at rest and before iOS 26.
-private struct TabBarGlassLens: View {
-    let isMoving: Bool
+/// The highlight behind the selected tab. Its two ends chase the selection on springs of
+/// different stiffness, so the pill stretches like a liquid while it travels and closes
+/// back up as it lands. While `isLifted` it swells into a glass lens, like the iOS 26
+/// system tab bar (the glass needs iOS 26).
+private struct TabBarSelectionLens: View {
+    let selectedIndex: Int
+    let isLifted: Bool
+
+    private static let headSpring = Animation.spring(response: 0.34, dampingFraction: 0.78)
+    private static let tailSpring = Animation.spring(response: 0.5, dampingFraction: 0.85)
+    private static let liftSpring = Animation.spring(response: 0.3, dampingFraction: 0.7)
+    private static let settleSpring = Animation.spring(response: 0.45, dampingFraction: 0.6)
+    /// How much larger than its slot the lens grows while lifted.
+    private static let liftedScale = CGSize(width: 1.15, height: 1.35)
 
     var body: some View {
-        if #available(iOS 26, *) {
-            // Its own container keeps the lens a separate glass layer; glass placed
-            // directly inside the bar's glass content merged into the bar and never showed.
-            GlassEffectContainer {
-                Color.clear
-                    .glassEffect(isMoving ? .clear : .identity, in: Capsule())
+        GeometryReader { proxy in
+            let slot = selectedSlot(in: proxy.size)
+            // Each reader animates on its own spring and hands down the in-flight value,
+            // which is the only way to drive one shape from several animations at once.
+            AnimatedValueReader(value: slot.minX) { head in
+                AnimatedValueReader(value: slot.minX) { tail in
+                    AnimatedValueReader(value: isLifted ? 1 : 0) { lift in
+                        lens(from: min(head, tail), to: max(head, tail) + slot.width, lift: lift, slot: slot)
+                    }
+                    .animation(isLifted ? Self.liftSpring : Self.settleSpring, value: isLifted)
+                }
+                .animation(Self.tailSpring, value: selectedIndex)
             }
-            .overlay {
-                Capsule()
-                    .strokeBorder(
-                        LinearGradient(
-                            colors: [Constants.Colors.white, Constants.Colors.white.opacity(0.2)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        ),
-                        lineWidth: 1.5
-                    )
-                    .opacity(isMoving ? 1 : 0)
-            }
-            .shadow(color: Constants.Colors.black.opacity(isMoving ? 0.15 : 0), radius: 10, y: 4)
-            .scaleEffect(x: isMoving ? 1.15 : 1, y: isMoving ? 1.35 : 1)
+            .animation(Self.headSpring, value: selectedIndex)
         }
+    }
+
+    private func selectedSlot(in size: CGSize) -> CGRect {
+        let tabWidth = size.width / CGFloat(Router.Tab.allCases.count)
+        return CGRect(x: tabWidth * CGFloat(selectedIndex), y: 0, width: tabWidth, height: size.height)
+    }
+
+    /// The pill spanning `leading...trailing`, grown about its centre by `lift` (0 at
+    /// rest, 1 fully lifted; the settle spring overshoots a little either side).
+    private func lens(from leading: CGFloat, to trailing: CGFloat, lift: CGFloat, slot: CGRect) -> some View {
+        let growth = CGSize(
+            width: slot.width * (Self.liftedScale.width - 1) * lift,
+            height: slot.height * (Self.liftedScale.height - 1) * lift
+        )
+        return ZStack {
+            Capsule()
+                .fill(Constants.Colors.tabBarSelection)
+            if #available(iOS 26, *) {
+                // Its own container keeps the lens a separate glass layer; glass placed
+                // directly inside the bar's glass content merged into the bar and never showed.
+                GlassEffectContainer {
+                    Color.clear
+                        .glassEffect(isLifted ? .clear : .identity, in: Capsule())
+                }
+            }
+        }
+        .frame(width: trailing - leading + growth.width, height: slot.height + growth.height)
+        .offset(x: leading - growth.width / 2, y: -growth.height / 2)
     }
 }
 
-/// Frosted, touch-responsive Liquid Glass capsule behind the floating tab bar,
-/// with a material fallback before iOS 26.
+/// Re-renders `content` with the in-flight value of `value` on every frame of whatever
+/// animation is applied to this view.
+private struct AnimatedValueReader<Content: View>: View, Animatable {
+    var value: CGFloat
+    @ViewBuilder let content: (CGFloat) -> Content
+
+    var animatableData: CGFloat {
+        get { value }
+        set { value = newValue }
+    }
+
+    var body: some View {
+        content(value)
+    }
+}
+
+/// Tinted Liquid Glass capsule behind the floating tab bar that lightens and swells while
+/// it is pressed, with a material fallback before iOS 26.
 private struct TabBarGlassModifier: ViewModifier {
+
+    /// How much of the tint stays and how far the bar grows while pressed on iOS 26,
+    /// measured off what interactive Liquid Glass does to the bar on iOS 27.
+    private static let pressedTintOpacity = 0.15
+    private static let pressedScale = 1.035
+    private static let pressSpring = Animation.spring(response: 0.3, dampingFraction: 0.8)
+
+    @GestureState private var isPressed = false
+
+    // Use a single material/glass layer only — stacking fill + glass + shadow
+    // produced a second, slightly larger outline behind the bar.
     func body(content: Content) -> some View {
         let shape = Capsule()
-        // Use a single material/glass layer only — stacking fill + glass + shadow
-        // produced a second, slightly larger outline behind the bar.
-        if #available(iOS 26, *) {
-            content
+        if #available(iOS 27, *) {
+            tinted(content)
                 .glassEffect(.regular.interactive(), in: shape)
+        } else if #available(iOS 26, *) {
+            // iOS 26's interactive glass ends every press with a dip and a flash before
+            // snapping back, which flickers across the whole bar, so the press response
+            // is drawn here on plain glass instead.
+            tinted(content, tintOpacity: isPressed ? Self.pressedTintOpacity : 1)
+                .glassEffect(.regular, in: shape)
+                .animation(Self.pressSpring) { bar in
+                    bar.scaleEffect(isPressed ? Self.pressedScale : 1)
+                }
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 0)
+                        .updating($isPressed) { _, isPressed, _ in isPressed = true }
+                )
         } else {
-            content
+            tinted(content)
                 .background(.ultraThinMaterial, in: shape)
                 .overlay(shape.strokeBorder(Constants.Colors.black.opacity(0.06), lineWidth: 1))
                 .shadow(color: Constants.Colors.black.opacity(0.08), radius: 8, x: 0, y: 2)
         }
     }
+
+    /// Backs the bar with white so content behind it stays muted, grays it toward Figma's
+    /// body tone, and keeps its empty areas tappable.
+    private func tinted(_ content: Content, tintOpacity: Double = 1) -> some View {
+        content
+            .background {
+                ZStack {
+                    Capsule()
+                        .fill(Constants.Colors.tabBarGlassBacking)
+                    Capsule()
+                        .fill(Constants.Colors.tabBarGlassTint)
+                        .opacity(tintOpacity)
+                        .animation(Self.pressSpring, value: tintOpacity)
+                }
+            }
+            .contentShape(Capsule())
+    }
 }
- 
