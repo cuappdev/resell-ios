@@ -27,13 +27,6 @@ struct SellView: View {
         }
         .background(Constants.Colors.white)
         .toolbar(.hidden, for: .navigationBar)
-        .confirmationDialog(
-            "Select Image Source",
-            isPresented: $viewModel.isShowingImageSourceDialog,
-            titleVisibility: .visible
-        ) {
-            imageSourceButtons
-        }
         .photosPicker(
             isPresented: $viewModel.isShowingPhotosPicker,
             selection: $viewModel.selectedItems,
@@ -92,12 +85,7 @@ struct SellView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: Constants.Sell.photoSlotSpacing) {
                 ForEach(viewModel.photoSlots.indices, id: \.self) { index in
-                    PhotoSlotView(
-                        index: index,
-                        content: viewModel.photoSlots[index],
-                        onAdd: viewModel.addPhotoTapped,
-                        onRemove: { viewModel.removeImage(at: index) }
-                    )
+                    photoSlot(at: index)
                 }
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
@@ -106,6 +94,30 @@ struct SellView: View {
         .scrollDisabled(!viewModel.isPhotoStripScrollable)
         .padding(.horizontal, -Constants.Spacing.horizontalPadding)
         .padding(.vertical, -Constants.Sell.photoShadowRadius * 2)
+    }
+
+    /// The image source dialog hangs off the Add card so iOS anchors it there.
+    @ViewBuilder
+    private func photoSlot(at index: Int) -> some View {
+        let content = viewModel.photoSlots[index]
+        let slot = PhotoSlotView(
+            index: index,
+            content: content,
+            onAdd: viewModel.addPhotoTapped,
+            onRemove: { viewModel.removeImage(at: index) }
+        )
+
+        if content == .add {
+            slot.confirmationDialog(
+                "Select Image Source",
+                isPresented: $viewModel.isShowingImageSourceDialog,
+                titleVisibility: .visible
+            ) {
+                imageSourceButtons
+            }
+        } else {
+            slot
+        }
     }
 
     @ViewBuilder
