@@ -294,7 +294,7 @@ struct MainTabView: View {
                         unreadBadge(count: badgeCount)
                     }
                 }
-                .frame(maxWidth: .infinity, minHeight: Self.avatarDiameter)
+                .frame(maxWidth: .infinity, minHeight: Self.avatarDiameter + Self.selectedAvatarRingWidth * 2)
                 .padding(.vertical, Constants.Spacing.spacing8)
                 .contentShape(Rectangle())
         }
@@ -497,6 +497,8 @@ private struct TabBarGlassModifier: ViewModifier {
     private static let pressedTintOpacity = 0.15
     private static let pressedScale = 1.035
     private static let pressSpring = Animation.spring(response: 0.3, dampingFraction: 0.8)
+    private static let shadowRadius: CGFloat = 8
+    private static let shadowOffsetY: CGFloat = 4
 
     @GestureState private var isPressed = false
 
@@ -524,7 +526,6 @@ private struct TabBarGlassModifier: ViewModifier {
             tinted(content)
                 .background(.ultraThinMaterial, in: shape)
                 .overlay(shape.strokeBorder(Constants.Colors.black.opacity(0.06), lineWidth: 1))
-                .shadow(color: Constants.Colors.black.opacity(0.08), radius: 8, x: 0, y: 2)
         }
     }
 
@@ -534,6 +535,7 @@ private struct TabBarGlassModifier: ViewModifier {
         content
             .background {
                 ZStack {
+                    outerShadow
                     Capsule()
                         .fill(Constants.Colors.tabBarGlassBacking)
                     Capsule()
@@ -543,5 +545,18 @@ private struct TabBarGlassModifier: ViewModifier {
                 }
             }
             .contentShape(Capsule())
+    }
+
+    /// A drop shadow cut away under the bar, so it darkens only what's around the bar
+    /// and doesn't gray the translucent bar itself.
+    private var outerShadow: some View {
+        Capsule()
+            .shadow(color: Constants.Colors.tabBarShadow, radius: Self.shadowRadius, y: Self.shadowOffsetY)
+            .mask {
+                Rectangle()
+                    .padding(-(Self.shadowRadius * 2 + Self.shadowOffsetY))
+                    .overlay { Capsule().blendMode(.destinationOut) }
+                    .compositingGroup()
+            }
     }
 }

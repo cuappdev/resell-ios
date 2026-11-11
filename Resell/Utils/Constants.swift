@@ -35,6 +35,7 @@ struct Constants {
         // Tab bar
         static let tabBarInactive = Color(red: 158/255, green: 158/255, blue: 163/255)
         static let tabBarSelection = Color(red: 121/255, green: 86/255, blue: 61/255, opacity: 16/100)
+        static let tabBarShadow = Color(red: 0/255, green: 0/255, blue: 0/255, opacity: 12/100)
         /// Grays the tab bar's glass to Figma's body tone.
         static let tabBarGlassTint = Color(red: 0/255, green: 0/255, blue: 0/255, opacity: 6/100)
         /// Keeps busy content behind the tab bar from showing through its icons.
