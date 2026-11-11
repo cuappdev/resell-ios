@@ -15,19 +15,26 @@ struct SelectionSheet: View {
     let title: String
     let options: [String]
     let selection: String?
+    let height: CGFloat
     let onApply: (String?) -> Void
 
     @State private var draft: String?
-    @State private var contentHeight: CGFloat = 0
 
     private var hasChanges: Bool {
         draft != selection
     }
 
-    init(title: String, options: [String], selection: String?, onApply: @escaping (String?) -> Void) {
+    init(
+        title: String,
+        options: [String],
+        selection: String?,
+        height: CGFloat = 0,
+        onApply: @escaping (String?) -> Void = { _ in }
+    ) {
         self.title = title
         self.options = options
         self.selection = selection
+        self.height = height
         self.onApply = onApply
         _draft = State(initialValue: selection)
     }
@@ -44,15 +51,9 @@ struct SelectionSheet: View {
         .padding(.top, Constants.Sell.sheetTopPadding)
         .padding(.bottom, Constants.Sell.sheetBottomPadding)
         .fixedSize(horizontal: false, vertical: true)
-        .background {
-            GeometryReader { proxy in
-                Color.clear
-                    .onAppear { contentHeight = proxy.size.height }
-            }
-        }
         .frame(maxHeight: .infinity, alignment: .top)
         .background(Constants.Colors.white)
-        .presentationDetents([.height(contentHeight)])
+        .presentationDetents([.height(height)])
         .presentationDragIndicator(.hidden)
         .presentationCornerRadius(Constants.Sell.sheetCornerRadius)
     }
@@ -137,6 +138,6 @@ struct SelectionSheet: View {
 #Preview {
     Color.clear
         .sheet(isPresented: .constant(true)) {
-            SelectionSheet(title: "Category", options: Constants.Sell.categories, selection: "Other") { _ in }
+            SelectionSheet(title: "Category", options: Constants.Sell.categories, selection: "Other", height: 310)
         }
 }

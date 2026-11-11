@@ -14,6 +14,8 @@ struct SellView: View {
 
     @StateObject private var viewModel = ViewModel()
 
+    @State private var selectionSheetHeights: [ViewModel.SelectionField: CGFloat] = [:]
+
     // MARK: - UI
 
     var body: some View {
@@ -41,12 +43,9 @@ struct SellView: View {
             ImagePicker(sourceType: .camera, selectedImages: $viewModel.selectedImages)
         }
         .onChange(of: viewModel.selectedItems) { _ in Task { await viewModel.loadImages() } }
+        .background { selectionSheetSizer }
         .sheet(item: $viewModel.activeSelectionField) { field in
-            SelectionSheet(
-                title: field.rawValue,
-                options: viewModel.options(for: field),
-                selection: viewModel.selection(for: field)
-            ) { viewModel.apply($0, to: field) }
+            selectionSheet(for: field)
         }
         .alert("Couldn't post your listing", isPresented: $viewModel.isShowingPublishError) {
             Button("OK", role: .cancel) {}
@@ -246,6 +245,33 @@ struct SellView: View {
             isOptional: isOptional,
             action: { viewModel.activeSelectionField = field }
         )
+    }
+
+    private func selectionSheet(for field: ViewModel.SelectionField) -> SelectionSheet {
+        SelectionSheet(
+            title: field.rawValue,
+            options: viewModel.options(for: field),
+            selection: viewModel.selection(for: field),
+            height: selectionSheetHeights[field] ?? 0
+        ) { viewModel.apply($0, to: field) }
+    }
+
+    /// Lays out each selection sheet invisibly ahead of time. A sheet whose height changes while
+    /// it opens slides in from the corner, so each one opens at its measured height instead.
+    private var selectionSheetSizer: some View {
+        ZStack {
+            ForEach(ViewModel.SelectionField.allCases) { field in
+                selectionSheet(for: field)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .background {
+                        GeometryReader { proxy in
+                            Color.clear
+                                .onAppear { selectionSheetHeights[field] = proxy.size.height }
+                        }
+                    }
+            }
+        }
+        .hidden()
     }
 
     private func fieldLabel(_ text: String) -> some View {

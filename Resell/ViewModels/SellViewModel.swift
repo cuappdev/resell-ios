@@ -13,7 +13,7 @@ extension SellView {
     @MainActor
     final class ViewModel: ObservableObject {
 
-        enum SelectionField: String, Identifiable {
+        enum SelectionField: String, CaseIterable, Identifiable {
             case category = "Category"
             case condition = "Condition"
             case event = "Event"
