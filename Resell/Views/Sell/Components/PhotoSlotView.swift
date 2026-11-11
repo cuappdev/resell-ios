@@ -9,7 +9,7 @@ import SwiftUI
 
 struct PhotoSlotView: View {
 
-    enum Content {
+    enum Content: Equatable {
         case photo(UIImage)
         case add
         case empty
