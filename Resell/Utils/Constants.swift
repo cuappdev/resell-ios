@@ -32,6 +32,14 @@ struct Constants {
         static let filterLightGreen = Color(red: 164/255, green: 183/255, blue: 171/255)
         static let filterBlue = Color(red: 115/255, green: 162/255, blue: 171/255)
         
+        // Tab bar
+        static let tabBarInactive = Color(red: 158/255, green: 158/255, blue: 163/255)
+        static let tabBarSelection = Color(red: 121/255, green: 86/255, blue: 61/255, opacity: 16/100)
+        static let tabBarShadow = Color(red: 0/255, green: 0/255, blue: 0/255, opacity: 12/100)
+        /// Grays the tab bar's glass to Figma's body tone.
+        static let tabBarGlassTint = Color(red: 0/255, green: 0/255, blue: 0/255, opacity: 6/100)
+        /// Keeps busy content behind the tab bar from showing through its icons.
+        static let tabBarGlassBacking = Color(red: 255/255, green: 255/255, blue: 255/255, opacity: 70/100)
 
         // Gradients
         static let resellGradient = LinearGradient(stops: [
@@ -47,6 +55,11 @@ struct Constants {
             .init(color: Color(red: 173/255, green: 104/255, blue: 227/255), location: 0.0),
             .init(color: Color(red: 223/255, green: 152/255, blue: 86/255), location: 1.0)
         ], startPoint: .leading, endPoint: .trailing)
+        static let tabBarActiveGradient = LinearGradient(stops: [
+            .init(color: Color(red: 164/255, green: 98/255, blue: 230/255), location: 0.0),
+            .init(color: Color(red: 209/255, green: 111/255, blue: 192/255), location: 0.5),
+            .init(color: Color(red: 224/255, green: 160/255, blue: 99/255), location: 1.0)
+        ], startPoint: .topLeading, endPoint: .bottomTrailing)
 
     }
 
@@ -74,7 +87,6 @@ struct Constants {
         static let subtitle2 = Font.custom("Rubik-Medium", size: 12)
 
         // Tab bar
-        static let tabBarLabel = Font.custom("Rubik-Medium", size: 11)
         static let badge = Font.custom("Roboto-Medium", size: 10)
     }
 
