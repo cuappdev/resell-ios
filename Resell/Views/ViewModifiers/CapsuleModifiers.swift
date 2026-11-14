@@ -38,6 +38,24 @@ struct PurpleCapsule: ViewModifier {
     }
 }
 
+/// A button drawn as `purpleCapsule()`. Unlike `.plain`, it adds no fade of its own while
+/// disabled, so a disabled button shows the design's 40% instead of a doubled fade.
+struct PurpleCapsuleButtonStyle: ButtonStyle {
+
+    private static let pressedOpacity: CGFloat = 0.7
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .purpleCapsule()
+            .opacity(configuration.isPressed ? Self.pressedOpacity : 1)
+    }
+}
+
+extension ButtonStyle where Self == PurpleCapsuleButtonStyle {
+
+    static var purpleCapsule: PurpleCapsuleButtonStyle { PurpleCapsuleButtonStyle() }
+}
+
 struct OutlinedCapsule<Border: ShapeStyle>: ViewModifier {
 
     let border: Border

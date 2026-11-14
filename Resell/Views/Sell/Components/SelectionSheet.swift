@@ -40,6 +40,15 @@ struct SelectionSheet: View {
         draft != selection
     }
 
+    /// The sheet adds the home-indicator inset below its detent, so the detent leaves it out and
+    /// the content runs into it, keeping the design's bottom padding under the buttons.
+    private var detentHeight: CGFloat {
+        let bottomSafeArea = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first?.windows.first?.safeAreaInsets.bottom ?? 0
+        return max(height - bottomSafeArea, 0)
+    }
+
     init(
         title: String,
         options: [String],
@@ -67,9 +76,10 @@ struct SelectionSheet: View {
         .padding(.top, SelectionSheetLayout.topPadding)
         .padding(.bottom, SelectionSheetLayout.bottomPadding)
         .fixedSize(horizontal: false, vertical: true)
-        .frame(maxHeight: .infinity, alignment: .top)
+        .frame(minHeight: 0, maxHeight: .infinity, alignment: .top)
+        .ignoresSafeArea(.container, edges: .bottom)
         .background(Constants.Colors.white)
-        .presentationDetents([.height(height)])
+        .presentationDetents([.height(detentHeight)])
         .presentationDragIndicator(.hidden)
         .presentationCornerRadius(SelectionSheetLayout.cornerRadius)
     }
@@ -133,9 +143,8 @@ struct SelectionSheet: View {
                 Text("Apply")
                     .padding(.horizontal, SelectionSheetLayout.buttonHorizontalPadding)
                     .frame(height: SelectionSheetLayout.buttonHeight)
-                    .purpleCapsule()
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.purpleCapsule)
             .disabled(!hasChanges)
         }
         .frame(width: SelectionSheetLayout.footerWidth)

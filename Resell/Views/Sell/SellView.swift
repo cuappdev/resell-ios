@@ -315,9 +315,8 @@ struct SellView: View {
                 }
             }
             .frame(width: SellLayout.publishButtonWidth, height: SellLayout.publishButtonHeight)
-            .purpleCapsule()
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.purpleCapsule)
         .disabled(!viewModel.canPublish)
         .frame(maxWidth: .infinity)
     }
