@@ -8,6 +8,25 @@
 import PhotosUI
 import SwiftUI
 
+private enum SellLayout {
+    static let photoSlotSpacing: CGFloat = 15
+    static let formSpacing: CGFloat = 20
+    static let fieldLabelSpacing: CGFloat = 12
+    static let fieldHeight: CGFloat = 43
+    static let fieldHorizontalPadding: CGFloat = 17
+    static let pricePillWidth: CGFloat = 128
+    static let pricePillVerticalPadding: CGFloat = 10
+    static let descriptionLabelSpacing: CGFloat = 8
+    static let descriptionHeight: CGFloat = 128
+    static let descriptionCornerRadius: CGFloat = 10
+    static let descriptionHorizontalPadding: CGFloat = 13
+    static let descriptionVerticalPadding: CGFloat = 16
+    /// TextEditor's built-in text inset, subtracted so typed text lines up with the placeholder.
+    static let textEditorInset = CGSize(width: 5, height: 8)
+    static let publishButtonWidth: CGFloat = 200
+    static let publishButtonHeight: CGFloat = 49
+}
+
 struct SellView: View {
 
     // MARK: - Properties
@@ -15,6 +34,8 @@ struct SellView: View {
     @StateObject private var viewModel = ViewModel()
 
     @State private var selectionSheetHeights: [ViewModel.SelectionField: CGFloat] = [:]
+
+    @Environment(\.displayScale) private var displayScale
 
     // MARK: - UI
 
@@ -40,9 +61,10 @@ struct SellView: View {
             photoLibrary: .shared()
         )
         .sheet(isPresented: $viewModel.isShowingCamera) {
-            ImagePicker(sourceType: .camera, selectedImages: $viewModel.selectedImages)
+            ImagePicker(sourceType: .camera, selectedImages: $viewModel.capturedImages)
         }
-        .onChange(of: viewModel.selectedItems) { _ in Task { await viewModel.loadImages() } }
+        .onChange(of: viewModel.selectedItems) { _ in Task { await viewModel.loadImages(displayScale: displayScale) } }
+        .onChange(of: viewModel.capturedImages) { _ in Task { await viewModel.addCapturedImages() } }
         .background { selectionSheetSizer }
         .sheet(item: $viewModel.activeSelectionField) { field in
             selectionSheet(for: field)
@@ -53,8 +75,6 @@ struct SellView: View {
             Text("Check your connection and try again.")
         }
     }
-
-    // MARK: - Header
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -67,8 +87,6 @@ struct SellView: View {
                 .foregroundStyle(Constants.Colors.mutedGray)
         }
     }
-
-    // MARK: - Photos
 
     private var photosSection: some View {
         VStack(spacing: 12) {
@@ -83,9 +101,7 @@ struct SellView: View {
 
     private var photosTitleRow: some View {
         HStack {
-            Text("Photos")
-                .font(Constants.Fonts.h3)
-                .foregroundStyle(Constants.Colors.black)
+            fieldLabel("Photos")
 
             Spacer()
 
@@ -97,17 +113,17 @@ struct SellView: View {
 
     private var photoStrip: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Constants.Sell.photoSlotSpacing) {
+            HStack(spacing: SellLayout.photoSlotSpacing) {
                 ForEach(viewModel.photoSlots.indices, id: \.self) { index in
                     photoSlot(at: index)
                 }
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
-            .padding(.vertical, Constants.Sell.photoShadowRadius * 2)
+            .padding(.vertical, PhotoSlotView.shadowRadius * 2)
         }
         .scrollDisabled(!viewModel.isPhotoStripScrollable)
         .padding(.horizontal, -Constants.Spacing.horizontalPadding)
-        .padding(.vertical, -Constants.Sell.photoShadowRadius * 2)
+        .padding(.vertical, -PhotoSlotView.shadowRadius * 2)
     }
 
     /// The image source dialog hangs off the Add card so iOS anchors it there.
@@ -145,10 +161,8 @@ struct SellView: View {
         Button("Cancel", role: .cancel) {}
     }
 
-    // MARK: - Form
-
     private var formSection: some View {
-        VStack(alignment: .leading, spacing: Constants.Sell.formSpacing) {
+        VStack(alignment: .leading, spacing: SellLayout.formSpacing) {
             titleField
             divider
             priceRow
@@ -164,7 +178,7 @@ struct SellView: View {
     }
 
     private var titleField: some View {
-        VStack(alignment: .leading, spacing: Constants.Sell.fieldLabelSpacing) {
+        VStack(alignment: .leading, spacing: SellLayout.fieldLabelSpacing) {
             fieldLabel("Title")
 
             TextField("", text: $viewModel.title)
@@ -175,10 +189,9 @@ struct SellView: View {
                         placeholder("What are you selling?", font: Constants.Fonts.title2)
                     }
                 }
-                .padding(.horizontal, Constants.Sell.fieldHorizontalPadding)
-                .frame(height: Constants.Sell.fieldHeight)
-                .background(Constants.Colors.wash)
-                .clipShape(Capsule())
+                .padding(.horizontal, SellLayout.fieldHorizontalPadding)
+                .frame(height: SellLayout.fieldHeight)
+                .background(Constants.Colors.wash, in: Capsule())
         }
     }
 
@@ -204,17 +217,16 @@ struct SellView: View {
                         }
                     }
             }
-            .padding(.horizontal, Constants.Sell.fieldHorizontalPadding)
-            .padding(.vertical, Constants.Sell.pricePillVerticalPadding)
-            .frame(width: Constants.Sell.pricePillWidth)
-            .background(Constants.Colors.wash)
-            .clipShape(Capsule())
+            .padding(.horizontal, SellLayout.fieldHorizontalPadding)
+            .padding(.vertical, SellLayout.pricePillVerticalPadding)
+            .frame(width: SellLayout.pricePillWidth)
+            .background(Constants.Colors.wash, in: Capsule())
         }
-        .frame(height: Constants.Sell.fieldHeight)
+        .frame(height: SellLayout.fieldHeight)
     }
 
     private var descriptionField: some View {
-        VStack(alignment: .leading, spacing: Constants.Sell.descriptionLabelSpacing) {
+        VStack(alignment: .leading, spacing: SellLayout.descriptionLabelSpacing) {
             fieldLabel("Description")
 
             ZStack(alignment: .topLeading) {
@@ -222,18 +234,17 @@ struct SellView: View {
                     .font(Constants.Fonts.title2)
                     .foregroundStyle(Constants.Colors.black)
                     .scrollContentBackground(.hidden)
-                    .padding(.horizontal, Constants.Sell.descriptionHorizontalPadding - Constants.Sell.textEditorInset.width)
-                    .padding(.vertical, Constants.Sell.descriptionVerticalPadding - Constants.Sell.textEditorInset.height)
+                    .padding(.horizontal, SellLayout.descriptionHorizontalPadding - SellLayout.textEditorInset.width)
+                    .padding(.vertical, SellLayout.descriptionVerticalPadding - SellLayout.textEditorInset.height)
 
                 if viewModel.description.isEmpty {
                     placeholder("Size, measurements, any flaws, where to pick up...", font: Constants.Fonts.title2)
-                        .padding(.horizontal, Constants.Sell.descriptionHorizontalPadding)
-                        .padding(.vertical, Constants.Sell.descriptionVerticalPadding)
+                        .padding(.horizontal, SellLayout.descriptionHorizontalPadding)
+                        .padding(.vertical, SellLayout.descriptionVerticalPadding)
                 }
             }
-            .frame(height: Constants.Sell.descriptionHeight)
-            .background(Constants.Colors.wash)
-            .clipShape(RoundedRectangle(cornerRadius: Constants.Sell.descriptionCornerRadius))
+            .frame(height: SellLayout.descriptionHeight)
+            .background(Constants.Colors.wash, in: RoundedRectangle(cornerRadius: SellLayout.descriptionCornerRadius))
         }
     }
 
@@ -256,8 +267,6 @@ struct SellView: View {
         ) { viewModel.apply($0, to: field) }
     }
 
-    /// Lays out each selection sheet invisibly ahead of time. A sheet whose height changes while
-    /// it opens slides in from the corner, so each one opens at its measured height instead.
     private var selectionSheetSizer: some View {
         ZStack {
             ForEach(ViewModel.SelectionField.allCases) { field in
@@ -293,8 +302,6 @@ struct SellView: View {
             .frame(height: 1)
     }
 
-    // MARK: - Publish
-
     private var publishButton: some View {
         Button {
             Task { await viewModel.publish() }
@@ -305,14 +312,10 @@ struct SellView: View {
                         .tint(Constants.Colors.white)
                 } else {
                     Text("Publish")
-                        .font(Constants.Fonts.title1)
-                        .foregroundStyle(Constants.Colors.white)
                 }
             }
-            .frame(width: Constants.Sell.publishButtonWidth, height: Constants.Sell.publishButtonHeight)
-            .background(Constants.Colors.resellPurple)
-            .clipShape(Capsule())
-            .opacity(viewModel.canPublish || viewModel.isPublishing ? 1 : Constants.Sell.disabledOpacity)
+            .frame(width: SellLayout.publishButtonWidth, height: SellLayout.publishButtonHeight)
+            .purpleCapsule()
         }
         .buttonStyle(.plain)
         .disabled(!viewModel.canPublish)
@@ -323,3 +326,4 @@ struct SellView: View {
 #Preview {
     SellView()
 }
+

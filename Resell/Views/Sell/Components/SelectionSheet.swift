@@ -8,6 +8,22 @@
 import Flow
 import SwiftUI
 
+private enum SelectionSheetLayout {
+    static let cornerRadius: CGFloat = 20
+    static let topPadding: CGFloat = 8
+    static let bottomPadding: CGFloat = 36
+    static let sectionSpacing: CGFloat = 40
+    static let headerSpacing: CGFloat = 20
+    static let grabberSize = CGSize(width: 65.5, height: 6)
+    static let chipSpacing: CGFloat = 12
+    static let chipPadding: CGFloat = 12
+    static let chipBorderWidth: CGFloat = 1
+    static let selectedChipBorderWidth: CGFloat = 2
+    static let footerWidth: CGFloat = 296
+    static let buttonHeight: CGFloat = 40
+    static let buttonHorizontalPadding: CGFloat = 16
+}
+
 struct SelectionSheet: View {
 
     // MARK: - Properties
@@ -42,27 +58,27 @@ struct SelectionSheet: View {
     // MARK: - UI
 
     var body: some View {
-        VStack(spacing: Constants.Sell.sheetSectionSpacing) {
+        VStack(spacing: SelectionSheetLayout.sectionSpacing) {
             header
             chips
             footer
         }
         .padding(.horizontal, Constants.Spacing.horizontalPadding)
-        .padding(.top, Constants.Sell.sheetTopPadding)
-        .padding(.bottom, Constants.Sell.sheetBottomPadding)
+        .padding(.top, SelectionSheetLayout.topPadding)
+        .padding(.bottom, SelectionSheetLayout.bottomPadding)
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxHeight: .infinity, alignment: .top)
         .background(Constants.Colors.white)
         .presentationDetents([.height(height)])
         .presentationDragIndicator(.hidden)
-        .presentationCornerRadius(Constants.Sell.sheetCornerRadius)
+        .presentationCornerRadius(SelectionSheetLayout.cornerRadius)
     }
 
     private var header: some View {
-        VStack(spacing: Constants.Sell.sheetHeaderSpacing) {
+        VStack(spacing: SelectionSheetLayout.headerSpacing) {
             Capsule()
                 .fill(Constants.Colors.stroke)
-                .frame(width: Constants.Sell.grabberSize.width, height: Constants.Sell.grabberSize.height)
+                .frame(width: SelectionSheetLayout.grabberSize.width, height: SelectionSheetLayout.grabberSize.height)
 
             Text(title)
                 .font(Constants.Fonts.h2)
@@ -71,7 +87,7 @@ struct SelectionSheet: View {
     }
 
     private var chips: some View {
-        HFlow(itemSpacing: Constants.Sell.chipSpacing, rowSpacing: Constants.Sell.chipSpacing) {
+        HFlow(itemSpacing: SelectionSheetLayout.chipSpacing, rowSpacing: SelectionSheetLayout.chipSpacing) {
             ForEach(options, id: \.self) { option in
                 chip(option)
             }
@@ -80,24 +96,19 @@ struct SelectionSheet: View {
     }
 
     private func chip(_ option: String) -> some View {
-        Button {
-            draft = draft == option ? nil : option
+        let isSelected = draft == option
+
+        return Button {
+            draft = isSelected ? nil : option
         } label: {
             Text(option)
                 .font(Constants.Fonts.title4)
                 .foregroundStyle(Constants.Colors.black)
-                .padding(Constants.Sell.chipPadding)
-                .background(Constants.Colors.white)
-                .clipShape(Capsule())
-                .overlay {
-                    if draft == option {
-                        Capsule()
-                            .strokeBorder(Constants.Colors.resellGradient, lineWidth: Constants.Sell.selectedChipBorderWidth)
-                    } else {
-                        Capsule()
-                            .strokeBorder(Constants.Colors.stroke, lineWidth: Constants.Sell.chipBorderWidth)
-                    }
-                }
+                .padding(SelectionSheetLayout.chipPadding)
+                .outlinedCapsule(
+                    isSelected ? AnyShapeStyle(Constants.Colors.resellGradient) : AnyShapeStyle(Constants.Colors.stroke),
+                    lineWidth: isSelected ? SelectionSheetLayout.selectedChipBorderWidth : SelectionSheetLayout.chipBorderWidth
+                )
         }
         .buttonStyle(.plain)
     }
@@ -110,7 +121,7 @@ struct SelectionSheet: View {
                 Text("Reset")
                     .font(Constants.Fonts.title1)
                     .foregroundStyle(Constants.Colors.mediumGray)
-                    .padding(.horizontal, Constants.Sell.sheetButtonHorizontalPadding)
+                    .padding(.horizontal, SelectionSheetLayout.buttonHorizontalPadding)
             }
             .buttonStyle(.plain)
 
@@ -120,24 +131,25 @@ struct SelectionSheet: View {
                 onApply(draft)
             } label: {
                 Text("Apply")
-                    .font(Constants.Fonts.title1)
-                    .foregroundStyle(Constants.Colors.white)
-                    .padding(.horizontal, Constants.Sell.sheetButtonHorizontalPadding)
-                    .frame(height: Constants.Sell.sheetButtonHeight)
-                    .background(Constants.Colors.resellPurple)
-                    .clipShape(Capsule())
-                    .opacity(hasChanges ? 1 : Constants.Sell.disabledOpacity)
+                    .padding(.horizontal, SelectionSheetLayout.buttonHorizontalPadding)
+                    .frame(height: SelectionSheetLayout.buttonHeight)
+                    .purpleCapsule()
             }
             .buttonStyle(.plain)
             .disabled(!hasChanges)
         }
-        .frame(width: Constants.Sell.sheetFooterWidth)
+        .frame(width: SelectionSheetLayout.footerWidth)
     }
 }
 
 #Preview {
     Color.clear
         .sheet(isPresented: .constant(true)) {
-            SelectionSheet(title: "Category", options: Constants.Sell.categories, selection: "Other", height: 310)
+            SelectionSheet(
+                title: "Category",
+                options: ["Clothing", "Books", "School", "Electronics", "Sports & Outdoors", "Other"],
+                selection: "Other",
+                height: 310
+            )
         }
 }

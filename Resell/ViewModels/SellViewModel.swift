@@ -21,10 +21,9 @@ extension SellView {
             var id: Self { self }
         }
 
-        // MARK: - Properties
-
         @Published var selectedImages: [UIImage] = []
         @Published var selectedItems: [PhotosPickerItem] = []
+        @Published var capturedImages: [UIImage] = []
 
         @Published var isShowingImageSourceDialog = false
         @Published var isShowingPhotosPicker = false
@@ -45,17 +44,20 @@ extension SellView {
         @Published var activeSelectionField: SelectionField?
         @Published private(set) var isPublishing = false
         @Published var isShowingPublishError = false
-        @Published private(set) var didPublish = false
 
+        private static let maxImages = 8
+        private static let uploadImageMaxDimension: CGFloat = 512
+        private static let categories = ["Clothing", "Books", "School", "Electronics", "Sports & Outdoors", "Other"]
+        private static let conditions = ["Gently Used", "Used", "Never Used"]
         private static let backendCategories = ["Sports & Outdoors": "Active"]
         private static let backendConditions = ["Used": "Worn"]
 
         var remainingImageSlots: Int {
-            max(0, Constants.Sell.maxImages - selectedImages.count)
+            max(0, Self.maxImages - selectedImages.count)
         }
 
         var photoCountText: String {
-            "\(selectedImages.count)/\(Constants.Sell.maxImages)"
+            "\(selectedImages.count)/\(Self.maxImages)"
         }
 
         var isCameraAvailable: Bool {
@@ -79,35 +81,49 @@ extension SellView {
                 && category != nil
                 && condition != nil
                 && !description.cleaned().isEmpty
-                && !isPublishing
         }
-
-        // MARK: - Functions
 
         func addPhotoTapped() {
             isShowingImageSourceDialog = true
         }
 
-        func loadImages() async {
+        /// Decodes the photos picked from the library straight to upload size, so the strip never
+        /// holds full-resolution bitmaps.
+        func loadImages(displayScale: CGFloat) async {
             guard !selectedItems.isEmpty, remainingImageSlots > 0 else {
                 selectedItems = []
                 return
             }
 
+            let maxDimension = Self.uploadImageMaxDimension
             var loaded: [UIImage] = []
             for item in selectedItems.prefix(remainingImageSlots) {
                 do {
-                    if let data = try await item.loadTransferable(type: Data.self),
-                       let image = UIImage(data: data) {
-                        loaded.append(image)
-                    }
+                    guard let data = try await item.loadTransferable(type: Data.self) else { continue }
+                    let image = await Task.detached {
+                        UIImage.downsampled(from: data, maxDimension: maxDimension, scale: displayScale)
+                    }.value
+                    if let image { loaded.append(image) }
                 } catch {
                     NetworkManager.shared.logger.error("Error in SellView.ViewModel.loadImages: \(error)")
                 }
             }
 
-            selectedImages.append(contentsOf: loaded)
+            selectedImages.append(contentsOf: loaded.prefix(remainingImageSlots))
             selectedItems = []
+        }
+
+        /// Shrinks camera captures to upload size before they join the strip.
+        func addCapturedImages() async {
+            guard !capturedImages.isEmpty else { return }
+            let captured = capturedImages
+            capturedImages = []
+
+            let maxDimension = Self.uploadImageMaxDimension
+            let resized = await Task.detached {
+                captured.map { $0.resizedToMaxDimension(maxDimension) }
+            }.value
+            selectedImages.append(contentsOf: resized.prefix(remainingImageSlots))
         }
 
         func removeImage(at index: Int) {
@@ -118,9 +134,9 @@ extension SellView {
         func options(for field: SelectionField) -> [String] {
             switch field {
             case .category:
-                Constants.Sell.categories
+                Self.categories
             case .condition:
-                Constants.Sell.conditions
+                Self.conditions
             case .event:
                 Constants.eventSpaces.map(\.title)
             }
@@ -150,7 +166,7 @@ extension SellView {
         }
 
         func publish() async {
-            guard canPublish else { return }
+            guard canPublish, !isPublishing else { return }
             guard let user = GoogleAuthManager.shared.user else {
                 GoogleAuthManager.shared.logger.error("Error in SellView.ViewModel.publish: User not available.")
                 isShowingPublishError = true
@@ -164,19 +180,16 @@ extension SellView {
                 _ = try await NetworkManager.shared.createPost(postBody: await postBody(userId: user.firebaseUid))
                 NotificationCenter.default.post(name: Constants.Notifications.NewListingCreated, object: nil)
                 resetForm()
-                didPublish = true
             } catch {
                 NetworkManager.shared.logger.error("Error in SellView.ViewModel.publish: \(error)")
                 isShowingPublishError = true
             }
         }
 
-        // MARK: - Private Methods
-
         private func postBody(userId: String) async -> PostBody {
             let images = selectedImages
             let imagesBase64 = await Task.detached {
-                images.map { $0.resizedToMaxDimension(Constants.Sell.uploadImageMaxDimension).toBase64() ?? "" }
+                images.map { $0.toBase64() ?? "" }
             }.value
 
             return PostBody(
@@ -200,7 +213,6 @@ extension SellView {
             condition = nil
             event = nil
         }
-
 
         private static func sanitizedPrice(_ text: String) -> String {
             let parts = text.filter { $0.isNumber || $0 == "." }.split(separator: ".", omittingEmptySubsequences: false)

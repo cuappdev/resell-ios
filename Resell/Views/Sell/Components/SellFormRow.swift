@@ -7,6 +7,12 @@
 
 import SwiftUI
 
+private enum SellFormRowLayout {
+    static let valueSpacing: CGFloat = 12
+    static let optionalTagSpacing: CGFloat = 8
+    static let optionalDotSize: CGFloat = 5
+}
+
 struct SellFormRow: View {
 
     // MARK: - Properties
@@ -34,7 +40,7 @@ struct SellFormRow: View {
     }
 
     private var labelView: some View {
-        HStack(spacing: Constants.Sell.optionalTagSpacing) {
+        HStack(spacing: SellFormRowLayout.optionalTagSpacing) {
             Text(label)
                 .font(Constants.Fonts.h3)
                 .foregroundStyle(Constants.Colors.black)
@@ -42,7 +48,7 @@ struct SellFormRow: View {
             if isOptional {
                 Circle()
                     .fill(Constants.Colors.mutedGray)
-                    .frame(width: Constants.Sell.optionalDotSize, height: Constants.Sell.optionalDotSize)
+                    .frame(width: SellFormRowLayout.optionalDotSize, height: SellFormRowLayout.optionalDotSize)
 
                 Text("optional")
                     .font(Constants.Fonts.body1)
@@ -52,7 +58,7 @@ struct SellFormRow: View {
     }
 
     private var valueView: some View {
-        HStack(spacing: Constants.Sell.rowValueSpacing) {
+        HStack(spacing: SellFormRowLayout.valueSpacing) {
             Text(value ?? placeholder)
                 .font(Constants.Fonts.title1)
                 .foregroundStyle(value == nil ? Constants.Colors.mutedGray : Constants.Colors.black)
@@ -64,7 +70,7 @@ struct SellFormRow: View {
 }
 
 #Preview {
-    VStack(spacing: Constants.Sell.formSpacing) {
+    VStack(spacing: 20) {
         SellFormRow(label: "Category", value: nil, placeholder: "Choose")
         SellFormRow(label: "Condition", value: "Never Used", placeholder: "Choose")
         SellFormRow(label: "Event", value: nil, placeholder: "None", isOptional: true)

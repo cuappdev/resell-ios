@@ -7,6 +7,22 @@
 
 import SwiftUI
 
+private enum PhotoSlotLayout {
+    static let width: CGFloat = 231
+    static let height: CGFloat = 294
+    static let cornerRadius: CGFloat = 15
+    static let borderWidth: CGFloat = 2
+    static let dash: [CGFloat] = [6, 4]
+    static let badgeInset: CGFloat = 16
+    static let shadowY: CGFloat = 2
+    static let coverPillHeight: CGFloat = 30
+    static let addButtonSize = CGSize(width: 123, height: 30)
+    static let addPhotoIconSize = CGSize(width: 47.25, height: 41.25)
+    static let removeIconSize: CGFloat = 23
+    static let removeButtonSize: CGFloat = 32
+    static let removeButtonInset: CGFloat = 12
+}
+
 struct PhotoSlotView: View {
 
     enum Content: Equatable {
@@ -15,6 +31,9 @@ struct PhotoSlotView: View {
         case empty
     }
 
+    /// Half of Figma's blur of 10, since SwiftUI's radius spreads twice as far.
+    static let shadowRadius: CGFloat = 5
+
     // MARK: - Properties
 
     let index: Int
@@ -22,18 +41,14 @@ struct PhotoSlotView: View {
     var onAdd: () -> Void = {}
     var onRemove: () -> Void = {}
 
-    private var isCover: Bool {
-        index == 0
-    }
-
     // MARK: - UI
 
     var body: some View {
         card
-            .frame(width: Constants.Sell.photoSlotWidth, height: Constants.Sell.photoSlotHeight)
+            .frame(width: PhotoSlotLayout.width, height: PhotoSlotLayout.height)
             .overlay(alignment: .topLeading) {
                 badge
-                    .padding(Constants.Sell.photoSlotBadgeInset)
+                    .padding(PhotoSlotLayout.badgeInset)
             }
     }
 
@@ -41,32 +56,28 @@ struct PhotoSlotView: View {
     private var card: some View {
         switch content {
         case .photo(let image):
-            photoSlot(image)
+            photoCard(image)
         case .add:
-            addSlot
+            addCard
         case .empty:
-            emptySlot
+            RoundedRectangle(cornerRadius: PhotoSlotLayout.cornerRadius)
+                .fill(Constants.Colors.white)
+                .overlay { dashedBorder(Constants.Colors.stroke) }
         }
     }
 
-    // MARK: - Photo
-
-    private func photoSlot(_ image: UIImage) -> some View {
+    private func photoCard(_ image: UIImage) -> some View {
         Color.clear
             .overlay {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
             }
-            .clipShape(slotShape)
-            .shadow(
-                color: Constants.Colors.shadow,
-                radius: Constants.Sell.photoShadowRadius,
-                y: Constants.Sell.photoShadowY
-            )
+            .clipShape(RoundedRectangle(cornerRadius: PhotoSlotLayout.cornerRadius))
+            .shadow(color: Constants.Colors.shadow, radius: Self.shadowRadius, y: PhotoSlotLayout.shadowY)
             .overlay(alignment: .topTrailing) {
                 removeButton
-                    .padding(Constants.Sell.removeButtonInset)
+                    .padding(PhotoSlotLayout.removeButtonInset)
             }
     }
 
@@ -74,105 +85,64 @@ struct PhotoSlotView: View {
         Button(action: onRemove) {
             Image("removePhoto")
                 .resizable()
-                .frame(width: Constants.Sell.removeIconSize, height: Constants.Sell.removeIconSize)
+                .frame(width: PhotoSlotLayout.removeIconSize, height: PhotoSlotLayout.removeIconSize)
                 .rotationEffect(.degrees(45))
-                .frame(width: Constants.Sell.removeButtonSize, height: Constants.Sell.removeButtonSize)
+                .frame(width: PhotoSlotLayout.removeButtonSize, height: PhotoSlotLayout.removeButtonSize)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Remove photo")
     }
 
-    // MARK: - Add
-
-    private var addSlot: some View {
+    private var addCard: some View {
         Button(action: onAdd) {
-            slotShape
+            RoundedRectangle(cornerRadius: PhotoSlotLayout.cornerRadius)
                 .fill(Constants.Colors.lightPurpleWash)
                 .overlay {
                     VStack(spacing: 16) {
                         Image("addPhoto")
                             .resizable()
-                            .frame(width: Constants.Sell.addPhotoIconSize.width, height: Constants.Sell.addPhotoIconSize.height)
+                            .frame(width: PhotoSlotLayout.addPhotoIconSize.width, height: PhotoSlotLayout.addPhotoIconSize.height)
 
-                        addLabel
+                        HStack(spacing: 9) {
+                            Image(systemName: "plus")
+                            Text("Add")
+                        }
+                        .frame(width: PhotoSlotLayout.addButtonSize.width, height: PhotoSlotLayout.addButtonSize.height)
+                        .purpleCapsule(font: Constants.Fonts.title3)
                     }
                 }
-                .overlay {
-                    dashedBorder(Constants.Colors.resellPurple)
-                }
+                .overlay { dashedBorder(Constants.Colors.resellPurple) }
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Add photo")
     }
-
-    private var addLabel: some View {
-        HStack(spacing: 9) {
-            Image(systemName: "plus")
-            Text("Add")
-        }
-        .font(Constants.Fonts.title3)
-        .foregroundStyle(Constants.Colors.white)
-        .frame(width: Constants.Sell.addButtonWidth, height: Constants.Sell.addButtonHeight)
-        .background(Constants.Colors.resellPurple)
-        .clipShape(Capsule())
-    }
-
-    // MARK: - Empty
-
-    private var emptySlot: some View {
-        slotShape
-            .fill(Constants.Colors.white)
-            .overlay {
-                dashedBorder(Constants.Colors.stroke)
-            }
-    }
-
-    // MARK: - Shared
 
     @ViewBuilder
     private var badge: some View {
-        if isCover {
-            coverPill
+        if index == 0 {
+            Text("Cover")
+                .font(Constants.Fonts.title3)
+                .foregroundStyle(Constants.Colors.resellPurple)
+                .padding(.horizontal, 10)
+                .frame(height: PhotoSlotLayout.coverPillHeight)
+                .outlinedCapsule(Constants.Colors.resellPurple, lineWidth: PhotoSlotLayout.borderWidth)
         } else {
-            slotNumber
+            Text("\(index + 1)")
+                .font(Constants.Fonts.title1)
+                .foregroundStyle(Constants.Colors.inactiveGray)
         }
     }
 
-    private var coverPill: some View {
-        Text("Cover")
-            .font(Constants.Fonts.title3)
-            .foregroundStyle(Constants.Colors.resellPurple)
-            .padding(.horizontal, 10)
-            .frame(height: Constants.Sell.coverPillHeight)
-            .background(Constants.Colors.white)
-            .clipShape(Capsule())
-            .overlay {
-                Capsule()
-                    .strokeBorder(Constants.Colors.resellPurple, lineWidth: Constants.Sell.photoSlotBorderWidth)
-            }
-    }
-
-    private var slotNumber: some View {
-        Text("\(index + 1)")
-            .font(Constants.Fonts.title1)
-            .foregroundStyle(Constants.Colors.inactiveGray)
-    }
-
-    private var slotShape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: Constants.Sell.photoSlotCornerRadius)
-    }
-
     private func dashedBorder(_ color: Color) -> some View {
-        slotShape
-            .strokeBorder(
-                color,
-                style: StrokeStyle(lineWidth: Constants.Sell.photoSlotBorderWidth, dash: Constants.Sell.photoSlotDash)
-            )
+        RoundedRectangle(cornerRadius: PhotoSlotLayout.cornerRadius)
+            .strokeBorder(color, style: StrokeStyle(lineWidth: PhotoSlotLayout.borderWidth, dash: PhotoSlotLayout.dash))
     }
 }
 
 #Preview {
     ScrollView(.horizontal) {
-        HStack(spacing: Constants.Sell.photoSlotSpacing) {
+        HStack {
             PhotoSlotView(index: 0, content: .photo(UIImage(named: "justin") ?? UIImage()))
             PhotoSlotView(index: 1, content: .add)
             PhotoSlotView(index: 2, content: .empty)

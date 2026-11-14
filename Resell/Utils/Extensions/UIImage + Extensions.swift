@@ -5,6 +5,7 @@
 //  Created by Richie Sun on 9/12/24.
 //
 
+import ImageIO
 import SwiftUI
 import UIKit
 
@@ -50,6 +51,23 @@ extension UIImage {
         }
 
         return scaledImage
+    }
+
+    /// Decodes `data` straight into an upright image whose longest edge is at most `maxDimension`
+    /// points at `scale`, without first decoding the full-resolution bitmap like `UIImage(data:)`.
+    static func downsampled(from data: Data, maxDimension: CGFloat, scale: CGFloat) -> UIImage? {
+        let sourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary
+        guard let source = CGImageSourceCreateWithData(data as CFData, sourceOptions) else { return nil }
+
+        let thumbnailOptions = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCacheImmediately: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxDimension * scale
+        ] as CFDictionary
+        guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, thumbnailOptions) else { return nil }
+
+        return UIImage(cgImage: image, scale: scale, orientation: .up)
     }
 
     func toBase64(compressionQuality: CGFloat = 0.3) -> String? {
