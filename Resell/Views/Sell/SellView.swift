@@ -5,95 +5,80 @@
 //  Created by Andrew Gao on 9/3/26.
 //
 
-import Flow
 import PhotosUI
 import SwiftUI
 
-/// Sell tab: every field needed to post a listing, on one scrolling screen.
+private enum SellLayout {
+    static let photoSlotSpacing: CGFloat = 15
+    static let formSpacing: CGFloat = 20
+    static let fieldLabelSpacing: CGFloat = 12
+    static let fieldHeight: CGFloat = 43
+    static let fieldHorizontalPadding: CGFloat = 17
+    static let pricePillWidth: CGFloat = 128
+    static let pricePillVerticalPadding: CGFloat = 10
+    static let descriptionLabelSpacing: CGFloat = 8
+    static let descriptionHeight: CGFloat = 128
+    static let descriptionCornerRadius: CGFloat = 10
+    static let descriptionHorizontalPadding: CGFloat = 13
+    static let descriptionVerticalPadding: CGFloat = 16
+    /// TextEditor's built-in text inset, subtracted so typed text lines up with the placeholder.
+    static let textEditorInset = CGSize(width: 5, height: 8)
+    static let publishButtonWidth: CGFloat = 200
+    static let publishButtonHeight: CGFloat = 49
+}
+
 struct SellView: View {
 
     // MARK: - Properties
 
-    @EnvironmentObject private var viewModel: NewListingViewModel
+    @StateObject private var viewModel = ViewModel()
 
-    @FocusState private var focusedField: Field?
-    @State private var currentImageIndex = 0
+    @State private var selectionSheetHeights: [ViewModel.SelectionField: CGFloat] = [:]
 
-    private enum Field {
-        case title
-        case description
-    }
-
-    private let categoryOptions: [String] = Constants.productCategories.map(\.title)
-
-    private let conditionOptions: [(label: String, value: String)] = [
-        ("Brand New", "Never Used"),
-        ("Gently Used", "Gently Used"),
-        ("Used", "Worn"),
-    ]
+    @Environment(\.displayScale) private var displayScale
 
     // MARK: - UI
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 24) {
                 header
-                imagePicker
-                primaryFields
-                categorySection
-                conditionSection
-                eventSection
-                descriptionField
+
+                Group {
+                    photosSection
+                    formSection
+                }
+                .allowsHitTesting(!viewModel.isPublishing)
+
                 publishButton
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
-            .padding(.top, 12)
-            .padding(.bottom, 24)
+            .padding(.vertical, 12)
         }
         .scrollDismissesKeyboard(.interactively)
         .background(Constants.Colors.white)
-        .navigationBarBackButtonHidden()
         .toolbar(.hidden, for: .navigationBar)
-        .sheet(isPresented: $viewModel.didShowPriceInput) {
-            PriceInputView(
-                price: $viewModel.priceText,
-                isPresented: $viewModel.didShowPriceInput,
-                titleText: "What price do you want to sell your product?"
-            )
-            .presentationDetents([.large])
-            .presentationDragIndicator(.visible)
-            .presentationCornerRadius(25)
-        }
         .photosPicker(
-            isPresented: $viewModel.didShowPhotosPicker,
+            isPresented: $viewModel.isShowingPhotosPicker,
             selection: $viewModel.selectedItems,
             maxSelectionCount: viewModel.remainingImageSlots,
             matching: .images,
             photoLibrary: .shared()
         )
-        .sheet(isPresented: $viewModel.didShowCamera) {
-            ImagePicker(sourceType: .camera, selectedImages: $viewModel.selectedImages)
+        .sheet(isPresented: $viewModel.isShowingCamera) {
+            ImagePicker(sourceType: .camera, selectedImages: $viewModel.capturedImages)
         }
-        .confirmationDialog(
-            "Select Image Source",
-            isPresented: $viewModel.didShowImageSourceDialog,
-            titleVisibility: .visible
-        ) {
-            Button("Photo Library") {
-                viewModel.didShowPhotosPicker = true
-            }
-            Button("Camera") {
-                viewModel.didShowCamera = true
-            }
-            Button("Cancel", role: .cancel) {}
+        .onChange(of: viewModel.selectedItems) { _ in Task { await viewModel.loadImages(displayScale: displayScale) } }
+        .onChange(of: viewModel.capturedImages) { _ in Task { await viewModel.addCapturedImages() } }
+        .onChange(of: viewModel.price) { _ in viewModel.normalizePrice() }
+        .background { selectionSheetSizer }
+        .sheet(item: $viewModel.activeSelectionField) { field in
+            selectionSheet(for: field)
         }
-        .onChange(of: viewModel.selectedItems) { newItems in
-            Task {
-                await viewModel.updateListingImages(newItems: newItems)
-            }
-        }
-        .onChange(of: viewModel.selectedImages.count) { imageCount in
-            currentImageIndex = min(currentImageIndex, max(0, imageCount - 1))
+        .alert("Couldn't post your listing", isPresented: $viewModel.isShowingPublishError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Check your connection and try again.")
         }
     }
 
@@ -104,389 +89,248 @@ struct SellView: View {
                 .foregroundStyle(Constants.Colors.black)
 
             Text("Give the people what they want")
-                .font(Constants.Fonts.body1)
+                .font(Constants.Fonts.h3)
+                .foregroundStyle(Constants.Colors.mutedGray)
+        }
+    }
+
+    private var photosSection: some View {
+        VStack(spacing: 12) {
+            photosTitleRow
+            photoStrip
+
+            Text("Start with your best shot")
+                .font(Constants.Fonts.title3)
+                .foregroundStyle(Constants.Colors.mutedGray)
+        }
+    }
+
+    private var photosTitleRow: some View {
+        HStack {
+            fieldLabel("Photos")
+
+            Spacer()
+
+            Text(viewModel.photoCountText)
+                .font(Constants.Fonts.title3)
+                .foregroundStyle(Constants.Colors.mutedGray)
+        }
+    }
+
+    private var photoStrip: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: SellLayout.photoSlotSpacing) {
+                ForEach(viewModel.photoSlots.indices, id: \.self) { index in
+                    photoSlot(at: index)
+                }
+            }
+            .padding(.horizontal, Constants.Spacing.horizontalPadding)
+            .padding(.vertical, PhotoSlotView.shadowRadius * 2)
+        }
+        .scrollDisabled(!viewModel.isPhotoStripScrollable)
+        .padding(.horizontal, -Constants.Spacing.horizontalPadding)
+        .padding(.vertical, -PhotoSlotView.shadowRadius * 2)
+    }
+
+    /// The image source dialog hangs off the Add card so iOS anchors it there.
+    @ViewBuilder
+    private func photoSlot(at index: Int) -> some View {
+        let content = viewModel.photoSlots[index]
+        let slot = PhotoSlotView(
+            index: index,
+            content: content,
+            onAdd: viewModel.addPhotoTapped,
+            onRemove: { viewModel.removeImage(at: index) }
+        )
+
+        if content == .add {
+            slot.confirmationDialog(
+                "Select Image Source",
+                isPresented: $viewModel.isShowingImageSourceDialog,
+                titleVisibility: .visible
+            ) {
+                imageSourceButtons
+            }
+        } else {
+            slot
+        }
+    }
+
+    @ViewBuilder
+    private var imageSourceButtons: some View {
+        Button("Photo Library") { viewModel.isShowingPhotosPicker = true }
+
+        if viewModel.isCameraAvailable {
+            Button("Camera") { viewModel.isShowingCamera = true }
+        }
+
+        Button("Cancel", role: .cancel) {}
+    }
+
+    private var formSection: some View {
+        VStack(alignment: .leading, spacing: SellLayout.formSpacing) {
+            titleField
+            divider
+            priceRow
+            divider
+            selectionRow(.category, placeholder: "Choose")
+            divider
+            selectionRow(.condition, placeholder: "Choose")
+            divider
+            selectionRow(.event, placeholder: "None", isOptional: true)
+            divider
+            descriptionField
+        }
+    }
+
+    private var titleField: some View {
+        VStack(alignment: .leading, spacing: SellLayout.fieldLabelSpacing) {
+            fieldLabel("Title")
+
+            TextField("", text: $viewModel.title)
+                .font(Constants.Fonts.title2)
                 .foregroundStyle(Constants.Colors.black)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var imagePicker: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Constants.Colors.wash.opacity(0.6))
-
-            if viewModel.selectedImages.isEmpty {
-                emptyImagePicker
-            } else {
-                selectedImageCarousel
-            }
-        }
-        .aspectRatio(385.0 / 439.0, contentMode: .fit)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay {
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Constants.Colors.secondaryGray, lineWidth: 0.75)
-        }
-    }
-
-    private var emptyImagePicker: some View {
-        Button {
-            focusedField = nil
-            viewModel.didShowImageSourceDialog = true
-        } label: {
-            VStack(spacing: 16) {
-                Image(systemName: "photo.badge.plus")
-                    .font(.system(size: 42, weight: .regular))
-                    .foregroundStyle(Constants.Colors.black)
-
-                Text("Add images to show off your listing")
-                    .font(Constants.Fonts.subtitle1)
-                    .foregroundStyle(Constants.Colors.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Constants.Colors.tertiaryGray)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Constants.Colors.black, lineWidth: 1)
-                    }
-            }
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var selectedImageCarousel: some View {
-        ZStack {
-            GeometryReader { proxy in
-                TabView(selection: $currentImageIndex) {
-                    ForEach(viewModel.selectedImages.indices, id: \.self) { index in
-                        Image(uiImage: viewModel.selectedImages[index])
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: proxy.size.width, height: proxy.size.height)
-                            .clipped()
-                            .tag(index)
+                .overlay(alignment: .leading) {
+                    if viewModel.title.isEmpty {
+                        placeholder("What are you selling?", font: Constants.Fonts.title2)
                     }
                 }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-            }
-            .clipped()
+                .padding(.horizontal, SellLayout.fieldHorizontalPadding)
+                .frame(height: SellLayout.fieldHeight)
+                .background(Constants.Colors.wash, in: Capsule())
+        }
+    }
+
+    private var priceRow: some View {
+        HStack {
+            fieldLabel("Price")
+
+            Spacer()
 
             HStack {
-                carouselButton(systemName: "chevron.left", direction: -1)
+                Text("$")
+                    .font(Constants.Fonts.title2)
+                    .foregroundStyle(Constants.Colors.black)
 
-                Spacer()
-
-                carouselButton(systemName: "chevron.right", direction: 1)
-            }
-            .padding(.horizontal, 8)
-
-            VStack {
-                HStack {
-                    removeImageButton
-
-                    Spacer()
-
-                    addImageButton
-                }
-
-                Spacer()
-
-                ImageCountBadge(
-                    currentIndex: currentImageIndex,
-                    count: viewModel.selectedImages.count,
-                    font: Constants.Fonts.subtitle1
-                )
-            }
-            .padding(12)
-        }
-    }
-
-    private var removeImageButton: some View {
-        Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                viewModel.removeImage(at: currentImageIndex)
-            }
-        } label: {
-            Image(systemName: "trash")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(Constants.Colors.errorRed)
-                .frame(width: 36, height: 36)
-                .background(.ultraThinMaterial, in: Circle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var addImageButton: some View {
-        Button {
-            viewModel.didShowImageSourceDialog = true
-        } label: {
-            Image(systemName: "plus")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Constants.Colors.black)
-                .frame(width: 36, height: 36)
-                .background(.ultraThinMaterial, in: Circle())
-        }
-        .buttonStyle(.plain)
-        .disabled(viewModel.remainingImageSlots == 0)
-    }
-
-    private func carouselButton(systemName: String, direction: Int) -> some View {
-        Button {
-            let nextIndex = currentImageIndex + direction
-            guard viewModel.selectedImages.indices.contains(nextIndex) else { return }
-            withAnimation(.easeInOut(duration: 0.2)) {
-                currentImageIndex = nextIndex
-            }
-        } label: {
-            Image(systemName: systemName)
-                .font(.system(size: 28, weight: .medium))
-                .foregroundStyle(Constants.Colors.white)
-                .frame(width: 44, height: 60)
-                .contentShape(Rectangle())
-                .shadow(color: Constants.Colors.black.opacity(0.35), radius: 2)
-        }
-        .buttonStyle(.plain)
-        .disabled(!viewModel.selectedImages.indices.contains(currentImageIndex + direction))
-        .opacity(viewModel.selectedImages.indices.contains(currentImageIndex + direction) ? 1 : 0)
-    }
-
-    private var primaryFields: some View {
-        HStack(alignment: .top, spacing: 12) {
-            listingField(
-                label: "Item Name / Title",
-                placeholder: "Something belongs here...",
-                text: $viewModel.titleText,
-                field: .title
-            )
-
-            priceField
-        }
-    }
-
-    private var priceField: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Price")
-                .font(Constants.Fonts.body2)
-                .foregroundStyle(Constants.Colors.black)
-
-            Button {
-                focusedField = nil
-                viewModel.didShowPriceInput = true
-            } label: {
-                HStack(spacing: 6) {
-                    Text("$")
-                        .font(Constants.Fonts.body2)
-                        .foregroundStyle(Constants.Colors.black)
-
-                    Text(viewModel.priceText.isEmpty ? "1" : viewModel.priceText)
-                        .font(Constants.Fonts.subtitle1)
-                        .foregroundStyle(
-                            viewModel.priceText.isEmpty
-                                ? Constants.Colors.inactiveGray
-                                : Constants.Colors.black
-                        )
-
-                    Spacer()
-                }
-                .padding(.horizontal, 10)
-                .frame(width: 102, height: 36)
-                .background(Constants.Colors.wash)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Constants.Colors.inactiveGray, lineWidth: 1)
-                }
-            }
-            .buttonStyle(.plain)
-        }
-    }
-
-    private func listingField(
-        label: String,
-        placeholder: String,
-        text: Binding<String>,
-        field: Field
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(label)
-                .font(Constants.Fonts.body2)
-                .foregroundStyle(Constants.Colors.black)
-
-            TextField(placeholder, text: text)
-                .font(Constants.Fonts.subtitle1)
-                .foregroundStyle(Constants.Colors.black)
-                .focused($focusedField, equals: field)
-                .padding(.horizontal, 10)
-                .frame(height: 36)
-                .background(Constants.Colors.wash)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Constants.Colors.inactiveGray, lineWidth: 1)
-                }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var categorySection: some View {
-        formSection(title: "Category") {
-            HFlow {
-                ForEach(categoryOptions, id: \.self) { category in
-                    selectionChip(
-                        title: category,
-                        isSelected: viewModel.selectedFilter == category
-                    ) {
-                        viewModel.selectedFilter = category
+                TextField("", text: $viewModel.price)
+                    .font(Constants.Fonts.title1)
+                    .foregroundStyle(Constants.Colors.black)
+                    .multilineTextAlignment(.trailing)
+                    .keyboardType(.decimalPad)
+                    .overlay(alignment: .trailing) {
+                        if viewModel.price.isEmpty {
+                            placeholder("0.00", font: Constants.Fonts.title1)
+                        }
                     }
-                }
             }
+            .padding(.horizontal, SellLayout.fieldHorizontalPadding)
+            .padding(.vertical, SellLayout.pricePillVerticalPadding)
+            .frame(width: SellLayout.pricePillWidth)
+            .background(Constants.Colors.wash, in: Capsule())
         }
-    }
-
-    private var conditionSection: some View {
-        formSection(title: "Condition") {
-            HFlow {
-                ForEach(conditionOptions.indices, id: \.self) { index in
-                    let condition = conditionOptions[index]
-                    selectionChip(
-                        title: condition.label,
-                        isSelected: viewModel.selectedCondition == condition.value
-                    ) {
-                        viewModel.selectedCondition = condition.value
-                    }
-                }
-            }
-        }
-    }
-
-    private var eventSection: some View {
-        formSection(title: "Event (optional)") {
-            HFlow {
-                ForEach(Constants.eventSpaces) { event in
-                    selectionChip(
-                        title: event.title,
-                        isSelected: viewModel.selectedEvent == event
-                    ) {
-                        viewModel.toggleEvent(event)
-                    }
-                }
-            }
-        }
-    }
-
-    private func formSection<Content: View>(
-        title: String,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(Constants.Fonts.subtitle1)
-                .foregroundStyle(Constants.Colors.black)
-
-            Divider()
-                .overlay(Constants.Colors.secondaryGray)
-
-            content()
-        }
-    }
-
-    private func selectionChip(
-        title: String,
-        isSelected: Bool,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(Constants.Fonts.subtitle1)
-                .foregroundStyle(
-                    isSelected
-                        ? Constants.Colors.resellPurple
-                        : Constants.Colors.inactiveGray
-                )
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(
-                    isSelected
-                        ? Constants.Colors.resellPurple.opacity(0.15)
-                        : Constants.Colors.white
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(
-                            isSelected
-                                ? Constants.Colors.resellPurple
-                                : Constants.Colors.secondaryGray,
-                            lineWidth: 1
-                        )
-                }
-        }
-        .buttonStyle(.plain)
+        .frame(height: SellLayout.fieldHeight)
     }
 
     private var descriptionField: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Description")
-                .font(Constants.Fonts.subtitle1)
-                .foregroundStyle(Constants.Colors.black)
+        VStack(alignment: .leading, spacing: SellLayout.descriptionLabelSpacing) {
+            fieldLabel("Description")
 
             ZStack(alignment: .topLeading) {
-                if viewModel.descriptionText.isEmpty {
-                    Text("Details that someone buying this should know...")
-                        .font(Constants.Fonts.subtitle1)
-                        .foregroundStyle(Constants.Colors.inactiveGray)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 12)
-                }
-
-                TextEditor(text: $viewModel.descriptionText)
-                    .font(Constants.Fonts.subtitle1)
+                TextEditor(text: $viewModel.description)
+                    .font(Constants.Fonts.title2)
                     .foregroundStyle(Constants.Colors.black)
-                    .focused($focusedField, equals: .description)
                     .scrollContentBackground(.hidden)
-                    .padding(4)
-                    .background(.clear)
+                    .padding(.horizontal, SellLayout.descriptionHorizontalPadding - SellLayout.textEditorInset.width)
+                    .padding(.vertical, SellLayout.descriptionVerticalPadding - SellLayout.textEditorInset.height)
+
+                if viewModel.description.isEmpty {
+                    placeholder("Size, measurements, any flaws, where to pick up...", font: Constants.Fonts.title2)
+                        .padding(.horizontal, SellLayout.descriptionHorizontalPadding)
+                        .padding(.vertical, SellLayout.descriptionVerticalPadding)
+                }
             }
-            .frame(minHeight: 80)
-            .background(Constants.Colors.wash)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay {
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Constants.Colors.inactiveGray, lineWidth: 1)
+            .frame(height: SellLayout.descriptionHeight)
+            .background(Constants.Colors.wash, in: RoundedRectangle(cornerRadius: SellLayout.descriptionCornerRadius))
+        }
+    }
+
+    private func selectionRow(_ field: ViewModel.SelectionField, placeholder: String, isOptional: Bool = false) -> some View {
+        SellFormRow(
+            label: field.rawValue,
+            value: viewModel.selection(for: field),
+            placeholder: placeholder,
+            isOptional: isOptional,
+            action: { viewModel.activeSelectionField = field }
+        )
+    }
+
+    private func selectionSheet(for field: ViewModel.SelectionField) -> SelectionSheet {
+        SelectionSheet(
+            title: field.rawValue,
+            options: viewModel.options(for: field),
+            selection: viewModel.selection(for: field),
+            height: selectionSheetHeights[field] ?? 0
+        ) { viewModel.apply($0, to: field) }
+    }
+
+    private var selectionSheetSizer: some View {
+        ZStack {
+            ForEach(ViewModel.SelectionField.allCases) { field in
+                selectionSheet(for: field)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .background {
+                        GeometryReader { proxy in
+                            Color.clear
+                                .onAppear { selectionSheetHeights[field] = proxy.size.height }
+                                .onChange(of: proxy.size.height) { selectionSheetHeights[field] = $0 }
+                        }
+                    }
             }
         }
+        .hidden()
+    }
+
+    private func fieldLabel(_ text: String) -> some View {
+        Text(text)
+            .font(Constants.Fonts.h3)
+            .foregroundStyle(Constants.Colors.black)
+    }
+
+    private func placeholder(_ text: String, font: Font) -> some View {
+        Text(text)
+            .font(font)
+            .foregroundStyle(Constants.Colors.mutedGray)
+            .allowsHitTesting(false)
+    }
+
+    private var divider: some View {
+        Rectangle()
+            .fill(Constants.Colors.stroke)
+            .frame(height: 1)
     }
 
     private var publishButton: some View {
         Button {
-            focusedField = nil
-            viewModel.createNewListing()
+            UIApplication.shared.endEditing()
+            Task { await viewModel.publish() }
         } label: {
-            Group {
-                if viewModel.isLoading {
+            ZStack {
+                if viewModel.isPublishing {
                     ProgressView()
                         .tint(Constants.Colors.white)
                 } else {
-                    Text("Publish Listing")
+                    Text("Publish")
                 }
             }
-            .font(Constants.Fonts.title3)
-            .foregroundStyle(Constants.Colors.white)
-            .frame(maxWidth: .infinity, minHeight: 40)
-            .background(Constants.Colors.tertiaryGray)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay {
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Constants.Colors.black, lineWidth: 1)
-            }
+            .frame(width: SellLayout.publishButtonWidth, height: SellLayout.publishButtonHeight)
         }
-        .buttonStyle(.plain)
-        .disabled(!canPublish || viewModel.isLoading)
-        .opacity(canPublish ? 1 : 0.45)
-    }
-
-    private var canPublish: Bool {
-        !viewModel.selectedImages.isEmpty && viewModel.checkInputIsValid()
+        .buttonStyle(.purpleCapsule)
+        .disabled(!viewModel.canPublish)
+        .frame(maxWidth: .infinity)
     }
 }
+
+#Preview {
+    SellView()
+}
+
