@@ -2,7 +2,7 @@
 //  SellView.swift
 //  Resell
 //
-//  Created by Ethan Chen on 10/28/26.
+//  Created by Andrew Gao on 9/3/26.
 //
 
 import PhotosUI
@@ -43,8 +43,13 @@ struct SellView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 header
-                photosSection
-                formSection
+
+                Group {
+                    photosSection
+                    formSection
+                }
+                .allowsHitTesting(!viewModel.isPublishing)
+
                 publishButton
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
@@ -65,6 +70,7 @@ struct SellView: View {
         }
         .onChange(of: viewModel.selectedItems) { _ in Task { await viewModel.loadImages(displayScale: displayScale) } }
         .onChange(of: viewModel.capturedImages) { _ in Task { await viewModel.addCapturedImages() } }
+        .onChange(of: viewModel.price) { _ in viewModel.normalizePrice() }
         .background { selectionSheetSizer }
         .sheet(item: $viewModel.activeSelectionField) { field in
             selectionSheet(for: field)
@@ -276,6 +282,7 @@ struct SellView: View {
                         GeometryReader { proxy in
                             Color.clear
                                 .onAppear { selectionSheetHeights[field] = proxy.size.height }
+                                .onChange(of: proxy.size.height) { selectionSheetHeights[field] = $0 }
                         }
                     }
             }
@@ -304,6 +311,7 @@ struct SellView: View {
 
     private var publishButton: some View {
         Button {
+            UIApplication.shared.endEditing()
             Task { await viewModel.publish() }
         } label: {
             ZStack {

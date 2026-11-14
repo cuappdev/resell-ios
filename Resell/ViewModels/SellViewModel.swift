@@ -30,12 +30,7 @@ extension SellView {
         @Published var isShowingCamera = false
 
         @Published var title = ""
-        @Published var price = "" {
-            didSet {
-                let sanitized = Self.sanitizedPrice(price)
-                if sanitized != price { price = sanitized }
-            }
-        }
+        @Published var price = ""
         @Published var description = ""
         @Published private(set) var category: String?
         @Published private(set) var condition: String?
@@ -165,6 +160,13 @@ extension SellView {
             activeSelectionField = nil
         }
 
+        /// Keeps the typed price a plain dollar amount: digits with at most two decimal places, the
+        /// region's decimal separator read as ".", and no leading zeros.
+        func normalizePrice() {
+            let normalized = Self.normalizedPrice(price)
+            if normalized != price { price = normalized }
+        }
+
         func publish() async {
             guard canPublish, !isPublishing else { return }
             guard let user = GoogleAuthManager.shared.user else {
@@ -194,7 +196,7 @@ extension SellView {
 
             return PostBody(
                 title: title.cleaned(),
-                description: description.cleaned(),
+                description: description.trimmingCharacters(in: .whitespacesAndNewlines),
                 categories: category.map { [Self.backendCategories[$0] ?? $0] } ?? [],
                 condition: condition.map { Self.backendConditions[$0] ?? $0 } ?? "",
                 original_price: Double(price) ?? 0,
@@ -214,11 +216,15 @@ extension SellView {
             event = nil
         }
 
-        private static func sanitizedPrice(_ text: String) -> String {
-            let parts = text.filter { $0.isNumber || $0 == "." }.split(separator: ".", omittingEmptySubsequences: false)
-            guard let whole = parts.first else { return "" }
-            guard parts.count > 1 else { return String(whole) }
-            return "\(whole).\(parts[1].prefix(2))"
+        private static func normalizedPrice(_ text: String) -> String {
+            let parts = text
+                .replacingOccurrences(of: Locale.current.decimalSeparator ?? ".", with: ".")
+                .split(separator: ".", maxSplits: 1, omittingEmptySubsequences: false)
+                .map { $0.compactMap(\.wholeNumberValue).map(String.init).joined() }
+            let hasDecimalPoint = parts.count > 1
+            var whole = String(parts[0].drop { $0 == "0" })
+            if whole.isEmpty && (hasDecimalPoint || !parts[0].isEmpty) { whole = "0" }
+            return hasDecimalPoint ? "\(whole).\(parts[1].prefix(2))" : whole
         }
     }
 }
