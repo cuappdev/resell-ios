@@ -14,6 +14,8 @@ struct SellView: View {
 
     @StateObject private var viewModel = ViewModel()
 
+    @State private var selectionSheetHeights: [ViewModel.SelectionField: CGFloat] = [:]
+
     // MARK: - UI
 
     var body: some View {
@@ -21,10 +23,13 @@ struct SellView: View {
             VStack(alignment: .leading, spacing: 24) {
                 header
                 photosSection
+                formSection
+                publishButton
             }
             .padding(.horizontal, Constants.Spacing.horizontalPadding)
             .padding(.vertical, 12)
         }
+        .scrollDismissesKeyboard(.interactively)
         .background(Constants.Colors.white)
         .toolbar(.hidden, for: .navigationBar)
         .photosPicker(
@@ -38,6 +43,15 @@ struct SellView: View {
             ImagePicker(sourceType: .camera, selectedImages: $viewModel.selectedImages)
         }
         .onChange(of: viewModel.selectedItems) { _ in Task { await viewModel.loadImages() } }
+        .background { selectionSheetSizer }
+        .sheet(item: $viewModel.activeSelectionField) { field in
+            selectionSheet(for: field)
+        }
+        .alert("Couldn't post your listing", isPresented: $viewModel.isShowingPublishError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Check your connection and try again.")
+        }
     }
 
     // MARK: - Header
@@ -129,6 +143,180 @@ struct SellView: View {
         }
 
         Button("Cancel", role: .cancel) {}
+    }
+
+    // MARK: - Form
+
+    private var formSection: some View {
+        VStack(alignment: .leading, spacing: Constants.Sell.formSpacing) {
+            titleField
+            divider
+            priceRow
+            divider
+            selectionRow(.category, placeholder: "Choose")
+            divider
+            selectionRow(.condition, placeholder: "Choose")
+            divider
+            selectionRow(.event, placeholder: "None", isOptional: true)
+            divider
+            descriptionField
+        }
+    }
+
+    private var titleField: some View {
+        VStack(alignment: .leading, spacing: Constants.Sell.fieldLabelSpacing) {
+            fieldLabel("Title")
+
+            TextField("", text: $viewModel.title)
+                .font(Constants.Fonts.title2)
+                .foregroundStyle(Constants.Colors.black)
+                .overlay(alignment: .leading) {
+                    if viewModel.title.isEmpty {
+                        placeholder("What are you selling?", font: Constants.Fonts.title2)
+                    }
+                }
+                .padding(.horizontal, Constants.Sell.fieldHorizontalPadding)
+                .frame(height: Constants.Sell.fieldHeight)
+                .background(Constants.Colors.wash)
+                .clipShape(Capsule())
+        }
+    }
+
+    private var priceRow: some View {
+        HStack {
+            fieldLabel("Price")
+
+            Spacer()
+
+            HStack {
+                Text("$")
+                    .font(Constants.Fonts.title2)
+                    .foregroundStyle(Constants.Colors.black)
+
+                TextField("", text: $viewModel.price)
+                    .font(Constants.Fonts.title1)
+                    .foregroundStyle(Constants.Colors.black)
+                    .multilineTextAlignment(.trailing)
+                    .keyboardType(.decimalPad)
+                    .overlay(alignment: .trailing) {
+                        if viewModel.price.isEmpty {
+                            placeholder("0.00", font: Constants.Fonts.title1)
+                        }
+                    }
+            }
+            .padding(.horizontal, Constants.Sell.fieldHorizontalPadding)
+            .padding(.vertical, Constants.Sell.pricePillVerticalPadding)
+            .frame(width: Constants.Sell.pricePillWidth)
+            .background(Constants.Colors.wash)
+            .clipShape(Capsule())
+        }
+        .frame(height: Constants.Sell.fieldHeight)
+    }
+
+    private var descriptionField: some View {
+        VStack(alignment: .leading, spacing: Constants.Sell.descriptionLabelSpacing) {
+            fieldLabel("Description")
+
+            ZStack(alignment: .topLeading) {
+                TextEditor(text: $viewModel.description)
+                    .font(Constants.Fonts.title2)
+                    .foregroundStyle(Constants.Colors.black)
+                    .scrollContentBackground(.hidden)
+                    .padding(.horizontal, Constants.Sell.descriptionHorizontalPadding - Constants.Sell.textEditorInset.width)
+                    .padding(.vertical, Constants.Sell.descriptionVerticalPadding - Constants.Sell.textEditorInset.height)
+
+                if viewModel.description.isEmpty {
+                    placeholder("Size, measurements, any flaws, where to pick up...", font: Constants.Fonts.title2)
+                        .padding(.horizontal, Constants.Sell.descriptionHorizontalPadding)
+                        .padding(.vertical, Constants.Sell.descriptionVerticalPadding)
+                }
+            }
+            .frame(height: Constants.Sell.descriptionHeight)
+            .background(Constants.Colors.wash)
+            .clipShape(RoundedRectangle(cornerRadius: Constants.Sell.descriptionCornerRadius))
+        }
+    }
+
+    private func selectionRow(_ field: ViewModel.SelectionField, placeholder: String, isOptional: Bool = false) -> some View {
+        SellFormRow(
+            label: field.rawValue,
+            value: viewModel.selection(for: field),
+            placeholder: placeholder,
+            isOptional: isOptional,
+            action: { viewModel.activeSelectionField = field }
+        )
+    }
+
+    private func selectionSheet(for field: ViewModel.SelectionField) -> SelectionSheet {
+        SelectionSheet(
+            title: field.rawValue,
+            options: viewModel.options(for: field),
+            selection: viewModel.selection(for: field),
+            height: selectionSheetHeights[field] ?? 0
+        ) { viewModel.apply($0, to: field) }
+    }
+
+    /// Lays out each selection sheet invisibly ahead of time. A sheet whose height changes while
+    /// it opens slides in from the corner, so each one opens at its measured height instead.
+    private var selectionSheetSizer: some View {
+        ZStack {
+            ForEach(ViewModel.SelectionField.allCases) { field in
+                selectionSheet(for: field)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .background {
+                        GeometryReader { proxy in
+                            Color.clear
+                                .onAppear { selectionSheetHeights[field] = proxy.size.height }
+                        }
+                    }
+            }
+        }
+        .hidden()
+    }
+
+    private func fieldLabel(_ text: String) -> some View {
+        Text(text)
+            .font(Constants.Fonts.h3)
+            .foregroundStyle(Constants.Colors.black)
+    }
+
+    private func placeholder(_ text: String, font: Font) -> some View {
+        Text(text)
+            .font(font)
+            .foregroundStyle(Constants.Colors.mutedGray)
+            .allowsHitTesting(false)
+    }
+
+    private var divider: some View {
+        Rectangle()
+            .fill(Constants.Colors.stroke)
+            .frame(height: 1)
+    }
+
+    // MARK: - Publish
+
+    private var publishButton: some View {
+        Button {
+            Task { await viewModel.publish() }
+        } label: {
+            ZStack {
+                if viewModel.isPublishing {
+                    ProgressView()
+                        .tint(Constants.Colors.white)
+                } else {
+                    Text("Publish")
+                        .font(Constants.Fonts.title1)
+                        .foregroundStyle(Constants.Colors.white)
+                }
+            }
+            .frame(width: Constants.Sell.publishButtonWidth, height: Constants.Sell.publishButtonHeight)
+            .background(Constants.Colors.resellPurple)
+            .clipShape(Capsule())
+            .opacity(viewModel.canPublish || viewModel.isPublishing ? 1 : Constants.Sell.disabledOpacity)
+        }
+        .buttonStyle(.plain)
+        .disabled(!viewModel.canPublish)
+        .frame(maxWidth: .infinity)
     }
 }
 

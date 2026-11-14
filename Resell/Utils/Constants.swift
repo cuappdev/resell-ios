@@ -17,6 +17,7 @@ struct Constants {
         static let errorRed = Color(red: 242/255, green: 0/255, blue: 0/255)
         static let inactiveGray = Color(red: 190/255, green: 190/255, blue: 190/255)
         static let lightPurpleWash = Color(red: 247/255, green: 242/255, blue: 255/255)
+        static let mediumGray = Color(red: 103/255, green: 103/255, blue: 103/255)
         static let mutedGray = Color(red: 112/255, green: 112/255, blue: 112/255)
         static let purpleWash = Color(red: 250/255, green: 247/255, blue: 255/255)
         static let resellPurple = Color(red: 158/255, green: 112/255, blue: 246/255)
@@ -126,6 +127,45 @@ struct Constants {
         static let removeIconSize: CGFloat = 23
         static let removeButtonSize: CGFloat = 32
         static let removeButtonInset: CGFloat = 12
+
+        static let formSpacing: CGFloat = 20
+        static let fieldLabelSpacing: CGFloat = 12
+        static let fieldHeight: CGFloat = 43
+        static let fieldHorizontalPadding: CGFloat = 17
+        static let pricePillWidth: CGFloat = 128
+        static let pricePillVerticalPadding: CGFloat = 10
+        static let rowValueSpacing: CGFloat = 12
+        static let optionalTagSpacing: CGFloat = 8
+        static let optionalDotSize: CGFloat = 5
+        static let descriptionLabelSpacing: CGFloat = 8
+        static let descriptionHeight: CGFloat = 128
+        static let descriptionCornerRadius: CGFloat = 10
+        static let descriptionHorizontalPadding: CGFloat = 13
+        static let descriptionVerticalPadding: CGFloat = 16
+        /// TextEditor's built-in text inset, subtracted so typed text lines up with the placeholder.
+        static let textEditorInset = CGSize(width: 5, height: 8)
+        static let publishButtonWidth: CGFloat = 200
+        static let publishButtonHeight: CGFloat = 49
+        static let disabledOpacity: CGFloat = 0.4
+        /// Longest edge, in pixels, of each photo sent with a new listing.
+        static let uploadImageMaxDimension: CGFloat = 512
+
+        static let sheetCornerRadius: CGFloat = 20
+        static let sheetTopPadding: CGFloat = 8
+        static let sheetBottomPadding: CGFloat = 36
+        static let sheetSectionSpacing: CGFloat = 40
+        static let sheetHeaderSpacing: CGFloat = 20
+        static let grabberSize = CGSize(width: 65.5, height: 6)
+        static let chipSpacing: CGFloat = 12
+        static let chipPadding: CGFloat = 12
+        static let chipBorderWidth: CGFloat = 1
+        static let selectedChipBorderWidth: CGFloat = 2
+        static let sheetFooterWidth: CGFloat = 296
+        static let sheetButtonHeight: CGFloat = 40
+        static let sheetButtonHorizontalPadding: CGFloat = 16
+
+        static let categories = ["Clothing", "Books", "School", "Electronics", "Sports & Outdoors", "Other"]
+        static let conditions = ["Gently Used", "Used", "Never Used"]
     }
 
     /// Notifications for pub/sub
