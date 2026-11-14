@@ -147,7 +147,7 @@ struct SelectionSheet: View {
         .sheet(isPresented: .constant(true)) {
             SelectionSheet(
                 title: "Category",
-                options: ["Clothing", "Books", "School", "Electronics", "Sports & Outdoors", "Other"],
+                options: ["Clothing", "Books", "School", "Electronics", "Household", "Sports & Outdoors", "Other"],
                 selection: "Other",
                 height: 310
             )

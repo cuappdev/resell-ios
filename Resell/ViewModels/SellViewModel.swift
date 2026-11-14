@@ -47,7 +47,7 @@ extension SellView {
 
         private static let maxImages = 8
         private static let uploadImageMaxDimension: CGFloat = 512
-        private static let categories = ["Clothing", "Books", "School", "Electronics", "Sports & Outdoors", "Other"]
+        private static let categories = ["Clothing", "Books", "School", "Electronics", "Household", "Sports & Outdoors", "Other"]
         private static let conditions = ["Gently Used", "Used", "Never Used"]
         private static let backendCategories = ["Sports & Outdoors": "Active"]
         private static let backendConditions = ["Used": "Worn"]
